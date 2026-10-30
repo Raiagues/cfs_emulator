@@ -1,0 +1,10 @@
+[Unit]
+Description=Raspberry Pi cFS
+# Start this on-demand service manually after uploading the binaries.
+After=multi-user.target
+
+[Service]
+WorkingDirectory=/opt/cFS/build-rpi_linux/exe/cpu1
+ExecStart=/opt/cFS/build-rpi_linux/exe/cpu1/core-cpu1
+StandardOutput=journal
+StandardError=journal

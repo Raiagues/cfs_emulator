@@ -1,0 +1,6 @@
+*
+!Dockerfile
+!cfs.service
+!emulator.sh
+!config/
+!config/**
