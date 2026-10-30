@@ -1,7 +1,8 @@
 *
 !Dockerfile
 !cfs.service
-!emulator.sh
+!scripts/
+!scripts/emulator.sh
 !config/
 !config/10-usb.network
 !config/serial-console.conf

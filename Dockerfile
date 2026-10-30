@@ -64,7 +64,7 @@ COPY --from=prepare /opt/raspi-os/raspios.qcow2 \
     /opt/raspi-os/initramfs8 \
     /opt/raspi-os/
 
-COPY --chmod=755 emulator.sh /usr/local/bin/emulator
+COPY --chmod=755 scripts/emulator.sh /usr/local/bin/emulator
 WORKDIR /work
 
 ENTRYPOINT ["/usr/local/bin/emulator"]
