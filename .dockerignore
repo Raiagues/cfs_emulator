@@ -3,4 +3,7 @@
 !cfs.service
 !emulator.sh
 !config/
-!config/**
+!config/10-usb.network
+!config/serial-console.conf
+!config/sshd.conf
+!config/watchdog.conf

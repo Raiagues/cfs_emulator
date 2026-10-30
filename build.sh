@@ -3,4 +3,5 @@ set -e
 
 cd "$(dirname "$0")"
 
-docker build --network=host -t pi4-emulator:dev .
+# Use the same image name for local builds and published releases.
+docker build -t "$(cat config/image)" "$@" .

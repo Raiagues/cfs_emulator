@@ -1,4 +1,4 @@
-FROM debian:trixie-slim
+FROM debian:trixie-slim AS base
 
 # Install QEMU and required tools
 RUN echo "deb http://deb.debian.org/debian trixie-backports main" > /etc/apt/sources.list.d/backports.list && \
@@ -8,6 +8,8 @@ RUN echo "deb http://deb.debian.org/debian trixie-backports main" > /etc/apt/sou
     device-tree-compiler guestfish "linux-image-$(dpkg --print-architecture)" && \
     apt-get install -y --no-install-recommends -t trixie-backports qemu-system-arm && \
     rm -rf /var/lib/apt/lists/*
+
+FROM base AS prepare
 
 # Download Raspberry Pi OS
 RUN mkdir -p /opt/raspi-os && \
@@ -30,8 +32,9 @@ COPY config/ /tmp/config/
 
 RUN qemu-img convert -f raw -O qcow2 /opt/raspi-os/raspios.img /opt/raspi-os/raspios.qcow2 && \
     qemu-img resize /opt/raspi-os/raspios.qcow2 4G && \
-    LIBGUESTFS_BACKEND=direct guestfish --rw -a /opt/raspi-os/raspios.qcow2 \
+    guestfish --rw -a /opt/raspi-os/raspios.qcow2 \
         run : mount /dev/sda2 / : \
+        mkdir-p /opt/cFS/build-rpi_linux/exe/cpu1 : \
         upload /tmp/cfs.service /etc/systemd/system/cfs.service : \
         mkdir-p /etc/systemd/system/multi-user.target.wants : \
         ln-sf /dev/null /etc/systemd/system/userconfig.service : \
@@ -51,6 +54,15 @@ RUN qemu-img convert -f raw -O qcow2 /opt/raspi-os/raspios.img /opt/raspi-os/ras
         upload /tmp/config/sshd.conf /etc/ssh/sshd_config.d/00-emulator.conf : \
         ln-sf /dev/null /etc/systemd/system/ssh.socket : \
         ln-sf /usr/lib/systemd/system/ssh.service /etc/systemd/system/multi-user.target.wants/ssh.service
+
+FROM base
+
+# Keep only the prepared disk and boot files in the distributed image.
+COPY --from=prepare /opt/raspi-os/raspios.qcow2 \
+    /opt/raspi-os/kernel8.img \
+    /opt/raspi-os/bcm2711-rpi-4-b.dtb \
+    /opt/raspi-os/initramfs8 \
+    /opt/raspi-os/
 
 COPY --chmod=755 emulator.sh /usr/local/bin/emulator
 WORKDIR /work

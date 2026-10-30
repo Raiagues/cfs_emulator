@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -e
+cd "$(dirname "$0")"
 
 # Ask Linux to flush the persistent disk and power off normally.
-exec ssh -p 2222 root@127.0.0.1 systemctl poweroff
+exec ssh -F config/ssh.conf pi4-cfs systemctl poweroff

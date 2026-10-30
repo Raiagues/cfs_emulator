@@ -12,14 +12,17 @@ if [[ ! -e board/raspios.qcow2 ]]; then
         mkdir-p /root/.ssh : chmod 0700 /root/.ssh : \
         upload /ssh.pub /root/.ssh/authorized_keys : \
         chmod 0600 /root/.ssh/authorized_keys
+    # Keep this disk's kernel and device tree together across image updates.
+    cp /opt/raspi-os/kernel8.img /opt/raspi-os/bcm2711-rpi-4-b.dtb \
+        /opt/raspi-os/initramfs8 board/
     mv board/raspios.qcow2.new board/raspios.qcow2
 fi
 
 # Retain guest changes. The inactive watchdog driver provides clean power-off.
 exec qemu-system-aarch64 -M raspi4b \
-    -kernel /opt/raspi-os/kernel8.img \
-    -dtb /opt/raspi-os/bcm2711-rpi-4-b.dtb \
-    -initrd /opt/raspi-os/initramfs8 \
+    -kernel board/kernel8.img \
+    -dtb board/bcm2711-rpi-4-b.dtb \
+    -initrd board/initramfs8 \
     -drive file=board/raspios.qcow2,if=sd,format=qcow2 \
     -append "console=ttyAMA1 root=/dev/mmcblk1p2 rw rootwait watchdog_disarm=0" \
     -display none \
