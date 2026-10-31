@@ -2,8 +2,12 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-# Accept an existing ARM64 build; this script does not compile cFS.
-PAYLOAD="${1:-cFS/build-rpi_linux/exe/cpu1}"
+# Use the fixed ARM64 build directory in this repository.
+if (($#)); then
+    echo "Usage: ./run.sh" >&2
+    exit 2
+fi
+PAYLOAD=cFS/build-rpi_linux/exe/cpu1
 if [[ ! -f "$PAYLOAD/core-cpu1" || ! -d "$PAYLOAD/cf" ]]; then
     echo "Expected core-cpu1 and cf in $PAYLOAD." >&2
     exit 1
@@ -13,6 +17,10 @@ if [[ ! -f "$SSH_CONFIG" ]]; then
     echo "Run ./scripts/setup.sh first." >&2
     exit 1
 fi
+
+echo "Checking the build and virtual sensors..."
+python3 project/manage.py check-build
+python3 sensors/runtime.py prepare
 
 echo "Stopping cFS..."
 ssh -F "$SSH_CONFIG" pi4-cfs systemctl stop cfs.service

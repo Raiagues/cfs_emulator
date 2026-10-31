@@ -1,3 +1,10 @@
+FROM debian:trixie-slim AS cfs-builder
+
+# Cross-compile cFS without installing a toolchain on the host PC.
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential cmake gcc-aarch64-linux-gnu g++-aarch64-linux-gnu git && rm -rf /var/lib/apt/lists/*
+WORKDIR /cFS
+CMD ["make", "-j4", "ARCH_rpi_linux=aarch64-linux-gnu", "BUILDTYPE=release", "O=build-rpi_linux/emulator", "DESTDIR=/cFS/build-rpi_linux", "rpi_linux.prep", "rpi_linux.install"]
+
 FROM debian:trixie-slim AS base
 
 # Install QEMU and required tools

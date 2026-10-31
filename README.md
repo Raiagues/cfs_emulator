@@ -1,9 +1,9 @@
 # Raspberry Pi 4 cFS emulator
 
-Run all commands on your **Linux PC**, from the repository directory.
-The setup supports Ubuntu 24.04+ and Debian 13 on AMD64.
+Run commands on your Linux PC, from this repository. Supported hosts:
+Ubuntu 24.04+ or Debian 13+, AMD64, with Git for the initial clone.
 
-## Set up once
+## First use
 
 ```bash
 git clone https://github.com/Raiagues/cfs_emulator.git
@@ -11,50 +11,110 @@ cd cfs_emulator
 ./scripts/setup.sh
 ```
 
-Run setup as your normal user. It uses `sudo` when needed to install missing
-Docker, OpenSSH, and Buildx packages from the distribution's APT repositories.
-It configures SSH automatically in `~/.ssh/cfs-emulator/`, outside the checkout,
-and downloads the emulator image or builds it locally if unavailable.
-
-If setup adds you to the Docker group, **sign out and sign back in** before
-continuing.
-
-## Boot Linux
+Setup installs missing tools, configures SSH outside the repository, downloads
+the emulator image and builds cFS when needed. It requests sudo when necessary.
+If it adds your user to the Docker group, sign out and back in before continuing.
 
 ```bash
 ./boot.sh
-```
-
-The emulator runs in the background. This command waits until SSH login works
-and prints `Raspberry Pi ready...` before returning. The first boot can take
-several minutes.
-
-## Upload and run cFS
-
-Provide a precompiled **ARM64** directory containing `core-cpu1` and `cf/`.
-Setup does not build or provide this cFS payload. The default directory is
-`cFS/build-rpi_linux/exe/cpu1`:
-
-```bash
 ./run.sh
 ```
 
-To use a build elsewhere, run `./run.sh /path/to/cpu1` instead, replacing the
-path with the absolute path to your build directory on the PC.
+Boot shows the live Linux log and returns when SSH works. Run checks the build
+and sensors, loads the guest I2C interface, uploads cFS and follows its log.
+Look for `CFE_ES_Main entering OPERATIONAL state` and `tmp105: 23.500 C`.
+Ctrl+C closes the log view; the emulator and cFS keep running.
 
-The command shows SCP upload progress, starts cFS, and follows its logs. Look
-for `CFE_ES_Main entering OPERATIONAL state`. Press Ctrl+C to stop following
-logs; cFS keeps running. Run `./run.sh` again to upload an updated build while
-Linux stays running.
+## Configuration
 
-## Control
+The project starts with `thermal_app` and a TMP105 on `i2c-bus.1`, address `0x48`.
+`project/config.json` stores hardware and app bindings. cFS app manifests store
+message IDs, commands and telemetry. Stock apps, including `sample_app`, are
+protected by the project commands.
+
+```mermaid
+flowchart LR
+    Config["Project JSON"] --> Boot["boot.sh: create QEMU devices"]
+    Config --> Build["build-cfs.sh: sync and compile apps"]
+    Boot --> Run["run.sh: verify, upload and start cFS"]
+    Build --> Run
+```
+
+```bash
+./scripts/project.sh devices
+./scripts/project.sh list
+./scripts/project.sh locate thermal_app
+```
+
+See [project commands](project/README.md) to create apps, sensors, commands and
+telemetry. The same JSON and commands can be used by a future GUI.
+
+## Update and control
+
+After changing app code or configuration:
+
+```bash
+./scripts/build-cfs.sh
+./run.sh
+```
+
+Adding or changing QEMU devices also requires `./stop.sh` followed by `./boot.sh`
+before running cFS. The run command reports mismatches before stopping cFS.
+Changing sensor values does not require rebuilding or restarting.
 
 | Command | Action |
 | --- | --- |
-| `./logs.sh` | Follow the emulator's boot and serial logs. |
-| `./stop.sh` | Shut down the emulator. |
-| `./boot.sh --interactive` | Boot with the serial console attached. |
-| `ssh -F ~/.ssh/cfs-emulator/config pi4-cfs` | Open a guest shell. |
+| `./scripts/project.sh values` | Apply sensor values from the JSON. |
+| `./scripts/project.sh simulate` | Run the Python sensor waveforms; Ctrl+C stops them. |
+| `./logs.sh` | Follow Linux boot and serial output. |
+| `./boot.sh --interactive` | Boot with a Linux terminal attached. |
+| `./stop.sh` | Shut down the emulator normally. |
 
-Guest files in `board/` survive restarts. Keep the SSH identity in
-`~/.ssh/cfs-emulator/` to retain access to the existing guest disk.
+The guest disk persists in `board/`. No Docker rebuild is needed for app,
+sensor configuration or simulator changes. All scripts locate the repository.
+
+## Python sensor simulation
+
+With Linux and cFS running, open another terminal:
+
+```bash
+./scripts/project.sh simulate
+```
+
+To update only one configured device, select its ID from `project/config.json`:
+
+```bash
+./scripts/project.sh simulate tmp105 --interval 0.5
+./scripts/project.sh simulate tmp105 --interval 1 --steps 30
+```
+
+Edit [sensors/tmp105.py](sensors/tmp105.py) or
+[sensors/lsm303dlhc_mag.py](sensors/lsm303dlhc_mag.py) to change the simulation.
+Each file has amplitude/period constants and a `sample(elapsed_s, initial_values)`
+function. `elapsed_s` is real elapsed time on the PC, in seconds.
+The project's `values` supply each device's waveform center/axis offsets;
+model defaults apply to properties omitted from the JSON. Set amplitude to zero
+for a constant value, or replace `sample()` with your own Python calculation:
+
+```python
+def sample(elapsed_s, initial_values):
+    return {"temperature": 30000 if elapsed_s < 10 else 20000}
+```
+
+Return integer QEMU properties: `temperature` in millidegrees Celsius, or
+`mag-x`, `mag-y`, `mag-z` in thousandths of a microtesla. The runner validates
+every sample before sending a tick through QMP. TMP105 readings reach cFS through
+I²C; the default sensor resolution is 0.5 °C, so readings quantize the waveform.
+The magnetometer can be simulated in QEMU but does not yet have a cFS driver.
+
+Restart only `simulate` after editing Python; no build or emulator restart is
+needed. Ctrl+C (or `--steps`) leaves the last values in the sensors. Run
+`./scripts/project.sh values` to restore the JSON values. Run one simulator for
+the chosen devices at a time to avoid competing writers.
+
+`sensors/` contains only runtime code: model calculations, the simulation loop,
+hardware integration and the QMP client. Tests live in `tests/`:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
+```

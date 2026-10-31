@@ -1,0 +1,27 @@
+{
+  "board": "raspi4b",
+  "os": ["raspios"],
+  "buses": {
+    "i2c-bus.1": {"device": "/dev/i2c-1", "dt_node": "/soc/i2c@7e804000"}
+  },
+  "models": {
+    "tmp105": {
+      "cfs_driver": "tmp105",
+      "kind": "sensor",
+      "properties": {
+        "temperature": {"type": "integer", "min": -128000, "max": 127937, "unit": "millidegrees Celsius"}
+      }
+    },
+    "lsm303dlhc_mag": {
+      "cfs_driver": null,
+      "kind": "sensor",
+      "properties": {
+        "mag-x": {"type": "integer", "min": -180000, "max": 180000, "unit": "milli-microtesla"},
+        "mag-y": {"type": "integer", "min": -180000, "max": 180000, "unit": "milli-microtesla"},
+        "mag-z": {"type": "integer", "min": -180000, "max": 180000, "unit": "milli-microtesla"}
+      }
+    }
+  },
+  "protected_paths": ["cFS/cfe", "cFS/osal", "cFS/psp", "cFS/libs", "cFS/tools", "cFS/.git"],
+  "protected_apps": ["sample_app", "ci_lab", "to_lab", "sch_lab", "cf", "cs", "ds", "fm", "hk", "hs", "lc", "md", "sc", "sbn", "sbn_udp", "sbn_f_remap"]
+}

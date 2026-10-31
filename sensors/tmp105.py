@@ -1,15 +1,18 @@
-import math
+"""TMP105 waveform. Edit the constants or sample() to change the simulation."""
 
-from qmp import set_property
+import math
 
 
 DEVICE = "tmp105"
+DEFAULT_C = 25.0
+AMPLITUDE_C = 5.0
+PERIOD_SECONDS = 30.0
 
 
-def update(qmp, sensor_id, t):
-    temperature = 25 + 5 * math.sin(t)
-
-    # search the temp0 device and configure the temperature to 25ºC 
-    set_property(qmp, f"/machine/peripheral/{sensor_id}", "temperature", round(temperature * 1000))
-
-    print(f"{sensor_id} = {temperature:.2f} °C")
+def sample(elapsed_s, initial_values):
+    """Return QEMU properties in millidegrees Celsius; values sets the center."""
+    if not math.isfinite(PERIOD_SECONDS) or PERIOD_SECONDS <= 0:
+        raise ValueError("PERIOD_SECONDS must be finite and positive")
+    center = initial_values.get("temperature", round(DEFAULT_C * 1000)) / 1000
+    temperature = center + AMPLITUDE_C * math.sin(2 * math.pi * elapsed_s / PERIOD_SECONDS)
+    return {"temperature": round(temperature * 1000)}

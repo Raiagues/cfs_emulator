@@ -1,0 +1,19 @@
+/* Sensor telemetry scaffold. User-owned after creation. */
+#ifndef ${guard}
+#define ${guard}
+
+#include "sensors/${app}_${sensor}_sensor.h"
+
+/* APPGEN: USER telemetry.${packet}.payload */
+typedef ${prefix}_${source}_Payload_t ${prefix}_${entity}_Payload_t;
+
+typedef struct
+{
+    CFE_MSG_TelemetryHeader_t TelemetryHeader;
+    ${prefix}_${entity}_Payload_t Payload;
+} ${prefix}_${entity}_Tlm_t;
+
+void ${prefix}_${entity}_Init(void);
+CFE_Status_t ${prefix}_${entity}_Send(void);
+
+#endif

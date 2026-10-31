@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Initialize a persistent disk and its SSH key only on the first run.
+# Validate devices before opening the guest disk.
 mkdir -p board
+python3 sensors/runtime.py args > board/qemu-devices.args
+mapfile -d '' -t SENSOR_ARGS < board/qemu-devices.args
+
+# Initialize a persistent disk and its SSH key only on the first run.
 if [[ ! -e board/raspios.qcow2 ]]; then
     echo "Preparing the guest disk for its first boot..."
     cp /opt/raspi-os/raspios.qcow2 board/raspios.qcow2.new
@@ -19,6 +23,7 @@ if [[ ! -e board/raspios.qcow2 ]]; then
 fi
 
 # Retain guest changes. The inactive watchdog driver provides clean power-off.
+python3 sensors/runtime.py record
 exec qemu-system-aarch64 -M raspi4b \
     -kernel board/kernel8.img \
     -dtb board/bcm2711-rpi-4-b.dtb \
@@ -28,5 +33,6 @@ exec qemu-system-aarch64 -M raspi4b \
     -display none \
     -chardev stdio,id=console,signal=off,logfile="$1" \
     -serial chardev:console -monitor none \
+    -qmp unix:/work/board/qmp.sock,server=on,wait=off \
     -netdev user,id=net0,hostfwd=tcp:0.0.0.0:2222-:22 \
-    -device usb-net,netdev=net0
+    -device usb-net,netdev=net0 "${SENSOR_ARGS[@]}"

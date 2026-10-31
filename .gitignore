@@ -1,3 +1,4 @@
 board/
 logs/
 .ssh/
+__pycache__/

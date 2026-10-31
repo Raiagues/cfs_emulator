@@ -1,0 +1,26 @@
+/* Sensor telemetry scaffold. User-owned after creation. */
+#include "${app}_${packet}_tlm.h"
+#include "${app}_msgids.h"
+#include <string.h>
+
+static ${prefix}_${entity}_Tlm_t ${prefix}_${entity}_Tlm;
+
+static void ${prefix}_${entity}_Fill(${prefix}_${entity}_Payload_t *Payload)
+{
+    /* APPGEN: USER telemetry.${packet}.fill */
+    *Payload = *${prefix}_${source}_GetData();
+}
+
+void ${prefix}_${entity}_Init(void)
+{
+    memset(&${prefix}_${entity}_Tlm, 0, sizeof(${prefix}_${entity}_Tlm));
+    CFE_MSG_Init(CFE_MSG_PTR(${prefix}_${entity}_Tlm.TelemetryHeader),
+                 CFE_SB_ValueToMsgId(${prefix}_${packet_upper}_TLM_MID), sizeof(${prefix}_${entity}_Tlm));
+}
+
+CFE_Status_t ${prefix}_${entity}_Send(void)
+{
+    ${prefix}_${entity}_Fill(&${prefix}_${entity}_Tlm.Payload);
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(${prefix}_${entity}_Tlm.TelemetryHeader));
+    return CFE_SB_TransmitMsg(CFE_MSG_PTR(${prefix}_${entity}_Tlm.TelemetryHeader), true);
+}
