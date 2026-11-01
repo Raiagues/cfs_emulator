@@ -1,0 +1,58 @@
+/**
+ * @file
+ *   Standard command handlers for @PREFIX@.
+ */
+
+/*
+** Include Files:
+*/
+#include "@APP@.h"
+#include "@APP@_cmds.h"
+#include "@APP@_eventids.h"
+#include "@APP@_version.h"
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+/*                                                                            */
+/* Gather housekeeping and send it to the Software Bus                        */
+/*                                                                            */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+CFE_Status_t @PREFIX@_SendHkCmd(const @PREFIX@_SendHkCmd_t *Msg)
+{
+    (void)Msg;
+
+    @PREFIX@_Data.HkTlm.Payload.CommandCounter      = @PREFIX@_Data.CommandCounter;
+    @PREFIX@_Data.HkTlm.Payload.CommandErrorCounter = @PREFIX@_Data.CommandErrorCounter;
+
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(@PREFIX@_Data.HkTlm.TelemetryHeader));
+    return CFE_SB_TransmitMsg(CFE_MSG_PTR(@PREFIX@_Data.HkTlm.TelemetryHeader), true);
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+/*                                                                            */
+/* NOOP command                                                               */
+/*                                                                            */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+CFE_Status_t @PREFIX@_NoopCmd(const @PREFIX@_NoopCmd_t *Msg)
+{
+    (void)Msg;
+    @PREFIX@_Data.CommandCounter++;
+
+    CFE_EVS_SendEvent(@PREFIX@_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION,
+                     "@PREFIX@: NOOP command %s", @PREFIX@_VERSION);
+    return CFE_SUCCESS;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+/*                                                                            */
+/* Reset command execution counters                                           */
+/*                                                                            */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+CFE_Status_t @PREFIX@_ResetCountersCmd(const @PREFIX@_ResetCountersCmd_t *Msg)
+{
+    (void)Msg;
+    @PREFIX@_Data.CommandCounter      = 0;
+    @PREFIX@_Data.CommandErrorCounter = 0;
+
+    CFE_EVS_SendEvent(@PREFIX@_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "@PREFIX@: RESET command");
+    return CFE_SUCCESS;
+}

@@ -1,0 +1,26 @@
+{
+  "linux_i2c_lib": {
+    "entry_point": "LINUX_I2C_LIB_Init",
+    "systems": [
+      "linux"
+    ]
+  },
+  "linux_uart_lib": {
+    "entry_point": "LINUX_UART_LIB_Init",
+    "systems": [
+      "linux"
+    ]
+  },
+  "lsm303dlhc_mag_lib": {
+    "entry_point": "LSM303DLHC_MAG_LIB_Init",
+    "systems": [
+      "linux"
+    ]
+  },
+  "tmp105_lib": {
+    "entry_point": "TMP105_LIB_Init",
+    "systems": [
+      "linux"
+    ]
+  }
+}

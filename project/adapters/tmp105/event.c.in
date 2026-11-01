@@ -1,0 +1,5 @@
+        int32 Magnitude = Value < 0 ? -Value : Value;
+
+        CFE_EVS_SendEvent(@PREFIX@_SENSOR_VALUE_INF_EID, CFE_EVS_EventType_INFORMATION,
+                         "@NAME@: %s%ld.%03ld C", Value < 0 ? "-" : "",
+                         (long)(Magnitude / 1000), (long)(Magnitude % 1000));

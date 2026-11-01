@@ -1,27 +1,91 @@
 {
   "board": "raspi4b",
-  "os": ["raspios"],
+  "name": "Raspberry Pi 4B",
+  "os": [
+    "raspios"
+  ],
+  "os_labels": {
+    "raspios": "Raspberry Pi OS"
+  },
+  "targets": [
+    "qemu",
+    "physical"
+  ],
   "buses": {
-    "i2c-bus.1": {"device": "/dev/i2c-1", "dt_node": "/soc/i2c@7e804000"}
+    "i2c-bus.1": {
+      "device": "/dev/i2c-1",
+      "dt_node": "/soc/i2c@7e804000"
+    }
   },
   "models": {
     "tmp105": {
       "cfs_driver": "tmp105",
+      "library": "tmp105_lib",
+      "default_address": 72,
+      "default_values": {
+        "temperature": 23500
+      },
       "kind": "sensor",
       "properties": {
-        "temperature": {"type": "integer", "min": -128000, "max": 127937, "unit": "millidegrees Celsius"}
+        "temperature": {
+          "type": "integer",
+          "min": -128000,
+          "max": 127937,
+          "unit": "millidegrees Celsius"
+        }
       }
     },
     "lsm303dlhc_mag": {
-      "cfs_driver": null,
+      "cfs_driver": "lsm303dlhc_mag",
+      "library": "lsm303dlhc_mag_lib",
+      "default_address": 30,
+      "default_values": {
+        "mag-x": 0,
+        "mag-y": 0,
+        "mag-z": 0
+      },
+      "address_source": "https://www.st.com/resource/en/datasheet/lsm303dlhc.pdf#page=22",
       "kind": "sensor",
       "properties": {
-        "mag-x": {"type": "integer", "min": -180000, "max": 180000, "unit": "milli-microtesla"},
-        "mag-y": {"type": "integer", "min": -180000, "max": 180000, "unit": "milli-microtesla"},
-        "mag-z": {"type": "integer", "min": -180000, "max": 180000, "unit": "milli-microtesla"}
+        "mag-x": {
+          "type": "integer",
+          "min": -180000,
+          "max": 180000,
+          "unit": "milli-microtesla"
+        },
+        "mag-y": {
+          "type": "integer",
+          "min": -180000,
+          "max": 180000,
+          "unit": "milli-microtesla"
+        },
+        "mag-z": {
+          "type": "integer",
+          "min": -180000,
+          "max": 180000,
+          "unit": "milli-microtesla"
+        }
       }
     }
   },
-  "protected_paths": ["cFS/cfe", "cFS/osal", "cFS/psp", "cFS/libs", "cFS/tools", "cFS/.git"],
-  "protected_apps": ["sample_app", "ci_lab", "to_lab", "sch_lab", "cf", "cs", "ds", "fm", "hk", "hs", "lc", "md", "sc", "sbn", "sbn_udp", "sbn_f_remap"]
+  "os_families": {
+    "raspios": "linux"
+  },
+  "build": {
+    "raspios": {
+      "architecture": "aarch64-linux-gnu",
+      "cmake": {
+        "CMAKE_SYSTEM_NAME": "Linux",
+        "CMAKE_SYSTEM_PROCESSOR": "aarch64",
+        "CMAKE_C_COMPILER": "aarch64-linux-gnu-gcc",
+        "CMAKE_CXX_COMPILER": "aarch64-linux-gnu-g++",
+        "CMAKE_FIND_ROOT_PATH": "/usr/aarch64-linux-gnu",
+        "CMAKE_FIND_ROOT_PATH_MODE_PROGRAM": "NEVER",
+        "CMAKE_FIND_ROOT_PATH_MODE_LIBRARY": "ONLY",
+        "CMAKE_FIND_ROOT_PATH_MODE_INCLUDE": "ONLY",
+        "CFE_SYSTEM_PSPNAME": "pc-linux",
+        "OSAL_SYSTEM_OSTYPE": "posix"
+      }
+    }
+  }
 }

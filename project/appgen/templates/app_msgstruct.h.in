@@ -1,0 +1,38 @@
+/**
+ * @file
+ *   Standard command and telemetry message types for @PREFIX@.
+ */
+#ifndef DEFAULT_@PREFIX@_MSGSTRUCT_H
+#define DEFAULT_@PREFIX@_MSGSTRUCT_H
+
+#include "cfe_msg_hdr.h"
+#include "@APP@_msgdefs.h"
+
+/* Each command has a distinct type so its payload can evolve independently. */
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader;
+} @PREFIX@_NoopCmd_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader;
+} @PREFIX@_ResetCountersCmd_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader;
+} @PREFIX@_SendHkCmd_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader;
+} @PREFIX@_WakeupCmd_t;
+
+typedef struct
+{
+    CFE_MSG_TelemetryHeader_t TelemetryHeader;
+    @PREFIX@_HkTlm_Payload_t  Payload;
+} @PREFIX@_HkTlm_t;
+
+#endif /* DEFAULT_@PREFIX@_MSGSTRUCT_H */

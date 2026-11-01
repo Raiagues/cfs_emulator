@@ -1,0 +1,17 @@
+/**
+ * @file
+ *   User implementation of the @NAME@ command for @PREFIX@.
+ */
+
+#include "@APP@_@NAME@_cmd.h"
+
+/************************************************************************
+** Command handler. The dispatcher validates the packet size before this call.
+** Return CFE_SUCCESS for accepted commands; failures increment the error count.
+*************************************************************************/
+CFE_Status_t @PREFIX@_@ENTITY@Cmd(const @PREFIX@_@ENTITY@Cmd_t *Msg)
+{
+    /* APPGEN: USER command.@NAME@ */
+    (void)Msg;
+    return CFE_STATUS_NOT_IMPLEMENTED;
+}

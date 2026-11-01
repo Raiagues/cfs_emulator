@@ -1,0 +1,15 @@
+/**
+ * @file
+ *   Standard command handler prototypes for @PREFIX@.
+ */
+#ifndef @PREFIX@_CMDS_H
+#define @PREFIX@_CMDS_H
+
+#include "cfe.h"
+#include "@APP@_msg.h"
+
+CFE_Status_t @PREFIX@_SendHkCmd(const @PREFIX@_SendHkCmd_t *Msg);
+CFE_Status_t @PREFIX@_NoopCmd(const @PREFIX@_NoopCmd_t *Msg);
+CFE_Status_t @PREFIX@_ResetCountersCmd(const @PREFIX@_ResetCountersCmd_t *Msg);
+
+#endif /* @PREFIX@_CMDS_H */

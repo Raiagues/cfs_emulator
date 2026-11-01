@@ -1,0 +1,15 @@
+/**
+ * @file
+ *   Application message IDs for @PREFIX@.
+ */
+#ifndef DEFAULT_@PREFIX@_MSGIDS_H
+#define DEFAULT_@PREFIX@_MSGIDS_H
+
+#define @PREFIX@_CMD_MID     @CMD_MID@
+#define @PREFIX@_SEND_HK_MID @HK_REQUEST_MID@
+#define @PREFIX@_WAKEUP_MID  @WAKEUP_MID@
+#define @PREFIX@_HK_TLM_MID  @HK_TLM_MID@
+
+@TELEMETRY_IDS@
+
+#endif /* DEFAULT_@PREFIX@_MSGIDS_H */

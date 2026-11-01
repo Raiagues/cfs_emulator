@@ -20,6 +20,7 @@ if [[ ! -e board/raspios.qcow2 ]]; then
     cp /opt/raspi-os/kernel8.img /opt/raspi-os/bcm2711-rpi-4-b.dtb \
         /opt/raspi-os/initramfs8 board/
     mv board/raspios.qcow2.new board/raspios.qcow2
+    sync -f board/raspios.qcow2
 fi
 
 # Retain guest changes. The inactive watchdog driver provides clean power-off.

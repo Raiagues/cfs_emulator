@@ -1,0 +1,81 @@
+/**
+ * @file
+ *   @NAME@ sensor adapter for @PREFIX@.
+ */
+
+/* APPGEN: DRIVER @DRIVER@ */
+
+/*
+** Include Files:
+*/
+#include "@APP@_@NAME@_sensor.h"
+#include "@APP@_@NAME@_sensor_cfg.h"
+#include "@APP@_eventids.h"
+@DRIVER_INCLUDE@
+
+#include <string.h>
+
+/* The telemetry payload is the authoritative sensor state. */
+static @PREFIX@_@ENTITY@_Tlm_t @PREFIX@_@ENTITY@_Tlm;
+@DRIVER_STATE@
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+/*                                                                            */
+/* Device-specific read. Add driver calls or conversions here.                 */
+/*                                                                            */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+static int32 @PREFIX@_@ENTITY@_ReadValue(@VALUE_TYPE@ *Value)
+{
+    /* APPGEN: USER sensor.@NAME@.read */
+@READ_VALUE@
+}
+
+/************************************************************************
+** Initialize sensor state and telemetry header.
+*************************************************************************/
+void @PREFIX@_@ENTITY@_Init(void)
+{
+    memset(&@PREFIX@_@ENTITY@_Tlm, 0, sizeof(@PREFIX@_@ENTITY@_Tlm));
+    CFE_MSG_Init(CFE_MSG_PTR(@PREFIX@_@ENTITY@_Tlm.TelemetryHeader),
+                 CFE_SB_ValueToMsgId(@PREFIX@_@ENTITY_UPPER@_TLM_MID), sizeof(@PREFIX@_@ENTITY@_Tlm));
+    @PREFIX@_@ENTITY@_Tlm.Payload.Status = CFE_STATUS_NOT_IMPLEMENTED;
+@DRIVER_INIT@
+    /* APPGEN: USER sensor.@NAME@.init */
+}
+
+/************************************************************************
+** Read the device, update validity and publish the sensor telemetry packet.
+*************************************************************************/
+int32 @PREFIX@_@ENTITY@_Read(void)
+{
+    @PREFIX@_@ENTITY@_Payload_t *Data = &@PREFIX@_@ENTITY@_Tlm.Payload;
+    @VALUE_TYPE@ Value = {0};
+
+    Data->ReadCounter++;
+    Data->Status = @PREFIX@_@ENTITY@_ReadValue(&Value);
+    Data->Valid = Data->Status == CFE_SUCCESS;
+
+    if (Data->Valid)
+    {
+        Data->Value = Value;
+@VALUE_EVENT@
+    }
+    else
+    {
+        Data->ErrorCounter++;
+        CFE_EVS_SendEvent(@PREFIX@_SENSOR_READ_ERR_EID, CFE_EVS_EventType_ERROR,
+                         "@NAME@ read failed: status=%ld", (long)Data->Status);
+    }
+
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(@PREFIX@_@ENTITY@_Tlm.TelemetryHeader));
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(@PREFIX@_@ENTITY@_Tlm.TelemetryHeader), true);
+    return Data->Status;
+}
+
+/************************************************************************
+** Return the current sample without duplicating sensor state.
+*************************************************************************/
+const @PREFIX@_@ENTITY@_Payload_t *@PREFIX@_@ENTITY@_GetData(void)
+{
+    return &@PREFIX@_@ENTITY@_Tlm.Payload;
+}

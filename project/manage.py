@@ -14,13 +14,45 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from project.model import (ProjectError, appgen, board_catalog, identifier, load_config,
                            mapped_manifests, protected_apps, read_manifests, safe_path,
-                           validate_config)
+                           validate_config, required_libraries, planned_project_files)
 
 
-def commit(root, files, check=False):
+def commit(root, files, check=False, library_names=(), mutable_libraries=()):
     """Validate and stage the complete plan before replacing any source file."""
-    protected = board_catalog()["protected_paths"] + [f"cFS/apps/{name}" for name in protected_apps(root)]
+    # App generation owns its library dependencies, while the native script
+    # owns application selection. Keep both in this same atomic transaction.
+    fragment = "cFS/sample_defs/generated/appgen_startup.scr"
+    startup = "cFS/sample_defs/cpu1_cfe_es_startup.scr"
+    if fragment in files and (startup in files or safe_path(root, startup).is_file()):
+        from project.appgen.native_startup import reconcile_generated_modules
+        previous = safe_path(root, fragment)
+        current = files[startup] if startup in files else safe_path(root, startup).read_text()
+        updated = reconcile_generated_modules(current, previous.read_text() if previous.exists() else "", files[fragment])
+        files = {**files, startup: updated}
+    if startup in files:
+        from project.cfs_config import module_limits_plan
+        files = {**files, **module_limits_plan(root, files)}
+    allowed_libraries = set()
+    for name in library_names:
+        identifier(name)
+        relative = "cFS/libs/" + name
+        if safe_path(root, relative).exists():
+            raise ProjectError(f"Library directory already exists: {name}")
+        allowed_libraries.add(relative)
+    for name in mutable_libraries:
+        identifier(name)
+        relative = "cFS/libs/" + name
+        directory = safe_path(root, relative)
+        if (directory / ".git").exists():
+            raise ProjectError(f"Cannot replace a library submodule: {name}")
+        allowed_libraries.add(relative)
+    from project.driver_catalog import load_catalog
+    allowed_libraries.update("cFS/libs/" + name for name in load_catalog(root))
+    selected = load_config(root)
+    protected = board_catalog(selected["board"], root)["protected_paths"] + [f"cFS/apps/{name}" for name in protected_apps(root)]
     for relative in files:
+        if any(relative.startswith(path + "/") for path in allowed_libraries):
+            continue
         if any(relative == path or relative.startswith(path + "/") for path in protected):
             raise ProjectError(f"Protected project path: {relative}")
     paths = {relative: safe_path(root, relative) for relative in files}
@@ -28,14 +60,18 @@ def commit(root, files, check=False):
         if path.exists() and not path.is_file():
             raise ProjectError(f"Expected a regular file: {path}")
     changed = [relative for relative, path in sorted(paths.items())
-               if not path.exists() or path.read_text() != files[relative]]
+               if (path.exists() if files[relative] is None else
+                   not path.exists() or path.read_text() != files[relative])]
     if check or not changed:
         return changed
-    previous, staged, replaced, directories = {}, {}, [], []
+    previous, modes, staged, replaced, directories = {}, {}, {}, [], []
     try:
         for relative in changed:
             path = paths[relative]
             previous[relative] = path.read_bytes() if path.exists() else None
+            modes[relative] = path.stat().st_mode & 0o777 if path.exists() else 0o644
+            if files[relative] is None:
+                continue
             missing = []
             parent = path.parent
             while not parent.exists():
@@ -51,7 +87,10 @@ def commit(root, files, check=False):
                 handle.write(files[relative])
             temporary.chmod(path.stat().st_mode & 0o777 if path.exists() else 0o644)
         for relative in changed:
-            staged[relative].replace(paths[relative])
+            if files[relative] is None:
+                paths[relative].unlink()
+            else:
+                staged[relative].replace(paths[relative])
             replaced.append(relative)
     except BaseException:
         for relative in reversed(replaced):
@@ -59,6 +98,7 @@ def commit(root, files, check=False):
                 paths[relative].unlink()
             else:
                 paths[relative].write_bytes(previous[relative])
+                paths[relative].chmod(modes[relative])
         raise
     finally:
         for temporary in staged.values():
@@ -66,6 +106,12 @@ def commit(root, files, check=False):
         for directory in reversed(directories):
             if directory.exists() and not any(directory.iterdir()):
                 directory.rmdir()
+    for relative in changed:
+        if files[relative] is None:
+            parent = paths[relative].parent
+            while parent != Path(root) and parent.is_dir() and not any(parent.iterdir()):
+                parent.rmdir()
+                parent = parent.parent
     return changed
 
 
@@ -92,8 +138,11 @@ def parser():
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument("--root", type=Path, default=ROOT)
     commands = cli.add_subparsers(dest="action", required=True)
-    for action in ("sync", "check", "devices", "list", "stamp", "check-build"):
+    for action in ("sync", "check", "devices", "list"):
         commands.add_parser(action)
+    for action in ("stamp", "check-build"):
+        command = commands.add_parser(action)
+        command.add_argument("--target", choices=("native", "qemu", "physical"))
     for action in ("add-app", "locate"):
         command = commands.add_parser(action)
         command.add_argument("app")
@@ -129,24 +178,32 @@ def parser():
 def run(args):
     root = args.root.resolve()
     if args.action == "devices":
-        return board_catalog(), 0
+        return board_catalog(load_config(root)["board"], root), 0
     config = copy.deepcopy(load_config(root))
     validate_config(root, config)
     generator = appgen(root)
     manifests = read_manifests(root, config)
+    from project.cfs_config import configured
+    if args.action in ("sync", "check") and not configured(root, config):
+        return {"changed": [], "deleted": [], "check": args.action == "check"}, 0
     if args.action in ("stamp", "check-build"):
-        signature = {"schema_version": 1, "board": config["board"], "os": config["os"],
-                     "apps": config["apps"], "manifests": mapped_manifests(config, manifests)}
-        relative = "cFS/build-rpi_linux/exe/cpu1/project.json"
+        target = getattr(args, 'target', None) or ('native' if config['board'] is None else 'qemu')
+        if (target == 'native') != (config['board'] is None):
+            raise ProjectError('Build target must match the selected native or board profile')
+        kind = 'native' if target == 'native' else 'flight'
+        signature = {"schema_version": 1, "target": kind, "board": config["board"], "os": config["os"],
+                     "apps": config["apps"], "libraries": required_libraries(config, root),
+                     "manifests": mapped_manifests(config, manifests, root)}
+        relative = f"project/generated/build-{kind}.json"
         path = safe_path(root, relative)
         if args.action == "check-build":
             if not path.is_file() or json.loads(path.read_text()) != signature:
                 raise ProjectError("cFS build configuration is missing or stale; run ./scripts/build-cfs.sh")
             return {"build": "current"}, 0
-        payload = safe_path(root, "cFS/build-rpi_linux/exe/cpu1")
-        if not safe_path(root, "cFS/build-rpi_linux/exe/cpu1/core-cpu1").is_file() or not (payload / "cf").is_dir():
+        payload = safe_path(root, f"cFS/build-{kind}/exe/cpu1")
+        if not (payload / "core-cpu1").is_file() or not (payload / "cf").is_dir():
             raise ProjectError("Build payload is missing; run ./scripts/build-cfs.sh before stamping")
-        plan = {"cFS/" + path: content for path, content in generator.planned_files(root / "cFS", manifests).items()}
+        plan = planned_project_files(root, config, manifests) if configured(root, config) else {}
         if commit(root, plan, check=True):
             raise ProjectError("Generated cFS configuration is stale; run ./scripts/build-cfs.sh")
         return {"changed": commit(root, {relative: json.dumps(signature, indent=2) + "\n"})}, 0
@@ -175,7 +232,7 @@ def run(args):
                 values[key] = int(value, 0)
             except ValueError as exc:
                 raise ProjectError("--value requires PROPERTY=INTEGER") from exc
-        config["devices"].append({"name": args.name, "id": args.id, "model": args.model,
+        config["devices"].append({"name": args.model, "id": args.id, "model": args.model,
                                   "bus": args.bus, "address": args.address, "values": values})
     elif args.action.startswith("add-"):
         registry = registry_app(config, args.app)
@@ -193,7 +250,7 @@ def run(args):
             device = next((device for device in config["devices"] if device["id"] == args.device), None)
             if device is None:
                 raise ProjectError(f"Unknown device: {args.device}")
-            catalog = board_catalog()
+            catalog = board_catalog(config["board"], root)
             driver = catalog["models"][device["model"]]["cfs_driver"]
             if driver is None:
                 raise ProjectError(f"No cFS driver is implemented for {device['model']}; QEMU simulation is available")
@@ -221,13 +278,22 @@ def run(args):
         registry = registry_app(config, args.app)
         registry["command_bindings"][args.name] = args.actuator
     validate_config(root, config, manifests, new_apps)
-    mapped_manifests(config, manifests)
-    plan = {"cFS/" + path: content for path, content in generator.planned_files(root / "cFS", manifests).items()}
+    mapped_manifests(config, manifests, root)
+    plan = planned_project_files(root, config, manifests)
     plan.update(extra)
+    if args.action == "add-app":
+        from project.appgen.native_startup import parse_startup, render_startup
+        from project.cfs_config import STARTUP, native_startup
+        current = plan[STARTUP] if STARTUP in plan else native_startup(root, config)
+        active, archived = parse_startup(current)
+        recipes, _ = parse_startup(plan['cFS/sample_defs/generated/appgen_startup.scr'])
+        active.append(next(entry for entry in recipes if entry.name == args.app))
+        plan[STARTUP] = render_startup(active, [entry for entry in archived if entry.name != args.app])
     if args.action not in ("sync", "check"):
         plan["project/config.json"] = json.dumps(config, indent=2) + "\n"
     changed = commit(root, plan, check=args.action == "check")
-    result = {"changed": changed, "check": args.action == "check"}
+    result = {"changed": changed, "deleted": [path for path, content in plan.items() if content is None],
+              "check": args.action == "check"}
     if args.action == "add-command":
         result["implementation"] = "Command handler is a user-code stub; use locate to implement it"
     return result, 1 if args.action == "check" and changed else 0

@@ -1,0 +1,13 @@
+{
+  "library": "tmp105_lib",
+  "device_pattern": "/dev/i2c-[0-9]+",
+  "max_address": 127,
+  "tokens": {
+    "VALUE_TYPE": "int32",
+    "VALUE_NOTE": "Latest successful sample in millidegrees Celsius.",
+    "VALUE_INCLUDE": "",
+    "DRIVER_INCLUDE": "#include \"tmp105_lib.h\"",
+    "DRIVER_STATE": "",
+    "DRIVER_INIT": ""
+  }
+}

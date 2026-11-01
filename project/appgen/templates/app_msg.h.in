@@ -1,0 +1,11 @@
+/**
+ * @file
+ *   Public command and telemetry definitions for @PREFIX@.
+ */
+#ifndef DEFAULT_@PREFIX@_MSG_H
+#define DEFAULT_@PREFIX@_MSG_H
+
+#include "@APP@_msgdefs.h"
+#include "@APP@_msgstruct.h"
+
+#endif /* DEFAULT_@PREFIX@_MSG_H */

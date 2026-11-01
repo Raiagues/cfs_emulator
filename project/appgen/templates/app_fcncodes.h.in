@@ -1,0 +1,10 @@
+/**
+ * @file
+ *   Public command function codes for @PREFIX@.
+ */
+#ifndef @PREFIX@_FCNCODES_H
+#define @PREFIX@_FCNCODES_H
+
+#include "@APP@_fcncode_values.h"
+
+#endif /* @PREFIX@_FCNCODES_H */

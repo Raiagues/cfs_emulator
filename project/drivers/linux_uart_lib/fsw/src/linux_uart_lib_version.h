@@ -1,0 +1,6 @@
+#ifndef LINUX_UART_LIB_VERSION_H
+#define LINUX_UART_LIB_VERSION_H
+
+#define LINUX_UART_LIB_VERSION "0.1.0"
+
+#endif

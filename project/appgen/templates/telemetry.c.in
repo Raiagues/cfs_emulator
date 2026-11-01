@@ -1,0 +1,40 @@
+/**
+ * @file
+ *   User telemetry publisher for @PREFIX@.
+ */
+
+#include "@APP@_@NAME@_tlm.h"
+#include "@APP@_msgids.h"
+
+#include <string.h>
+
+static @PREFIX@_@ENTITY@_Tlm_t @PREFIX@_@ENTITY@_Tlm;
+
+/************************************************************************
+** Fill the telemetry payload from application data.
+*************************************************************************/
+static void @PREFIX@_@ENTITY@_Fill(@PREFIX@_@ENTITY@_Payload_t *Payload)
+{
+    /* APPGEN: USER telemetry.@NAME@.fill */
+    (void)Payload;
+}
+
+/************************************************************************
+** Initialize the telemetry header once.
+*************************************************************************/
+void @PREFIX@_@ENTITY@_Init(void)
+{
+    memset(&@PREFIX@_@ENTITY@_Tlm, 0, sizeof(@PREFIX@_@ENTITY@_Tlm));
+    CFE_MSG_Init(CFE_MSG_PTR(@PREFIX@_@ENTITY@_Tlm.TelemetryHeader),
+                 CFE_SB_ValueToMsgId(@PREFIX@_@ENTITY_UPPER@_TLM_MID), sizeof(@PREFIX@_@ENTITY@_Tlm));
+}
+
+/************************************************************************
+** Update the payload, timestamp and publish the telemetry packet.
+*************************************************************************/
+CFE_Status_t @PREFIX@_@ENTITY@_Send(void)
+{
+    @PREFIX@_@ENTITY@_Fill(&@PREFIX@_@ENTITY@_Tlm.Payload);
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(@PREFIX@_@ENTITY@_Tlm.TelemetryHeader));
+    return CFE_SB_TransmitMsg(CFE_MSG_PTR(@PREFIX@_@ENTITY@_Tlm.TelemetryHeader), true);
+}

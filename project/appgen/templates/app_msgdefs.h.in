@@ -1,0 +1,20 @@
+/**
+ * @file
+ *   Standard command and telemetry payload definitions for @PREFIX@.
+ */
+#ifndef DEFAULT_@PREFIX@_MSGDEFS_H
+#define DEFAULT_@PREFIX@_MSGDEFS_H
+
+#include "common_types.h"
+
+/************************************************************************
+** Housekeeping reports command interface counters.
+** Sensor values and status belong to each sensor's own telemetry payload.
+*************************************************************************/
+typedef struct
+{
+    uint8 CommandCounter;
+    uint8 CommandErrorCounter;
+} @PREFIX@_HkTlm_Payload_t;
+
+#endif /* DEFAULT_@PREFIX@_MSGDEFS_H */

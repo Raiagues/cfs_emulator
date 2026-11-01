@@ -1,120 +1,110 @@
-# Raspberry Pi 4 cFS emulator
+# Flight Studio
 
-Run commands on your Linux PC, from this repository. Supported hosts:
-Ubuntu 24.04+ or Debian 13+, AMD64, with Git for the initial clone.
+Develop NASA cFS with a source editor, block diagrams, terminals and Ground Station.
+Run on the local computer, in QEMU or on a physical Raspberry Pi. The browser and
+command line use the same project and execution controls.
 
-## First use
+## Start
 
-```bash
-git clone https://github.com/Raiagues/cfs_emulator.git
+Linux host, Python 3.10+, CMake, Make and a C/C++ compiler.
+
+```sh
+git clone --recurse-submodules https://github.com/Raiagues/cfs_emulator.git
 cd cfs_emulator
-./scripts/setup.sh
+python3 -m venv .venv
+. .venv/bin/activate
+python3 -m pip install -r ground_station/requirements.txt
+./start
 ```
 
-Setup installs missing tools, configures SSH outside the repository, downloads
-the emulator image and builds cFS when needed. It requests sudo when necessary.
-If it adds your user to the Docker group, sign out and back in before continuing.
+Open **http://127.0.0.1:8765**. `./start --ui --port 8766` selects another port.
+The initial workspace shows CPU1 startup beside the mission architecture.
 
-```bash
-./boot.sh
-./run.sh
+The `cFS/` submodule uses the [official NASA repository](https://github.com/nasa/cFS).
+A new project has no selected board, sensors or custom drivers. **Native** builds
+and runs the upstream mission on the host:
+
+```sh
+./start --no-ui build
+./start --no-ui run
+./start --no-ui stop
 ```
 
-Boot shows the live Linux log and returns when SSH works. Run checks the build
-and sensors, loads the guest I2C interface, uploads cFS and follows its log.
-Look for `CFE_ES_Main entering OPERATIONAL state` and `tmp105: 23.500 C`.
-Ctrl+C closes the log view; the emulator and cFS keep running.
+`run` follows output; Ctrl+C closes the reader. Use `run --no-follow` to return
+immediately and `logs` to open output later.
 
-## Configuration
+## Board and emulator
 
-The project starts with `thermal_app` and a TMP105 on `i2c-bus.1`, address `0x48`.
-`project/config.json` stores hardware and app bindings. cFS app manifests store
-message IDs, commands and telemetry. Stock apps, including `sample_app`, are
-protected by the project commands.
+Select the board and operating system in the toolbar, then choose **Emulator** or
+**Board**. This prepares the native toolchain and mission configuration.
+
+```sh
+./start --no-ui profile --board raspi4b --os raspios
+./start --no-ui setup --target qemu
+./start --no-ui build --target qemu
+./start --no-ui boot --target qemu
+./start --no-ui run --target qemu
+./start --no-ui stop --target qemu
+./start --no-ui shutdown --target qemu
+```
+
+**Start QEMU + Linux** boots the emulator; **Stop QEMU** stops it. For a powered-on
+physical board, use **Connect board** or:
+
+```sh
+./start --no-ui connect --target physical --host raspberrypi.local
+./start --no-ui build --target physical
+./start --no-ui run --target physical
+./start --no-ui stop --target physical
+```
+
+## Edit and test
+
+Enter **Edit** in Architecture to create, configure, add or remove app/library
+blocks. Library chips show dependencies. Changes update native CMake, startup
+and scheduler sources; **Build cFS** compiles them.
+
+```sh
+./start --no-ui app new attitude_app --wakeup-hz 2 --hk-hz 0.25 --preview
+./start --no-ui app new attitude_app --wakeup-hz 2 --hk-hz 0.25
+./start --no-ui library new payload_lib
+./start --no-ui app disable attitude_app
+./start --no-ui app remove attitude_app
+./start --no-ui app delete attitude_app
+```
+
+**Disable** changes startup. **Remove** excludes a module from the mission while
+preserving its files. **Delete** also removes a project-created module's sources.
+
+In **Synthetic data**, Widgets and Code edit the sensor's Python configuration.
+Custom functions live in `sensors/<model>.py`. **Test code** prints samples in a
+terminal without starting QEMU:
+
+```sh
+./start --no-ui simulate-preview --model lsm303dlhc_mag
+python3 -m sensors.tmp105 --steps 5
+```
+
+**Terminal → + → New terminal** opens a shell in this repository.
 
 ```mermaid
 flowchart LR
-    Config["Project JSON"] --> Boot["boot.sh: create QEMU devices"]
-    Config --> Build["build-cfs.sh: sync and compile apps"]
-    Boot --> Run["run.sh: verify, upload and start cFS"]
-    Build --> Run
+    Source[Apps + libraries] --> Mission[CMake + startup + scheduler]
+    Mission --> Build[Build cFS]
+    Build --> Native[Native host]
+    Build --> QEMU[QEMU + Linux]
+    Build --> Board[Physical board]
+    Python[Sensor Python / Widgets] --> QMP[QMP]
+    QMP --> QEMU
+    Native --> Ground[Ground Station]
+    QEMU --> Ground
+    Board --> Ground
 ```
 
-```bash
-./scripts/project.sh devices
-./scripts/project.sh list
-./scripts/project.sh locate thermal_app
-```
+- [Interface](interface/README.md): editor, architecture and terminals.
+- [Project](project/README.md): apps, libraries, drivers and native configuration.
+- [Hardware](hardware/README.md): targets, build and deployment.
+- [Sensors](sensors/README.md): functions, widgets and synthetic samples.
+- [Ground Station](ground_station/README.md): commands and telemetry.
 
-See [project commands](project/README.md) to create apps, sensors, commands and
-telemetry. The same JSON and commands can be used by a future GUI.
-
-## Update and control
-
-After changing app code or configuration:
-
-```bash
-./scripts/build-cfs.sh
-./run.sh
-```
-
-Adding or changing QEMU devices also requires `./stop.sh` followed by `./boot.sh`
-before running cFS. The run command reports mismatches before stopping cFS.
-Changing sensor values does not require rebuilding or restarting.
-
-| Command | Action |
-| --- | --- |
-| `./scripts/project.sh values` | Apply sensor values from the JSON. |
-| `./scripts/project.sh simulate` | Run the Python sensor waveforms; Ctrl+C stops them. |
-| `./logs.sh` | Follow Linux boot and serial output. |
-| `./boot.sh --interactive` | Boot with a Linux terminal attached. |
-| `./stop.sh` | Shut down the emulator normally. |
-
-The guest disk persists in `board/`. No Docker rebuild is needed for app,
-sensor configuration or simulator changes. All scripts locate the repository.
-
-## Python sensor simulation
-
-With Linux and cFS running, open another terminal:
-
-```bash
-./scripts/project.sh simulate
-```
-
-To update only one configured device, select its ID from `project/config.json`:
-
-```bash
-./scripts/project.sh simulate tmp105 --interval 0.5
-./scripts/project.sh simulate tmp105 --interval 1 --steps 30
-```
-
-Edit [sensors/tmp105.py](sensors/tmp105.py) or
-[sensors/lsm303dlhc_mag.py](sensors/lsm303dlhc_mag.py) to change the simulation.
-Each file has amplitude/period constants and a `sample(elapsed_s, initial_values)`
-function. `elapsed_s` is real elapsed time on the PC, in seconds.
-The project's `values` supply each device's waveform center/axis offsets;
-model defaults apply to properties omitted from the JSON. Set amplitude to zero
-for a constant value, or replace `sample()` with your own Python calculation:
-
-```python
-def sample(elapsed_s, initial_values):
-    return {"temperature": 30000 if elapsed_s < 10 else 20000}
-```
-
-Return integer QEMU properties: `temperature` in millidegrees Celsius, or
-`mag-x`, `mag-y`, `mag-z` in thousandths of a microtesla. The runner validates
-every sample before sending a tick through QMP. TMP105 readings reach cFS through
-I²C; the default sensor resolution is 0.5 °C, so readings quantize the waveform.
-The magnetometer can be simulated in QEMU but does not yet have a cFS driver.
-
-Restart only `simulate` after editing Python; no build or emulator restart is
-needed. Ctrl+C (or `--steps`) leaves the last values in the sensors. Run
-`./scripts/project.sh values` to restore the JSON values. Run one simulator for
-the chosen devices at a time to avoid competing writers.
-
-`sensors/` contains only runtime code: model calculations, the simulation loop,
-hardware integration and the QMP client. Tests live in `tests/`:
-
-```bash
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
-```
+Use `./start --help` or `./start --no-ui COMMAND --help` for command options.

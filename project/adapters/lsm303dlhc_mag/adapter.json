@@ -1,0 +1,13 @@
+{
+  "library": "lsm303dlhc_mag_lib",
+  "device_pattern": "/dev/i2c-[0-9]+",
+  "max_address": 127,
+  "tokens": {
+    "VALUE_TYPE": "LSM303DLHC_MAG_Vector_t",
+    "VALUE_NOTE": "Latest successful X/Y/Z magnetic sample in milli-microtesla.",
+    "VALUE_INCLUDE": "#include \"lsm303dlhc_mag_lib.h\"",
+    "DRIVER_INCLUDE": "#include \"lsm303dlhc_mag_lib.h\"",
+    "DRIVER_STATE": "static bool @PREFIX@_@ENTITY@_Configured;",
+    "DRIVER_INIT": "    @PREFIX@_@ENTITY@_Configured = false;"
+  }
+}

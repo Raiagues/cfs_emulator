@@ -1,0 +1,10 @@
+#include "@NAME@_internal.h"
+#include "@NAME@_version.h"
+
+int32 @PREFIX@_Init(void)
+{
+    OS_printf("@NAME@ " @PREFIX@_VERSION " initialized.\n");
+    return CFE_SUCCESS;
+}
+
+/* Implement public functions here. This library has no task or schedule. */

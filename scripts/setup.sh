@@ -37,7 +37,7 @@ ssh_current() {
         ssh -G -F /dev/null -o StrictHostKeyChecking=accept-new localhost >/dev/null 2>&1
 }
 
-echo "[1/5] Checking Docker, Buildx and OpenSSH..."
+echo "[1/4] Checking Docker, Buildx and OpenSSH..."
 DOCKER_PACKAGES=(docker.io)
 BUILDX_PACKAGE=docker-buildx
 if [[ "$(dpkg-query -W -f='${Status}' docker-ce-cli 2>/dev/null)" == 'install ok installed' ]]; then
@@ -97,7 +97,7 @@ fi
 ssh -V
 
 # Initialize missing submodules over HTTPS, including nested GitHub repositories.
-echo "[2/5] Checking repository dependencies..."
+echo "[2/4] Checking repository dependencies..."
 SUBMODULES="$(git submodule status --recursive)"
 if grep -q '^-' <<< "$SUBMODULES"; then
     git -c url.https://github.com/.insteadOf=git@github.com: submodule update --init --recursive --progress
@@ -106,7 +106,7 @@ else
 fi
 
 # Keep this machine's SSH credentials outside the repository.
-echo "[3/5] Configuring the local SSH identity..."
+echo "[3/4] Configuring the local SSH identity..."
 SSH_DIR="$HOME/.ssh/cfs-emulator"
 mkdir -p "$SSH_DIR"
 chmod 0700 "$SSH_DIR"
@@ -133,7 +133,7 @@ EOF
 chmod 0600 "$SSH_DIR/config" "$SSH_DIR/id_ed25519"
 
 # Reuse the image, download it, or build locally if no published image is available.
-echo "[4/5] Preparing the emulator image..."
+echo "[4/4] Preparing the emulator image..."
 IMAGE="$(cat config/image)"
 if ! "${SUDO[@]}" docker image inspect "$IMAGE" >/dev/null 2>&1; then
     echo "Downloading the emulator image..."
@@ -145,12 +145,9 @@ else
     echo "Using the installed emulator image."
 fi
 
-echo "[5/5] Checking the ARM64 cFS build..."
-if [[ ! -f cFS/build-rpi_linux/exe/cpu1/core-cpu1 || ! -d cFS/build-rpi_linux/exe/cpu1/cf ]] || \
-    ! python3 project/manage.py check-build; then
-    "${SUDO[@]}" ./scripts/build-cfs.sh
-else
-    echo "Using cFS/build-rpi_linux/exe/cpu1."
+if [[ "$("${SUDO[@]}" docker image inspect --format '{{index .Config.Labels "org.flight-studio.qemu-lsm-signed"}}' "$IMAGE")" != 1 ]]; then
+    echo "Updating the emulator's signed sensor support..."
+    "${SUDO[@]}" ./scripts/build.sh --network=host
 fi
 
 echo "Setup complete. SSH is configured in $SSH_DIR."

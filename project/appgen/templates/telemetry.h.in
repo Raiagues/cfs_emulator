@@ -1,0 +1,25 @@
+/**
+ * @file
+ *   @NAME@ telemetry packet for @PREFIX@.
+ */
+#ifndef @PREFIX@_@ENTITY_UPPER@_TLM_H
+#define @PREFIX@_@ENTITY_UPPER@_TLM_H
+
+#include "cfe.h"
+
+typedef struct
+{
+    /* APPGEN: USER telemetry.@NAME@.payload */
+    uint32 Value;
+} @PREFIX@_@ENTITY@_Payload_t;
+
+typedef struct
+{
+    CFE_MSG_TelemetryHeader_t   TelemetryHeader;
+    @PREFIX@_@ENTITY@_Payload_t Payload;
+} @PREFIX@_@ENTITY@_Tlm_t;
+
+void @PREFIX@_@ENTITY@_Init(void);
+CFE_Status_t @PREFIX@_@ENTITY@_Send(void);
+
+#endif /* @PREFIX@_@ENTITY_UPPER@_TLM_H */

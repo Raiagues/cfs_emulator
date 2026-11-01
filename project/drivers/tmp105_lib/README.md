@@ -1,0 +1,11 @@
+# TMP105 sensor library
+
+Native cFE sensor library following `sample_lib`'s public-header/source layout.
+`TMP105_LIB_ReadTemperature` reads register `0x00` and converts its signed
+big-endian result into millidegrees Celsius. The output remains unchanged after
+a failed read. Bus/device path and seven-bit address come from the caller.
+
+The CMake dependency and C calls point to `linux_i2c_lib`, which owns Linux
+`I2C_RDWR`. The sensor library owns register selection and temperature decoding.
+`TMP105_LIB_Init` opens no hardware. Adding a TMP105 to the project includes this
+library even before an application uses it.

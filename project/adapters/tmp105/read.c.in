@@ -1,0 +1,2 @@
+    return TMP105_LIB_ReadTemperature(@PREFIX@_@ENTITY_UPPER@_DEVICE,
+                                      @PREFIX@_@ENTITY_UPPER@_ADDRESS, Value);

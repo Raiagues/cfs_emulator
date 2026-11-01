@@ -1,0 +1,10 @@
+/**
+ * @file
+ *   Performance monitor ID for @PREFIX@.
+ */
+#ifndef DEFAULT_@PREFIX@_PERFIDS_H
+#define DEFAULT_@PREFIX@_PERFIDS_H
+
+#define @PREFIX@_PERF_ID @PERF_ID@
+
+#endif /* DEFAULT_@PREFIX@_PERFIDS_H */

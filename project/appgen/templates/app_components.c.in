@@ -1,0 +1,24 @@
+/**
+ * @file
+ *   Registered sensor and telemetry calls for @PREFIX@.
+ */
+
+#include "@APP@_components.h"
+@COMPONENT_INCLUDES@
+
+/************************************************************************
+** Initialize registered components, then invoke user initialization.
+*************************************************************************/
+CFE_Status_t @PREFIX@_ComponentsInit(void)
+{
+@COMPONENT_INIT@
+    return @PREFIX@_UserInit();
+}
+
+/************************************************************************
+** Read sensors, invoke application logic and publish custom telemetry.
+*************************************************************************/
+void @PREFIX@_ComponentsWakeup(void)
+{
+@COMPONENT_WAKEUP@
+}

@@ -1,0 +1,8 @@
+#ifndef @PREFIX@_INTERNAL_H
+#define @PREFIX@_INTERNAL_H
+
+#include "@NAME@.h"
+
+/* Private declarations shared by this library's implementation files. */
+
+#endif

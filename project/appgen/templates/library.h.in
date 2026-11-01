@@ -1,0 +1,11 @@
+#ifndef @PREFIX@_H
+#define @PREFIX@_H
+
+#include "cfe.h"
+
+/* Called once by cFE when its CFE_LIB startup entry is loaded. */
+int32 @PREFIX@_Init(void);
+
+/* Add public functions here; applications include this header. */
+
+#endif

@@ -1,0 +1,35 @@
+/**
+ * @file
+ *   @NAME@ sensor data and public interface for @PREFIX@.
+ */
+#ifndef @PREFIX@_@ENTITY_UPPER@_SENSOR_H
+#define @PREFIX@_@ENTITY_UPPER@_SENSOR_H
+
+#include "cfe.h"
+@VALUE_INCLUDE@
+
+/************************************************************************
+** Sensor telemetry payload. This is also the sensor's only stored state.
+*************************************************************************/
+typedef struct
+{
+    /* APPGEN: USER sensor.@NAME@.payload */
+    @VALUE_TYPE@ Value;  /**< @VALUE_NOTE@ */
+    int32  Status;       /**< Status of the latest read. */
+    uint32 ReadCounter;  /**< Number of attempted reads. */
+    uint32 ErrorCounter; /**< Number of failed reads. */
+    uint8  Valid;        /**< Nonzero only when the latest read succeeded. */
+    uint8  Reserved[3];
+} @PREFIX@_@ENTITY@_Payload_t;
+
+typedef struct
+{
+    CFE_MSG_TelemetryHeader_t   TelemetryHeader;
+    @PREFIX@_@ENTITY@_Payload_t Payload;
+} @PREFIX@_@ENTITY@_Tlm_t;
+
+void @PREFIX@_@ENTITY@_Init(void);
+int32 @PREFIX@_@ENTITY@_Read(void);
+const @PREFIX@_@ENTITY@_Payload_t *@PREFIX@_@ENTITY@_GetData(void);
+
+#endif /* @PREFIX@_@ENTITY_UPPER@_SENSOR_H */

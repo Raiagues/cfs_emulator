@@ -1,0 +1,12 @@
+    if (!@PREFIX@_@ENTITY@_Configured)
+    {
+        int32 Status = LSM303DLHC_MAG_Configure(@PREFIX@_@ENTITY_UPPER@_DEVICE,
+                                               @PREFIX@_@ENTITY_UPPER@_ADDRESS);
+        if (Status != CFE_SUCCESS)
+        {
+            return Status;
+        }
+        @PREFIX@_@ENTITY@_Configured = true;
+    }
+    return LSM303DLHC_MAG_Read(@PREFIX@_@ENTITY_UPPER@_DEVICE,
+                              @PREFIX@_@ENTITY_UPPER@_ADDRESS, Value);

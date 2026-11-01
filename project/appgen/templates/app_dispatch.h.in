@@ -1,0 +1,14 @@
+/**
+ * @file
+ *   Command dispatch prototypes for @PREFIX@.
+ */
+#ifndef @PREFIX@_DISPATCH_H
+#define @PREFIX@_DISPATCH_H
+
+#include "cfe.h"
+
+bool @PREFIX@_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength);
+void @PREFIX@_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr);
+void @PREFIX@_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr);
+
+#endif /* @PREFIX@_DISPATCH_H */

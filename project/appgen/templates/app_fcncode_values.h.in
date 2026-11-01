@@ -1,0 +1,12 @@
+/**
+ * @file
+ *   Command function code values for @PREFIX@.
+ */
+#ifndef DEFAULT_@PREFIX@_FCNCODE_VALUES_H
+#define DEFAULT_@PREFIX@_FCNCODE_VALUES_H
+
+#define @PREFIX@_NOOP_CC           0
+#define @PREFIX@_RESET_COUNTERS_CC 1
+@COMMAND_CODES@
+
+#endif /* DEFAULT_@PREFIX@_FCNCODE_VALUES_H */

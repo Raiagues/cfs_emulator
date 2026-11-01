@@ -1,18 +1,30 @@
-"""TMP105 waveform. Edit the constants or sample() to change the simulation."""
+"""Temperature in °C. Configuration and waveform for the shared runner."""
 
 import math
+from sensors.schema import Sensor, Signal
 
-
-DEVICE = "tmp105"
-DEFAULT_C = 25.0
 AMPLITUDE_C = 5.0
 PERIOD_SECONDS = 30.0
 
 
-def sample(elapsed_s, initial_values):
-    """Return QEMU properties in millidegrees Celsius; values sets the center."""
-    if not math.isfinite(PERIOD_SECONDS) or PERIOD_SECONDS <= 0:
-        raise ValueError("PERIOD_SECONDS must be finite and positive")
-    center = initial_values.get("temperature", round(DEFAULT_C * 1000)) / 1000
-    temperature = center + AMPLITUDE_C * math.sin(2 * math.pi * elapsed_s / PERIOD_SECONDS)
-    return {"temperature": round(temperature * 1000)}
+SIGNALS = {"temperature": {"function": "script"}}
+
+
+def configure(device):
+    return Sensor.from_device(device, (Signal("temperature", "°C", 1000),))
+
+
+def sample(seconds, initial_c):
+    """Return one temperature in °C; seconds is time since this run started."""
+    angle = 2 * math.pi * seconds / PERIOD_SECONDS
+    return initial_c + AMPLITUDE_C * math.sin(angle)
+
+
+def hold(seconds, initial):
+    """Edit this function for a custom temperature signal."""
+    return initial
+
+
+if __name__ == "__main__":
+    from sensors.session import sensor_main
+    sensor_main(__file__)

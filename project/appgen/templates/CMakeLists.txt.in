@@ -1,0 +1,18 @@
+project(CFE_@PREFIX@ C)
+
+if(CFE_EDS_ENABLED)
+    message(FATAL_ERROR "@APP@ uses the non-EDS sample_app message format; EDS is not supported by appgen.")
+endif()
+
+# Generated application configuration. Application and component sources are explicit.
+set(APP_SRC_FILES
+# APPGEN BEGIN SOURCES
+@SOURCES@
+# APPGEN END SOURCES
+)
+
+add_cfe_app(@APP@ ${APP_SRC_FILES})
+target_include_directories(@APP@ PUBLIC fsw/inc PRIVATE fsw/src)
+# APPGEN BEGIN DEPENDENCIES
+@DEPENDENCIES@
+# APPGEN END DEPENDENCIES

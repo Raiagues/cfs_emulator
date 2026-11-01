@@ -1,0 +1,6 @@
+#ifndef TMP105_LIB_VERSION_H
+#define TMP105_LIB_VERSION_H
+
+#define TMP105_LIB_VERSION "0.1.0"
+
+#endif

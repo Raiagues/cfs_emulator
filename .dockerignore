@@ -3,6 +3,7 @@
 !cfs.service
 !scripts/
 !scripts/emulator.sh
+!scripts/qemu-lsm303dlhc-signed.patch
 !config/
 !config/10-usb.network
 !config/serial-console.conf

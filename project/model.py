@@ -12,6 +12,9 @@ class ProjectError(ValueError):
     pass
 
 
+PROTECTED_PATHS = ["cFS/cfe", "cFS/osal", "cFS/psp", "cFS/libs", "cFS/tools", "cFS/.git"]
+
+
 def safe_path(root, relative):
     relative = Path(relative)
     if relative.is_absolute() or ".." in relative.parts:
@@ -35,13 +38,68 @@ def fields(value, expected, label):
         raise ProjectError(f"{label} fields must be: {', '.join(sorted(expected))}")
 
 
-def board_catalog():
-    return json.loads(safe_path(Path(__file__).parent, "boards/raspi4b.json").read_text())
+def board_catalog(board=None, root=None):
+    """Read an explicit capability catalog, defaulting to this project's board."""
+    directory = Path(root) / "project" if root is not None else Path(__file__).parent
+    if board is None:
+        selection = safe_path(directory, "config.json")
+        if selection.is_file():
+            board = json.loads(selection.read_text()).get("board")
+        if board is None:
+            return {"board": None, "name": "Native", "os": [], "os_labels": {}, "targets": ["native"],
+                    "buses": {}, "models": {}, "protected_paths": PROTECTED_PATHS, "protected_apps": []}
+    identifier(board)
+    path = safe_path(directory, f"boards/{board}.json")
+    if not path.is_file():
+        raise ProjectError(f"No platform capability catalog for board: {board}")
+    catalog = json.loads(path.read_text())
+    if catalog.get("board") != board:
+        raise ProjectError(f"Board catalog identifier differs from its filename: {board}")
+    catalog.setdefault("protected_paths", PROTECTED_PATHS)
+    catalog.setdefault("protected_apps", [])
+    return catalog
 
 
-def validate_values(device, values):
+def board_catalogs(root=None):
+    directory = Path(root) / "project" if root is not None else Path(__file__).parent
+    return [board_catalog(path.stem, root) for path in sorted((directory / "boards").glob("*.json"))]
+
+
+def required_libraries(config, root=None, manifests=None, excluded=None, selected=None):
+    """Libraries demanded by this configuration, ordered by native dependencies."""
+    from project.driver_catalog import requirements
+    root = Path(root) if root is not None else Path(__file__).resolve().parents[1]
+    return requirements(root, config, manifests, excluded, selected)[0]
+
+
+def planned_project_files(root, config, manifests, excluded=None, selected=None):
+    """Plan native cFS configuration and external generator metadata together."""
+    from project.driver_catalog import requirements, plan_drivers, selection
+    root = Path(root)
+    generator = appgen(root)
+    if excluded is None:
+        excluded = selection(root)["removed"]
+    # New sensor adapters declare dependencies in their native CMake source.
+    sources = {f"cFS/apps/{app['name']}/CMakeLists.txt": generator.merged_app_cmake(root / "cFS", app)
+               for app in manifests}
+    libraries = requirements(root, config, manifests, excluded, selected, sources)[0]
+    from project.cfs_config import bootstrap_plan
+    files = bootstrap_plan(root, config)
+    files.update({"cFS/" + path: content for path, content in generator.planned_files(
+        root / "cFS", manifests, libraries=libraries, excluded=excluded).items()})
+    files.update(plan_drivers(root, libraries))
+    for manifest in manifests:
+        name = manifest["name"]
+        files[f"project/apps/{name}.json"] = json.dumps(manifest, indent=2) + "\n"
+        legacy = f"cFS/apps/{name}/app.json"
+        if safe_path(root, legacy).exists():
+            files[legacy] = None
+    return files
+
+
+def validate_values(device, values, catalog=None):
     """Check static and simulated values against the same QEMU property limits."""
-    properties = board_catalog()["models"][device["model"]]["properties"]
+    properties = (catalog or board_catalog())["models"][device["model"]]["properties"]
     if not isinstance(values, dict):
         raise ProjectError(f"Values for {device['id']} must be an object")
     for key, value in values.items():
@@ -50,16 +108,20 @@ def validate_values(device, values):
             raise ProjectError(f"Unsupported value for {device['id']}.{key}; run ./scripts/project.sh devices")
 
 
-def validate_hardware(config):
+def validate_hardware(config, root=None):
     """Validate configuration without needing a cFS checkout (guest runtime)."""
     fields(config, {"schema_version", "board", "os", "devices", "apps"}, "project config")
-    catalog = board_catalog()
+    catalog = board_catalog(config["board"], root)
     if type(config["schema_version"]) is not int or config["schema_version"] != 1:
         raise ProjectError("Unsupported project schema_version; expected 1")
-    if config["board"] != catalog["board"] or config["os"] not in catalog["os"]:
-        raise ProjectError("Supported board/OS: raspi4b/raspios; run ./scripts/project.sh devices")
     if not isinstance(config["devices"], list) or not isinstance(config["apps"], list):
         raise ProjectError("devices and apps must be lists")
+    if config["board"] is None:
+        if config["os"] is not None or config["devices"]:
+            raise ProjectError("Select a board and operating system before adding hardware")
+        return
+    if config["board"] != catalog["board"] or config["os"] not in catalog["os"]:
+        raise ProjectError(f"Unsupported OS for {catalog['board']}; supported: {', '.join(catalog['os'])}")
     ids, addresses = set(), set()
     for device in config["devices"]:
         fields(device, {"name", "id", "model", "bus", "address", "values"}, "device")
@@ -77,12 +139,14 @@ def validate_hardware(config):
             raise ProjectError(f"Duplicate device ID or I2C bus/address: {device['id']}")
         ids.add(device["id"])
         addresses.add(address)
-        validate_values(device, device["values"])
+        validate_values(device, device["values"], catalog)
 
 
 def load_config(root):
-    config = json.loads(safe_path(root, "project/config.json").read_text())
-    validate_hardware(config)
+    path = safe_path(root, "project/config.json")
+    config = (json.loads(path.read_text()) if path.is_file() else
+              {"schema_version": 1, "board": None, "os": None, "devices": [], "apps": []})
+    validate_hardware(config, root)
     return config
 
 
@@ -92,7 +156,7 @@ def topology(config):
 
 
 def appgen(root):
-    source = safe_path(root, "cFS/tools/appgen/appgen.py")
+    source = safe_path(root, "project/appgen/appgen.py")
     spec = importlib.util.spec_from_file_location("project_appgen", source)
     module = importlib.util.module_from_spec(spec)
     # Read-only commands must not create __pycache__ in the source checkout.
@@ -102,7 +166,8 @@ def appgen(root):
 
 
 def protected_apps(root):
-    protected = set(board_catalog()["protected_apps"])
+    config = load_config(root)
+    protected = set(board_catalog(config["board"], root)["protected_apps"])
     modules = safe_path(root, "cFS/.gitmodules")
     if modules.exists():
         parser = configparser.ConfigParser()
@@ -118,16 +183,16 @@ def read_manifests(root, config):
     """Reject unregistered/stock app manifests before appgen can touch them."""
     registered = {app.get("name") for app in config["apps"] if isinstance(app, dict)}
     protected = protected_apps(root)
-    for path in safe_path(root, "cFS/apps").glob("*/app.json"):
+    for path in safe_path(root, "project/apps").glob("*.json"):
         safe_path(root, path.relative_to(root))
-        if path.parent.name in protected or path.parent.name not in registered:
-            raise ProjectError(f"Protected or unregistered app: {path.parent.name}")
+        if path.stem in protected or path.stem not in registered:
+            raise ProjectError(f"Protected or unregistered app: {path.stem}")
     return appgen(root).read_manifests(safe_path(root, "cFS"))
 
 
 def validate_config(root, config, manifests=None, new_apps=()):
-    validate_hardware(config)
-    catalog = board_catalog()
+    validate_hardware(config, root)
+    catalog = board_catalog(config["board"], root)
     protected = protected_apps(root)
     names = set()
     devices = {device["id"]: device for device in config["devices"]}
@@ -142,7 +207,7 @@ def validate_config(root, config, manifests=None, new_apps=()):
                 raise ProjectError(f"{app['name']}.{key} must be an object")
         if app["name"] not in new_apps:
             path = safe_path(root, f"cFS/apps/{app['name']}/CMakeLists.txt")
-            if not path.is_file() or "Generated from app.json." not in path.read_text():
+            if not path.is_file() or not any(marker in path.read_text() for marker in ("Generated application configuration.", "Generated from app.json.")):
                 raise ProjectError(f"App was not created by appgen: {app['name']}")
     if manifests is None:
         manifests = read_manifests(root, config)
@@ -175,9 +240,9 @@ def validate_config(root, config, manifests=None, new_apps=()):
                 raise ProjectError("No actuator model is currently supported; command handlers remain user code")
 
 
-def mapped_manifests(config, manifests):
+def mapped_manifests(config, manifests, root=None):
     """Apply hardware locations to manifests, keeping all message IDs intact."""
-    catalog = board_catalog()
+    catalog = board_catalog(config["board"], root)
     devices = {device["id"]: device for device in config["devices"]}
     apps = {app["name"]: app for app in manifests}
     for registry in config["apps"]:

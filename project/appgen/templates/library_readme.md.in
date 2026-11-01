@@ -1,0 +1,10 @@
+# @NAME@
+
+cFE library following the local `libs/sample_lib` layout. Its public interface is
+`fsw/public_inc/@NAME@.h`; implementation and private headers are in `fsw/src`.
+
+`@PREFIX@_Init` runs from the native `CFE_LIB` startup entry. A library has no
+application task and receives no scheduler entries. Calling apps declare
+`add_cfe_app_dependency(app_name @NAME@)` in their CMake configuration.
+
+These files are created once and remain editable; app generation preserves them.

@@ -1,0 +1,3 @@
+# Official cFS-GroundSystem runtime dependencies
+PyQt5>=5.10,<6
+pyzmq>=22,<28

@@ -1,23 +1,7 @@
 {
   "schema_version": 1,
-  "board": "raspi4b",
-  "os": "raspios",
-  "devices": [
-    {
-      "name": "Board temperature",
-      "id": "tmp105",
-      "model": "tmp105",
-      "bus": "i2c-bus.1",
-      "address": 72,
-      "values": {"temperature": 23500}
-    }
-  ],
-  "apps": [
-    {
-      "name": "thermal_app",
-      "sensors": {"tmp105": "tmp105"},
-      "telemetry_bindings": {},
-      "command_bindings": {}
-    }
-  ]
+  "board": null,
+  "os": null,
+  "devices": [],
+  "apps": []
 }

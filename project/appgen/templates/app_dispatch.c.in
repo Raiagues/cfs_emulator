@@ -1,0 +1,117 @@
+/**
+ * @file
+ *   Software Bus and command dispatch for @PREFIX@.
+ */
+
+/*
+** Include Files:
+*/
+#include "@APP@.h"
+#include "@APP@_dispatch.h"
+#include "@APP@_cmds.h"
+#include "@APP@_components.h"
+#include "@APP@_eventids.h"
+#include "@APP@_fcncodes.h"
+@COMMAND_INCLUDES@
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+/*                                                                            */
+/* Verify command packet length                                               */
+/*                                                                            */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+bool @PREFIX@_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength)
+{
+    CFE_MSG_Size_t ActualLength = 0;
+
+    if (CFE_MSG_GetSize(MsgPtr, &ActualLength) != CFE_SUCCESS || ActualLength != ExpectedLength)
+    {
+        @PREFIX@_Data.CommandErrorCounter++;
+        CFE_EVS_SendEvent(@PREFIX@_CMD_LEN_ERR_EID, CFE_EVS_EventType_ERROR,
+                         "Invalid Msg length: Len = %u, Expected = %u",
+                         (unsigned int)ActualLength, (unsigned int)ExpectedLength);
+        return false;
+    }
+
+    return true;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+/*                                                                            */
+/* Process ground commands                                                    */
+/*                                                                            */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+void @PREFIX@_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
+{
+    CFE_MSG_FcnCode_t CommandCode = 0;
+
+    if (CFE_MSG_GetFcnCode(&SBBufPtr->Msg, &CommandCode) != CFE_SUCCESS)
+    {
+        @PREFIX@_Data.CommandErrorCounter++;
+        return;
+    }
+
+    switch (CommandCode)
+    {
+        case @PREFIX@_NOOP_CC:
+            if (@PREFIX@_VerifyCmdLength(&SBBufPtr->Msg, sizeof(@PREFIX@_NoopCmd_t)))
+            {
+                @PREFIX@_NoopCmd((const @PREFIX@_NoopCmd_t *)SBBufPtr);
+            }
+            break;
+
+        case @PREFIX@_RESET_COUNTERS_CC:
+            if (@PREFIX@_VerifyCmdLength(&SBBufPtr->Msg, sizeof(@PREFIX@_ResetCountersCmd_t)))
+            {
+                @PREFIX@_ResetCountersCmd((const @PREFIX@_ResetCountersCmd_t *)SBBufPtr);
+            }
+            break;
+
+@COMMAND_CASES@
+        default:
+            @PREFIX@_Data.CommandErrorCounter++;
+            CFE_EVS_SendEvent(@PREFIX@_CC_ERR_EID, CFE_EVS_EventType_ERROR,
+                             "Invalid ground command code: CC = %u", (unsigned int)CommandCode);
+            break;
+    }
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+/*                                                                            */
+/* Process a packet received on the command pipe                              */
+/*                                                                            */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+void @PREFIX@_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
+{
+    CFE_SB_MsgId_t MsgId = CFE_SB_INVALID_MSG_ID;
+
+    if (CFE_MSG_GetMsgId(&SBBufPtr->Msg, &MsgId) != CFE_SUCCESS)
+    {
+        @PREFIX@_Data.CommandErrorCounter++;
+        return;
+    }
+
+    if (CFE_SB_MsgId_Equal(MsgId, CFE_SB_ValueToMsgId(@PREFIX@_CMD_MID)))
+    {
+        @PREFIX@_ProcessGroundCommand(SBBufPtr);
+    }
+    else if (CFE_SB_MsgId_Equal(MsgId, CFE_SB_ValueToMsgId(@PREFIX@_SEND_HK_MID)))
+    {
+        if (@PREFIX@_VerifyCmdLength(&SBBufPtr->Msg, sizeof(@PREFIX@_SendHkCmd_t)))
+        {
+            @PREFIX@_SendHkCmd((const @PREFIX@_SendHkCmd_t *)SBBufPtr);
+        }
+    }
+    else if (CFE_SB_MsgId_Equal(MsgId, CFE_SB_ValueToMsgId(@PREFIX@_WAKEUP_MID)))
+    {
+        if (@PREFIX@_VerifyCmdLength(&SBBufPtr->Msg, sizeof(@PREFIX@_WakeupCmd_t)))
+        {
+            @PREFIX@_ComponentsWakeup();
+        }
+    }
+    else
+    {
+        @PREFIX@_Data.CommandErrorCounter++;
+        CFE_EVS_SendEvent(@PREFIX@_MID_ERR_EID, CFE_EVS_EventType_ERROR,
+                         "Invalid command packet: MID = 0x%X", (unsigned int)CFE_SB_MsgIdToValue(MsgId));
+    }
+}

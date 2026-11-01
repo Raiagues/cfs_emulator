@@ -2,3 +2,5 @@ board/
 logs/
 .ssh/
 __pycache__/
+.venv/
+project/generated/build*.json

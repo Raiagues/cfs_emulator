@@ -1,0 +1,18 @@
+/**
+ * @file
+ *   Event IDs for @PREFIX@.
+ */
+#ifndef @PREFIX@_EVENTIDS_H
+#define @PREFIX@_EVENTIDS_H
+
+#define @PREFIX@_INIT_INF_EID         1
+#define @PREFIX@_CC_ERR_EID           2
+#define @PREFIX@_NOOP_INF_EID         3
+#define @PREFIX@_RESET_INF_EID        4
+#define @PREFIX@_MID_ERR_EID          5
+#define @PREFIX@_CMD_LEN_ERR_EID      6
+#define @PREFIX@_PIPE_ERR_EID         7
+#define @PREFIX@_SENSOR_READ_ERR_EID  8
+#define @PREFIX@_SENSOR_VALUE_INF_EID 9
+
+#endif /* @PREFIX@_EVENTIDS_H */

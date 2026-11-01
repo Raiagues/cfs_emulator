@@ -3,7 +3,7 @@ FROM debian:trixie-slim AS cfs-builder
 # Cross-compile cFS without installing a toolchain on the host PC.
 RUN apt-get update && apt-get install -y --no-install-recommends build-essential cmake gcc-aarch64-linux-gnu g++-aarch64-linux-gnu git && rm -rf /var/lib/apt/lists/*
 WORKDIR /cFS
-CMD ["make", "-j4", "ARCH_rpi_linux=aarch64-linux-gnu", "BUILDTYPE=release", "O=build-rpi_linux/emulator", "DESTDIR=/cFS/build-rpi_linux", "rpi_linux.prep", "rpi_linux.install"]
+CMD ["bash"]
 
 FROM debian:trixie-slim AS base
 
@@ -62,7 +62,32 @@ RUN qemu-img convert -f raw -O qcow2 /opt/raspi-os/raspios.img /opt/raspi-os/ras
         ln-sf /dev/null /etc/systemd/system/ssh.socket : \
         ln-sf /usr/lib/systemd/system/ssh.service /etc/systemd/system/multi-user.target.wants/ssh.service
 
+FROM base AS qemu-builder
+
+# Preserve signed magnetic readings in QEMU's LSM303DLHC QOM properties.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential pkg-config ninja-build python3-venv \
+    libglib2.0-dev libpixman-1-dev libslirp-dev libfdt-dev zlib1g-dev patch && \
+    rm -rf /var/lib/apt/lists/*
+RUN curl -fL https://download.qemu.org/qemu-11.1.2.tar.xz -o /tmp/qemu.tar.xz && \
+    echo "731b5681e4bb18be313231579b8efd0296c5b015fa36dc533874b639ba838016  /tmp/qemu.tar.xz" | sha256sum -c - && \
+    mkdir /tmp/qemu && tar -xJf /tmp/qemu.tar.xz -C /tmp/qemu --strip-components=1 && \
+    rm /tmp/qemu.tar.xz
+COPY scripts/qemu-lsm303dlhc-signed.patch /tmp/qemu-signed.patch
+RUN apt-get update && apt-get install -y --no-install-recommends python3-setuptools python3-wheel && \
+    rm -rf /var/lib/apt/lists/*
+RUN cd /tmp/qemu && patch -p1 < /tmp/qemu-signed.patch && \
+    mkdir build && cd build && \
+    ../configure --prefix=/usr --target-list=aarch64-softmmu --enable-slirp \
+        --disable-docs --disable-tools --disable-guest-agent --disable-user \
+        --disable-werror --disable-download && \
+    ninja -j4 qemu-system-aarch64 && \
+    install -D -s -m755 qemu-system-aarch64 /output/qemu-system-aarch64
+
 FROM base
+
+LABEL org.flight-studio.qemu-lsm-signed="1"
+COPY --from=qemu-builder /output/qemu-system-aarch64 /usr/bin/qemu-system-aarch64
 
 # Keep only the prepared disk and boot files in the distributed image.
 COPY --from=prepare /opt/raspi-os/raspios.qcow2 \

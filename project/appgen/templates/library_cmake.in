@@ -1,0 +1,5 @@
+project(CFE_@PREFIX@ C)
+
+# Native cFE library layout follows libs/sample_lib.
+add_cfe_app(@NAME@ fsw/src/@NAME@.c)
+target_include_directories(@NAME@ PUBLIC fsw/public_inc)

@@ -1,0 +1,17 @@
+#ifndef LSM303DLHC_MAG_LIB_INTERNAL_H
+#define LSM303DLHC_MAG_LIB_INTERNAL_H
+
+#include "lsm303dlhc_mag_lib.h"
+
+enum LSM303DLHC_MAG_Register
+{
+    LSM303DLHC_MAG_CONFIG_A = 0x00,
+    LSM303DLHC_MAG_CONFIG_B = 0x01,
+    LSM303DLHC_MAG_MODE = 0x02,
+    LSM303DLHC_MAG_OUTPUT_X_HIGH = 0x03,
+    LSM303DLHC_MAG_STATUS = 0x09
+};
+
+static int32 LSM303DLHC_MAG_Decode(uint8 High, uint8 Low);
+
+#endif

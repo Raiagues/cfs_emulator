@@ -1,0 +1,23 @@
+/**
+ * @file
+ *   User application logic for @PREFIX@.
+ */
+
+#include "@APP@_user.h"
+
+/************************************************************************
+** User initialization. Called once after component initialization.
+*************************************************************************/
+CFE_Status_t @PREFIX@_UserInit(void)
+{
+    /* APPGEN: USER app.init */
+    return CFE_SUCCESS;
+}
+
+/************************************************************************
+** User periodic processing. Called by the scheduler wakeup.
+*************************************************************************/
+void @PREFIX@_UserWakeup(void)
+{
+    /* APPGEN: USER app.wakeup */
+}

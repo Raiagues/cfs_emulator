@@ -1,0 +1,23 @@
+/* Workbench canvas and manipulation controls. */
+.board-stage {position:relative;overflow:hidden;isolation:isolate}
+.board-stage canvas {position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+.board-stage .model-labels {position:absolute;inset:0;pointer-events:none}
+.board-stage .model-label {position:absolute;pointer-events:auto;touch-action:none;cursor:move;font:10px var(--mono,monospace);letter-spacing:0;color:#a8b4bf;background:#20242b;border:1px solid #3e4753;border-radius:4px;padding:6px 9px;line-height:1.25;max-width:calc(100% - 30px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.board-stage .model-label.active {color:#e3c6a2;border-color:#a88c68;background:#302b25;box-shadow:0 2px 8px #1014194d}
+.board-stage .model-label:hover {border-color:#c7ac88}
+.board-view-controls {position:absolute;bottom:19px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:2px;z-index:2;padding:4px;border:1px solid #3b424b;border-radius:7px;background:#20242bea;box-shadow:0 4px 16px #10131930}
+.board-view-controls button {display:inline-flex;justify-content:center;align-items:center;min-width:30px;height:29px;padding:0 7px;background:transparent;border:0;border-radius:4px;color:#97a5b4;cursor:pointer}
+.board-view-controls button:hover {background:#30363f;color:#dce2e8}
+.board-view-controls button:focus-visible,.board-stage .model-label:focus-visible {outline:1px solid #c5aa85;outline-offset:2px}
+.board-mode-switch {display:flex;gap:2px;border-right:1px solid #3a414b;padding-right:5px;margin-right:3px}
+.board-mode-switch button {font:600 10px var(--mono,monospace);min-width:34px;letter-spacing:.3px}
+.board-mode-switch button.active {background:#bda584;color:#1c2026}
+.board-drag-hint {position:absolute;bottom:62px;width:100%;text-align:center;font-size:9px;color:#778390;pointer-events:none;letter-spacing:.1px}
+@media (max-width:600px) {.board-stage .model-label{font-size:9px;padding:5px 7px}.board-view-controls{bottom:13px}.board-drag-hint{bottom:56px;font-size:8px}}
+
+/* Details appear only after a scene selection and never resize the canvas. */
+.cad-details{position:absolute;left:18px;bottom:88px;width:268px;max-width:calc(100% - 36px);max-height:calc(100% - 105px);overflow:auto;z-index:5;padding:14px 15px;background:#20252ef5;border:1px solid #46505c;border-radius:8px;box-shadow:0 10px 30px #0004;scrollbar-width:thin;scrollbar-color:#46515c transparent}
+.cad-details header{display:flex;align-items:flex-start;gap:5px;padding-bottom:11px;border-bottom:1px solid #343d48}.cad-details header>div{flex:1;min-width:0}.cad-details strong{font-size:12px;font-weight:500;color:#d7c4a8;display:block;overflow-wrap:anywhere}.cad-details header span{display:block;margin-top:4px;color:#8393a3;font:10px var(--mono)}
+.cad-details .icon-button{width:22px;height:22px;flex:none;margin-top:-3px}.cad-details .icon-button svg{width:12px;height:12px}
+.cad-details dl{margin:7px 0 0}.cad-details dl>div{display:flex;align-items:baseline;justify-content:space-between;gap:14px;padding:6px 0}.cad-details dt{font-size:10px;color:#8c9baa}.cad-details dd{margin:0;color:#c7d2de;font:10px var(--mono);text-align:right;overflow-wrap:anywhere;max-width:65%}
+@media(max-width:760px){.cad-details{left:12px;bottom:78px;padding:10px 12px;width:245px;max-height:calc(100% - 88px)}}

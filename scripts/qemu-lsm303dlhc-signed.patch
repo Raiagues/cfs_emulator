@@ -1,0 +1,71 @@
+--- a/hw/sensor/lsm303dlhc_mag.c
++++ b/hw/sensor/lsm303dlhc_mag.c
+@@ -88,7 +88,7 @@
+     int gm = extract32(s->crb, 5, 3);
+ 
+     /* Convert to uT where 1000 = 1 uT. Conversion factor depends on gain. */
+-    int64_t value = muldiv64(s->x, 100000, xy_gain[gm]);
++    int64_t value = (int64_t)s->x * 100000 / xy_gain[gm];
+     visit_type_int(v, name, &value, errp);
+ }
+ 
+@@ -99,7 +99,7 @@
+     int gm = extract32(s->crb, 5, 3);
+ 
+     /* Convert to uT where 1000 = 1 uT. Conversion factor depends on gain. */
+-    int64_t value = muldiv64(s->y, 100000, xy_gain[gm]);
++    int64_t value = (int64_t)s->y * 100000 / xy_gain[gm];
+     visit_type_int(v, name, &value, errp);
+ }
+ 
+@@ -110,7 +110,7 @@
+     int gm = extract32(s->crb, 5, 3);
+ 
+     /* Convert to uT where 1000 = 1 uT. Conversion factor depends on gain. */
+-    int64_t value = muldiv64(s->z, 100000, z_gain[gm]);
++    int64_t value = (int64_t)s->z * 100000 / z_gain[gm];
+     visit_type_int(v, name, &value, errp);
+ }
+ 
+@@ -126,7 +126,12 @@
+         return;
+     }
+ 
+-    reg = muldiv64(value, xy_gain[gm], 100000);
++    /* muldiv64 is unsigned; scale the magnitude, then restore the sign. */
++    reg = muldiv64(value < 0 ? -(uint64_t)value : (uint64_t)value,
++                   xy_gain[gm], 100000);
++    if (value < 0) {
++        reg = -reg;
++    }
+ 
+     /* Make sure we are within a 12-bit limit. */
+     if (reg > 2047 || reg < -2048) {
+@@ -149,7 +154,12 @@
+         return;
+     }
+ 
+-    reg = muldiv64(value, xy_gain[gm], 100000);
++    /* muldiv64 is unsigned; scale the magnitude, then restore the sign. */
++    reg = muldiv64(value < 0 ? -(uint64_t)value : (uint64_t)value,
++                   xy_gain[gm], 100000);
++    if (value < 0) {
++        reg = -reg;
++    }
+ 
+     /* Make sure we are within a 12-bit limit. */
+     if (reg > 2047 || reg < -2048) {
+@@ -172,7 +182,12 @@
+         return;
+     }
+ 
+-    reg = muldiv64(value, z_gain[gm], 100000);
++    /* muldiv64 is unsigned; scale the magnitude, then restore the sign. */
++    reg = muldiv64(value < 0 ? -(uint64_t)value : (uint64_t)value,
++                   z_gain[gm], 100000);
++    if (value < 0) {
++        reg = -reg;
++    }
+ 
+     /* Make sure we are within a 12-bit limit. */
+     if (reg > 2047 || reg < -2048) {

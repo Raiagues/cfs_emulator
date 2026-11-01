@@ -1,0 +1,48 @@
+/* Output sessions share the editor palette, with slim quiet scrollbars. */
+.terminal.console{height:180px;min-height:100px;max-height:none;flex:none;display:flex;flex-direction:column;overflow:visible;resize:none;border-top:1px solid #333840;background:#191c22}
+.no-terminal .terminal{display:none}
+.console-heading{display:flex;align-items:center;justify-content:initial;flex:none;gap:12px;height:34px;min-height:34px;min-width:0;padding:0 12px;border-bottom:1px solid #30353d;background:#1b1e24;font-size:9px;letter-spacing:.8px}
+.console-heading .icon{width:13px;height:13px;color:#8fabc4}
+#terminal-title{font-size:10px;letter-spacing:0;color:#919da9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#job-status{margin-left:auto;font-size:10px;letter-spacing:0;color:#91a39d;white-space:nowrap}
+#job-status[data-status=failed]{color:#d1a09b}
+.terminal-body{display:flex;flex:1;min-width:0;min-height:0;overflow:hidden}
+.terminal-body #logs{flex:1;min-width:0;min-height:0;height:auto;margin:0;padding:12px 18px;font:12px/1.65 var(--mono);white-space:pre;color:#c0c6c9;background:transparent;overflow:auto;outline-offset:-3px}
+.terminal-body #logs.terminal-empty{color:#75818b;font:11px/1.6 var(--sans, sans-serif)}
+#terminal-sessions{flex:0 0 195px;min-width:0;overflow:auto;border-left:1px solid #30353d;background:#1c1f25;padding:7px 5px}
+.terminal-session-row{display:flex;align-items:center;min-width:0;border-radius:3px;margin-bottom:2px;color:#96a2af}
+.terminal-session-row:hover{background:#242931}
+.terminal-session-row.selected{background:#2a2e36;color:#d1b892}
+.terminal-session{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:8px 7px;border:0;text-align:left;font-size:11px;color:inherit;white-space:nowrap;background:transparent}
+.terminal-session>svg{width:13px;height:13px;flex:none}.terminal-session>span{overflow:hidden;text-overflow:ellipsis;flex:1}
+.terminal-session small{font:9px var(--mono);color:#7c8793}
+.session-dot{width:5px;height:5px;flex:none;border-radius:50%;background:#67717a}.session-dot.running{background:#a1bdad}.session-dot.failed{background:#c38f8b}.session-dot.succeeded{background:#8d9d94}
+.terminal-close{display:flex;align-items:center;justify-content:center;width:22px;height:24px;flex:none;margin-right:3px;border:0;border-radius:3px;color:#77818c;background:transparent}
+.terminal-close svg{width:11px;height:11px}.terminal-close:hover,.terminal-close:focus-visible{color:#e1d0bb;background:#3a3c42}
+.terminal-open{position:relative;flex:none}.terminal-open>summary{display:flex;align-items:center;justify-content:center;list-style:none;cursor:pointer}.terminal-open>summary::-webkit-details-marker{display:none}.terminal-open>summary svg{width:13px;height:13px}
+.terminal-open[open]>summary{color:#d1b892;background:#2a2e36}
+.terminal-open-menu{position:absolute;right:0;bottom:calc(100% + 8px);z-index:90;min-width:190px;max-width:260px;max-height:250px;overflow:auto;padding:5px;border:1px solid #3b424b;border-radius:5px;background:#23272e;box-shadow:0 8px 22px #0005;letter-spacing:0}
+.terminal-open-menu button{display:flex;align-items:center;gap:8px;padding:8px;width:100%;text-align:left;color:#bec6cf;font-size:11px;border-radius:3px}.terminal-open-menu button:hover{background:#30363f}.terminal-open-menu button svg{width:13px;height:13px;flex:none}.terminal-open-menu button span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.terminal-menu-label{padding:9px 8px 4px;color:#8995a2;font-size:9px;letter-spacing:.5px;text-transform:uppercase;border-top:1px solid #343a43;margin-top:3px}
+.terminal :is(#logs,#terminal-sessions,.terminal-open-menu){scrollbar-width:thin;scrollbar-color:#454e596b transparent}
+.terminal :is(#logs,#terminal-sessions,.terminal-open-menu):hover{scrollbar-color:#56616e transparent}
+.terminal :is(#logs,#terminal-sessions,.terminal-open-menu)::-webkit-scrollbar{width:6px;height:6px}
+.terminal :is(#logs,#terminal-sessions,.terminal-open-menu)::-webkit-scrollbar-track,.terminal :is(#logs,#terminal-sessions,.terminal-open-menu)::-webkit-scrollbar-corner{background:transparent}
+.terminal :is(#logs,#terminal-sessions,.terminal-open-menu)::-webkit-scrollbar-thumb{background:#454e5980;border-radius:6px}
+.terminal :is(#logs,#terminal-sessions,.terminal-open-menu)::-webkit-scrollbar-thumb:hover{background:#65717e}
+.terminal :is(#logs,#terminal-sessions,.terminal-open-menu)::-webkit-scrollbar-button{display:none;width:0;height:0}
+@supports selector(::-webkit-scrollbar){
+ .terminal :is(#logs,#terminal-sessions,.terminal-open-menu){scrollbar-width:auto;scrollbar-color:auto}
+}
+@media(max-width:760px){
+ .terminal-body{flex-direction:column-reverse}
+ #terminal-sessions{flex:0 0 38px;display:flex;align-items:center;gap:4px;padding:3px 6px;border-left:0;border-bottom:1px solid #30353d;overflow-x:auto}
+ .terminal-session-row{flex:none;margin:0}.terminal-session{padding:6px 8px}.terminal-session small{display:none}
+ .terminal-body #logs{padding:10px 12px;font-size:11px}.console-heading{gap:8px}.console-heading>span:first-child{display:inline}
+}
+
+#logs[hidden],#shell-terminal[hidden],.shell-screen[hidden] {display:none!important}
+#shell-terminal {flex:1;min-width:0;min-height:0;position:relative;padding:8px 10px;background:#191c22;overflow:hidden}
+.shell-screen {height:100%;width:100%;min-width:0}
+.shell-screen .xterm {height:100%}
+.terminal-open-menu small {margin-left:auto;font-size:9px;color:#7b8b98}

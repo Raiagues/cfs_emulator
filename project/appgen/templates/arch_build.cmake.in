@@ -1,0 +1,8 @@
+# Platform-level definitions, following sample_app.
+set(@PREFIX@_PLATFORM_CONFIG_FILE_LIST
+    @APP@_platform_cfg.h
+    @APP@_msgids.h
+    @APP@_perfids.h
+)
+
+generate_configfile_set(${@PREFIX@_PLATFORM_CONFIG_FILE_LIST})

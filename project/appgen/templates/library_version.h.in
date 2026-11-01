@@ -1,0 +1,6 @@
+#ifndef @PREFIX@_VERSION_H
+#define @PREFIX@_VERSION_H
+
+#define @PREFIX@_VERSION "0.1.0"
+
+#endif

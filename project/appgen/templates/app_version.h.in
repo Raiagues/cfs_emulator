@@ -1,0 +1,10 @@
+/**
+ * @file
+ *   Version identification for @PREFIX@.
+ */
+#ifndef @PREFIX@_VERSION_H
+#define @PREFIX@_VERSION_H
+
+#define @PREFIX@_VERSION "1.0.0"
+
+#endif /* @PREFIX@_VERSION_H */

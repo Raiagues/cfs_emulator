@@ -1,0 +1,13 @@
+/**
+ * @file
+ *   User application entry points for @PREFIX@.
+ */
+#ifndef @PREFIX@_USER_H
+#define @PREFIX@_USER_H
+
+#include "cfe.h"
+
+CFE_Status_t @PREFIX@_UserInit(void);
+void         @PREFIX@_UserWakeup(void);
+
+#endif /* @PREFIX@_USER_H */

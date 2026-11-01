@@ -1,0 +1,24 @@
+/**
+ * @file
+ *   @NAME@ command packet and handler for @PREFIX@.
+ */
+#ifndef @PREFIX@_@ENTITY_UPPER@_CMD_H
+#define @PREFIX@_@ENTITY_UPPER@_CMD_H
+
+#include "cfe.h"
+
+typedef struct
+{
+    /* APPGEN: USER command.@NAME@.payload */
+    uint32 Value;
+} @PREFIX@_@ENTITY@_Payload_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t     CommandHeader;
+    @PREFIX@_@ENTITY@_Payload_t Payload;
+} @PREFIX@_@ENTITY@Cmd_t;
+
+CFE_Status_t @PREFIX@_@ENTITY@Cmd(const @PREFIX@_@ENTITY@Cmd_t *Msg);
+
+#endif /* @PREFIX@_@ENTITY_UPPER@_CMD_H */

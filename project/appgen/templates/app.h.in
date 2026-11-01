@@ -1,0 +1,42 @@
+/**
+ * @file
+ *   Main header file for @PREFIX@.
+ */
+#ifndef @PREFIX@_H
+#define @PREFIX@_H
+
+/*
+** Required header files.
+*/
+#include "cfe.h"
+#include "@APP@_platform_cfg.h"
+#include "@APP@_perfids.h"
+#include "@APP@_msgids.h"
+#include "@APP@_msg.h"
+
+/************************************************************************
+** Type Definitions
+*************************************************************************/
+typedef struct
+{
+    /* Command interface counters. */
+    uint8 CommandCounter;
+    uint8 CommandErrorCounter;
+
+    /* Housekeeping telemetry packet. */
+    @PREFIX@_HkTlm_t HkTlm;
+
+    /* Run loop state and Software Bus pipe. */
+    uint32          RunStatus;
+    CFE_SB_PipeId_t CommandPipe;
+} @PREFIX@_Data_t;
+
+extern @PREFIX@_Data_t @PREFIX@_Data;
+
+/************************************************************************
+** Local function prototypes.
+*************************************************************************/
+void         @PREFIX@_Main(void);
+CFE_Status_t @PREFIX@_Init(void);
+
+#endif /* @PREFIX@_H */

@@ -1,0 +1,13 @@
+/**
+ * @file
+ *   Platform configuration for @PREFIX@.
+ */
+#ifndef DEFAULT_@PREFIX@_PLATFORM_CFG_H
+#define DEFAULT_@PREFIX@_PLATFORM_CFG_H
+
+#include "@APP@_mission_cfg.h"
+
+#define @PREFIX@_PLATFORM_PIPE_DEPTH 16
+#define @PREFIX@_PLATFORM_PIPE_NAME "@PREFIX@_PIPE"
+
+#endif /* DEFAULT_@PREFIX@_PLATFORM_CFG_H */

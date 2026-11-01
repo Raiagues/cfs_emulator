@@ -1,0 +1,10 @@
+/**
+ * @file
+ *   Mission configuration for @PREFIX@.
+ */
+#ifndef DEFAULT_@PREFIX@_MISSION_CFG_H
+#define DEFAULT_@PREFIX@_MISSION_CFG_H
+
+/* Application mission configuration. */
+
+#endif /* DEFAULT_@PREFIX@_MISSION_CFG_H */

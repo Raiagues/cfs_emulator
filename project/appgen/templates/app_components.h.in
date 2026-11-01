@@ -1,0 +1,13 @@
+/**
+ * @file
+ *   Registered component entry points for @PREFIX@.
+ */
+#ifndef @PREFIX@_COMPONENTS_H
+#define @PREFIX@_COMPONENTS_H
+
+#include "cfe.h"
+
+CFE_Status_t @PREFIX@_ComponentsInit(void);
+void         @PREFIX@_ComponentsWakeup(void);
+
+#endif /* @PREFIX@_COMPONENTS_H */

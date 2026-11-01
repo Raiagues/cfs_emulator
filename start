@@ -1,0 +1,206 @@
+#!/usr/bin/env python3
+"""Start Flight Studio, or use its shared tools without a web interface."""
+import argparse
+import json
+import os
+from pathlib import Path
+import sys
+
+
+ROOT = Path(__file__).resolve().parent
+HELP = """Usage:
+  ./start [--ui] [--port PORT]
+  ./start --no-ui COMMAND [OPTIONS]
+
+Web interface:
+  ./start
+  ./start --ui --port 8766
+
+Command line:
+  ./start --no-ui build
+  ./start --no-ui run
+  ./start --no-ui stop
+  ./start --no-ui status
+  ./start --no-ui profile --board raspi4b --os raspios
+  ./start --no-ui profile --native
+  ./start --no-ui boot --target qemu
+  ./start --no-ui simulate-preview --model tmp105
+  ./start --no-ui app new attitude_app
+  ./start --no-ui app delete attitude_app
+  ./start --no-ui library new payload_lib
+  ./start --no-ui library list
+  ./start --no-ui library remove payload_lib
+  ./start --no-ui run --target physical --host raspberrypi.local
+  ./start --no-ui project --help
+  ./start --no-ui simulate --help
+
+Run './start --no-ui COMMAND --help' for command options.
+"""
+
+
+def replace(argv):
+    os.execv(argv[0], argv)
+
+
+def main(argv=None):
+    argv = list(sys.argv[1:] if argv is None else argv)
+    os.chdir(ROOT)
+    if argv and argv[0] in {'-h', '--help'}:
+        print(HELP)
+        return 0
+    if not argv or argv[0] == '--ui':
+        replace([sys.executable, str(ROOT / 'interface/server.py'), *argv[1:]])
+        return 0
+    if argv[0] != '--no-ui':
+        print(HELP, file=sys.stderr)
+        return 2
+    argv = argv[1:]
+    if argv and argv[0] in {'project', 'simulate'}:
+        if any(arg == '--root' or arg.startswith('--root=') for arg in argv[1:]):
+            print('Commands use the project containing ./start; --root is not supported.', file=sys.stderr)
+            return 2
+        command = ([sys.executable, str(ROOT / 'project/manage.py')] if argv[0] == 'project' else
+                   [sys.executable, '-u', '-m', 'sensors.simulator'])
+        replace([*command, *argv[1:]])
+        return 0
+
+    parser = argparse.ArgumentParser(prog='./start --no-ui', description='Flight Studio command-line tools.')
+    commands = parser.add_subparsers(dest='command')
+    commands.add_parser('status', help='Show workspace and target status')
+    profile = commands.add_parser('profile', help='Show or select the native or board/OS profile')
+    selection = profile.add_mutually_exclusive_group()
+    selection.add_argument('--native', action='store_true', help='Use this computer without a board')
+    selection.add_argument('--board', help='Board identifier from the hardware catalog')
+    profile.add_argument('--os', help='Operating system identifier for the selected board')
+    apps = commands.add_parser('app', help='Create or select mission applications')
+    apps.add_argument('action', choices=('list', 'new', 'edit', 'add', 'enable', 'disable', 'remove', 'delete'),
+                      help='remove excludes the app from the mission; delete also removes its sources')
+    apps.add_argument('name', nargs='?')
+    apps.add_argument('--priority', type=int)
+    apps.add_argument('--stack-size', type=int)
+    apps.add_argument('--wakeup-hz', type=float)
+    apps.add_argument('--hk-hz', type=float)
+    apps.add_argument('--preview', action='store_true', help='Print the source/configuration plan without writing it')
+    libraries = commands.add_parser('library', help='Create and manage native mission libraries')
+    libraries.add_argument('action', choices=('list', 'new', 'add', 'remove', 'delete'),
+                           help='remove excludes the library from the mission; delete also removes its sources')
+    libraries.add_argument('name', nargs='?')
+    libraries.add_argument('--preview', action='store_true')
+    for action in ('setup', 'build', 'boot', 'run', 'stop', 'shutdown', 'connect', 'probe', 'logs', 'values', 'simulate-preview'):
+        command = commands.add_parser(action)
+        command.add_argument('--target', choices=('native', 'qemu', 'physical'),
+                             help='Defaults to native without a board, otherwise QEMU')
+        command.add_argument('--host', help='Physical board hostname, IP or SSH alias')
+        command.add_argument('--user', help='SSH user; defaults to OpenSSH configuration')
+        command.add_argument('--ssh-port', type=int, default=22)
+        if action in {'build', 'run'}:
+            command.add_argument('--sensorless', action='store_true', help='Physical build without sensor apps')
+        if action == 'run':
+            command.add_argument('--no-follow', action='store_true', help='Return after cFS starts')
+        if action == 'logs':
+            command.add_argument('--kind', choices=('boot', 'flight'), default='flight')
+        if action == 'simulate-preview':
+            source = command.add_mutually_exclusive_group()
+            source.add_argument('--device', help='Configured sensor ID')
+            source.add_argument('--model', help='Python sensor model; no board is needed')
+    commands.add_parser('project', help='Project generator commands (project --help)')
+    commands.add_parser('simulate', help='Synthetic sensor data (simulate --help)')
+    args = parser.parse_args(argv)
+    if not args.command:
+        parser.print_help()
+        return 0
+    if args.command == 'profile':
+        if bool(args.board) != bool(args.os):
+            parser.error('Select both --board and --os, or use --native')
+        from interface.backend.workspace import Workspace
+        workspace = Workspace(ROOT)
+        try:
+            if args.native or args.board:
+                result = workspace.select_profile(None if args.native else args.board, None if args.native else args.os)
+                print(json.dumps({'board': args.board, 'os': args.os, 'changed': result['changed']}, indent=2))
+            else:
+                from hardware.manager import HardwareManager
+                config = workspace.model.load_config(ROOT)
+                print(json.dumps({'board': config['board'], 'os': config['os'], 'profiles': HardwareManager(ROOT).profiles()}, indent=2))
+            return 0
+        except (OSError, ValueError, RuntimeError) as error:
+            print(f'Error: {error}', file=sys.stderr)
+            return 1
+    if args.command in {'app', 'library'}:
+        if (args.action == 'list' and args.name) or (args.action != 'list' and not args.name):
+            parser.error(f'{args.command} list takes no name; all other actions require a name')
+        settings = {key: getattr(args, key) for key in ('priority', 'stack_size', 'wakeup_hz', 'hk_hz')
+                    if getattr(args, key, None) is not None}
+        if args.action not in {'new', 'edit'} and (settings or args.preview):
+            parser.error('Configuration options apply to app new/edit or library new')
+        from interface.backend.workspace import Workspace
+        workspace = Workspace(ROOT)
+        try:
+            mission = workspace.mission.snapshot()
+            if args.action in {'new', 'edit'}:
+                mode = 'edit' if args.action == 'edit' else 'create'
+                draft = workspace.mission_draft(args.command, args.name, settings,
+                                                mission['source']['hash'], mode=mode)
+                result = draft if args.preview else workspace.save_mission_draft(
+                    args.command, args.name, draft['draft']['settings'], draft['expected_hash'],
+                    draft['plan_hash'], mode=mode)
+            elif args.action == 'list':
+                result = mission if args.command == 'app' else mission['available_libraries']
+            elif args.command == 'library':
+                result = workspace.mission_library(args.action, args.name, mission['source']['hash'])
+            elif args.action == 'delete':
+                result = workspace.delete_app(args.name, mission['source']['hash'])
+            else:
+                result = workspace.mission_app(args.action, args.name, mission['source']['hash'])
+            print(json.dumps(result, indent=2))
+            return 0
+        except (OSError, ValueError, RuntimeError) as error:
+            print(f'Error: {error}', file=sys.stderr)
+            return 1
+    from hardware.manager import HardwareError, HardwareManager
+    manager = HardwareManager(ROOT)
+    target = getattr(args, 'target', None) or manager.default_target()
+    host, user = getattr(args, 'host', None), getattr(args, 'user', None)
+    port = getattr(args, 'ssh_port', 22)
+    sensorless = getattr(args, 'sensorless', False)
+    if (host or user or port != 22) and target != 'physical':
+        parser.error('SSH options require --target physical')
+    if (user or port != 22) and not host:
+        parser.error('--user and --ssh-port require --host')
+    if sensorless and target != 'physical':
+        parser.error('--sensorless requires --target physical')
+    if args.command in {'connect', 'probe'} and target != 'physical':
+        parser.error(args.command + ' requires --target physical')
+    if args.command == 'values' and target != 'qemu':
+        parser.error('values requires --target qemu')
+
+    # Setup needs the real terminal for sudo; all other operations use the same
+    # adapter, deployment checks and execution lock as the browser interface.
+    if args.command == 'setup' and target == 'qemu':
+        replace(['/bin/bash', str(ROOT / 'scripts/setup.sh')])
+        return 0
+    try:
+        if args.command == 'status':
+            print(json.dumps(manager.status(), indent=2))
+            return 0
+        connection = {'host': host, 'user': user or '', 'port': port} if host else None
+        options = {'target': target, 'connection': connection, 'sensorless': sensorless}
+        if args.command == 'logs':
+            options['kind'] = args.kind
+        if args.command == 'simulate-preview':
+            options.update({key: getattr(args, key) for key in ('model', 'device') if getattr(args, key) is not None})
+        result = manager.execute(args.command, emit=lambda line: print(line, flush=True), **options)
+        if result is not None:
+            print(json.dumps(result, indent=2), flush=True)
+        if args.command == 'run' and not args.no_follow:
+            manager.execute('logs', target=target, connection=connection)
+        return 0
+    except (HardwareError, OSError, ValueError) as error:
+        print(f'Error: {error}', file=sys.stderr)
+        return 1
+    except KeyboardInterrupt:
+        return 130
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())
