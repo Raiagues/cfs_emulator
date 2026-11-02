@@ -50,6 +50,8 @@ int32 @PREFIX@_@ENTITY@_Read(void)
 {
     @PREFIX@_@ENTITY@_Payload_t *Data = &@PREFIX@_@ENTITY@_Tlm.Payload;
     @VALUE_TYPE@ Value = {0};
+    /* Before the first read, any failure is new. */
+    int32 PreviousStatus = Data->ReadCounter == 0 ? CFE_SUCCESS : Data->Status;
 
     Data->ReadCounter++;
     Data->Status = @PREFIX@_@ENTITY@_ReadValue(&Value);
@@ -63,8 +65,12 @@ int32 @PREFIX@_@ENTITY@_Read(void)
     else
     {
         Data->ErrorCounter++;
-        CFE_EVS_SendEvent(@PREFIX@_SENSOR_READ_ERR_EID, CFE_EVS_EventType_ERROR,
-                         "@NAME@ read failed: status=%ld", (long)Data->Status);
+        /* Telemetry counts every failed read; the event reports each new failure status once. */
+        if (Data->Status != PreviousStatus)
+        {
+            CFE_EVS_SendEvent(@PREFIX@_SENSOR_READ_ERR_EID, CFE_EVS_EventType_ERROR,
+                             "@NAME@ read failed: status=%ld", (long)Data->Status);
+        }
     }
 
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(@PREFIX@_@ENTITY@_Tlm.TelemetryHeader));

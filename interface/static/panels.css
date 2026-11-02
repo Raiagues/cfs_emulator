@@ -283,6 +283,8 @@
 .gs-field-preview small {color:#748c9a}
 .gs-shell .gs-error {padding:12px 17px;color:#cf9d92;background:#b7776610;border-top:1px solid #725348;font-size:11px;overflow-wrap:anywhere}
 .gs-shell .gs-reading.invalid>small {color:#cf9d92}
+.gs-values>.gs-invalid-field>span {color:#cf9d92}
+.gs-values>.gs-invalid-field>span::after {content:' · invalid'}
 .gs-shell .gs-packet-fields {margin:10px 0}
 .gs-shell .gs-packet-fields>summary:before, .gs-catalog-errors>summary:before {display:none}
 .gs-shell .gs-packet-fields .gs-values {padding:0 0 12px}

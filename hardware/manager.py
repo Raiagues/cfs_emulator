@@ -24,6 +24,12 @@ import threading
 import time
 
 
+# Every field hardware/board_probe.py reports, with its JSON type.
+PROBE_FIELDS = {"arch": str, "model": str, "home": str, "hostname": str, "i2c": list, "sudo": bool,
+                "authorized": bool, "shutdown_authorized": bool, "service_installed": bool,
+                "service": str, "systemd": bool, "os": str, "raspios": bool}
+
+
 class HardwareError(RuntimeError):
     def __init__(self, message, returncode=None):
         super().__init__(message)
@@ -70,9 +76,9 @@ class HardwareManager:
         return self._load(self.build_state_file(target, sensorless), {})
 
     @staticmethod
-    def _capture(argv, timeout=10):
+    def _capture(argv, timeout=10, input=None):
         try:
-            result = subprocess.run(argv, text=True, capture_output=True, timeout=timeout)
+            result = subprocess.run(argv, text=True, capture_output=True, timeout=timeout, input=input)
             return result.returncode, (result.stdout + result.stderr).strip()
         except (OSError, subprocess.TimeoutExpired) as error:
             return 1, str(error)
@@ -542,19 +548,18 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
 
     def probe(self, connection=None, emit=lambda line: None, cancel=None):
         argv = self.ssh_argv("physical", connection)
+        # The script travels on stdin, so no shell quoting is involved.
         # JSON avoids locale-dependent parsing of diagnostic tools.
-        script = '''import json,os,platform,subprocess,pathlib,shutil,pwd
-p=pathlib.Path('/proc/device-tree/model')
-def run(args):
- r=subprocess.run(args,capture_output=True,text=True);return {'ok':r.returncode==0,'output':r.stdout.strip()}
-print(json.dumps({'arch':platform.machine(),'model':p.read_bytes().decode().strip('\\x00') if p.exists() else '', 'home':os.path.expanduser('~'),'hostname':platform.node(),'i2c':sorted(str(x) for x in pathlib.Path('/dev').glob('i2c-*')),'sudo':run(['sudo','-n','true'])['ok'],'authorized':run(['sudo','-n','-l','systemctl','start','cfs-studio.service'])['ok'],'shutdown_authorized':run(['sudo','-n','-l','systemctl','poweroff','--no-block'])['ok'],'service_installed':pathlib.Path('/etc/systemd/system/cfs-studio.service').is_file() and pathlib.Path('/etc/systemd/system/cfs-studio.service').read_text().startswith('# Flight Studio managed; account='+pwd.getpwuid(os.getuid()).pw_name+'\\n'),'service':run(['systemctl','is-active','cfs-studio.service'])['output'],'systemd':bool(shutil.which('systemd-run')),'os':platform.freedesktop_os_release().get('PRETTY_NAME',''),'raspios':pathlib.Path('/etc/rpi-issue').exists()}))'''
-        code, output = self._capture(argv + ["python3 -c " + shlex.quote(script)], 20)
+        script = (self.root / "hardware/board_probe.py").read_text()
+        code, output = self._capture(argv + ["python3 -"], 20, input=script)
         if code:
             raise HardwareError("SSH failed. Check that the board is on the same network and the key is authorized. " + output)
         try:
             result = json.loads(next(line for line in reversed(output.splitlines()) if line.startswith("{")))
         except (ValueError, IndexError, StopIteration):
             raise HardwareError("Invalid SSH response: " + output) from None
+        if any(not isinstance(result.get(field), kind) for field, kind in PROBE_FIELDS.items()):
+            raise HardwareError("Invalid SSH response: " + output)
         if "Raspberry Pi 4 Model B" not in result["model"] or result["arch"] != "aarch64" or not result["raspios"]:
             raise HardwareError("The platform supports Raspberry Pi 4B with Raspberry Pi OS ARM64: " + str(result))
         result["connected"] = True

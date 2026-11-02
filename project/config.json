@@ -1,7 +1,18 @@
 {
   "schema_version": 1,
-  "board": null,
-  "os": null,
-  "devices": [],
+  "board": "raspi4b",
+  "os": "raspios",
+  "devices": [
+    {
+      "name": "tmp105",
+      "id": "tmp105",
+      "model": "tmp105",
+      "bus": "i2c-bus.1",
+      "address": 72,
+      "values": {
+        "temperature": 23500
+      }
+    }
+  ],
   "apps": []
 }

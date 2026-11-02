@@ -33,86 +33,64 @@ ROLE_ICONS = {'entry': 'play', 'initialize': 'settings', 'receive': 'arrow-down'
               'publish': 'arrow-up-right', 'timer': 'rotate'}
 
 
-def _documented_purpose(app, functions, root):
-    """Read a short purpose from this application's own introductory README.
+# Sections whose prose introduces an application in a README.
+INTRODUCTION = {'introduction', 'overview', 'purpose', 'description'}
+# cFS READMEs open with a sentence stating only that the app belongs to the bundle.
+MEMBERSHIP = ('plug in to', 'plug-in to', 'framework component')
 
-    This is an extract of local documentation, not an app-name lookup table or
-    an inferred runtime feature. Bootstrap/build boilerplate and code examples
-    are excluded. Unknown or undocumented apps retain the source-call summary.
-    """
-    if root is None:
-        return None
-    relative = app.get('path')
-    if not relative and functions:
-        prefixes = set()
-        for fn in functions:
-            parts = Path(fn['path']).parts
-            if 'apps' in parts and parts.index('apps') + 1 < len(parts):
-                prefixes.add(Path(*parts[:parts.index('apps') + 2]))
-        if len(prefixes) == 1:
-            relative = next(iter(prefixes))
-    if not relative:
-        return None
-    directory = root / relative
-    if not directory.resolve().is_relative_to(root):
-        return None
-    for filename in ('README.md', 'README.rst', 'README.txt', 'README'):
-        path = directory / filename
-        try:
-            if not path.resolve().is_relative_to(root) or path.stat().st_size > 128_000:
-                continue
-            lines = path.read_text(encoding='utf-8').splitlines()
-        except (OSError, UnicodeError):
+
+def _introduction(lines):
+    """Prose paragraphs with their first line, up to the first non-introduction section."""
+    paragraphs, current, first, fenced, titled = [], [], 0, False, False
+    for number, line in enumerate([*lines, ''], 1):
+        stripped = line.strip()
+        if stripped.startswith(('```', '~~~')):
+            fenced = not fenced
             continue
-        paragraphs, current, first_line = [], [], 0
-        fenced = False
-        for number, line in enumerate(lines, 1):
-            stripped = line.strip()
-            if stripped.startswith(('```', '~~~')):
-                fenced = not fenced
-                continue
-            if fenced:
-                continue
-            if stripped.startswith('#'):
-                heading = stripped.lstrip('#').strip().lower()
-                if heading not in {'introduction', 'overview', 'description', 'purpose'} and paragraphs:
-                    break
-                if current:
-                    paragraphs.append((' '.join(current), first_line))
-                    current = []
-                continue
-            if not stripped or stripped.startswith(('![', '- ', '* ', '|')):
-                if current:
-                    paragraphs.append((' '.join(current), first_line))
-                    current = []
-                continue
-            if not current:
-                first_line = number
+        heading = not fenced and stripped.startswith('#')
+        if stripped and not fenced and not heading and not stripped.startswith(('![', '- ', '* ', '|')):
+            first = first or number
             current.append(stripped)
+            continue
         if current:
-            paragraphs.append((' '.join(current), first_line))
-        for paragraph, line in paragraphs:
-            paragraph = re.sub(r'\[([^\]]+)\]\([^)]*\)', r'\1', paragraph)
-            paragraph = re.sub(r'[`*]', '', paragraph)
-            paragraph = re.sub(r'\b(\w+)(\s+\1\b)+', r'\1', paragraph, flags=re.IGNORECASE)
-            sentences = re.split(r'(?<=[.!?])\s+(?=[A-Z])', paragraph)
-            for sentence in sentences:
-                lower = sentence.lower()
-                if len(sentence) < 35 or lower.startswith(('to ', 'run ', 'install ', 'for ', 'see ', 'note ', 'use ')) or any(fragment in lower for fragment in (
-                        'this repository', 'framework component', 'plug in to', 'plug-in to',
-                        'written in c', 'software required', 'user\'s guide', 'user’s guide',
-                        'demonstration bundle', 'mission ready', 'it is intended to be located',
-                        'for information', 'app.json', 'http://', 'https://')):
-                    continue
-                if len(sentence) > 220:
-                    # Retain a complete purpose clause before a long list of
-                    # examples, then bound genuinely long descriptions.
-                    clause = re.split(r'\s+by\s+', sentence, maxsplit=1)[0]
-                    sentence = clause.rstrip(' .') + '.' if len(clause) >= 45 and clause != sentence else sentence
-                if len(sentence) > 220:
-                    sentence = sentence[:217].rsplit(' ', 1)[0].rstrip(' ,;:.') + '…'
-                return {'text': sentence, 'source': {'path': path.relative_to(root).as_posix(),
-                                                    'line': line, 'kind': 'documentation'}}
+            paragraphs.append((' '.join(current), first))
+            current, first = [], 0
+        if heading:
+            # The first heading is the title; any other section ends the introduction.
+            if titled and stripped.lstrip('#').strip().lower() not in INTRODUCTION:
+                break
+            titled = True
+    return paragraphs
+
+
+def _documented_purpose(app, root):
+    """First sentence of the app's README.md introduction that says what it does.
+
+    This quotes local documentation; it is not an app-name lookup table or an
+    inferred runtime feature. Without a README.md, or without such a sentence,
+    the caller keeps the summary of observed source calls. A README.md that
+    exists but cannot be used returns only an 'error'.
+    """
+    if root is None or not app.get('path'):
+        return None
+    path = root / app['path'] / 'README.md'
+    try:
+        if not path.resolve().is_relative_to(root):
+            return {'error': 'README.md points outside the workspace; it was not read.'}
+        if path.stat().st_size > 128_000:
+            return {'error': 'README.md exceeds 128 kB; it was not read.'}
+        lines = path.read_text(encoding='utf-8').splitlines()
+    except FileNotFoundError:
+        return None
+    except (OSError, UnicodeError) as error:
+        return {'error': 'README.md could not be read: ' + str(error)}
+    for paragraph, line in _introduction(lines):
+        paragraph = re.sub(r'\[([^\]]+)\]\([^)]*\)', r'\1', paragraph).replace('`', '').replace('*', '')
+        for sentence in re.split(r'(?<=[.!?])\s+(?=[A-Z])', paragraph):
+            if not any(marker in sentence.lower() for marker in MEMBERSHIP):
+                text = sentence if len(sentence) <= 500 else sentence[:499].rstrip() + '…'
+                return {'text': text, 'source': {'path': path.relative_to(root).as_posix(),
+                                                 'line': line, 'kind': 'documentation'}}
     return None
 
 
@@ -416,12 +394,12 @@ def summarize_application(app, entry_symbol=None, *, root=None):
     described = [work['summary'].rstrip('.').lower()] if work else []
     described.extend(descriptions[node['role']] for node in nodes if node['role'] in descriptions)
     source_summary = '; '.join(described).capitalize() + '.' if described else 'Application behavior from its C entry points and calls.'
-    purpose = _documented_purpose(app, functions, root)
+    purpose = _documented_purpose(app, root) or {}
     covered = set().union(*(set(group) for group in groups.values())) if groups else set()
     return {'nodes': nodes, 'edges': edges, 'entry': _reference(entry) if entry else None,
             'details': describe_application(app, root=root) if root else {},
-            'description': purpose['text'] if purpose else source_summary,
-            'purpose_source': purpose['source'] if purpose else None, 'source_summary': source_summary,
+            'description': purpose.get('text') or source_summary,
+            'purpose_source': purpose.get('source'), 'purpose_error': purpose.get('error'), 'source_summary': source_summary,
             'entry_symbol': entry_symbol or (entry['symbol'] if entry else None),
             'scope': 'Source-level calls and API uses; conditional branches included. Not a runtime trace.',
             'omitted_function_count': len(functions) - len(covered)}

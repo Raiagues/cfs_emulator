@@ -29,6 +29,12 @@ int32 TMP105_LIB_ReadTemperature(const char *Device, uint16 Address, int32 *Temp
     }
 
     Raw = ((int32)Data[0] << 8) | Data[1];
+    /* Reject data a TMP105 cannot produce, such as the all-ones pattern read
+     * when no device drove the bus and the controller reported no NACK. */
+    if ((Raw & TMP105_UNUSED_BITS) != 0)
+    {
+        return -EIO;
+    }
     if ((Raw & TMP105_SIGN_BIT) != 0)
     {
         Raw -= TMP105_FULL_SCALE;

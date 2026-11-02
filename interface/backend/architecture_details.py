@@ -9,13 +9,13 @@ from collections import defaultdict, deque
 from pathlib import Path
 import re
 
-from ground_station.discovery import arguments
+from ground_station.c_source import (arguments, blank_lexemes, calls, closing, entry_routes,
+                                     mid_aliases, mid_regions, mids_at)
 from interface.backend.source_index import SourceIndex, mask_source
 
 
 _FILES = {}
 _INDEXES = {}
-_COMMENTS = re.compile(r'/\*[\s\S]*?\*/|//[^\n]*')
 _PUBLISH = {'CFE_SB_TransmitMsg', 'CFE_SB_TransmitBuffer', 'CFE_SB_SendMsg', 'CFE_SB_ZeroCopySend'}
 
 
@@ -29,9 +29,8 @@ def _read(root, path):
         cached = _FILES.get(path)
         if cached is None or cached[0] != stamp:
             raw = path.read_text(encoding='utf-8')
-            clean = _COMMENTS.sub(lambda match: re.sub(r'[^\n]', ' ', match[0]), raw)
             cached = (stamp, {'path': path.relative_to(root).as_posix(), 'raw': raw,
-                              'clean': clean, 'mask': mask_source(raw)})
+                              'clean': blank_lexemes(raw, literals=False), 'mask': mask_source(raw)})
             _FILES[path] = cached
         return cached[1]
     except (OSError, UnicodeError):
@@ -50,29 +49,16 @@ def _fnref(fn):
     return {key: fn[key] for key in ('id', 'symbol', 'path', 'line', 'end_line')}
 
 
-def _closing(text, opening, left='(', right=')'):
-    depth = 1
-    for position in range(opening + 1, len(text)):
-        if text[position] == left:
-            depth += 1
-        elif text[position] == right:
-            depth -= 1
-            if not depth:
-                return position
-    return None
-
-
 def _calls(file, symbols=None, start=0, end=None):
-    end = len(file['mask']) if end is None else end
-    for match in re.finditer(r'\b([A-Za-z_]\w*)\s*\(', file['mask'][start:end]):
-        name = match[1]
-        if symbols is not None and name not in symbols:
-            continue
-        position = start + match.start()
-        opening = start + match.end() - 1
-        closing = _closing(file['mask'], opening)
-        if closing is not None and closing < end:
-            yield name, position, closing, arguments(file['clean'][opening + 1:closing])
+    return calls(file['clean'], symbols, start, end, masked=file['mask'])
+
+
+def _callee(by_name, caller, symbol):
+    """The definition a direct call reaches: the caller's file first, else one external."""
+    candidates = by_name.get(symbol, [])
+    local = [fn for fn in candidates if fn['path'] == caller['path']]
+    candidates = local or [fn for fn in candidates if not fn.get('static') or fn['path'].endswith('.h')]
+    return candidates[0] if len(candidates) == 1 else None
 
 
 def _bounds(file, fn):
@@ -157,10 +143,10 @@ class Constants:
             definition = self.definition(match[1])
             if not definition or definition['parameters'] is None or match[1] in seen:
                 continue
-            closing = _closing(expression, match.end() - 1)
-            if closing is None:
+            finish = closing(expression, match.end() - 1)
+            if finish is None:
                 continue
-            values = arguments(expression[match.end():closing])
+            values = arguments(expression[match.end():finish])
             if len(values) != len(definition['parameters']):
                 continue
             replacement = definition['expression']
@@ -168,7 +154,7 @@ class Constants:
                 replacement = re.sub(r'\b' + re.escape(name.strip()) + r'\b', lambda _: value, replacement)
             replacement = re.sub(r'\s*##\s*', '', replacement)
             replacement = self.expand(replacement, (*seen, match[1]))
-            return self.expand(expression[:match.start()] + '(' + replacement + ')' + expression[closing + 1:], seen)
+            return self.expand(expression[:match.start()] + '(' + replacement + ')' + expression[finish + 1:], seen)
         def substitute(match):
             name = match[0]
             definition = self.definition(name)
@@ -323,9 +309,10 @@ def describe_application(app, *, root):
     for fn in functions:
         file = files[fn['path']]
         start, end = _bounds(file, fn)
-        for name, position, closing, args in _calls(file, start=start, end=end):
-            occurrences.append({'api': name, 'position': position, 'end': closing, 'args': args,
-                                'function': _fnref(fn), 'source': _ref(file, position, name), 'file': file})
+        for name, position, finish, args in _calls(file, start=start, end=end):
+            occurrence = {'api': name, 'position': position, 'end': finish, 'args': args,
+                          'function': _fnref(fn), 'source': _ref(file, position, name), 'file': file}
+            occurrences.append(occurrence)
 
     def packet_record(typ):
         return {'packet_type': typ, 'packet_source': type_sources.get(typ),
@@ -381,52 +368,32 @@ def describe_application(app, *, root):
                                           'source': caller['source'], 'function': caller['function'],
                                           'via': [item['source']], 'kind': 'direct'})
 
-    # First map received MID branches to local functions, then use their actual
-    # CC cases. There is deliberately no assumed APP_CMD_MID fallback.
-    routes = defaultdict(set)
-    mid_branches, cc_cases = [], []
+    # Received MIDs reach code only through the comparisons shared with the
+    # catalog; CC cases take the MID of the code that reaches them. There is
+    # deliberately no assumed APP_CMD_MID fallback.
+    aliases = defaultdict(set)
+    for file in files.values():
+        for alias, mids in mid_aliases(file['mask']).items():
+            aliases[alias] |= mids
+    regions, sites, cc_cases = {}, {fn['id']: [] for fn in functions}, []
     for fn in functions:
         file = files[fn['path']]
         start, end = _bounds(file, fn)
         body = file['mask'][start:end]
-        aliases = dict(re.findall(r'\b(\w+)\s*=\s*CFE_SB_ValueToMsgId\s*\(\s*(\w+_MID)\s*\)', body))
-        for condition in re.finditer(r'\bif\s*\(', body):
-            opening = start + condition.end() - 1
-            closing = _closing(file['mask'], opening)
-            if closing is None:
-                continue
-            predicate = file['mask'][opening:closing + 1]
-            if 'CFE_SB_MsgId_Equal' not in predicate:
-                continue
-            mids = {aliases.get(word, word) for word in re.findall(r'\b\w+_MID\b', predicate)}
-            mids.update(aliases[word] for word in re.findall(r'\b\w+\b', predicate) if word in aliases)
-            brace = re.match(r'\s*\{', file['mask'][closing + 1:end])
-            if len(mids) != 1 or not brace:
-                continue
-            begin = closing + 1 + brace.end() - 1
-            finish = _closing(file['mask'], begin, '{', '}')
-            if finish is not None:
-                mid_branches.append((next(iter(mids)), file, begin + 1, finish, fn))
+        regions[fn['id']] = [(mid, start + begin, start + finish) for mid, begin, finish in mid_regions(body, aliases)]
         for case in re.finditer(r'\bcase\s+(\w+_CC)\s*:', body):
             begin = start + case.end()
             next_case = re.search(r'\b(?:case\s+\w+\s*:|default\s*:|break\s*;)', file['mask'][begin:end])
             finish = begin + next_case.start() if next_case else end
             cc_cases.append((case[1], file, begin, finish, fn))
+    for item in occurrences:
+        target = _callee(by_name, item['function'], item['api'])
+        if target:
+            sites[item['function']['id']].append((target['id'], item['position']))
+    routes = entry_routes(regions, sites)
 
     def local_calls(file, begin, finish):
         return [name for name, _, _, _ in _calls(file, start=begin, end=finish) if name in by_name]
-
-    for mid, file, begin, finish, _ in mid_branches:
-        pending = deque(local_calls(file, begin, finish))
-        seen = set()
-        while pending:
-            symbol = pending.popleft()
-            if symbol in seen:
-                continue
-            seen.add(symbol)
-            routes[symbol].add(mid)
-            for target in by_name[symbol]:
-                pending.extend(call for call in target.get('calls', []) if call in by_name)
 
     def handler(file, begin, finish):
         pending = deque((symbol, []) for symbol in local_calls(file, begin, finish))
@@ -450,27 +417,36 @@ def describe_application(app, *, root):
             pending.extend((call, [*via, _fnref(fn)]) for call in fn.get('calls', []) if call in by_name)
         return fallback
 
-    command_groups = {}
+    command_groups, dispatched = {}, set()
     for code, file, begin, finish, fn in cc_cases:
-        received = routes.get(fn['symbol'], set())
+        received = mids_at(regions[fn['id']], routes[fn['id']], begin)
+        dispatched |= received
         found = handler(file, begin, finish)
-        if len(received) != 1 or found is None:
-            unresolved.append({'kind': 'command_route', 'expression': code, 'source': _ref(file, begin, code)})
-            continue
-        mid = next(iter(received))
-        group = command_groups.setdefault(mid, {'mid': constants.reference(mid), 'handlers': [], 'source': _ref(file, begin, mid)})
-        group['handlers'].append({'cc': constants.reference(code, _ref(file, begin, code)), **found,
-                                  'source': _ref(file, begin, code)})
-    case_functions = {fn['symbol'] for _, _, _, _, fn in cc_cases}
-    for mid, file, begin, finish, fn in mid_branches:
-        if any(mid in routes[symbol] for symbol in case_functions):
-            continue
-        found = handler(file, begin, finish)
-        if found:
+        if not received:
+            reason = 'No CFE_SB_MsgId_Equal branch or guard reaches ' + fn['symbol']
+        elif len(received) > 1:
+            reason = fn['symbol'] + ' is reached from several MIDs: ' + ', '.join(sorted(received))
+        elif found is None:
+            reason = 'No local handler is called for this function code'
+        else:
+            mid = next(iter(received))
             group = command_groups.setdefault(mid, {'mid': constants.reference(mid), 'handlers': [], 'source': _ref(file, begin, mid)})
-            record = {'cc': None, **found, 'source': _ref(file, begin, mid)}
-            if not any(item['handler']['id'] == record['handler']['id'] for item in group['handlers']):
-                group['handlers'].append(record)
+            record = {'cc': constants.reference(code, _ref(file, begin, code)), **found, 'source': _ref(file, begin, code)}
+            group['handlers'].append(record)
+            continue
+        unresolved.append({'kind': 'command_route', 'expression': code, 'source': _ref(file, begin, code), 'reason': reason})
+    # A MID whose messages reach function-code dispatch is not itself a command.
+    for fn in functions:
+        file = files[fn['path']]
+        for mid, begin, finish in regions[fn['id']]:
+            if mid in dispatched:
+                continue
+            found = handler(file, begin, finish)
+            if found:
+                group = command_groups.setdefault(mid, {'mid': constants.reference(mid), 'handlers': [], 'source': _ref(file, begin, mid)})
+                record = {'cc': None, **found, 'source': _ref(file, begin, mid)}
+                if not any(item['handler']['id'] == record['handler']['id'] for item in group['handlers']):
+                    group['handlers'].append(record)
     commands = list(command_groups.values())
 
     # Register/load/use relationships refer to the same handle in C. Resolve

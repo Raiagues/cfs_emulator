@@ -18,7 +18,7 @@ from ground_station.discovery import command_mappings, telemetry_mappings, raw_t
 from ground_station.tables import table_packets
 from ground_station.subscriptions import subscription_metadata
 
-CATALOG_VERSION = 10
+CATALOG_VERSION = 11
 
 TYPES = {'uint8': 'B', 'uint16': 'H', 'uint32': 'I', 'uint64': 'Q',
          'int8': 'b', 'int16': 'h', 'int32': 'i', 'int64': 'q',
@@ -147,7 +147,7 @@ def resolve_build(root, build_dir=None):
 def _build_catalog(root, overrides_root=None, container=None, temp_root=None, build_dir=None):
     root = Path(root).resolve()
     build = resolve_build(root, build_dir)
-    result = {'packets': [], 'commands': [], 'errors': [], 'transport': {},
+    result = {'packets': [], 'commands': [], 'unresolved_commands': [], 'errors': [], 'transport': {},
               'source': build.relative_to(root).as_posix(), 'byte_order': 'little',
               'catalog_version': CATALOG_VERSION, 'apps': []}
     compiler_build = build / 'cache' if (build / 'cache').is_dir() else build
@@ -306,7 +306,7 @@ def _build_catalog(root, overrides_root=None, container=None, temp_root=None, bu
                          'code_expr': expression, 'struct': typ,
                          'fields': fields_for(typ, structs, formats=formats), 'kind': 'command',
                          'dispatch': 'mid' if code == mid else 'function_code'}
-                        for code, (mid, expression, typ) in sorted(mappings.items()) if mid in defined]
+                        for code, (mid, expression, typ) in sorted(mappings.items())]
             for mid, size in sorted(raw_telemetry_mappings(initialized, defined).items()):
                 if mid not in telemetry:
                     packets.append({'id': mid, 'name': mid, 'app': app, 'mid_expr': mid, 'struct': None,
@@ -314,11 +314,11 @@ def _build_catalog(root, overrides_root=None, container=None, temp_root=None, bu
             commands += [{'id': code, 'name': code, 'app': app, 'mid_expr': mid, 'code_expr': expression,
                           'struct': None, 'fields': [], 'kind': 'command', 'size_expr': size,
                           'dispatch': 'function_code'}
-                         for code, (mid, expression, size) in sorted(explicit.items()) if mid in defined]
-            unresolved += [code for code, (mid, _, _) in mappings.items() if mid not in defined]
-            unresolved += [code for code, (mid, _, _) in explicit.items() if mid not in defined]
-            if unresolved:
-                result['errors'].append(app + ': commands with unresolved layouts: ' + ', '.join(unresolved))
+                         for code, (mid, expression, size) in sorted(explicit.items())]
+            # Unresolved commands stay listed with their reason; none is sendable.
+            for code, reason in unresolved.items():
+                result['unresolved_commands'].append({'id': code, 'app': app, 'reason': reason})
+                result['errors'].append(f'{app}: command {code} is unresolved: {reason}')
             missing_telemetry = used_telemetry - {packet['struct'] for packet in packets}
             if missing_telemetry:
                 result['errors'].append(app + ': telemetry with unresolved MIDs: ' + ', '.join(sorted(missing_telemetry)))

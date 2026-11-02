@@ -3,59 +3,52 @@
 Discovery names the wire objects; catalog.py asks the target compiler for every
 MID, code, size and field offset. No app-specific command dictionary lives here.
 """
+from collections import Counter, defaultdict
 import re
 
-
-def arguments(text):
-    parts, start, level = [], 0, 0
-    for index, char in enumerate(text):
-        if char in '([{': level += 1
-        elif char in ')]}': level -= 1
-        elif char == ',' and level == 0:
-            parts.append(text[start:index].strip()); start = index + 1
-    return parts + [text[start:].strip()]
-
-
-def calls(text, symbol):
-    for match in re.finditer(r'\b' + re.escape(symbol) + r'\s*\(', text):
-        level, end = 1, match.end()
-        while end < len(text) and level:
-            if text[end] == '(': level += 1
-            elif text[end] == ')': level -= 1
-            end += 1
-        if not level:
-            yield match.start(), arguments(text[match.end():end - 1])
+from ground_station.c_source import (arguments, blank_lexemes, calls, closing, entry_routes,
+                                     mid_aliases, mid_regions, mids_at)
 
 
 def function_bodies(text):
-    masked = re.sub(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'', lambda m:' ' * len(m[0]), text)
-    found = {}
-    pattern = re.compile(r'\b(\w+)\s*\([^;{}]*\)\s*\{')
+    """Return (name, parameters, begin, end) of each brace-delimited definition."""
+    masked = blank_lexemes(text)
+    found = []
+    pattern = re.compile(r'\b(\w+)\s*\(([^;{}]*)\)\s*\{')
     position = 0
     while match := pattern.search(masked, position):
-        name = match[1]
-        level, end = 1, match.end()
-        while end < len(masked) and level:
-            if masked[end] == '{': level += 1
-            elif masked[end] == '}': level -= 1
-            end += 1
-        if name not in {'if','for','while','switch'}:
-            found[name] = text[match.end():end - 1]
-        position = end
+        end = closing(masked, match.end() - 1, '{', '}')
+        if end is None:
+            break
+        if match[1] not in {'if', 'for', 'while', 'switch'}:
+            found.append((match[1], arguments(text[match.start(2):match.end(2)]), match.end(), end))
+        position = end + 1
     return found
 
 
 def command_mappings(text, structs, defined, prefix):
-    """Resolve direct casts, validation wrappers, length arrays and handler tables."""
+    """Resolve direct casts, validation wrappers, length arrays and handler tables.
+
+    A code belongs to the MID that reaches its dispatch: a CFE_SB_MsgId_Equal
+    branch, a negated test that returns for every other MID, or an explicit
+    handler table entry. Without that evidence the code is returned with the
+    reason, never with a MID chosen from the application name.
+    Returns (mappings, {unresolved code: reason}, size-only mappings).
+    """
     packet_types = {name for name, fields in structs.items()
                     if any(typ == 'CFE_MSG_CommandHeader_t' for typ, _, _ in fields)}
-    bodies = function_bodies(text)
-    parameters = {name: arguments(match[1]) for name in bodies
-                  if (match := re.search(r'\b' + re.escape(name) + r'\s*\(([^;{}]*)\)\s*\{', text))}
+    masked = blank_lexemes(text)
+    definitions = function_bodies(text)
+    counts = Counter(name for name, _, _, _ in definitions)
+    # Static functions in separate sources can share a name. After
+    # preprocessing the called definition is unknown, so neither is followed.
+    functions = {name: (parameters, begin, end) for name, parameters, begin, end in definitions if counts[name] == 1}
+    bodies = {name: masked[begin:end] for name, (_, begin, end) in functions.items()}
+    owned = lambda code: code in defined and code.startswith(prefix + '_')
     validators = {}
     for name, body in bodies.items():
-        names = [re.findall(r'\w+', parameter)[-1] for parameter in parameters.get(name, []) if re.findall(r'\w+', parameter)]
-        for _, args in calls(body, 'CFE_MSG_GetSize'):
+        names = [re.findall(r'\w+', parameter)[-1] for parameter in functions[name][0] if re.findall(r'\w+', parameter)]
+        for _, _, _, args in calls(body, {'CFE_MSG_GetSize'}):
             if len(args) != 2 or not re.fullmatch(r'&\s*\w+', args[1]): continue
             actual = args[1].lstrip('&').strip()
             for index, expected in enumerate(names):
@@ -64,7 +57,7 @@ def command_mappings(text, structs, defined, prefix):
     def sizes_in(block, seen=()):
         sizes = set()
         for name, index in validators.items():
-            for _, args in calls(block, name):
+            for _, _, _, args in calls(block, {name}):
                 if len(args) > index:
                     size = args[index]
                     if size in defined or size.isdigit() or re.fullmatch(r'sizeof\s*\(\s*\w+\s*\)', size):
@@ -84,70 +77,105 @@ def command_mappings(text, structs, defined, prefix):
             if name in bodies and name not in seen:
                 types.update(types_in(bodies[name], (*seen, name)))
         return types
-    mappings, explicit, expected = {}, {}, set()
-    mid = prefix + '_CMD_MID'
-    aliases = dict(re.findall(r'\b(\w+)\s*=\s*CFE_SB_ValueToMsgId\s*\(\s*(\w+_MID)\s*\)', text))
-    routes, branches = {}, []
-    for match in re.finditer(r'CFE_SB_MsgId_Equal\s*\([^,]+,\s*(?:CFE_SB_ValueToMsgId\s*\(\s*)?(\w+)\s*(?:\)\s*)?\)\s*\)\s*\{', text):
-        received = aliases.get(match[1], match[1]); level, end = 1, match.end()
-        while end < len(text) and level:
-            if text[end] == '{': level += 1
-            elif text[end] == '}': level -= 1
-            end += 1
-        if received in defined and received.startswith(prefix + '_'):
-            branches.append((received, text[match.end():end - 1]))
-    def route_calls(block, received, seen=()):
-        if len(seen) >= 5: return
-        for name in re.findall(r'\b(\w+)\s*\(', block):
-            if name in bodies and name not in seen:
-                routes.setdefault(name, set()).add(received)
-                route_calls(bodies[name], received, (*seen, name))
-    for received, block in branches:
-        route_calls(block, received)
-        if received != mid:
-            candidates = types_in(block)
-            if len(candidates) == 1: mappings[received] = (received, '0', candidates.pop())
+    aliases = mid_aliases(masked)
+    regions = {name: mid_regions(body, aliases) for name, body in bodies.items()}
+    sites = {name: [(call[1], call.start()) for call in re.finditer(r'\b(\w+)\s*\(', body) if call[1] in bodies]
+             for name, body in bodies.items()}
+    routes = entry_routes(regions, sites)
+    layouts, sized, reasons, expected = defaultdict(set), defaultdict(set), {}, set()
+    def route(code, function, position, candidates, sizes):
+        received = mids_at(regions[function], routes[function], position)
+        if len(received) > 1:
+            several = ', '.join(sorted(received))
+            reasons.setdefault(code, f'{function} is reached from several MIDs ({several})')
+        elif not received:
+            reasons.setdefault(code, f'no MID comparison or handler table reaches {function}')
+        elif len(candidates) == 1:
+            layouts[code].add((next(iter(received)), code, next(iter(candidates))))
+        elif len(sizes) == 1:
+            sized[code].add((next(iter(received)), code, next(iter(sizes))))
     for function, body in bodies.items():
+        # A dispatch branch that never consumes the message has no external
+        # packet layout to expose (for example, an internal scheduler wakeup).
+        message_parameters = [re.findall(r'\w+', parameter)[-1] for parameter in functions[function][0]
+                              if re.search(r'\b(?:CFE_MSG_Message_t|CFE_SB_Buffer_t)\b', parameter)]
         for match in re.finditer(r'\bcase\s+(\w+_CC)\s*:(.*?)(?=\bbreak\s*;|\bcase\s+|\bdefault\s*:)', body, re.S):
             code, block = match.groups()
-            if code not in defined or not code.startswith(prefix + '_'):
+            if not owned(code):
                 continue
-            candidates = types_in(block)
-            sizes = sizes_in(block)
-            received = routes.get(function, {mid})
-            if len(candidates) == 1 and len(received) == 1:
-                mappings[code] = (next(iter(received)), code, candidates.pop())
-            elif len(sizes) == 1 and len(received) == 1:
-                explicit[code] = (next(iter(received)), code, sizes.pop())
-            # A dispatch branch that never consumes the message has no external
-            # packet layout to expose (for example, an internal scheduler wakeup).
-            message_parameters = [re.findall(r'\w+', parameter)[-1] for parameter in parameters.get(function, [])
-                                  if re.search(r'\b(?:CFE_MSG_Message_t|CFE_SB_Buffer_t)\b', parameter)]
-            if not message_parameters or candidates or sizes or code in mappings or code in explicit or any(
-                    re.search(r'\b' + re.escape(name) + r'\b', block) for name in message_parameters):
+            candidates, sizes = types_in(block), sizes_in(block)
+            mentioned = any(re.search(r'\b' + re.escape(name) + r'\b', block) for name in message_parameters)
+            if not message_parameters or candidates or sizes or mentioned:
                 expected.add(code)
-    for code, typ in re.findall(r'\[\s*(\w+_CC)\s*\]\s*=\s*sizeof\s*\(\s*(\w+)\s*\)', text):
-        if code in defined and code.startswith(prefix + '_'):
-            expected.add(code)
-            if typ in packet_types: mappings[code] = (mid, code, typ)
-    for table_mid, code, typ in re.findall(r'\b\w+\(\s*(\w+_MID)\s*,\s*(\w+_CC|0)\s*,\s*(\w+)\s*,', text):
+            route(code, function, match.start(), candidates, sizes)
+    for name, _, begin, end in definitions:
+        if counts[name] > 1:
+            for code in re.findall(r'\bcase\s+(\w+_CC)\s*:', masked[begin:end]):
+                if owned(code):
+                    expected.add(code)
+                    reasons.setdefault(code, f'{name} has several definitions')
+    spans = [(begin, end, name) for name, (_, begin, end) in functions.items()]
+    for match in re.finditer(r'\[\s*(\w+_CC)\s*\]\s*=\s*sizeof\s*\(\s*(\w+)\s*\)', masked):
+        code, typ = match.groups()
+        if not owned(code):
+            continue
+        expected.add(code)
+        # The length array takes its MID from the function that indexes it.
+        container = next(((name, begin) for begin, end, name in spans if begin <= match.start() < end), None)
+        if container is None:
+            reasons.setdefault(code, 'its length array is not inside a single function definition')
+        elif typ in packet_types:
+            route(code, container[0], match.start() - container[1], {typ}, set())
+    for table_mid, code, typ in re.findall(r'\b\w+\(\s*(\w+_MID)\s*,\s*(\w+_CC|0)\s*,\s*(\w+)\s*,', masked):
         if not table_mid.startswith(prefix + '_') or typ not in packet_types:
             continue
-        if code == '0': mappings[table_mid] = (table_mid, '0', typ)
+        if code == '0': layouts[table_mid].add((table_mid, '0', typ))
         elif code in defined:
-            expected.add(code); mappings[code] = (table_mid, code, typ)
-    explicit = {code: layout for code, layout in explicit.items() if code not in mappings}
-    return mappings, sorted(expected - mappings.keys() - explicit.keys()), explicit
+            expected.add(code); layouts[code].add((table_mid, code, typ))
+    # A MID whose messages reach function-code dispatch is not itself a command.
+    dispatched = set()
+    for function, body in bodies.items():
+        for match in re.finditer(r'\bcase\s+(\w+_CC)\s*:|\[\s*(\w+_CC)\s*\]\s*=', body):
+            if owned(match[1] or match[2]):
+                dispatched |= mids_at(regions[function], routes[function], match.start())
+    for function, body in bodies.items():
+        for mid, begin, end in regions[function]:
+            if mid in dispatched or mid not in defined or not mid.startswith(prefix + '_'):
+                continue
+            candidates = types_in(body[begin:end])
+            if len(candidates) == 1: layouts[mid].add((mid, '0', candidates.pop()))
+    mappings, explicit, unresolved = {}, {}, {}
+    for code, found in layouts.items():
+        if len(found) == 1:
+            mappings[code] = found.pop()
+        else:
+            unresolved[code] = 'conflicting dispatch evidence: ' + ', '.join(f'{mid} {typ}' for mid, _, typ in sorted(found))
+    for code, found in sized.items():
+        if code in mappings or code in unresolved:
+            continue
+        if len(found) == 1:
+            explicit[code] = found.pop()
+        else:
+            unresolved[code] = 'conflicting validated lengths: ' + ', '.join(f'{mid} {size}' for mid, _, size in sorted(found))
+    for selected in (mappings, explicit):
+        for code, (mid, _, _) in list(selected.items()):
+            if mid not in defined:
+                del selected[code]
+                unresolved[code] = mid + ' is not defined by the compiled headers'
+    for code in expected - mappings.keys() - explicit.keys() - unresolved.keys():
+        unresolved[code] = reasons.get(code, 'no command structure or validated length was found')
+    return mappings, dict(sorted(unresolved.items())), explicit
 
 
 def raw_telemetry_mappings(text, defined):
     """Find initialized byte buffers and their explicit compiler-sized packets."""
     result = {}
-    for body in function_bodies(text).values():
+    for _, _, begin, end in function_bodies(text):
+        body = text[begin:end]
         buffers = dict(re.findall(r'\b(?:uint8|uint8_t|unsigned\s+char|char)\s+(\w+)\s*\[([^\]]+)\]', body))
         pointers = dict(re.findall(r'\b(\w+)\s*=\s*\(\s*CFE_MSG_Message_t\s*\*\s*\)\s*&?\s*(\w+)\b', body))
         aliases = dict(re.findall(r'\b(\w+)\s*=\s*CFE_SB_ValueToMsgId\s*\(\s*(\w+)\s*\)', body))
-        for _, args in calls(body, 'CFE_MSG_Init'):
+        for _, _, _, args in calls(body, {'CFE_MSG_Init'}):
             if len(args) != 3: continue
             pointer = re.sub(r'\(\s*CFE_MSG_Message_t\s*\*\s*\)', '', args[0]).strip('& ')
             buffer = pointers.get(pointer, pointer)
@@ -180,12 +208,12 @@ def telemetry_mappings(text, structs, packet_types, declarations):
             candidates = {typ for parent in candidates for typ, name, _ in structs.get(parent, []) if name == member}
         return next(iter(candidates)) if len(candidates) == 1 else None
     def message_type(expression):
-        pointer = list(calls(expression, 'CFE_MSG_PTR'))
-        if pointer: expression = pointer[0][1][0]
+        pointer = next(calls(expression, {'CFE_MSG_PTR'}), None)
+        if pointer: expression = pointer[3][0]
         expression = re.sub(r'\([^)]*\*\s*\)', '', expression).strip('& ')
         return resolve(expression.removesuffix('.TelemetryHeader').removesuffix('->TelemetryHeader'))
     mappings, used = {}, set()
-    for position, args in calls(text, 'CFE_MSG_Init'):
+    for _, position, _, args in calls(text, {'CFE_MSG_Init'}):
         if len(args) < 3: continue
         mids = re.findall(r'\b(\w+_MID(?:_BASE)?)\b', args[1])
         size = re.fullmatch(r'sizeof\s*\((.*)\)', args[2], re.S)
@@ -200,16 +228,16 @@ def telemetry_mappings(text, structs, packet_types, declarations):
                 repeat = loops[-1][1]
             else: continue
         mappings[mids[0]] = (typ, repeat)
-    for _, args in calls(text, 'CFE_SB_TransmitMsg'):
+    for _, _, _, args in calls(text, {'CFE_SB_TransmitMsg'}):
         if not args: continue
         typ = message_type(args[0])
         if typ in packet_types: used.add(typ)
     variable = {}
-    for position, args in calls(text, 'CFE_MSG_SetSize'):
+    for _, position, _, args in calls(text, {'CFE_MSG_SetSize'}):
         if len(args) != 2: continue
-        pointer = list(calls(args[0], 'CFE_MSG_PTR'))
+        pointer = next(calls(args[0], {'CFE_MSG_PTR'}), None)
         if not pointer: continue
-        expression = pointer[0][1][0].removesuffix('.TelemetryHeader').removesuffix('->TelemetryHeader')
+        expression = pointer[3][0].removesuffix('.TelemetryHeader').removesuffix('->TelemetryHeader')
         typ = resolve(expression)
         if typ not in packet_types: continue
         # sizeof(packet) - maximum trailing data + used bytes is the firmware's

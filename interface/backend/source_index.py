@@ -10,8 +10,9 @@ from pathlib import Path
 import os
 import re
 
+from ground_station.c_source import blank_lexemes
 
-_LEXEME = re.compile(r'/\*[\s\S]*?\*/|//[^\n]*|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'')
+
 _TOKEN = re.compile(r'[A-Za-z_]\w*|->|\.\.\.|[^\s]')
 _IDENTIFIER = re.compile(r'[A-Za-z_]\w*\Z')
 _NOT_CALL = {'if', 'for', 'while', 'switch', 'sizeof', '_Alignof', 'alignof',
@@ -24,13 +25,9 @@ _EXCLUDED = {'.git', '__pycache__', 'node_modules', 'examples', 'docs', 'doc',
              'unit-test', 'unit-tests', 'ut-stubs', 'ut-coverage', 'coveragetest', 'tests'}
 
 
-def _blank(match):
-    return re.sub(r'[^\n]', ' ', match.group())
-
-
 def mask_source(source):
     """Blank comments, strings and entire continued directives without shifting offsets."""
-    masked = _LEXEME.sub(_blank, source)
+    masked = blank_lexemes(source)
     continued = False
     lines = []
     for line in masked.splitlines(keepends=True):

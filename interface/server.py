@@ -49,6 +49,48 @@ class Studio:
             self.operation.release()
 
     def job(self, action, options):
+        options, kind, script, connection = self._job_request(action, options)
+        target = options['target']
+        exclusive = action not in self.BACKGROUND
+        with self.lock:
+            if self.closing:
+                raise ValueError('The server is shutting down.')
+            destination = tuple(sorted(connection.items())) if connection else None
+            key = (action, target, kind, destination, options.get('device'), options.get('model'))
+            if not exclusive:
+                # A boot or run job keeps streaming the log this reader would open.
+                for existing in self.jobs.values():
+                    if (existing['status'] == 'running' and not existing['cancel'].is_set()
+                            and (existing['key'] == key or action == 'logs'
+                                 and existing['action'] in {'boot', 'run'} and existing['kind'] == kind
+                                 and existing['target'] == target and existing['connection'] == connection)):
+                        return {'id': existing['id'], 'existing': True}
+            if exclusive and not self.operation.acquire(blocking=False):
+                raise ValueError('An operation is already running. Follow its progress in the terminal.')
+            ident = secrets.token_hex(6)
+            record = {'id': ident, 'action': action, 'target': target, 'connection': connection,
+                      'device': options.get('device'), 'script': script, 'retry': bool(options.get('retry')),
+                      'kind': kind, 'status': 'running', 'key': key,
+                      'streaming': action in self.BACKGROUND, 'operation_complete': False,
+                      'lines': deque(maxlen=3000), 'line_count': 0, 'started': time.time(), 'exit_code': None,
+                      'cancel': threading.Event()}
+            record['thread'] = threading.Thread(target=self._run_job, args=(record, options), daemon=True)
+            self.jobs[ident] = record
+            for old in list(self.jobs)[:-30]:
+                if self.jobs[old]['status'] != 'running':
+                    del self.jobs[old]
+        try:
+            record['thread'].start()
+        except BaseException:
+            with self.lock:
+                del self.jobs[ident]
+            if exclusive:
+                self.operation.release()
+            raise
+        return {'id': ident}
+
+    def _job_request(self, action, options):
+        """Validate a job request: (options with target, log kind, sensor script, SSH connection)."""
         if not isinstance(action, str) or action not in self.ACTIONS or not isinstance(options, dict):
             raise ValueError('Invalid operation')
         if set(options) - {'target', 'connection', 'sensorless', 'kind', 'board', 'os', 'device', 'model', 'retry'}:
@@ -92,133 +134,108 @@ class Studio:
         if target == 'physical' and action in {'logs', 'boot', 'run', 'stop', 'shutdown', 'connect', 'probe', 'setup'}:
             connection = self.hardware.connection(options.get('connection'))
             options['connection'] = connection
-        exclusive = action not in self.BACKGROUND
+        return options, kind, script, connection
+
+    def _emit(self, record, line):
         with self.lock:
-            if self.closing:
-                raise ValueError('The server is shutting down.')
-            destination = tuple(sorted(connection.items())) if connection else None
-            key = (action, target, kind, destination, options.get('device'), options.get('model'))
-            if not exclusive:
-                for existing in self.jobs.values():
-                    if (existing['status'] == 'running' and not existing['cancel'].is_set()
-                            and (existing['key'] == key or action == 'logs'
-                                 and existing['action'] in {'boot', 'run'} and existing['kind'] == kind
-                                 and existing['target'] == target and existing['connection'] == connection)):
-                        return {'id': existing['id'], 'existing': True}
-            if exclusive and not self.operation.acquire(blocking=False):
-                raise ValueError('An operation is already running. Follow its progress in the terminal.')
-            ident = secrets.token_hex(6)
-            record = dict(id=ident, action=action, target=target, connection=connection,
-                          device=options.get('device'), script=script,
-                          retry=bool(options.get('retry')),
-                          kind=kind, status='running', key=key,
-                          streaming=action in self.BACKGROUND, operation_complete=False,
-                          lines=deque(maxlen=3000), line_count=0, started=time.time(), exit_code=None,
-                          cancel=threading.Event())
-            self.jobs[ident] = record
-            for old in list(self.jobs)[:-30]:
-                if self.jobs[old]['status'] != 'running':
-                    del self.jobs[old]
-        def emit(line):
-            with self.lock:
-                if action in {'simulate', 'simulate-preview'} and str(line).startswith('@sensor '):
-                    try:
-                        record['samples'] = json.loads(str(line)[8:])
-                        record['samples']['received_at'] = time.time()
-                        return
-                    except (ValueError, TypeError):
-                        pass
-                record['lines'].append(str(line))
-                record['line_count'] += 1
-        def run():
-            owns_operation = exclusive
-            try:
-                if record['cancel'].is_set():
+            if record['action'] in {'simulate', 'simulate-preview'} and str(line).startswith('@sensor '):
+                try:
+                    samples = json.loads(str(line)[8:])
+                except ValueError:
+                    samples = None
+                if isinstance(samples, dict):
+                    record['samples'] = dict(samples, received_at=time.time())
                     return
-                if action == 'boot' and target == 'qemu':
-                    self.hardware.assert_can_boot(options.get('retry', False))
-                def prepare_run():
-                    self.ground.stop()
-                    with self.lock:
-                        for other in self.jobs.values():
-                            if (other['streaming'] and (other['target'] != target or other['connection'] != connection
-                                    or other['action'] in {'logs', 'boot', 'run'} and other['kind'] == kind)):
-                                other['cancel'].set()
-                if action in {'build', 'boot', 'stop', 'shutdown'}:
-                    self.ground.stop()
-                if action == 'boot':
-                    with self.lock:
-                        for other in self.jobs.values():
-                            if (other['streaming'] and (other['target'] != target or other['connection'] != connection
-                                    or other['action'] in {'logs', 'boot', 'run'} and other['kind'] == kind)):
-                                other['cancel'].set()
-                if action == 'shutdown':
-                    # Stop readers/writers before SSH and QMP disappear normally.
-                    with self.lock:
-                        for other in self.jobs.values():
-                            if other['streaming'] and other['target'] == target and other['connection'] == connection:
-                                other['cancel'].set()
-                result = self.hardware.execute(action, emit, cancel=record['cancel'],
-                                               **({'on_start': prepare_run} if action == 'run' else {}), **options)
-                if action in {'stop', 'shutdown'}:
-                    with self.lock:
-                        for other in self.jobs.values():
-                            if (other['target'] == target and other['connection'] == connection
-                                    and (action == 'shutdown' and other['streaming']
-                                         or other['action'] in {'logs', 'run'} and other['kind'] == 'flight')):
-                                other['cancel'].set()
-                if action == 'build' and isinstance(result, dict) and result.get('fingerprint') and not record['cancel'].is_set():
-                    emit('Preparing the communication catalog for this build...')
-                    try:
-                        self.freeze_catalog(result, bool(result.get('sensorless')))
-                    except (ValueError, OSError, RuntimeError) as error:
-                        emit('Catalog unavailable: ' + str(error))
-                with self.lock:
-                    record['result'] = result
-                if action in {'run', 'boot'} and not record['cancel'].is_set():
-                    # The same output continues after startup. Release the operation
-                    # lock so a long-running log tail never blocks Build/Run/Stop.
-                    with self.lock:
-                        record['operation_complete'] = True
-                        record['streaming'] = True
-                        self.operation.release()
-                        owns_operation = False
-                    follow = {'target': target, 'kind': kind}
-                    if connection:
-                        follow['connection'] = connection
-                    if action == 'boot' and target == 'qemu':
-                        follow['tail'] = 0  # boot.sh already printed the serial history.
-                    if not record['cancel'].is_set():
-                        self.hardware.execute('logs', emit, cancel=record['cancel'], **follow)
-                with self.lock:
-                    record['exit_code'] = 0
-                    record['status'] = 'succeeded'
-            except Exception as error:
-                message = ('Log reader stopped: ' if record['operation_complete'] else '') + str(error)
-                if not record['cancel'].is_set():
-                    emit(message)
-                with self.lock:
-                    record['error'] = message
-                    record['exit_code'] = getattr(error, 'returncode', None)
-                    record['status'] = 'failed'
-            finally:
-                with self.lock:
-                    if record['cancel'].is_set():
-                        record['status'] = 'cancelled'
-                    record['ended'] = time.time()
-                if owns_operation:
-                    self.operation.release()
-        thread = threading.Thread(target=run, daemon=True)
-        record['thread'] = thread
+            record['lines'].append(str(line))
+            record['line_count'] += 1
+
+    def _cancel_readers(self, target, connection, kind=None, elsewhere=False):
+        """Cancel streaming jobs of this destination, or only its log followers of one kind.
+
+        With ``elsewhere``, streaming jobs of every other target or connection stop too.
+        """
+        with self.lock:
+            for other in self.jobs.values():
+                here = other['target'] == target and other['connection'] == connection
+                follows = kind is None or other['action'] in {'logs', 'boot', 'run'} and other['kind'] == kind
+                if other['streaming'] and (here and follows or elsewhere and not here):
+                    other['cancel'].set()
+
+    def _run_job(self, record, options):
+        """Job thread. An exclusive job holds self.operation until its operation ends."""
+        owns_operation = record['action'] not in self.BACKGROUND
+        emit = lambda line: self._emit(record, line)
         try:
-            thread.start()
-        except BaseException:
+            if record['cancel'].is_set():
+                return
+            result = self._execute_job(record, options, emit)
             with self.lock:
-                del self.jobs[ident]
-            if exclusive:
+                record['result'] = result
+            if record['action'] in {'run', 'boot'} and not record['cancel'].is_set():
+                # The same output continues after startup. Release the operation
+                # lock so a long-running log tail never blocks Build/Run/Stop.
+                with self.lock:
+                    record['operation_complete'] = True
+                    record['streaming'] = True
+                    self.operation.release()
+                    owns_operation = False
+                self._follow_logs(record, emit)
+            with self.lock:
+                record['exit_code'] = 0
+                record['status'] = 'succeeded'
+        except Exception as error:
+            message = ('Log reader stopped: ' if record['operation_complete'] else '') + str(error)
+            if not record['cancel'].is_set():
+                emit(message)
+            with self.lock:
+                record['error'] = message
+                record['exit_code'] = getattr(error, 'returncode', None)
+                record['status'] = 'failed'
+        finally:
+            with self.lock:
+                if record['cancel'].is_set():
+                    record['status'] = 'cancelled'
+                record['ended'] = time.time()
+            if owns_operation:
                 self.operation.release()
-            raise
-        return {'id': ident}
+
+    def _execute_job(self, record, options, emit):
+        action, target, kind, connection = record['action'], record['target'], record['kind'], record['connection']
+        if action == 'boot' and target == 'qemu':
+            # Refuse an impossible boot before disconnecting anything.
+            self.hardware.assert_can_boot(options.get('retry', False))
+        def replace_readers():
+            self.ground.stop()
+            self._cancel_readers(target, connection, kind=kind, elsewhere=True)
+        if action == 'boot':
+            replace_readers()
+        elif action in {'build', 'stop', 'shutdown'}:
+            self.ground.stop()
+        if action == 'shutdown':
+            # Stop readers/writers before SSH and QMP disappear normally.
+            self._cancel_readers(target, connection)
+        # A run replaces the readers only once its build and target checks pass.
+        hooks = {'on_start': replace_readers} if action == 'run' else {}
+        result = self.hardware.execute(action, emit, cancel=record['cancel'], **hooks, **options)
+        if action in {'stop', 'shutdown'}:
+            # Readers opened meanwhile would follow software that no longer runs.
+            self._cancel_readers(target, connection, kind='flight' if action == 'stop' else None)
+        if action == 'build' and isinstance(result, dict) and result.get('fingerprint') and not record['cancel'].is_set():
+            emit('Preparing the communication catalog for this build...')
+            try:
+                self.freeze_catalog(result, bool(result.get('sensorless')))
+            except (ValueError, OSError, RuntimeError) as error:
+                emit('Catalog unavailable: ' + str(error))
+        return result
+
+    def _follow_logs(self, record, emit):
+        follow = {'target': record['target'], 'kind': record['kind']}
+        if record['connection']:
+            follow['connection'] = record['connection']
+        if record['action'] == 'boot' and record['target'] == 'qemu':
+            follow['tail'] = 0  # boot.sh already printed the serial history.
+        if not record['cancel'].is_set():
+            self.hardware.execute('logs', emit, cancel=record['cancel'], **follow)
 
     def cancel(self, ident):
         with self.lock:
@@ -344,7 +361,9 @@ class Studio:
         self.ground.stop()
         deadline = time.monotonic() + 6
         for job in jobs:
-            job['thread'].join(max(0, deadline - time.monotonic()))
+            # A job registered just before closing may not have started its thread.
+            if job['thread'].is_alive():
+                job['thread'].join(max(0, deadline - time.monotonic()))
 
 
 class Handler(BaseHTTPRequestHandler):

@@ -3,7 +3,10 @@
 Native cFE sensor library following `sample_lib`'s public-header/source layout.
 `TMP105_LIB_ReadTemperature` reads register `0x00` and converts its signed
 big-endian result into millidegrees Celsius. The output remains unchanged after
-a failed read. Bus/device path and seven-bit address come from the caller.
+a failed read. Data with any of the always-zero bits D3–D0 set, such as the
+all-ones pattern of an unanswered read on a bus that reports no NACK, fails
+with `-EIO` instead of decoding as a temperature. Bus/device path and seven-bit
+address come from the caller.
 
 The CMake dependency and C calls point to `linux_i2c_lib`, which owns Linux
 `I2C_RDWR`. The sensor library owns register selection and temperature decoding.
