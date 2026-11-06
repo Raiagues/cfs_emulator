@@ -1,7 +1,7 @@
 """Small behavior diagrams derived from indexed C definitions and API calls.
 
-Blocks describe responsibilities, not files. Edges only represent observed calls
-or an API used inside a function; they do not claim runtime ordering. The lexical
+Blocks group functions by responsibility, not by file. An edge is a call found in
+the source, or an API used inside a function, not an execution order. The lexical
 index includes conditional branches and cannot resolve every callback or queue.
 """
 from collections import defaultdict, deque
@@ -31,67 +31,14 @@ ROLE_ORDER = {'entry': 0, 'initialize': 1, 'receive': 2, 'dispatch': 3,
 ROLE_ICONS = {'entry': 'play', 'initialize': 'settings', 'receive': 'arrow-down',
               'dispatch': 'workflow', 'commands': 'terminal', 'work': 'cpu',
               'publish': 'arrow-up-right', 'timer': 'rotate'}
-
-
-# Sections whose prose introduces an application in a README.
-INTRODUCTION = {'introduction', 'overview', 'purpose', 'description'}
-# cFS READMEs open with a sentence stating only that the app belongs to the bundle.
-MEMBERSHIP = ('plug in to', 'plug-in to', 'framework component')
-
-
-def _introduction(lines):
-    """Prose paragraphs with their first line, up to the first non-introduction section."""
-    paragraphs, current, first, fenced, titled = [], [], 0, False, False
-    for number, line in enumerate([*lines, ''], 1):
-        stripped = line.strip()
-        if stripped.startswith(('```', '~~~')):
-            fenced = not fenced
-            continue
-        heading = not fenced and stripped.startswith('#')
-        if stripped and not fenced and not heading and not stripped.startswith(('![', '- ', '* ', '|')):
-            first = first or number
-            current.append(stripped)
-            continue
-        if current:
-            paragraphs.append((' '.join(current), first))
-            current, first = [], 0
-        if heading:
-            # The first heading is the title; any other section ends the introduction.
-            if titled and stripped.lstrip('#').strip().lower() not in INTRODUCTION:
-                break
-            titled = True
-    return paragraphs
-
-
-def _documented_purpose(app, root):
-    """First sentence of the app's README.md introduction that says what it does.
-
-    This quotes local documentation; it is not an app-name lookup table or an
-    inferred runtime feature. Without a README.md, or without such a sentence,
-    the caller keeps the summary of observed source calls. A README.md that
-    exists but cannot be used returns only an 'error'.
-    """
-    if root is None or not app.get('path'):
-        return None
-    path = root / app['path'] / 'README.md'
-    try:
-        if not path.resolve().is_relative_to(root):
-            return {'error': 'README.md points outside the workspace; it was not read.'}
-        if path.stat().st_size > 128_000:
-            return {'error': 'README.md exceeds 128 kB; it was not read.'}
-        lines = path.read_text(encoding='utf-8').splitlines()
-    except FileNotFoundError:
-        return None
-    except (OSError, UnicodeError) as error:
-        return {'error': 'README.md could not be read: ' + str(error)}
-    for paragraph, line in _introduction(lines):
-        paragraph = re.sub(r'\[([^\]]+)\]\([^)]*\)', r'\1', paragraph).replace('`', '').replace('*', '')
-        for sentence in re.split(r'(?<=[.!?])\s+(?=[A-Z])', paragraph):
-            if not any(marker in sentence.lower() for marker in MEMBERSHIP):
-                text = sentence if len(sentence) <= 500 else sentence[:499].rstrip() + '…'
-                return {'text': text, 'source': {'path': path.relative_to(root).as_posix(),
-                                                 'line': line, 'kind': 'documentation'}}
-    return None
+ROLE_TITLES = {'initialize': 'Initialize', 'receive': 'Receive messages', 'dispatch': 'Route messages',
+               'commands': 'Handle commands', 'timer': 'Configure timing'}
+# Title of a work block whose functions share exactly one capability.
+WORK_TITLES = {'sensors': 'Sensor I/O', 'network_receive': 'Receive uplink data',
+               'network_send': 'Send network data', 'files': 'Access files',
+               'checksums': 'Calculate checksums', 'monitoring': 'Monitor execution',
+               'packet_assembly': 'Assemble packets', 'evaluation': 'Evaluate conditions'}
+FACET_LABELS = {'receive': 'receives', 'publish': 'publishes', 'timer': 'configures'}
 
 
 def _words(symbol):
@@ -99,7 +46,9 @@ def _words(symbol):
 
 
 def _reference(function, **extra):
-    return {**{key: function[key] for key in ('id', 'symbol', 'path', 'line', 'end_line')}, **extra}
+    reference = {key: function[key] for key in ('id', 'symbol', 'path', 'line', 'end_line')}
+    reference.update(extra)
+    return reference
 
 
 def _entry(functions, symbol):
@@ -111,7 +60,7 @@ def _entry(functions, symbol):
     matches = [fn for fn in functions if 'CFE_ES_RunLoop' in fn.get('calls', [])]
     if len(matches) == 1:
         return matches[0]
-    # A source name alone does not establish which of several entrypoints runs.
+    # Without a startup entry symbol, several run loops leave the entry unknown.
     return None
 
 
@@ -146,8 +95,7 @@ def _primary_role(function, entry, application_has_files):
         return 'entry'
     if _words(function['symbol'])[-1] in {'init', 'initialize', 'startup'} or calls & {'CFE_ES_RegisterApp', 'CFE_SB_CreatePipe'}:
         return 'initialize'
-    # Reading a message ID while copying its data is application processing,
-    # rather than evidence that the function selects a command handler.
+    # Copying incoming message fields is processing, even when the MID is read.
     if 'packet_assembly' in _capabilities(function, application_has_files):
         return 'work'
     if (calls & DISPATCH and not words & {'verify', 'validate', 'check'}) or words & {'dispatch'} or {'task', 'pipe'} <= words:
@@ -155,7 +103,7 @@ def _primary_role(function, entry, application_has_files):
     if words & {'verify', 'validate'} and not re.search(r'\w+Cmd_t\b', function.get('signature', '')):
         return None
     if words & {'cmd', 'command', 'commands', 'noop'} or re.search(r'\w+Cmd_t\b', function.get('signature', '')):
-        # Housekeeping commands are represented by what they actually do: publish.
+        # A housekeeping request handler that publishes belongs to the publish block.
         if calls & PUBLISH and words & {'hk', 'housekeeping', 'telemetry', 'tlm'}:
             return 'publish'
         return 'commands'
@@ -170,62 +118,19 @@ def _primary_role(function, entry, application_has_files):
     return None
 
 
-def _describe(role, functions, capabilities):
+def _title(role, functions, capabilities):
     calls = {name for fn in functions for name in fn.get('calls', [])}
     if role == 'entry':
-        return ('Application loop', 'Owns the cFE application run loop.') if 'CFE_ES_RunLoop' in calls else (
-            'Application entry', 'Entry function configured by the native startup script.')
-    if role == 'initialize':
-        pieces = []
-        if 'CFE_SB_CreatePipe' in calls or any(name.startswith('CFE_SB_Subscribe') for name in calls):
-            pieces.append('message pipes and subscriptions')
-        if any(name.startswith('CFE_TBL_') for name in calls):
-            pieces.append('tables')
-        if 'CFE_EVS_Register' in calls:
-            pieces.append('event reporting')
-        return ('Initialize', 'Sets up ' + ', '.join(pieces) + '.' if pieces else 'Sets up application state and resources.')
-    if role == 'receive':
-        return ('Receive messages', 'Receives software-bus messages for the application to process.')
-    if role == 'dispatch':
-        return ('Route messages', 'Reads message IDs or function codes and selects the corresponding handler.')
-    if role == 'commands':
-        return ('Handle commands', 'Implements the application’s command handlers.')
+        return 'Application loop' if 'CFE_ES_RunLoop' in calls else 'Application entry'
     if role == 'publish':
         publishers = [fn for fn in functions if set(fn.get('calls', [])) & PUBLISH]
         telemetry = publishers and all('CFE_SB_TimeStampMsg' in fn.get('calls', []) for fn in publishers)
-        return ('Publish telemetry' if telemetry else 'Publish messages',
-                'Time-stamps and publishes telemetry on the software bus.' if telemetry else
-                'Publishes outgoing messages on the software bus.')
-    if role == 'timer':
-        return ('Configure timing', 'Configures OS timers used by the application.')
-    descriptions = []
-    if 'sensors' in capabilities:
-        descriptions.append('accesses sensor interfaces')
-    if 'network_receive' in capabilities:
-        descriptions.append('receives network data')
-    if 'network_send' in capabilities:
-        descriptions.append('sends network data')
-    if 'files' in capabilities:
-        descriptions.append('accesses files and directories')
-    if 'checksums' in capabilities:
-        descriptions.append('calculates checksums with cFE CRC services')
-    if 'monitoring' in capabilities:
-        descriptions.append('reads execution information or services the watchdog')
-    if 'packet_assembly' in capabilities:
-        descriptions.append('copies incoming message fields into application buffers')
-    if 'evaluation' in capabilities:
-        descriptions.append('evaluates expressions and compares values')
-    title = ('Sensor I/O' if capabilities == {'sensors'} else
-             'Receive uplink data' if capabilities == {'network_receive'} else
-             'Send network data' if capabilities == {'network_send'} else
-             'Access files' if capabilities == {'files'} else
-             'Calculate checksums' if capabilities == {'checksums'} else
-             'Monitor execution' if capabilities == {'monitoring'} else
-             'Assemble packets' if capabilities == {'packet_assembly'} else
-             'Evaluate conditions' if capabilities == {'evaluation'} else 'Process application data')
-    description = '; '.join(descriptions)
-    return title, (description[:1].upper() + description[1:] + '.' if description else
-                   'Contains application-specific processing.')
+        return 'Publish telemetry' if telemetry else 'Publish messages'
+    if role != 'work':
+        return ROLE_TITLES[role]
+    if len(capabilities) == 1:
+        return WORK_TITLES[next(iter(capabilities))]
+    return 'Process application data'
 
 
 def summarize_application(app, entry_symbol=None, *, root=None):
@@ -233,7 +138,7 @@ def summarize_application(app, entry_symbol=None, *, root=None):
 
     ``app`` requires ``functions`` and ``call_edges`` from SourceIndex. Supplying
     the entry symbol from native startup removes ambiguity without app manifests.
-    ``root`` only improves API-call navigation; no source or runtime is modified.
+    ``root`` adds source details and line references for API calls.
     """
     functions = app.get('functions', [])
     by_id = {function['id']: function for function in functions}
@@ -248,25 +153,24 @@ def summarize_application(app, entry_symbol=None, *, root=None):
     for edge in app.get('call_edges', []):
         if edge.get('source') in by_id and edge.get('target') in by_id:
             graph[edge['source']].add(edge['target'])
-    # EDS and regular builds can define the same handler in separate files. A
-    # shared responsibility is still known when all visible candidates agree;
-    # the exact compiled definition is deliberately left as an alternative.
+    # EDS and regular builds can define the same handler in separate files. When
+    # every candidate has the same role, the call goes to the first one and the
+    # others are kept as alternatives; which one is compiled is not determined.
     alternatives = {}
     for fn in functions:
         resolved = {by_id[ident]['symbol'] for ident in graph[fn['id']]}
         for symbol in set(fn.get('calls', [])) - resolved:
             candidates = names[symbol]
             local = [candidate for candidate in candidates if candidate['path'] == fn['path']]
-            candidates = local or [candidate for candidate in candidates
-                                   if not candidate.get('static') or candidate['path'].endswith('.h')]
+            visible = [candidate for candidate in candidates if not candidate.get('static') or candidate['path'].endswith('.h')]
+            candidates = local or visible
             roles = {primary[candidate['id']] for candidate in candidates}
             if len(candidates) > 1 and len(roles) == 1 and None not in roles:
                 representative = sorted(candidates, key=lambda candidate: (candidate['path'], candidate['line']))[0]
                 graph[fn['id']].add(representative['id'])
                 alternatives[(fn['id'], representative['id'])] = candidates
-    # Computation symbols and APIs are useful evidence only on an observed
-    # entry/handler call path. An unrelated Compare or CRC utility must not
-    # become the application's principal behavior simply by existing on disk.
+    # Computation-only functions (checksums, comparisons, ...) are work only when
+    # reachable from the entry, a dispatcher, a command handler or a receiver.
     reachable = {fn['id'] for fn in functions if primary[fn['id']] in
                  {'entry', 'dispatch', 'commands', 'receive'}}
     pending = deque(reachable)
@@ -284,8 +188,8 @@ def summarize_application(app, entry_symbol=None, *, root=None):
         if primary[fn['id']]:
             groups[primary[fn['id']]][fn['id']] = fn
 
-    # API facets expose behavior inside a main routine without inventing a second
-    # function or an unconditional sequential edge (e.g. scheduler wait + send).
+    # A function that receives, publishes or configures timers also joins that
+    # role's block; this adds no call edge between its blocks.
     facets = {'receive': RECEIVE, 'publish': PUBLISH, 'timer': TIMERS}
     for role, apis in facets.items():
         for fn in functions:
@@ -331,16 +235,19 @@ def summarize_application(app, entry_symbol=None, *, root=None):
     nodes = []
     for role in sorted(groups, key=ROLE_ORDER.get):
         members = sorted(groups[role].values(), key=function_key)
-        capabilities = {cap for fn in members for cap in _capabilities(fn, files)} if role == 'work' else set()
-        title, summary = _describe(role, members, capabilities)
+        capabilities = set()
+        if role == 'work':
+            for fn in members:
+                capabilities |= _capabilities(fn, files)
         apis = {call for fn in members for call in fn.get('calls', []) if call.startswith(('CFE_', 'OS_'))}
         if role in facets:
             apis &= facets[role]
         references = [source_reference(fn, role) for fn in members]
-        nodes.append({'id': role, 'role': role, 'order': ROLE_ORDER[role], 'icon': ROLE_ICONS[role],
-                      'title': title, 'summary': summary, 'source': references[0],
-                      'functions': references, 'function_count': len(members),
-                      'apis': sorted(apis), 'capabilities': sorted(capabilities)})
+        node = {'id': role, 'role': role, 'order': ROLE_ORDER[role], 'icon': ROLE_ICONS[role],
+                'title': _title(role, members, capabilities), 'source': references[0],
+                'functions': references, 'function_count': len(members),
+                'apis': sorted(apis), 'capabilities': sorted(capabilities)}
+        nodes.append(node)
 
     edge_map = {}
 
@@ -348,8 +255,9 @@ def summarize_application(app, entry_symbol=None, *, root=None):
         if source == target or source not in groups or target not in groups:
             return
         key = (source, target, kind)
-        edge = edge_map.setdefault(key, {'source': source, 'target': target, 'kind': kind,
-                                         'label': label, 'count': 0, 'examples': []})
+        if key not in edge_map:
+            edge_map[key] = {'source': source, 'target': target, 'kind': kind, 'label': label, 'count': 0, 'examples': []}
+        edge = edge_map[key]
         edge['count'] += 1
         if len(edge['examples']) < 3:
             example = {'source': _reference(first), 'target': source_reference(last, target),
@@ -358,9 +266,8 @@ def summarize_application(app, entry_symbol=None, *, root=None):
                 example['alternatives'] = [_reference(fn) for fn in candidate_sources]
             edge['examples'].append(example)
 
-    # Collapse supporting helpers, retaining the actual call path as evidence.
-    # A node arrow means one member can call a member of the destination, not
-    # that every member runs in that order or that a live app is executing it.
+    # Edges pass through helpers without a role and keep the call path as examples.
+    # An edge means some member can call a member of the target block.
     for first in functions:
         source = primary[first['id']]
         if not source:
@@ -376,30 +283,22 @@ def summarize_application(app, entry_symbol=None, *, root=None):
             if target:
                 if target != source:
                     caller = via[-1] if via else first['id']
-                    add_edge(source, target, first, by_id[ident], via=via,
-                             candidate_sources=alternatives.get((caller, ident), ()))
+                    candidates = alternatives.get((caller, ident), ())
+                    add_edge(source, target, first, by_id[ident], via=via, candidate_sources=candidates)
                 continue
             if len(via) < 4:
                 pending.extend((child, (*via, ident)) for child in sorted(graph[ident]))
     for role, apis in facets.items():
         for fn in groups.get(role, {}).values():
             if primary[fn['id']] and primary[fn['id']] != role:
-                add_edge(primary[fn['id']], role, fn, fn, kind='uses',
-                         label={'receive': 'receives', 'publish': 'publishes', 'timer': 'configures'}[role])
+                add_edge(primary[fn['id']], role, fn, fn, kind='uses', label=FACET_LABELS[role])
 
     edges = sorted(edge_map.values(), key=lambda edge: (ROLE_ORDER[edge['source']], ROLE_ORDER[edge['target']], edge['kind']))
-    descriptions = {'receive': 'receives software-bus messages', 'commands': 'handles commands',
-                    'timer': 'configures timers', 'publish': 'publishes software-bus messages'}
-    work = next((node for node in nodes if node['role'] == 'work'), None)
-    described = [work['summary'].rstrip('.').lower()] if work else []
-    described.extend(descriptions[node['role']] for node in nodes if node['role'] in descriptions)
-    source_summary = '; '.join(described).capitalize() + '.' if described else 'Application behavior from its C entry points and calls.'
-    purpose = _documented_purpose(app, root) or {}
-    covered = set().union(*(set(group) for group in groups.values())) if groups else set()
+    covered = set()
+    for group in groups.values():
+        covered |= set(group)
     return {'nodes': nodes, 'edges': edges, 'entry': _reference(entry) if entry else None,
             'details': describe_application(app, root=root) if root else {},
-            'description': purpose.get('text') or source_summary,
-            'purpose_source': purpose.get('source'), 'purpose_error': purpose.get('error'), 'source_summary': source_summary,
             'entry_symbol': entry_symbol or (entry['symbol'] if entry else None),
             'scope': 'Source-level calls and API uses; conditional branches included. Not a runtime trace.',
             'omitted_function_count': len(functions) - len(covered)}

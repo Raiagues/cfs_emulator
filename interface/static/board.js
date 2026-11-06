@@ -1,8 +1,6 @@
 /**
- * Raspberry Pi workbench renderer from the supplied Flight Studio prototype.
- * The original board geometry and canvas lighting are retained; mission state
- * comes only from the caller, independently of the execution target. Links show
- * configured buses, not physical wiring or connection status.
+ * Workbench renderer for the local computer or the configured board and sensors.
+ * Links show configured buses, not physical wiring or connection status.
  */
 export function mountBoard(container, options = {}) {
   let settings = {...options};
@@ -177,6 +175,18 @@ function shade(hex, factor) {
   const digits = hex.replace('#', '')
   const channels = [0, 2, 4].map(i => Math.min(255, Math.max(0, Math.round(parseInt(digits.slice(i, i + 2), 16) * factor))))
   return `rgb(${channels.join(',')})`
+}
+
+function addComputer() {
+  // Local workstation, distinct from the Raspberry Pi and its peripheral buses.
+  box(0, .12, 0, 7.2, .25, 4.6, '#56616c');
+  box(0, .27, -.2, 6.6, .05, 3.9, '#151e29');
+  box(0, .3, -.2, 6.1, .02, 3.35, '#263b4a');
+  boardText('cFS', -1.3, .34, -.35, .75, '#c5d4df');
+  boardText('NATIVE', -.95, .34, .5, .26, '#95b4c5');
+  box(0, .05, 3, 6, .18, 1.5, '#47525d');
+  for(let row=0;row<3;row++)for(let col=0;col<12;col++)
+    box(-2.6+col*.47, .16, 2.53+row*.35, .35, .04, .24, '#87939d');
 }
 
 function addBoard() {
@@ -530,7 +540,8 @@ boardCanvas.addEventListener('wheel', event => {
 const resize = new ResizeObserver(updateModel);
 resize.observe(container);
 
-if (settings.board === 'raspi4b') addBoard();
+if (settings.board === 'native') addComputer();
+else if (settings.board === 'raspi4b') addBoard();
 syncModelDevices();
 return {
   update(next) {
@@ -540,7 +551,8 @@ return {
       modelParts.length = modelLines.length = modelTexts.length = 0;
       cameraAngle = .36; cameraTilt = .64; cameraZoom = 1; positions = {}; pan = [0,0];
       restoreLayout(); syncControls();
-      if (settings.board === 'raspi4b') addBoard();
+      if (settings.board === 'native') addComputer();
+      else if (settings.board === 'raspi4b') addBoard();
     }
     if (Object.hasOwn(next, 'selected')) selectedModel = next.selected;
     syncModelDevices();

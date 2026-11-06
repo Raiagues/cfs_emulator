@@ -110,8 +110,10 @@ def prepare_guest(config):
     paths = sorted({buses[device["bus"]]["device"] for device in config["devices"]})
     commands = ["modprobe i2c-dev"]
     commands.extend(f"test -c {shlex.quote(path)}" for path in paths)
+    from hardware.infrastructure import emulator_config
     subprocess.run([
         "ssh", "-F", str(Path.home() / ".ssh/cfs-emulator/config"),
+        "-p", str(emulator_config(ROOT)["ssh_port"]),
         "pi4-cfs", " && ".join(commands),
     ], check=True)
 

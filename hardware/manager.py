@@ -1,7 +1,8 @@
-"""Local deployment adapter for the existing cFS scripts and Raspberry Pi OS.
+"""Build, deployment and runtime control for the native, QEMU and physical targets.
 
 HardwareManager.execute is blocking: run it in a job worker and pass emit(line)
-and an optional threading.Event as cancel. No passwords or private keys are read.
+and an optional threading.Event as cancel. SSH runs in batch mode with the
+user's OpenSSH configuration and agent, and sudo never prompts for a password.
 """
 from __future__ import annotations
 
@@ -9,6 +10,7 @@ import hashlib
 import fcntl
 import json
 import os
+import platform
 from pathlib import Path
 import re
 import secrets
@@ -27,7 +29,9 @@ import time
 # Every field hardware/board_probe.py reports, with its JSON type.
 PROBE_FIELDS = {"arch": str, "model": str, "home": str, "hostname": str, "i2c": list, "sudo": bool,
                 "authorized": bool, "shutdown_authorized": bool, "service_installed": bool,
-                "service": str, "systemd": bool, "os": str, "raspios": bool}
+                "service": str, "service_directory": str, "systemd": bool, "os": str, "raspios": bool}
+# systemd states in which a service may still have a running process.
+ACTIVE_STATES = {"active", "activating", "deactivating", "reloading"}
 
 
 class HardwareError(RuntimeError):
@@ -60,8 +64,17 @@ class HardwareManager:
         temp.replace(self.runtime / name)
 
     def default_target(self):
+        selected = self._load("target.json", {}).get("target")
+        if selected in {"native", "qemu", "physical"}:
+            return selected
         config = json.loads((self.root / "project/config.json").read_text())
         return "native" if config.get("board") is None and config.get("os") is None else "qemu"
+
+    def select_target(self, target):
+        if not isinstance(target, str) or target not in {"native", "qemu", "physical"}:
+            raise HardwareError("Invalid execution target.")
+        self._save("target.json", {"target": target})
+        return {"target": target}
 
     @staticmethod
     def build_directory(target):
@@ -84,16 +97,18 @@ class HardwareManager:
             return 1, str(error)
 
     def _stream(self, argv, emit, cancel=None, cwd=None, timeout=None, stdin=None):
-        """Forward real output, including carriage-return progress, without shell input."""
+        """Emit each output line until argv exits; carriage returns also end a line.
+
+        Cancellation and timeout terminate the whole process group.
+        """
         emit("$ " + shlex.join(str(arg) for arg in argv))
         started = time.monotonic()
         env = dict(os.environ, PYTHONUNBUFFERED="1", PYTHONDONTWRITEBYTECODE="1")
-        # Never hang an HTTP job on a hidden sudo/password prompt.
+        # sudo fails instead of waiting for a password.
         env["SUDO_ASKPASS"] = "/bin/false"
-        with subprocess.Popen(argv, cwd=cwd or self.root, env=env,
-                              stdin=stdin if stdin is not None else subprocess.DEVNULL,
-                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                              start_new_session=True) as process:
+        directory = cwd or self.root
+        source = subprocess.DEVNULL if stdin is None else stdin
+        with subprocess.Popen(argv, cwd=directory, env=env, stdin=source, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, start_new_session=True) as process:
             selector = selectors.DefaultSelector()
             selector.register(process.stdout, selectors.EVENT_READ)
             pending = b""
@@ -128,22 +143,26 @@ class HardwareManager:
                         process.wait()
 
     def fingerprint(self):
-        """Include source edits, not just app manifests as check-build currently does."""
+        """SHA-256 of every source file a build reads.
+
+        Documentation, build output and the sensor values in project/config.json
+        do not change it.
+        """
         paths = []
         for directory in ("cFS", "project"):
             for base, dirs, files in os.walk(self.root / directory):
-                dirs[:] = sorted(d for d in dirs if d != ".git" and d != "__pycache__"
-                                 and not d.startswith("build") and not (Path(base) / d).is_symlink())
+                sources = [d for d in dirs if d not in {".git", "__pycache__"} and not d.startswith("build")]
+                dirs[:] = sorted(d for d in sources if not (Path(base) / d).is_symlink())
                 for name in sorted(files):
                     path = Path(base) / name
                     if path.suffix.lower() in {".md", ".rst"}:
                         continue
                     if path.parent == self.root / "project/generated" and name in {"build.json", "build-native.json", "build-flight.json"}:
-                        continue  # Build output must not invalidate its own source fingerprint.
+                        continue  # Written by the build itself.
                     if name != ".git" and not path.is_symlink() and not name.endswith(".pyc"):
                         paths.append(path)
         paths.append(self.root / "scripts/build-cfs.sh")
-        if self.default_target() != "native":
+        if json.loads((self.root / "project/config.json").read_text()).get("board"):
             paths.append(self.root / "Dockerfile")
         signature = tuple((str(p), p.stat().st_mtime_ns, p.stat().st_size) for p in paths)
         if self._fingerprint_cache and self._fingerprint_cache[0] == signature:
@@ -177,6 +196,8 @@ class HardwareManager:
 
     def connection(self, value=None):
         value = value or self._load("connection.json", {})
+        if not isinstance(value, dict):
+            raise HardwareError("Enter the board's SSH connection.")
         host = str(value.get("host", "")).strip()
         user = str(value.get("user", "")).strip()
         if "@" in host and not user:
@@ -191,27 +212,53 @@ class HardwareManager:
             raise HardwareError("Invalid SSH port.") from None
         if not 1 <= port <= 65535:
             raise HardwareError("Invalid SSH port.")
-        return {"host": host, "user": user, "port": port}
+        result = {"host": host, "user": user, "port": port}
+        identity = value.get("identity_file", "")
+        if not isinstance(identity, str) or any(c in identity for c in '\r\n\0'):
+            raise HardwareError("Invalid SSH identity path.")
+        if identity.strip():
+            key = Path(identity.strip()).expanduser()
+            if not key.is_absolute():
+                raise HardwareError("Use an absolute SSH key path on this computer, or a path starting with '~/'.")
+            result["identity_file"] = str(key)
+        directory = value.get("directory", "cfs-arm64")
+        if not isinstance(directory, str):
+            raise HardwareError("Invalid board installation folder.")
+        directory = directory.strip().removeprefix("~/").rstrip("/")
+        if not re.fullmatch(r"[a-zA-Z0-9_][a-zA-Z0-9_./-]*", directory) or any(p in {".", ".."} for p in directory.split("/")):
+            raise HardwareError("Choose an installation folder inside the board user's home, without '..'.")
+        directory = str(Path(directory))
+        if directory != "cfs-arm64":
+            result["directory"] = directory
+        return result
 
-    def ssh_argv(self, target="qemu", connection=None):
-        argv = ["ssh", "-T", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8",
+    def ssh_argv(self, target="qemu", connection=None, interactive=False):
+        argv = ["ssh", "-t" if interactive else "-T", "-o", "ConnectTimeout=8",
                 "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=3"]
+        if not interactive:
+            argv += ["-o", "BatchMode=yes"]
         if target == "qemu":
-            return argv + ["-F", str(Path.home() / ".ssh/cfs-emulator/config"), "pi4-cfs"]
+            from hardware.infrastructure import emulator_config
+            return argv + ["-F", str(Path.home() / ".ssh/cfs-emulator/config"),
+                           "-p", str(emulator_config(self.root)["ssh_port"]), "pi4-cfs"]
         if target != "physical":
             raise HardwareError("Invalid target.")
         config = self.connection(connection)
-        # OpenSSH's normal config, agent and known_hosts remain authoritative.
-        # accept-new enrolls new hosts but refuses changed host keys.
+        # The user's OpenSSH config, agent and known_hosts apply. accept-new
+        # enrolls new hosts but refuses changed host keys.
         argv += ["-o", "StrictHostKeyChecking=accept-new"]
-        if config["port"] != 22:
-            argv += ["-p", str(config["port"])]
+        argv += ["-p", str(config["port"])]
         if config["user"]:
             argv += ["-l", config["user"]]
+        if config.get("identity_file"):
+            argv += ["-i", config["identity_file"], "-o", "IdentitiesOnly=yes"]
         return argv + [config["host"]]
 
+    def board_directory(self, board, connection=None):
+        return board["home"] + "/" + self.connection(connection).get("directory", "cfs-arm64")
+
     def _physical_status(self):
-        """Refresh only service reachability; saved hardware discovery is not live state."""
+        """The saved board's last probe plus its live cFS service state, cached for 3 s."""
         previous = self._load("probe.json", self._last_probe)
         connection = self._load("connection.json")
         if not connection:
@@ -222,15 +269,15 @@ class HardwareManager:
                 return dict(cached[2])
             flight = self._flight_state("physical", connection)
             recognized = flight['running'] is not None
-            result = dict(previous or {}, observed_at=time.time(),
-                          service=flight['service'], flight_running=flight['running'], pids=flight['pids'],
-                          connected=True if recognized else None)
+            result = dict(previous or {})
+            result.update(observed_at=time.time(), service=flight['service'], flight_running=flight['running'], pids=flight['pids'])
+            result['connected'] = True if recognized else None
             result['observation_error'] = flight.get('error')
             self._physical_observation = (connection, time.monotonic(), result)
             return dict(result)
 
     def _local_flight_state(self):
-        """Only native binaries inside this checkout belong to this workspace."""
+        """core-cpuN processes whose executable is inside this checkout's cFS directory."""
         code, output = self._capture(['pgrep', '-x', 'core-cpu[0-9]+'], 3)
         if code not in (0, 1):
             return {'running': None, 'pids': [], 'service': 'unknown'}
@@ -254,8 +301,7 @@ class HardwareManager:
             argv = ["stdbuf", "-oL", "-eL", *argv]
         emit("$ " + shlex.join(argv))
         with (self.runtime / "native.log").open("wb") as output:
-            process = subprocess.Popen(argv, cwd=payload, stdin=subprocess.DEVNULL,
-                                       stdout=output, stderr=subprocess.STDOUT, start_new_session=True)
+            process = subprocess.Popen(argv, cwd=payload, stdin=subprocess.DEVNULL, stdout=output, stderr=subprocess.STDOUT, start_new_session=True)
         instance = secrets.token_hex(16)
         self._save("native.json", {"pid": process.pid, "instance": instance, "started_at": time.time()})
         time.sleep(1)
@@ -297,8 +343,9 @@ known=state in ('active','inactive','failed','activating','deactivating','reload
 pids=[int(pid) for pid in p.stdout.split() if pid.isdigit()]
 running=True if pids or state in ('active','activating','deactivating','reloading') else False if known else None
 print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'''
-        code, output = self._capture(self.ssh_argv(target, connection) + [
-            'python3 -c ' + shlex.quote(script) + ' ' + shlex.quote(service)], 8)
+        command = 'python3 -c ' + shlex.quote(script) + ' ' + shlex.quote(service)
+        argv = self.ssh_argv(target, connection) + [command]
+        code, output = self._capture(argv, 8)
         try:
             state = json.loads(output) if not code else None
             if not isinstance(state, dict) or set(state) != {'service', 'pids', 'running'}:
@@ -309,22 +356,30 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
                     'reachable': code == 0, 'error': output or 'SSH unavailable'}
 
     def assert_can_start(self, target=None, connection=None):
-        """Fresh process checks, under execution.lock, before any deployment mutation."""
+        """Raise unless cFS is confirmed stopped on every target this checkout may have started.
+
+        Callers hold execution.lock and call this before changing a deployment.
+        """
         checks = [('this workspace on the local host', self._local_flight_state())]
         target = target or self.default_target()
         deployed = self._load('deployed.json', {})
         running = self._qemu_running()
+        qemu_active = deployed.get('qemu') and not deployed['qemu'].get('stopped_at')
         if running:
             checks.append(('the emulator', self._flight_state('qemu')))
-        elif running is None and (target == 'qemu' or deployed.get('qemu') and not deployed['qemu'].get('stopped_at')):
+        elif running is None and (target == 'qemu' or qemu_active):
             checks.append(('the emulator', {'running': None}))
-        connections = []
         previous = self._load('active.json', {})
         physical_active = deployed.get('physical') and not deployed['physical'].get('stopped_at')
-        for candidate in (connection if target == 'physical' else None,
-                          self._load('connection.json') if self.default_target() != 'native' else None,
-                          deployed.get('physical', {}).get('connection') if physical_active else None,
-                          previous.get('connection') if previous.get('target') == 'physical' and previous.get('phase') != 'stopped' else None):
+        candidates = []
+        if target == 'physical':
+            candidates.append(connection or self._load('connection.json'))
+        if physical_active:
+            candidates.append(deployed['physical'].get('connection'))
+        if previous.get('target') == 'physical' and previous.get('phase') != 'stopped':
+            candidates.append(previous.get('connection'))
+        connections = []
+        for candidate in candidates:
             if candidate and candidate not in connections:
                 connections.append(candidate)
         for candidate in connections:
@@ -347,8 +402,6 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
     def _validate_profile(self, target, board=None, os=None):
         config = json.loads((self.root / "project/config.json").read_text())
         if target == "native":
-            if config.get("board") is not None or config.get("os") is not None:
-                raise HardwareError("Select the native profile without a board to run on this computer.")
             return {"board": None, "os": None}
         selected = (board or config["board"], os or config["os"])
         if not any((p["board"], p["os"]) == selected and target in p["targets"] for p in self.profiles()):
@@ -358,7 +411,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
         return {"board": selected[0], "os": selected[1]}
 
     def _qemu_running(self):
-        code, output = self._capture(["docker", "inspect", "--format", "{{.State.Running}}", "pi4-cfs"], 5)
+        code, output = self._capture(["docker", "inspect", "--format", "{{.State.Running}}", "pi4-cfs"], 30)
         if not code and output in {"true", "false"}:
             return output == "true"
         if "no such object" in output.lower() or "no such container" in output.lower():
@@ -366,7 +419,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
         return None
 
     def assert_can_boot(self, retry=False):
-        """Check the existing emulator before boot or an explicit SSH retry."""
+        """True when QEMU runs and boot only retries its SSH connection; raise when boot is not possible."""
         running = self._qemu_running()
         if running is None:
             raise HardwareError("Cannot read QEMU's state. Check Docker access before starting it.")
@@ -398,8 +451,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
             if self._qemu_running() is False:
                 emit("QEMU stopped.")
                 return
-            # The guest normally closes SSH during poweroff. Other command errors
-            # must remain visible instead of being hidden behind a later timeout.
+            # SSH exits with 255 when the guest closes it during poweroff.
             if error.returncode != 255:
                 raise
             emit("SSH disconnected; checking QEMU until shutdown completes.")
@@ -436,32 +488,38 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
             if required:
                 raise HardwareError("Cannot confirm that cFS on the physical board is stopped. Restore its SSH connection before switching targets. " + output)
             return
-        if any(line in {"active", "activating", "deactivating", "reloading"} for line in lines):
+        if ACTIVE_STATES.intersection(lines):
             emit("Stopping cFS on the board...")
             self._stream(argv + ["sudo -n systemctl stop cfs-studio.service"], emit, cancel, timeout=30)
             code, output = self._capture(argv + [check], 15)
             lines = output.splitlines()
-        if code or not lines or lines[-1] != "process-stopped" or any(line in {"active", "activating", "deactivating", "reloading"} for line in lines):
+        if code or not lines or lines[-1] != "process-stopped" or ACTIVE_STATES.intersection(lines):
             raise HardwareError("cFS is still running on the physical board. Stop any unmanaged core-cpu1 process before switching targets.")
         self._physical_observation = None
         emit("Board cFS is stopped; its Linux remains on.")
 
     def _switch_target(self, target, connection, emit, cancel=None):
+        """Stop cFS on the other targets before booting this one."""
         previous = self._load("active.json", {})
         deployed = self._load("deployed.json", {})
-        physical = []
-        for candidate in (previous.get("connection") if previous.get("target") == "physical" else None,
-                          deployed.get("physical", {}).get("connection"), self._load("connection.json")):
-            if candidate and candidate not in physical and (target == "qemu" or candidate != connection):
-                physical.append(candidate)
-        for candidate in physical:
-            required = (previous.get("target") == "physical" and previous.get("phase") != "stopped"
-                        and candidate == previous.get("connection")) or (not previous and candidate == deployed.get("physical", {}).get("connection"))
-            self._stop_physical(candidate, emit, cancel, required)
+        previous_running = previous.get("phase") != "stopped"
+        previous_board = previous.get("connection") if previous.get("target") == "physical" else None
+        deployed_board = deployed.get("physical", {}).get("connection")
+        boards = []
+        for candidate in (previous_board, deployed_board, self._load("connection.json")):
+            other = target == "qemu" or candidate != connection
+            if candidate and candidate not in boards and other:
+                boards.append(candidate)
+        for candidate in boards:
+            # Only the last active board must answer; other saved boards are stopped when reachable.
+            was_running = previous_running and candidate == previous_board
+            last_deployed = not previous and candidate == deployed_board
+            self._stop_physical(candidate, emit, cancel, was_running or last_deployed)
         if target == "physical":
             running = self._qemu_running()
-            required = previous.get("target") == "qemu" and previous.get("phase") != "stopped" or not previous and bool(deployed.get("qemu"))
-            if running is not False and (running is not None or required):
+            qemu_was_running = previous.get("target") == "qemu" and previous_running
+            qemu_deployed = not previous and bool(deployed.get("qemu"))
+            if running or (running is None and (qemu_was_running or qemu_deployed)):
                 emit("Stopping the emulator before starting cFS on the board.")
                 try:
                     self._wait_qemu_stopped(emit, cancel)
@@ -469,9 +527,12 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
                     raise HardwareError(f"Cannot start on the board: {error}") from error
         if cancel and cancel.is_set():
             raise HardwareError("Target switch cancelled.")
-        # Write before starting: interrupted deployments can leave a live service.
-        self._save("active.json", {"target": target, "connection": connection,
-                                    "phase": "starting", "updated_at": time.time()})
+        self._save_active(target, connection, "starting")
+
+    def _save_active(self, target, connection, phase):
+        """Record the target before and after starting it; an interrupted start can leave a live service."""
+        active = {"target": target, "connection": connection, "phase": phase, "updated_at": time.time()}
+        self._save("active.json", active)
 
     def _mark_stopped(self, target, connection=None):
         previous = self._load("active.json", {})
@@ -484,17 +545,18 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
 
     def status(self):
         config = json.loads((self.root / "project/config.json").read_text())
-        code, docker = self._capture(["docker", "info", "--format", "{{.ServerVersion}}"], 3)
-        running = None
+        running = self._qemu_running()
+        code = 0 if running is not None else 1
+        docker = "Docker did not respond. Check that its service is running." if code else ""
         service = None
         flight_running = None
         linux_ready = None
         boot_error = None
+        qemu_pids = []
         if not code:
-            running = self._qemu_running()
             if running:
                 flight = self._flight_state('qemu')
-                service, flight_running = flight['service'], flight['running']
+                service, flight_running, qemu_pids = flight['service'], flight['running'], flight['pids']
                 linux_ready = flight.get('reachable', flight_running is not None)
                 boot_error = flight.get('error') if not linux_ready else None
             elif running is False:
@@ -509,18 +571,26 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
         physical = self._physical_status() if default_target != 'native' or physical_active else None
         local = self._local_flight_state()
         qemu_active = deployed.get("qemu") and not deployed["qemu"].get("stopped_at")
-        if flight_running is None and not qemu_active:
+        if flight_running is None and not qemu_active and running is not True:
             flight_running = False
-        states = {'qemu': {'running': flight_running, 'pids': flight.get('pids', []) if running else []},
-                  'native': local}
-        if physical:
+        states = {'qemu': {'running': flight_running, 'pids': qemu_pids}, 'native': local}
+        if physical and (physical.get('flight_running') is not None or physical_active or default_target == 'physical'):
             states['physical'] = {'running': physical.get('flight_running'), 'pids': physical.get('pids', [])}
         targets = [target for target, state in states.items() if state['running']]
         unknown = [target for target, state in states.items() if state['running'] is None]
         labels = {'qemu': 'the emulator', 'physical': 'the physical board', 'native': 'this workspace on the local host'}
-        reason = ('cFS is already running on ' + ', '.join(labels[t] for t in targets) + '. Stop it before starting another instance.' if targets else
-                  'Cannot confirm cFS state on ' + ', '.join(labels[t] for t in unknown) + '.' if unknown else '')
+        if targets:
+            reason = 'cFS is already running on ' + ', '.join(labels[t] for t in targets) + '. Stop it before starting another instance.'
+        elif unknown:
+            reason = 'Cannot confirm cFS state on ' + ', '.join(labels[t] for t in unknown) + '.'
+        else:
+            reason = ''
         preferred = active.get("target") if active.get("target") in targets else default_target
+        # A target without a PID list still counts as one instance.
+        instances = sum(max(1, len(states[t]['pids'])) for t in targets)
+        execution = {"target": targets[0] if len(targets) == 1 else None, "preferred_target": preferred,
+                     "conflict": instances > 1, "can_start": not targets and not unknown,
+                     "block_reason": reason, "running_targets": targets}
         builds = {}
         for target in ("native", "qemu", "physical"):
             build = self.build_state(target)
@@ -529,22 +599,18 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
                               "current": build.get("fingerprint") == fingerprint,
                               "fingerprint": fingerprint,
                               "sensorless_current": no_sensors.get("fingerprint") == fingerprint}
+        tools = {tool: bool(shutil.which(tool)) for tool in ("docker", "ssh", "scp", "make", "cmake", "cc")}
+        qemu = {"running": running, "service": service, "flight_running": flight_running,
+                "linux_ready": linux_ready, "can_boot": running is False,
+                "can_retry_boot": running is True and linux_ready is False, "boot_error": boot_error,
+                "ssh_configured": (Path.home() / ".ssh/cfs-emulator/config").is_file()}
+        board = {"connection": self._load("connection.json"), "candidates": self.ssh_candidates(), "last_probe": physical}
         return {"board": config["board"], "os": config["os"], "profiles": self.profiles(),
-                "execution": {"target": targets[0] if len(targets) == 1 else None,
-                              "preferred_target": preferred, "conflict": sum(max(1, len(states[t]['pids'])) for t in targets) > 1,
-                              "can_start": not targets and not unknown, "block_reason": reason, "running_targets": targets},
-                "tools": {tool: bool(shutil.which(tool)) for tool in ("docker", "ssh", "scp", "make", "cmake", "cc")},
-                "native": dict(local, log_path="hardware/.runtime/native.log"),
+                "execution": execution, "tools": tools,
+                "native": dict(local, log_path="hardware/.runtime/native.log", os=platform.system(), architecture=platform.machine()),
                 "docker": {"available": code == 0, "error": docker if code else None},
-                "qemu": {"running": running, "service": service, "flight_running": flight_running,
-                         "linux_ready": linux_ready, "can_boot": running is False,
-                         "can_retry_boot": running is True and linux_ready is False,
-                         "boot_error": boot_error,
-                         "ssh_configured": (Path.home() / ".ssh/cfs-emulator/config").is_file()},
-                "build": builds[default_target], "builds": builds,
-                "physical": {"connection": self._load("connection.json"), "candidates": self.ssh_candidates(),
-                             "last_probe": physical},
-                "deployed": deployed}
+                "qemu": qemu, "build": builds[default_target], "builds": builds,
+                "physical": board, "deployed": deployed}
 
     def probe(self, connection=None, emit=lambda line: None, cancel=None):
         argv = self.ssh_argv("physical", connection)
@@ -565,7 +631,8 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
         result["connected"] = True
         result["checked_at"] = time.time()
         self._save("connection.json", self.connection(connection))
-        result["ready"] = result["authorized"] and result["service_installed"]
+        directory = self.board_directory(result, connection) + "/studio/current/cpu1"
+        result["ready"] = result["authorized"] and result["service_installed"] and result["service_directory"] == directory
         result["service_ready"] = result["ready"]
         self._last_probe = result
         self._save("probe.json", result)
@@ -575,24 +642,19 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
 
     def prepare_board(self, connection=None, emit=print, cancel=None, authorize=None):
         board = self.probe(connection, emit, cancel)
-        remote = board["home"] + "/cfs-arm64/studio/setup_board.py"
+        remote = self.board_directory(board, connection) + "/studio/setup_board.py"
         command = "mkdir -p " + shlex.quote(str(Path(remote).parent)) + " && cat > " + shlex.quote(remote)
         with (self.root / "hardware/setup_board.py").open("rb") as source:
             self._stream(self.ssh_argv("physical", connection) + [command], emit, cancel, stdin=source, timeout=30)
         argv = self.ssh_argv("physical", connection)
-        host = argv[-1]
         config = self.connection(connection)
-        interactive = ["ssh", "-t"]
-        if config["port"] != 22:
-            interactive += ["-p", str(config["port"])]
-        if config["user"]:
-            interactive += ["-l", config["user"]]
-        interactive += [host, "sudo python3 " + shlex.quote(remote)]
+        install = "python3 " + shlex.quote(remote) + " --directory " + shlex.quote(config.get("directory", "cfs-arm64"))
+        interactive = self.ssh_argv("physical", connection, interactive=True) + ["sudo " + install]
         if authorize is None:
             authorize = board["sudo"]
         result = {"setup_command": shlex.join(interactive), "script": remote, "setup_required": not authorize}
         if authorize:
-            self._stream(argv + ["sudo -n python3 " + shlex.quote(remote)], emit, cancel, timeout=30)
+            self._stream(argv + ["sudo -n " + install], emit, cancel, timeout=30)
             board = self.probe(connection, emit, cancel)
         board["admin_setup_command"] = result["setup_command"] if not board["ready"] or not board.get("shutdown_authorized") else None
         self._last_probe = board
@@ -620,20 +682,20 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
         removed = [app["name"] for app in config["apps"] if app["sensors"]]
         fragment = destination / "cFS/sample_defs/generated/appgen_startup.scr"
         previous_fragment = fragment.read_text() if fragment.exists() else ""
+        generator = str(destination / "project/appgen/appgen.py")
         for name in removed:
-            self._stream([sys.executable, str(destination / "project/appgen/appgen.py"),
-                          "--root", str(destination / "cFS"), "delete-app", name], emit, cwd=destination)
+            delete = [sys.executable, generator, "--root", str(destination / "cFS"), "delete-app", name]
+            self._stream(delete, emit, cwd=destination)
         config["apps"] = [app for app in config["apps"] if app["name"] not in removed]
         config["devices"] = []
         (destination / "project/config.json").write_text(json.dumps(config, indent=2) + "\n")
-        # Hardware owns sensor-library inclusion independently of app bindings.
-        # Refresh generated dependencies after clearing this isolated profile.
+        # Sensor libraries follow the configured devices, so sync drops them from the copy.
         self._stream([sys.executable, str(destination / "project/manage.py"), "sync"], emit, cwd=destination)
         startup = destination / "cFS/sample_defs/cpu1_cfe_es_startup.scr"
         if startup.exists():
+            current_fragment = fragment.read_text() if fragment.exists() else ""
             updated = reconcile_removed_modules(startup.read_text(), removed)
-            updated = reconcile_generated_modules(updated, previous_fragment,
-                                                   fragment.read_text() if fragment.exists() else "")
+            updated = reconcile_generated_modules(updated, previous_fragment, current_fragment)
             startup.write_text(updated)
         emit("Isolated sensorless profile; apps excluded from this build: " + ", ".join(removed))
         return destination
@@ -646,7 +708,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
         root = self.runtime / "sensorless" if sensorless else self.root
         payload = root / self.build_directory(target) / "exe/cpu1"
         if not (payload / "core-cpu1").is_file() or not (payload / "cf").is_dir():
-            raise HardwareError("Incomplete ARM64 payload. Build again.")
+            raise HardwareError("Incomplete cFS build. Build again.")
         return root, payload, state
 
     def _deploy_record(self, target, state, **extra):
@@ -674,15 +736,15 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
                 self._stream(argv + ["sudo -n modprobe i2c-dev"], emit, cancel, timeout=20)
                 emit("The driver will read physical sensors. QEMU devices are not provisioned on the board. I2C failures appear in logs and telemetry.")
         release = state["fingerprint"][:16] + ("-sensorless" if sensorless else "") + "-" + str(time.time_ns())
-        remote = board["home"] + "/cfs-arm64/releases/" + release
-        # Upload to a staging release without touching any running service.
+        remote = self.board_directory(board, connection) + "/releases/" + release
+        # Each upload is a new release directory; the running service keeps its own.
+        unpack = "mkdir -p " + shlex.quote(remote) + " && tar -xmf - -C " + shlex.quote(remote)
         with tempfile.TemporaryFile() as archive:
             with tarfile.open(fileobj=archive, mode="w") as tar:
                 tar.add(payload, arcname="cpu1")
             archive.seek(0)
-            self._stream(argv + ["mkdir -p " + shlex.quote(remote) + " && tar -xmf - -C " + shlex.quote(remote)],
-                         emit, cancel, stdin=archive, timeout=180)
-        current = board["home"] + "/cfs-arm64/studio/current"
+            self._stream(argv + [unpack], emit, cancel, stdin=archive, timeout=180)
+        current = self.board_directory(board, connection) + "/studio/current"
         self.assert_can_start('physical', connection)
         command = ("set -e; "
                    "if pgrep -x core-cpu1 >/dev/null; then echo 'Another cFS instance is running. Stop it before starting this one.'; exit 1; fi; "
@@ -697,8 +759,10 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
 
     def _run_qemu(self, emit, cancel):
         root, payload, state = self._require_build(target="qemu")
-        code, output = self._capture(["docker", "inspect", "--format", "{{.State.Running}}", "pi4-cfs"], 3)
-        if code or output != "true":
+        running = self._qemu_running()
+        if running is None:
+            raise HardwareError("Cannot read QEMU's state. Check Docker before running cFS.")
+        if running is False:
             emit("Starting the emulator to run this build...")
             self._stream(["bash", "boot.sh"], emit, cancel, timeout=660)
         self._stream([sys.executable, "project/manage.py", "check-build", "--target", "qemu"], emit, cancel)
@@ -709,12 +773,12 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
         self.assert_can_start('qemu')
         staging = working + ".upload-" + str(time.time_ns())
         previous = working + ".previous"
+        unpack = "mkdir -p " + shlex.quote(staging) + " && tar -xmf - -C " + shlex.quote(staging)
         with tempfile.TemporaryFile() as archive:
             with tarfile.open(fileobj=archive, mode="w") as tar:
                 tar.add(payload, arcname=".")
             archive.seek(0)
-            self._stream(argv + ["mkdir -p " + shlex.quote(staging) + " && tar -xmf - -C " + shlex.quote(staging)],
-                         emit, cancel, stdin=archive, timeout=180)
+            self._stream(argv + [unpack], emit, cancel, stdin=archive, timeout=180)
         self.assert_can_start('qemu')
         # Swap the complete installation; merging cf/ would retain removed libraries.
         command = ("set -e; if pgrep -x 'core-cpu[0-9]+' >/dev/null; then "
@@ -741,6 +805,11 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
         return script
 
     def execute(self, action, emit=print, *, target=None, connection=None, sensorless=False, cancel=None, on_start=None, **options):
+        """Run one Studio action.
+
+        Build, boot, run, stop and shutdown also hold hardware/.runtime/execution.lock,
+        shared by every Studio process that uses this checkout.
+        """
         target = target or self.default_target()
         if target not in ("native", "qemu", "physical"):
             raise HardwareError("Invalid target.")
@@ -756,39 +825,9 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
                 self.prepare_board(connection, emit, cancel)
             return self._last_probe
         if action == "logs":
-            if target == "native":
-                log = self.runtime / "native.log"
-                if not log.exists():
-                    raise HardwareError("Run native cFS before opening its output.")
-                return self._stream(["tail", "-n", "100", "-F", str(log)], emit, cancel)
-            argv = self.ssh_argv(target, connection)
-            service = "cfs-studio.service" if target == "physical" else "cfs.service"
-            command = ("sudo -n " if target == "physical" else "") + f"journalctl -u {service} -n 100 -f -o cat"
-            if options.get("kind") == "boot":
-                if target == "qemu":
-                    return self._stream(["bash", "logs.sh", "--tail", str(options.get("tail", 100))], emit, cancel)
-                return self._stream(argv + ["journalctl -b -n 100 -f -o short-monotonic"], emit, cancel)
-            return self._stream(argv + [command], emit, cancel)
+            return self._logs(target, connection, options.get("kind"), options.get("tail", 100), emit, cancel)
         if action in {"simulate", "simulate-preview"}:
-            if action == "simulate" and target != "qemu":
-                raise HardwareError("Sensor simulation is only available on QEMU.")
-            model = options.get("model")
-            if model is not None:
-                from sensors.simulator import simulation_scripts
-                if action != "simulate-preview" or model not in simulation_scripts(self.root):
-                    raise HardwareError("Select a Python sensor model to preview.")
-                return self._stream([sys.executable, '-u', '-m', 'sensors.' + model, '--steps', '8'], emit, cancel)
-            self.simulation_script(options.get("device"))
-            if action == "simulate" and not self._qemu_running():
-                raise HardwareError("Boot QEMU Linux before running synthetic data.")
-            device = options.get('device')
-            if action == "simulate-preview":
-                command = [sys.executable, '-u', '-m', 'sensors.session', '--dry-run', '--steps', '8', '--events']
-                if device is not None:
-                    command += ['--device', device]
-            else:
-                command = [sys.executable, '-u', '-m', 'sensors.simulator', device] if device is not None else [sys.executable, '-u', '-m', 'sensors.session', '--events']
-            return self._stream(command, emit, cancel)
+            return self._simulate(action, target, options.get("device"), options.get("model"), emit, cancel)
         if not self._lock.acquire(blocking=False):
             raise HardwareError("Another build or runtime operation is running.")
         execution_lock = None
@@ -799,96 +838,20 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
                     fcntl.flock(execution_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
                 except BlockingIOError:
                     raise HardwareError("Another Flight Studio instance is building or changing runtime state.") from None
-            qemu_retry = self.assert_can_boot(bool(options.get('retry'))) if action == 'boot' and target == 'qemu' else False
-            if action in {"boot", "run"}:
-                if action == "run":
-                    self.assert_can_start(target, connection)
-                    self._require_build(sensorless, target=target)
-                    if on_start:
-                        on_start()
-                if target == "physical":
-                    connection = self.connection(connection)
-                    try:
-                        self.probe(connection, emit, cancel)
-                    except HardwareError as error:
-                        if action == "boot" and str(error).startswith("SSH failed"):
-                            raise HardwareError("Linux is not reachable on this board. Power it on with the selected OS and SSH enabled; SSH cannot power on a board that is off. " + str(error)) from error
-                        raise
-                if action == 'boot' and not qemu_retry:
-                    self._switch_target(target, connection, emit, cancel)
-                elif action == 'run':
-                    self._save('active.json', {'target': target, 'connection': connection, 'phase': 'starting', 'updated_at': time.time()})
+            if action == "setup" and target == "physical":
+                return self.prepare_board(connection, emit, cancel)
             if action == "setup":
-                if target == "physical":
-                    return self.prepare_board(connection, emit, cancel)
                 return self._stream(["bash", "scripts/setup.sh"], emit, cancel)
             if action == "build":
-                if target == "native" and self._local_flight_state()["running"]:
-                    raise HardwareError("Stop native cFS before replacing its installed binaries.")
-                if not sensorless:
-                    self._stream([sys.executable, "project/manage.py", "sync"], emit, cancel)
-                source = self.fingerprint()
-                root = self._sensorless_root(emit) if sensorless else self.root
-                self._stream(["bash", "scripts/build-cfs.sh", "--target", target], emit, cancel, cwd=root)
-                # A saved edit during the build must never be marked as compiled.
-                final = self.fingerprint()
-                state = {"fingerprint": source if sensorless else final, "built_at": time.time(),
-                         "sensorless": sensorless, "target": target, "build_dir": self.build_directory(target)}
-                if source != final:
-                    raise HardwareError("Sources changed during the build; build again.")
-                self._save(self.build_state_file(target, sensorless), state)
-                return state
+                return self._build(target, sensorless, emit, cancel)
             if action == "boot":
-                if target == "physical":
-                    emit("Linux is already booted and reachable over SSH. Use Run cFS to start the flight software.")
-                    result = dict(self._last_probe, linux_ready=True)
-                elif qemu_retry:
-                    self._stream(self.ssh_argv() + ["true"], emit, cancel, timeout=20)
-                    emit("QEMU Linux connection restored.")
-                    result = {"linux_ready": True}
-                else:
-                    self._stream(["bash", "boot.sh"], emit, cancel, timeout=660)
-                    self._stream(self.ssh_argv() + ["systemctl stop cfs.service && ! pgrep -x core-cpu1"], emit, cancel, timeout=30)
-                    result = {"linux_ready": True}
-                self._save("active.json", {"target": target, "connection": connection,
-                                            "phase": "ready", "updated_at": time.time()})
-                return result
+                return self._boot(target, connection, bool(options.get("retry")), emit, cancel)
             if action == "run":
-                if target == "native":
-                    result = self._run_native(emit, cancel)
-                elif target == "physical":
-                    result = self._run_physical(emit, cancel, connection, sensorless)
-                else:
-                    result = self._run_qemu(emit, cancel)
-                self._save("active.json", {"target": target, "connection": connection,
-                                            "phase": "running", "updated_at": time.time()})
-                return result
+                return self._run(target, connection, sensorless, emit, cancel, on_start)
             if action == "stop":
-                if target == "native":
-                    self._stop_native(emit)
-                elif target == "physical":
-                    connection = self.connection(connection)
-                    self._stop_physical(connection, emit, cancel)
-                else:
-                    self._stream(self.ssh_argv() + ["systemctl stop cfs.service && ! pgrep -x core-cpu1"], emit, cancel, timeout=30)
-                self._mark_stopped(target, connection)
-                return {"stopped": True}
+                return self._stop(target, connection, emit, cancel)
             if action == "shutdown":
-                if target == "qemu":
-                    self._wait_qemu_stopped(emit, cancel)
-                    self._mark_stopped(target)
-                    return {"stopped": True}
-                connection = self.connection(connection)
-                code, _ = self._capture(self.ssh_argv(target, connection) + ["sudo -n -l systemctl poweroff --no-block"], 15)
-                if code:
-                    raise HardwareError("Linux shutdown is not authorized or SSH is unavailable. Open the board connection to check access and update its authorization.")
-                self._stop_physical(connection, emit, cancel)
-                self._mark_stopped(target, connection)
-                emit("Requesting Linux shutdown over SSH...")
-                self._stream(self.ssh_argv(target, connection) + ["sudo -n systemctl poweroff --no-block"], emit, cancel, timeout=20)
-                self._physical_observation = None
-                emit("Linux accepted the shutdown request. SSH will disconnect as the board powers off.")
-                return {"shutdown_requested": True}
+                return self._shutdown(target, connection, emit, cancel)
             if action == "values" and target == "qemu":
                 return self._stream(["bash", "scripts/project.sh", "values"], emit, cancel, timeout=30)
             raise HardwareError("Unsupported hardware action: " + str(action))
@@ -896,3 +859,138 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
             if execution_lock:
                 execution_lock.close()
             self._lock.release()
+
+    def _logs(self, target, connection, kind, tail, emit, cancel):
+        """Follow the flight software output, or the Linux boot log when kind is "boot"."""
+        if target == "native":
+            log = self.runtime / "native.log"
+            if not log.exists():
+                raise HardwareError("Run native cFS before opening its output.")
+            return self._stream(["tail", "-n", "100", "-F", str(log)], emit, cancel)
+        if kind == "boot" and target == "qemu":
+            return self._stream(["bash", "logs.sh", "--tail", str(tail)], emit, cancel)
+        argv = self.ssh_argv(target, connection)
+        if kind == "boot":
+            return self._stream(argv + ["journalctl -b -n 100 -f -o short-monotonic"], emit, cancel)
+        if target == "physical":
+            command = "sudo -n journalctl -u cfs-studio.service -n 100 -f -o cat"
+        else:
+            command = "journalctl -u cfs.service -n 100 -f -o cat"
+        return self._stream(argv + [command], emit, cancel)
+
+    def _simulate(self, action, target, device, model, emit, cancel):
+        """Write synthetic sensor values to QEMU, or print a local preview for simulate-preview."""
+        preview = action == "simulate-preview"
+        if not preview and target != "qemu":
+            raise HardwareError("Sensor simulation is only available on QEMU.")
+        if model is not None:
+            from sensors.simulator import simulation_scripts
+            if not preview or model not in simulation_scripts(self.root):
+                raise HardwareError("Select a Python sensor model to preview.")
+            return self._stream([sys.executable, "-u", "-m", "sensors." + model, "--steps", "8"], emit, cancel)
+        self.simulation_script(device)
+        if not preview and not self._qemu_running():
+            raise HardwareError("Boot QEMU Linux before running synthetic data.")
+        if preview:
+            command = [sys.executable, "-u", "-m", "sensors.session", "--dry-run", "--steps", "8", "--events"]
+            if device is not None:
+                command += ["--device", device]
+        elif device is not None:
+            command = [sys.executable, "-u", "-m", "sensors.simulator", device]
+        else:
+            command = [sys.executable, "-u", "-m", "sensors.session", "--events"]
+        return self._stream(command, emit, cancel)
+
+    def _build(self, target, sensorless, emit, cancel):
+        if target == "native" and self._local_flight_state()["running"]:
+            raise HardwareError("Stop native cFS before replacing its installed binaries.")
+        if not sensorless:
+            self._stream([sys.executable, "project/manage.py", "sync"], emit, cancel)
+        source = self.fingerprint()
+        root = self._sensorless_root(emit) if sensorless else self.root
+        self._stream(["bash", "scripts/build-cfs.sh", "--target", target], emit, cancel, cwd=root)
+        # An edit saved while compiling is not in these binaries.
+        if self.fingerprint() != source:
+            raise HardwareError("Sources changed during the build; build again.")
+        state = {"fingerprint": source, "built_at": time.time(), "sensorless": sensorless, "target": target, "build_dir": self.build_directory(target)}
+        self._save(self.build_state_file(target, sensorless), state)
+        return state
+
+    def _boot(self, target, connection, retry, emit, cancel):
+        """Start QEMU Linux with cFS stopped, or confirm that the board's Linux answers over SSH."""
+        qemu_retry = self.assert_can_boot(retry) if target == "qemu" else False
+        if target == "physical":
+            connection = self.connection(connection)
+            try:
+                self.probe(connection, emit, cancel)
+            except HardwareError as error:
+                if not str(error).startswith("SSH failed"):
+                    raise
+                message = "Linux is not reachable on this board. Power it on with the selected OS and SSH enabled; SSH cannot power on a board that is off. " + str(error)
+                raise HardwareError(message) from error
+        if not qemu_retry:
+            self._switch_target(target, connection, emit, cancel)
+        if target == "physical":
+            emit("Linux is already booted and reachable over SSH. Use Run cFS to start the flight software.")
+            result = dict(self._last_probe, linux_ready=True)
+        elif qemu_retry:
+            self._stream(self.ssh_argv() + ["true"], emit, cancel, timeout=20)
+            emit("QEMU Linux connection restored.")
+            result = {"linux_ready": True}
+        else:
+            self._stream(["bash", "boot.sh"], emit, cancel, timeout=660)
+            self._stop_qemu(emit, cancel)
+            result = {"linux_ready": True}
+        self._save_active(target, connection, "ready")
+        return result
+
+    def _run(self, target, connection, sensorless, emit, cancel, on_start):
+        self.assert_can_start(target, connection)
+        self._require_build(sensorless, target=target)
+        if on_start:
+            on_start()
+        if target == "physical":
+            connection = self.connection(connection)
+            self.probe(connection, emit, cancel)
+        self._save_active(target, connection, "starting")
+        if target == "native":
+            result = self._run_native(emit, cancel)
+        elif target == "physical":
+            result = self._run_physical(emit, cancel, connection, sensorless)
+        else:
+            result = self._run_qemu(emit, cancel)
+        self._save_active(target, connection, "running")
+        return result
+
+    def _stop_qemu(self, emit, cancel):
+        self._stream(self.ssh_argv() + ["systemctl stop cfs.service && ! pgrep -x core-cpu1"], emit, cancel, timeout=30)
+
+    def _stop(self, target, connection, emit, cancel):
+        if target == "native":
+            self._stop_native(emit)
+        elif target == "physical":
+            connection = self.connection(connection)
+            self._stop_physical(connection, emit, cancel)
+        else:
+            self._stop_qemu(emit, cancel)
+        self._mark_stopped(target, connection)
+        return {"stopped": True}
+
+    def _shutdown(self, target, connection, emit, cancel):
+        """Power off QEMU and wait for it to exit, or request the board's Linux poweroff."""
+        if target == "qemu":
+            self._wait_qemu_stopped(emit, cancel)
+            self._mark_stopped(target)
+            return {"stopped": True}
+        connection = self.connection(connection)
+        argv = self.ssh_argv(target, connection)
+        code, _ = self._capture(argv + ["sudo -n -l systemctl poweroff --no-block"], 15)
+        if code:
+            raise HardwareError("Linux shutdown is not authorized or SSH is unavailable. Open the board connection to check access and update its authorization.")
+        self._stop_physical(connection, emit, cancel)
+        self._mark_stopped(target, connection)
+        emit("Requesting Linux shutdown over SSH...")
+        self._stream(argv + ["sudo -n systemctl poweroff --no-block"], emit, cancel, timeout=20)
+        self._physical_observation = None
+        emit("Linux accepted the shutdown request. SSH will disconnect as the board powers off.")
+        return {"shutdown_requested": True}

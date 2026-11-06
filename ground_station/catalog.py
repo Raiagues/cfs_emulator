@@ -1,7 +1,7 @@
-"""Read packet definitions from cFS headers using its actual target C compiler.
+"""Read packet definitions from cFS headers with the target's C compiler.
 
-The compiler supplies sizes, offsets and constants. Python never guesses C padding.
-Unsupported C declarations remain raw bytes instead of reporting invented values.
+The compiler supplies sizes, offsets (including padding) and constants.
+Fields whose C declaration is not supported are shown as raw bytes.
 """
 import copy
 import json
@@ -32,7 +32,7 @@ def clean(text):
 
 
 def definition_source(root, appdir, symbol):
-    """Locate a C type declaration for display; app manifests are not packet schemas."""
+    """Header that declares a C type, for display."""
     pattern = re.compile(r'\b' + re.escape(symbol) + r'\s*;')
     for header in sorted(appdir.rglob('*.h')):
         if pattern.search(clean(header.read_text(errors='replace'))):
@@ -41,7 +41,7 @@ def definition_source(root, appdir, symbol):
 
 
 def source_locations(root, appdir, packet):
-    """Navigable C symbols, retaining source line numbers and never modifying files."""
+    """Source locations of a packet's identifier, type and dispatch, with line numbers."""
     root, appdir = Path(root), Path(appdir)
     identifier = packet['id'].split('[')[0]
     symbol = packet.get('struct') or packet.get('name', '')
@@ -403,7 +403,7 @@ def _build_catalog(root, overrides_root=None, container=None, temp_root=None, bu
 
 
 def build_catalog(root, overrides_root=None, build_dir=None):
-    """Use one temporary builder container so metadata does not require host GCC."""
+    """Query the target compiler in one temporary builder container; the host needs no cross GCC."""
     root = Path(root).resolve()
     build = resolve_build(root, build_dir)
     container_flags = any('-I/cFS/' in path.read_text() for path in build.glob('**/flags.make'))
@@ -425,7 +425,7 @@ def build_catalog(root, overrides_root=None, build_dir=None):
 
 
 def apply_overrides(catalog, root):
-    """Apply editable local definitions to a copy, never mutate a deployed schema."""
+    """Copy of a frozen catalog with the editable ground_station/overrides.json applied."""
     result = copy.deepcopy(catalog)
     path = Path(root) / 'ground_station/overrides.json'
     if not path.exists():

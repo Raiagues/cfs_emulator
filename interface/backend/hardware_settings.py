@@ -1,4 +1,4 @@
-"""Edit configured bus locations through the existing project generation plan."""
+"""Edit configured bus locations through the project generation plan."""
 import copy
 import hashlib
 import json
@@ -19,7 +19,7 @@ def device_settings(workspace, device_id):
 
 
 def update_device(workspace, payload):
-    """Save address/bus and regenerate bound readers without replacing user C."""
+    """Save address/bus and regenerate bound readers; user-owned C files are kept."""
     from project.manage import commit
 
     if not isinstance(payload, dict) or set(payload) != {"id", "bus", "address", "expected_hash"}:
@@ -41,7 +41,6 @@ def update_device(workspace, payload):
             raise ValueError("Device not found")
         device["bus"], device["address"] = payload["bus"], address
         model = workspace.model
-        generator = model.appgen(workspace.root)
         before_apps = {f"project/apps/{app['name']}.json":
                        workspace.path(f"project/apps/{app['name']}.json").read_bytes()
                        for app in config["apps"]}

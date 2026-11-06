@@ -139,8 +139,8 @@ class Definitions:
                 parameter_name = f'{name}-{index}'
                 parameter_names.append(parameter_name)
                 self.command_files[command['id']] = (name, index)
-                # MiniCmdUtil accepts integer flags. Compiler-encoded byte fields
-                # represent strings, floats, arrays and alignment without guessing.
+                # MiniCmdUtil accepts integer flags; strings, floats, arrays and padding
+                # are sent as byte fields encoded with the compiler's layout.
                 header = command.get('header_size', catalog['transport']['command_header_size'])
                 size = command['size'] - header
                 names = [f'Padding[{offset}]' for offset in range(size)]

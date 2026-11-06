@@ -1,8 +1,9 @@
-"""Navigable, source-only relationships for the application architecture view.
+"""Navigable relationships for the application architecture view.
 
-This module never invokes a compiler, reads a generated communication catalog,
-or uses app manifests. Numbers are evaluated only from unambiguous integer C
-constants. Dynamic routing and unsupported declarations retain their expressions.
+Everything comes from the C source text: the compiler, the generated
+communication catalog and app manifests are not consulted, so results are not
+checked against a build. Numbers are evaluated only from unambiguous integer C
+constants. Dynamic routing and unsupported declarations keep their expressions.
 """
 import ast
 from collections import defaultdict, deque
@@ -86,15 +87,19 @@ def _handle(expression):
 
 
 def _conditions(file, position):
-    """Keep preprocessor conditions visible rather than guess compiler flags."""
+    """Preprocessor conditions in effect at position, as source text; compiler flags are not evaluated."""
     stack = []
     for line in file['clean'][:position].splitlines():
         match = re.match(r'\s*#\s*(if|ifdef|ifndef|elif|else|endif)\b(.*)', line)
         if not match:
             continue
         kind, expression = match[1], match[2].strip()
-        if kind in {'if', 'ifdef', 'ifndef'}:
-            stack.append(expression if kind == 'if' else f'{"!" if kind == "ifndef" else ""}defined({expression})')
+        if kind == 'if':
+            stack.append(expression)
+        elif kind == 'ifdef':
+            stack.append(f'defined({expression})')
+        elif kind == 'ifndef':
+            stack.append(f'!defined({expression})')
         elif kind == 'endif' and stack:
             stack.pop()
         elif kind == 'else' and stack:
@@ -104,8 +109,49 @@ def _conditions(file, position):
     return stack
 
 
+def _integer(node):
+    """Value of a Python AST limited to integer literals and C integer operators."""
+    if isinstance(node, ast.Constant) and type(node.value) is int:
+        return node.value
+    if isinstance(node, ast.UnaryOp):
+        operand = _integer(node.operand)
+        if isinstance(node.op, ast.UAdd):
+            return operand
+        if isinstance(node.op, ast.USub):
+            return -operand
+        if isinstance(node.op, ast.Invert):
+            return ~operand
+    if isinstance(node, ast.BinOp):
+        left = _integer(node.left)
+        right = _integer(node.right)
+        if abs(left) > 2**64 or abs(right) > 2**64:
+            raise ValueError('Constant outside integer range')
+        operator = node.op
+        if isinstance(operator, ast.Add):
+            return left + right
+        if isinstance(operator, ast.Sub):
+            return left - right
+        if isinstance(operator, ast.Mult):
+            return left * right
+        if isinstance(operator, ast.BitOr):
+            return left | right
+        if isinstance(operator, ast.BitAnd):
+            return left & right
+        if isinstance(operator, ast.BitXor):
+            return left ^ right
+        if isinstance(operator, ast.LShift) and 0 <= right < 64:
+            return left << right
+        if isinstance(operator, ast.RShift) and 0 <= right < 64:
+            return left >> right
+    raise ValueError('Unsupported C expression')
+
+
 class Constants:
-    """Small integer/macro evaluator; unresolved C stays unresolved, never eval()."""
+    """Integer values of #define and enum constants.
+
+    Expressions are parsed with ast and evaluated by _integer; anything else,
+    including division, casts and out-of-range shifts, has no value (None).
+    """
     def __init__(self, files):
         self.definitions = defaultdict(list)
         for file in files:
@@ -114,9 +160,10 @@ class Constants:
                 name, params, expression = match.groups()
                 if not expression.strip():
                     continue
-                self.definitions[name].append({'parameters': params[1:-1].split(',') if params else None,
-                                               'expression': expression.replace('\\\n', ' ').strip(),
-                                               'source': _ref(file, match.start(), name)})
+                parameters = params[1:-1].split(',') if params else None
+                body = expression.replace('\\\n', ' ').strip()
+                definition = {'parameters': parameters, 'expression': body, 'source': _ref(file, match.start(), name)}
+                self.definitions[name].append(definition)
             for enum in re.finditer(r'\benum\s*(?:\w+\s*)?\{([^{}]*)\}', text):
                 previous = None
                 for entry in arguments(enum[1]):
@@ -124,10 +171,11 @@ class Constants:
                     if not match:
                         continue
                     name, expression = match.groups()
-                    expression = expression or (previous + ' + 1' if previous else '0')
+                    if not expression:
+                        expression = previous + ' + 1' if previous else '0'
                     offset = text.find(name, enum.start(), enum.end())
-                    self.definitions[name].append({'parameters': None, 'expression': expression,
-                                                   'source': _ref(file, offset, name)})
+                    definition = {'parameters': None, 'expression': expression, 'source': _ref(file, offset, name)}
+                    self.definitions[name].append(definition)
                     previous = name
 
     def definition(self, name):
@@ -166,41 +214,34 @@ class Constants:
     def value(self, expression):
         try:
             expanded = self.expand(expression)
+            # Integer suffixes (10U, 1UL) are not Python syntax.
             expanded = re.sub(r'(?<=\d)[uUlL]+\b', '', expanded)
             tree = ast.parse(expanded, mode='eval')
-            def integer(node):
-                if isinstance(node, ast.Constant) and type(node.value) is int:
-                    return node.value
-                if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.UAdd, ast.USub, ast.Invert)):
-                    value = integer(node.operand)
-                    return value if isinstance(node.op, ast.UAdd) else -value if isinstance(node.op, ast.USub) else ~value
-                if isinstance(node, ast.BinOp):
-                    left, right = integer(node.left), integer(node.right)
-                    if abs(left) > 2**64 or abs(right) > 2**64:
-                        raise ValueError('Constant outside integer range')
-                    operations = {ast.Add: lambda: left + right, ast.Sub: lambda: left - right,
-                                  ast.Mult: lambda: left * right, ast.BitOr: lambda: left | right,
-                                  ast.BitAnd: lambda: left & right, ast.BitXor: lambda: left ^ right,
-                                  ast.LShift: lambda: left << right if 0 <= right < 64 else None,
-                                  ast.RShift: lambda: left >> right if 0 <= right < 64 else None}
-                    if type(node.op) in operations:
-                        return operations[type(node.op)]()
-                raise ValueError('Unsupported C expression')
-            return integer(tree.body)
+            return _integer(tree.body)
         except (ValueError, SyntaxError, RecursionError, TypeError):
             return None
 
     def reference(self, expression, source=None):
+        """Symbol, definition and value for a MID or function-code expression.
+
+        A symbol defined differently in several headers keeps the caller's
+        expression and points at its first definition.
+        """
         symbol = _identifier(expression)
         definition = self.definition(symbol)
         alternatives = self.definitions.get(symbol, [])
-        return {'symbol': symbol, 'expression': definition['expression'] if definition else expression,
-                'value': self.value(symbol), 'source': definition['source'] if definition else
-                alternatives[0]['source'] if alternatives else source}
+        if definition:
+            expression, source = definition['expression'], definition['source']
+        elif alternatives:
+            source = alternatives[0]['source']
+        return {'symbol': symbol, 'expression': expression, 'value': self.value(symbol), 'source': source}
 
 
 def _configuration_files(root, files):
-    """Source defaults plus mission/CPU1 overrides; no generated build headers."""
+    """Configuration headers: source defaults replaced by mission and CPU1 overrides.
+
+    Generated build headers are not read.
+    """
     paths = set(root.glob('cFS/apps/*/config/*.h')) | set(root.glob('cFS/apps/*/fsw/inc/*ids.h'))
     paths |= set(root.glob('cFS/cfe/modules/*/config/*msgid*.h'))
     paths |= set(root.glob('cFS/cfe/modules/*/config/*topicid*.h'))
@@ -235,9 +276,9 @@ def _structures(files):
                         incomplete.add(name)
                         continue
                     field_name, array = field.groups()
-                    fields.append({'name': field_name, 'type': field_type,
-                                   'array': array[1:-1].strip() if array else None,
-                                   'source': _ref(file, match.start(1) + member.start(), field_name)})
+                    length = array[1:-1].strip() if array else None
+                    reference = _ref(file, match.start(1) + member.start(), field_name)
+                    fields.append({'name': field_name, 'type': field_type, 'array': length, 'source': reference})
             structs[name] = fields
             sources[name] = _ref(file, match.start(), name)
     if structs:
@@ -270,8 +311,8 @@ def _structures(files):
     def complete(typ, visited=()):
         if typ not in structs or typ in incomplete or typ in visited:
             return False
-        return all(complete(field['type'], (*visited, typ)) for field in structs[typ]
-                   if field['type'] in structs and not field['array'])
+        nested = [field['type'] for field in structs[typ] if field['type'] in structs and not field['array']]
+        return all(complete(nested_type, (*visited, typ)) for nested_type in nested)
     return structs, sources, resolve, fields, complete
 
 
@@ -295,8 +336,8 @@ def describe_application(app, *, root):
         file = _read(root, root / module['path'])
         if file and 'eds_' not in Path(file['path']).name and '_eds_' not in Path(file['path']).name:
             files[file['path']] = file
-    # Alternate EDS dispatch implementations remain in the source inventory;
-    # this view exposes the ordinary C definitions without asserting a live build.
+    # EDS dispatch variants are skipped: the view covers the ordinary C sources,
+    # whichever of them a given build compiles.
     functions = [fn for fn in functions if fn['path'] in files]
     by_name = defaultdict(list)
     for fn in functions:
@@ -323,8 +364,8 @@ def describe_application(app, *, root):
         if name.startswith('CFE_SB_Subscribe') and args:
             mid = constants.reference(args[0], source)
             if re.fullmatch(r'\w+_MID', mid['symbol']) or mid['value'] is not None:
-                subscriptions.append({'mid': mid, 'pipe': args[1] if len(args) > 1 else '',
-                                      'source': source, 'function': item['function'], 'kind': 'direct'})
+                pipe = args[1] if len(args) > 1 else ''
+                subscriptions.append({'mid': mid, 'pipe': pipe, 'source': source, 'function': item['function'], 'kind': 'direct'})
             else:
                 unresolved.append({'kind': 'subscription', 'expression': args[0], 'source': source})
         if name == 'CFE_MSG_Init' and len(args) >= 3:
@@ -364,13 +405,15 @@ def describe_application(app, *, root):
                     continue
                 mid = constants.reference(caller['args'][index], caller['source'])
                 if re.fullmatch(r'\w+_MID', mid['symbol']) or mid['value'] is not None:
-                    subscriptions.append({'mid': mid, 'pipe': item['args'][1] if len(item['args']) > 1 else '',
-                                          'source': caller['source'], 'function': caller['function'],
-                                          'via': [item['source']], 'kind': 'direct'})
+                    pipe = item['args'][1] if len(item['args']) > 1 else ''
+                    subscription = {'mid': mid, 'pipe': pipe, 'source': caller['source'], 'function': caller['function'],
+                                    'via': [item['source']], 'kind': 'direct'}
+                    subscriptions.append(subscription)
 
-    # Received MIDs reach code only through the comparisons shared with the
-    # catalog; CC cases take the MID of the code that reaches them. There is
-    # deliberately no assumed APP_CMD_MID fallback.
+    # A function code belongs to the MID whose CFE_SB_MsgId_Equal branch or
+    # returning guard reaches its case, by the rules the Ground Station catalog
+    # uses (ground_station/c_source.py). A case reached from no MID, or from
+    # several, is reported in unresolved with the reason.
     aliases = defaultdict(set)
     for file in files.values():
         for alias, mids in mid_aliases(file['mask']).items():
@@ -435,7 +478,8 @@ def describe_application(app, *, root):
             group['handlers'].append(record)
             continue
         unresolved.append({'kind': 'command_route', 'expression': code, 'source': _ref(file, begin, code), 'reason': reason})
-    # A MID whose messages reach function-code dispatch is not itself a command.
+    # A MID branch without function-code cases is one command handled by the
+    # function it calls (cc None).
     for fn in functions:
         file = files[fn['path']]
         for mid, begin, finish in regions[fn['id']]:
@@ -461,8 +505,9 @@ def describe_application(app, *, root):
             continue
         for _, pos, _, args in _calls(file, {'CFE_TBL_FILEDEF'}):
             if len(args) >= 4:
-                table_definitions.append({'name': args[1], 'variable': args[0], 'filename': args[3].strip('" '),
-                                          'source': _ref(file, pos, args[0]), 'file': file})
+                table = {'name': args[1], 'variable': args[0], 'filename': args[3].strip('" '),
+                         'source': _ref(file, pos, args[0]), 'file': file}
+                table_definitions.append(table)
     for item in occurrences:
         args = item['args']
         if item['api'] != 'CFE_TBL_Register' or len(args) < 2:
@@ -494,9 +539,9 @@ def describe_application(app, *, root):
         for function in table['functions']:
             resources[function['symbol']]['tables'].append(table)
 
-    # Dynamic packet loops can be tied to a single loaded packet table. Rows
-    # carry table source provenance and stay configured relationships, not a
-    # claim that the peer app is running or that the table is currently loaded.
+    # A subscribe or send loop over a loaded table gets one row per table entry,
+    # with that entry's preprocessor conditions. Rows describe the configured
+    # table; they do not show that the peer app runs or the table is loaded.
     for definition in table_definitions:
         if not any(table['definition'] == definition['source'] and table['load_sources'] for table in tables):
             continue
@@ -525,13 +570,16 @@ def describe_application(app, *, root):
                 source = _ref(file, pos, mid['symbol'])
                 conditions = inherited_conditions + _conditions(file, pos)
                 if dynamic_subs:
-                    subscriptions.append({'mid': mid, 'pipe': dynamic_subs[0]['args'][1] if len(dynamic_subs[0]['args']) > 1 else '',
-                                          'source': source, 'function': dynamic_subs[0]['function'], 'kind': 'table',
-                                          'table': definition['source'], 'conditions': conditions})
+                    subscriber = dynamic_subs[0]
+                    pipe = subscriber['args'][1] if len(subscriber['args']) > 1 else ''
+                    subscription = {'mid': mid, 'pipe': pipe, 'source': source, 'function': subscriber['function'],
+                                    'kind': 'table', 'table': definition['source'], 'conditions': conditions}
+                    subscriptions.append(subscription)
                 elif dynamic_sends:
-                    publications.append({'mid': mid, 'source': source, 'kind': 'scheduled', 'table': definition['source'],
-                                         'publishers': [call['function'] for call in dynamic_sends],
-                                         'packet_type': None, 'fields': [], 'conditions': conditions})
+                    publishers = [call['function'] for call in dynamic_sends]
+                    publication = {'mid': mid, 'source': source, 'kind': 'scheduled', 'table': definition['source'],
+                                   'publishers': publishers, 'packet_type': None, 'fields': [], 'conditions': conditions}
+                    publications.append(publication)
 
     index = _INDEXES.setdefault(root, SourceIndex(root))
     library_symbols = defaultdict(list)

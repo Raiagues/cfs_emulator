@@ -39,6 +39,7 @@ export function icon(name) {
 }
 
 
+icons.monitor='M3 3h18v13H3z M12 16v5 M7 21h10';
 icons.refresh=icons.rotate;
 icons.trash='M3 6h18 M9 6V3h6v3 M5 6l1 15h12l1-15 M10 10v7 M14 10v7';
 function html(text){return String(text).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}

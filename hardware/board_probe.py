@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Read-only board report for HardwareManager.probe, sent over SSH to `python3 -`.
 
-Prints one JSON object as its last line and changes nothing on the board. sudo
-is only queried with -n, so a missing authorization never waits for a password.
-Uses only the standard library of the board's Python 3.10 or newer.
+Prints one JSON object as its last line. sudo is queried only with -n, so a
+missing authorization fails instead of waiting for a password. Uses only the
+standard library of the board's Python 3.10 or newer.
 """
 import json
 import os
@@ -48,6 +48,7 @@ def report():
         "shutdown_authorized": succeeds("sudo", "-n", "-l", "systemctl", "poweroff", "--no-block"),
         "service_installed": service_installed(),
         "service": output("systemctl", "is-active", "cfs-studio.service"),
+        "service_directory": output("systemctl", "show", "cfs-studio.service", "--property=WorkingDirectory", "--value"),
         "systemd": bool(shutil.which("systemd-run")),
         "os": platform.freedesktop_os_release().get("PRETTY_NAME", ""),
         "raspios": Path("/etc/rpi-issue").exists(),

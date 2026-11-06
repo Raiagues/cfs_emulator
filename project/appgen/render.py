@@ -1,4 +1,4 @@
-"""Render the sample_app-style C files; no filesystem writes occur here."""
+"""Render the sample_app-style C files in memory."""
 
 from pathlib import Path
 import json

@@ -252,16 +252,18 @@ function renderToolbar(){
  const catalog=state.workspace?.catalog,project=state.workspace?.project;
  const profiles=state.hardware?.profiles||(catalog?.os||[]).map(os=>({board:catalog.board,board_label:catalog.name,os,os_label:catalog.os_labels?.[os]||os,targets:catalog.targets||[]}));
  if(!project)return;
- const boards=[{value:'',label:'No board · Native'},...[...new Map(profiles.filter(profile=>profile.board).map(profile=>[profile.board,{value:profile.board,label:profile.board_label||profile.board}])).values()]];
+ const boards=[{value:'',label:'Select board'},...[...new Map(profiles.filter(profile=>profile.board).map(profile=>[profile.board,{value:profile.board,label:profile.board_label||profile.board}])).values()]];
  if(state.board===undefined)state.board=project.board;
  if(state.os===undefined)state.os=project.os;
  const systems=[{value:'',label:state.board?'Select OS':'Host OS'},...profiles.filter(profile=>profile.board===state.board&&profile.os).map(profile=>({value:profile.os,label:profile.os_label||profile.os}))];
  const profile=profiles.find(profile=>profile.board===project.board&&profile.os===project.os),job=operation(),busy=!!job||state.profileBusy||!state.hardware;
- const targets=profile?.targets||(!project.board?['native']:[]);
- if(!targets.includes(state.target)&&targets.length)state.target=targets[0];
+ const targets=['native',...(profile?.targets||[])];
  boardSelector.update(boards,state.board||'',busy);osSelector.update(systems,state.os||'',busy||!state.board);
- for(const target of document.querySelectorAll('.target-switch button')){target.disabled=busy||(!targets.includes(target.dataset.target)&&target.dataset.target!=='native');target.setAttribute('aria-pressed',String(state.target===target.dataset.target));}
+ for(const target of document.querySelectorAll('.target-switch button')){target.disabled=busy;target.setAttribute('aria-pressed',String(state.target===target.dataset.target));}
  const boot=$('.boot-action'),physical=state.target==='physical',native=state.target==='native';
+ $('.profile-selectors').hidden=native;
+ $('#native-host').hidden=!native;
+ $('#native-host').textContent=['This computer',state.hardware?.native?.os,state.hardware?.native?.architecture].filter(Boolean).join(' · ');
  const needsSetup=state.target==='qemu'&&state.hardware&&(!state.hardware.docker?.available||!state.hardware.qemu?.ssh_configured);
  boot.hidden=native;boot.dataset.job=physical?'connect':needsSetup?'setup':'boot';
  boot.querySelector('.action-label').textContent=actionLabel(boot.dataset.job,state.target);
@@ -295,7 +297,8 @@ function renderToolbar(){
 function architecture(){state.archFullscreen=document.body.classList.contains('no-editor');return renderArchitecture(state,{esc,hex,icon});}
 function bench() {
  const w=state.workspace,h=state.hardware,physical=state.target==='physical';
- if(!w.project.board)return `<div class="hardware-empty">${icon('cpu')}<h2>No board selected</h2><p>cFS runs natively on this computer.</p>${button('Select board','data-choose-board')}</div>`;
+ if(state.target==='native')return `<div class="bench-shell native-bench"><div class="board-title"><div class="board-identity">${icon('monitor')}<div><h1>This computer</h1><span class="board-status"><i class="${h?.native?.running?'active':''}"></i>${h?.native?.running?'cFS running':'Native execution'} · ${esc(h?.native?.os||'Host OS')} · ${esc(h?.native?.architecture||'')}</span></div></div></div><div class="bench-canvas"><div id="board-stage" class="board-stage"></div></div></div>`;
+ if(!w.project.board)return `<div class="hardware-empty">${icon('cpu')}<h2>Select a board and OS</h2>${button('Select board','data-choose-board')}</div>`;
  const probe=h?.physical?.last_probe,connection=h?.physical?.connection;
  const selected=w.project.devices.find(d=>d.id===state.selectedDevice)||w.project.devices[0];
  state.selectedDevice=selected?.id||null;
@@ -349,11 +352,13 @@ function renderView(){
  $('#visual-heading').hidden=isWorkbench();
  $('#visual-title').innerHTML=isWorkbench()?'':icon({architecture:'layers',ground:'antenna'}[state.view])+({architecture:'Architecture',ground:'Ground Station'}[state.view]);
  syncNavigation();
- if(isWorkbench()&&state.workspace.project.board){
-  const options={board:state.workspace.project.board,context:state.view,devices:state.workspace.project.devices,selected:state.inspected==='board'?'board':state.selectedDevice,onInspect:id=>{if(state.view!=='simulation'){state.inspected=id;renderView();}},onSelect:id=>guarded(async()=>{if(state.view==='simulation')await selectSimulationDevice(id);else{state.selectedDevice=id;state.inspected=id;renderView();}})()};
+ if($('#board-stage')&&isWorkbench()&&(state.workspace.project.board||state.target==='native')){
+  const native=state.target==='native'&&state.view==='bench';
+  const options={board:native?'native':state.workspace.project.board,context:state.view,devices:native?[]:state.workspace.project.devices,selected:state.inspected==='board'?'board':state.selectedDevice,onInspect:id=>{if(state.view!=='simulation'){state.inspected=id;renderView();}},onSelect:id=>guarded(async()=>{if(state.view==='simulation')await selectSimulationDevice(id);else{state.selectedDevice=id;state.inspected=id;renderView();}})()};
   if(oldBoard&&boardRenderer){$('#board-stage').replaceWith(oldBoard);boardRenderer.update(options);}
   else boardRenderer=mountBoard($('#board-stage'),options);
  }
+ if(!$('#board-stage')&&boardRenderer){boardRenderer.destroy();boardRenderer=null;}
  if(state.view==='ground'){updateTelemetry();if($('.gs-definition-list'))$('.gs-definition-list').scrollTop=groundScroll;}
  if(!state.archQuery&&!state.archCategory)[...$('#view').querySelectorAll('details[data-detail-key]')].forEach(d=>{if(detailState.has(d.dataset.detailKey))d.open=detailState.get(d.dataset.detailKey);});
  paintIcons();
@@ -402,12 +407,12 @@ function connect() {
  const current=state.hardware?.physical?.connection||{},probe=state.hardware?.physical?.last_probe;
  const candidates=state.hardware?.physical?.candidates||[];
  const setup=probe?.admin_setup_command;
- dialog('Connect physical board',`<label>SSH host<input name="host" required placeholder="hostname or IP" value="${esc(current.host||'')}" list="ssh-hosts"></label><datalist id="ssh-hosts">${candidates.map(x=>`<option value="${esc(typeof x==='string'?x:x.host)}">`).join('')}</datalist><label>SSH user<input name="user" placeholder="Use local SSH configuration" value="${esc(current.user||'')}"></label><label><input type="checkbox" name="sensorless" ${state.sensorless?'checked':''} class="inline-check">Build without sensor apps</label>${setup?`<p>Authorize the service once in your terminal.</p><pre class="packet">${esc(setup)}</pre><div class="settings-actions">${button('Copy command','data-copy-setup')}${button('Check authorization','data-hardware-refresh')}</div>`:''}`,async values=>{state.sensorless=values.sensorless==='on';await startJob('connect',{connection:{host:values.host,user:values.user}});});
+ dialog('Connect physical board',`<label>SSH host<input name="host" required placeholder="hostname or IP" value="${esc(current.host||'')}" list="ssh-hosts"></label><datalist id="ssh-hosts">${candidates.map(x=>`<option value="${esc(typeof x==='string'?x:x.host)}">`).join('')}</datalist><label>SSH user<input name="user" placeholder="Use local SSH configuration" value="${esc(current.user||'')}"></label><p><a href="/?target=physical">SSH port, key and installation folder · Infrastructure ↗</a></p><label><input type="checkbox" name="sensorless" ${state.sensorless?'checked':''} class="inline-check">Build without sensor apps</label>${setup?`<p>Authorize the service once in your terminal.</p><pre class="packet">${esc(setup)}</pre><div class="settings-actions">${button('Copy command','data-copy-setup')}${button('Check authorization','data-hardware-refresh')}</div>`:''}`,async values=>{state.sensorless=values.sensorless==='on';await startJob('connect',{connection:{...current,host:values.host,user:values.user}});});
 }
 async function startJob(action, extra={}) {
  if(launchPending)throw Error('Wait for the current operation to start.');
  if(['build','run'].includes(action)&&state.missionDraft)throw Error('Save or cancel the architecture draft before building.');
- const options={target:action==='stop'?state.hardware?.execution?.target||state.target:state.target,...(['boot','build','run'].includes(action)?{board:state.board,os:state.os}:{}),...(action==='boot'&&state.target==='qemu'&&state.hardware?.qemu?.can_retry_boot?{retry:true}:{}),...(state.target==='physical'&&['build','run'].includes(action)?{sensorless:state.sensorless}:{}),...extra};
+ const options={target:action==='stop'?state.hardware?.execution?.target||state.target:state.target,...(['boot','build','run'].includes(action)&&state.target!=='native'?{board:state.board,os:state.os}:{}),...(action==='boot'&&state.target==='qemu'&&state.hardware?.qemu?.can_retry_boot?{retry:true}:{}),...(state.target==='physical'&&['build','run'].includes(action)?{sensorless:state.sensorless}:{}),...extra};
  launchPending={action,target:options.target,retry:!!options.retry,started:Date.now()/1000};renderToolbar();
  try{
   if(['build','run'].includes(action))await saveAll();
@@ -657,12 +662,12 @@ async function configureProfile(){
   requireSavedMission();
   const result=await api('mission/profile',{board:state.board,os:state.os,expected_hash:state.workspace.mission.source.hash});
   workspaceRequest++;state.workspace.mission=result.mission;await reloadMissionFiles(result.changed,result.deleted);
-  state.target=state.board?'qemu':'native';await hardwareRefresh(true);renderView();feedback(state.board?'Board and toolchain configured':'Native execution selected');
+  await api('hardware/target',{target:state.target});await hardwareRefresh(true);renderView();feedback(state.board?'Board and toolchain configured':'Native execution selected');
  }catch(error){state.board=state.workspace.project.board;state.os=state.workspace.project.os;throw error;}
  finally{state.profileBusy=false;renderToolbar();}
 }
 async function selectTarget(target){
- if(target==='native'&&state.workspace.project.board){state.board=null;state.os=null;await configureProfile();}
+ await api('hardware/target',{target});
  state.target=target;state.catalog=null;state.catalogTarget=null;state.groundError='';state.groundSelection=null;state.groundPacket=null;
  renderToolbar();selectTargetTerminal();await hardwareRefresh();renderView();if(state.view==='ground')await groundRefresh();
 }
@@ -757,7 +762,8 @@ document.addEventListener('click',guarded(async e=>{
  state.token=(await api('session')).token;
  await refresh(true);
  await openFile(state.workspace.mission.source.path,undefined,false);
- await hardwareRefresh();
+ // A job that finishes meanwhile replaces this request; wait for the newer state.
+ while(!state.hardware)await hardwareRefresh();
  if(state.hardware.execution?.preferred_target){state.target=state.hardware.execution.preferred_target;renderToolbar();selectTargetTerminal();renderView();}
 }catch(e){feedback(e.message,true);}})();
 setInterval(()=>{if(document.hidden||!state.workspace)return;pollJobs().catch(e=>feedback(e.message,true));if(state.view==='ground'||communicationVisible())pollGround().catch(e=>feedback(e.message,true));},1500);

@@ -64,7 +64,7 @@ def _forwarded(info, netdev, host, guest, port):
 
 
 def _qemu_link(hardware, port):
-    code, output = hardware._capture(["docker", "inspect", "pi4-cfs"], 10)
+    code, output = hardware._capture(["docker", "inspect", "pi4-cfs"], 30)
     try:
         container = json.loads(output)[0] if not code else None
     except (ValueError, IndexError, KeyError, TypeError):
@@ -102,7 +102,7 @@ def _qemu_link(hardware, port):
 
 
 def resolve_ground_link(hardware, target, catalog, connection=None):
-    """Return command, local listener and telemetry return addresses; never encode packets."""
+    """Return command, local listener and telemetry return addresses."""
     ports = catalog.get("transport", {})
     for key in ("command_port", "telemetry_port"):
         if type(ports.get(key)) is not int or not 1 <= ports[key] <= 65535:

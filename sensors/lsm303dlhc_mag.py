@@ -7,11 +7,9 @@ AMPLITUDE_UT = 20.0
 PERIOD_SECONDS = 30.0
 
 
-SIGNALS = {
-    "mag-x": {"function": "hold"},
-    "mag-y": {"function": "script"},
-    "mag-z": {"function": "script"},
-}
+SIGNALS = {'mag-x': {'initial': 0, 'function': 'hold'},
+ 'mag-y': {'initial': 0, 'function': 'script'},
+ 'mag-z': {'initial': 0, 'function': 'script'}}
 
 
 def configure(device):

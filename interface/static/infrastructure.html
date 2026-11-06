@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#191b20">
+  <title>Infrastructure · Flight Studio</title>
+  <link rel="stylesheet" href="/infrastructure.css">
+  <link rel="stylesheet" href="/vendor/xterm.css">
+</head>
+<body>
+  <header class="setup-header"><a href="/" class="brand">Flight <span>studio</span></a><span class="header-divider">/</span><span id="project-name">Infrastructure</span><span class="local-label">Local workspace</span></header>
+  <main>
+    <div class="page-heading"><div><span class="eyebrow">INFRASTRUCTURE</span><h1>Prepare your workspace</h1><p>Choose where cFS will run, configure access and check the tools.</p></div><button id="open-terminal" class="quiet" type="button">Open terminal</button></div>
+    <p id="feedback" role="status" aria-live="polite">Loading configuration…</p>
+    <form id="infrastructure-form">
+      <div class="setup-grid">
+        <section class="target-section" aria-labelledby="target-heading"><h2 id="target-heading"><span>01</span> Execution</h2><div id="targets" role="group" aria-label="Execution target"></div><div id="target-route" class="target-route"></div></section>
+        <section class="configuration-section" aria-labelledby="configuration-heading"><h2 id="configuration-heading"><span>02</span> Configuration</h2><div id="configuration"></div></section>
+        <section class="requirements-section" aria-labelledby="requirements-heading"><div class="section-heading"><h2 id="requirements-heading"><span>03</span> Requirements</h2><button id="check" type="button" class="quiet">Check</button></div><div id="checks"><p class="empty">Check the tools for the selected target.</p></div></section>
+      </div>
+      <section id="preparation" class="preparation" aria-label="Preparation commands"></section>
+      <footer class="setup-footer"><span id="save-state">Connections and emulator settings stay local.</span><div><button type="button" id="save">Save configuration</button><button type="submit" class="primary" id="enter">Open workspace <span aria-hidden="true">↗</span></button></div></footer>
+    </form>
+    <section id="job-output" class="output-panel" hidden><header><strong id="job-title">Connection</strong><span id="job-state"></span></header><pre id="job-log" role="log"></pre><div id="board-report"></div></section>
+    <section id="setup-terminal" class="output-panel" hidden><header><strong>Local terminal</strong><span>Project directory</span><button type="button" id="close-terminal" aria-label="Close terminal">×</button></header><div id="shell-terminal" hidden></div></section>
+  </main>
+  <script src="/vendor/xterm.js"></script>
+  <script src="/vendor/addon-fit.js"></script>
+  <script src="/infrastructure.js" type="module"></script>
+</body>
+</html>

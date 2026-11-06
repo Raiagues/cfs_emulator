@@ -2,15 +2,23 @@
   "modules": {
     "linux_i2c_lib": {
       "CMakeLists.txt": "f9fa0c212fe3fda8cf2a8d4f7ddc13c35c430e529009ae62d19d4577126fe2d8",
-      "README.md": "ab3fbebbe8850e6c592ed2031025bcf2a657d3ed43ce39c96a72ef63f15bed93",
+      "README.md": "24fcb2182823ab589bc87b26332c05f1d56251ea4f299c95a8688992235a1e80",
       "fsw/public_inc/linux_i2c_lib.h": "2cb9cda1d99e3fcfde291e7c802129066e116393001306ce49f48fb2f790c051",
       "fsw/src/linux_i2c_lib.c": "34e26b6ad79e181e342047bf8443f696561f361eb6e9956a69f826528ae857e8",
       "fsw/src/linux_i2c_lib_internal.h": "99f7f2dbee5300b84a3a09fc3d070542518f8266fffa7367e9e1701b3084d46f",
       "fsw/src/linux_i2c_lib_version.h": "fa46049c94ccaa45aab216e80bcc76b7bebe6c062e67ae583fe02d78e43f8d3d"
     },
+    "lsm303dlhc_mag_lib": {
+      "CMakeLists.txt": "f353a1851a3d5606de60b0e6d9d67d7df6a84ec7d7e8a6e0a33f7e987a893847",
+      "README.md": "ad3673becb4ee8570435483f6780961c1007865cf9d16f4c199ea39911bd3d6c",
+      "fsw/public_inc/lsm303dlhc_mag_lib.h": "e54576140f07eff64b1ecedb759df5bf4e24f11362f74b377fade1216b057409",
+      "fsw/src/lsm303dlhc_mag_lib.c": "0ddda59e8180e6fefd8ce6873051b4540c18cfcb795aca8158142bd52f9046c0",
+      "fsw/src/lsm303dlhc_mag_lib_internal.h": "a20a25168011b34e6ebe200cc7cc14e272899f6f30b7e708da203a80c1ae6c23",
+      "fsw/src/lsm303dlhc_mag_lib_version.h": "efc3a334867afe6f38678f6c9057ce2c5024fb7cac8ccd9df8ad50aa55aedcaf"
+    },
     "tmp105_lib": {
       "CMakeLists.txt": "573ab9e388225638c08acc516b67b96a3bf5b041cfacdca04eef6cd3b95cbea3",
-      "README.md": "780d1bf82f2c737cb37112608d714f0554746d35eb786478d1b1eb8b389de75f",
+      "README.md": "8b42b49495dddedb67d513712835e32a5053751ecabb64a4ec0cb72adc7cc8e5",
       "fsw/public_inc/tmp105_lib.h": "8dd77a5ae655f808ebccb9898edda04e1d92ec77f08937cd232bacf3a2513304",
       "fsw/src/tmp105_lib.c": "06b0edbe279e4d9fcd9e162ae2a4f759487567949b2bff1e2df207334eca6777",
       "fsw/src/tmp105_lib_internal.h": "63c52f9d02a4b1bdf3c2eda14470284bfdd39691b16c9b3bb6e45be46fefa143",

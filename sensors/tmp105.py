@@ -7,7 +7,7 @@ AMPLITUDE_C = 5.0
 PERIOD_SECONDS = 30.0
 
 
-SIGNALS = {"temperature": {"function": "script"}}
+SIGNALS = {'temperature': {'initial': 23.5, 'function': 'script'}}
 
 
 def configure(device):

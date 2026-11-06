@@ -99,7 +99,7 @@ def _guard_install(text):
 
 
 def table_membership_plan(root, sources=None):
-    """Return native C/CMake edits; never modify application source files.
+    """Return native C/CMake edits; application source files are not edited.
 
     Guards use CPU1 APPLIST at CMake configure time. CPU2 retains the original
     shared-table behavior because it does not define the CPU1 selection flag.

@@ -87,7 +87,7 @@ def _operand_mid(expression, aliases):
     if converted:
         return converted[1]
     if expression in aliases:
-        # A variable assigned different MIDs in different places proves none of them.
+        # A variable assigned several different MIDs resolves to none of them.
         return next(iter(aliases[expression])) if len(aliases[expression]) == 1 else None
     return expression if re.fullmatch(r'[A-Za-z_]\w*_MID', expression) else None
 

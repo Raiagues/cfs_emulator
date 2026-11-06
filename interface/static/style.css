@@ -1,4 +1,4 @@
-/* Layout adapters for the original v33 visual system; all content comes from the local API. */
+/* Workspace layout on top of the base rules in prototype.css. */
 :root{--text:var(--ink);--green:#a7baac;--red:#cc9691;--raised:#24292f;--lh:24px}
 [hidden]{display:none!important}
 body{background:#1b1e23}
@@ -90,7 +90,7 @@ label{display:block;font-size:10px;color:#90a2b1;margin:14px 0}label input,label
 .file-tab>button:last-child svg{width:10px;height:10px}
 #line-numbers{padding-bottom:80px}
 .arch-expand{padding:8px!important;margin-left:6px;color:#8498a5!important}.arch-expand svg{width:13px;height:13px}
-/* Drag the boundaries themselves, rather than a tiny native resize corner. */
+/* Panels resize by dragging their boundaries (.splitter). */
 .studio .explorer,.studio .editor-workspace,.terminal.console{resize:none;max-width:none}
 .splitter{width:5px;flex:0 0 5px;position:relative;background:#20242b;cursor:col-resize;touch-action:none;z-index:20;outline:none}
 .splitter:after{content:'';position:absolute;inset:0 1px;background:#bba17d;opacity:0;transition:opacity .12s}
@@ -115,7 +115,7 @@ label{display:block;font-size:10px;color:#90a2b1;margin:14px 0}label input,label
 .settings-actions{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}.settings-actions button{border:1px solid #46515c;border-radius:4px;padding:8px 10px;font-size:11px}label .inline-check{display:inline;width:auto;margin-right:7px}
 @media(max-width:760px){.board-title{padding:10px 13px 5px}.board-title h1{font-size:12px}.bench-title-actions .add-sensor{font-size:10px;padding:6px 8px}}
 
-/* Keep the local flex workspace independent of the prototype's floating explorer. */
+/* The file explorer is a column of the flex workspace, not a floating panel. */
 .studio#studio>.explorer{position:relative;inset:auto;display:flex;box-shadow:none}
 .no-tree .studio#studio>.explorer{display:none}
 .studio#studio .editor-workspace{min-width:220px}
@@ -208,3 +208,8 @@ body.is-operating{--operation-height:28px}
 .activity-rail.rail .rail-button{border-radius:0;box-shadow:none;border:0}
 .activity-rail.rail .rail-button.active{background:#c4ac8d0b;box-shadow:inset 2px 0 #c4ac8d;border-radius:0}
 .activity-rail.rail .rail-button:before{display:none}
+
+.native-host{font-size:11px;color:var(--muted);padding:0 10px;white-space:nowrap}
+.profile-selectors[hidden],.native-host[hidden]{display:none}
+.infrastructure-link{display:grid;place-items:center;padding:8px;color:var(--muted);border-right:1px solid var(--line)}
+.infrastructure-link:hover{color:var(--ink)}

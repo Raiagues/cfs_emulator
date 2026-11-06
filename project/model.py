@@ -159,7 +159,7 @@ def appgen(root):
     source = safe_path(root, "project/appgen/appgen.py")
     spec = importlib.util.spec_from_file_location("project_appgen", source)
     module = importlib.util.module_from_spec(spec)
-    # Read-only commands must not create __pycache__ in the source checkout.
+    # Read-only commands leave no __pycache__ in the checkout.
     sys.dont_write_bytecode = True
     spec.loader.exec_module(module)
     return module

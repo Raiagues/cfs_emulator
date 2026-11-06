@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Manage the project registry using the existing cFS app generator."""
+"""Manage the project registry with the app generator in project/appgen."""
 
 import argparse
 import copy
@@ -188,7 +188,7 @@ def run(args):
         return {"changed": [], "deleted": [], "check": args.action == "check"}, 0
     if args.action in ("stamp", "check-build"):
         target = getattr(args, 'target', None) or ('native' if config['board'] is None else 'qemu')
-        if (target == 'native') != (config['board'] is None):
+        if target != 'native' and config['board'] is None:
             raise ProjectError('Build target must match the selected native or board profile')
         kind = 'native' if target == 'native' else 'flight'
         signature = {"schema_version": 1, "target": kind, "board": config["board"], "os": config["os"],

@@ -1,8 +1,8 @@
 # cFS application generator
 
-Internal generator for CPU1 C applications and `sample_lib`-style libraries.
-Use the [project workflow](../README.md) for application drafts,
-mission membership and board/device bindings.
+This internal generator writes the C sources of CPU1 applications and of libraries
+with the `sample_lib` layout. Application drafts, mission membership and device
+bindings go through the [project workflow](../README.md).
 
 ## Source ownership
 
@@ -32,14 +32,14 @@ flowchart LR
     UART[linux_uart_lib] --> Serial["/dev/tty device"]
 ```
 
-`tmp105` and `lsm303dlhc_mag` use shared device libraries; `custom` creates an
-implementation stub. Sensor components own sampling and telemetry publication.
-Library source and public headers follow `libs/sample_lib/fsw/src/` and
-`fsw/public_inc/`.
+Sensors with the `tmp105` and `lsm303dlhc_mag` drivers use the shared device
+libraries above, and a `custom` sensor gets an implementation stub instead. The app's
+sensor components sample the device and publish its telemetry. Library sources and
+public headers follow `libs/sample_lib/fsw/src/` and `fsw/public_inc/`.
 
 ## Generator commands
 
-Run from the repository root:
+The commands below run from the repository root.
 
 ```sh
 python3 project/appgen/appgen.py list
@@ -54,10 +54,10 @@ returns current source paths and lines from `APPGEN: USER` markers.
 Generated apps include NOOP, RESET_COUNTERS, housekeeping and periodic wakeup
 handling. Custom commands receive CCs from 2 onward. Command MIDs use
 `0x1A00..0x1AFF`, telemetry MIDs `0x0A00..0x0AFF`, and performance IDs `100..127`.
-Validation rejects collisions and checks known SCH/TO table capacities from
-selected mission source files. Unresolved source configurations remain subject
-to the native build.
+Validation rejects collisions and checks the SCH and TO table capacities it can read
+from the selected mission sources. Capacities it cannot read are checked by the
+native build.
 
 `appgen.py` owns validation and file plans, `render.py` renders templates, and
-`mission_capacity.py` checks table usage. The Studio backend applies those plans
-together with native mission changes in one transaction.
+`mission_capacity.py` checks table usage. The Flight Studio backend applies those
+plans together with the native mission changes in one transaction.

@@ -2,8 +2,8 @@
 
 The native C preprocessor evaluates table conditions; a C static assertion checks
 the declared array capacity. Missing tables/tools, unsupported initializers
-and unresolved constants are left to the normal build; no fallback limits are
-invented. The generated includes are replaced in memory before counting rows.
+and unresolved constants are left to the normal build. The generated includes
+are replaced in memory before counting rows.
 """
 from pathlib import Path
 import re

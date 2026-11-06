@@ -1,4 +1,4 @@
-"""Read and edit CPU1's native cFE startup selection, without changing sources.
+"""Read and edit CPU1's native cFE startup selection; app sources are not edited.
 
 APPLIST describes compiled/installed modules; CFE_APP startup records describe
 what starts on the next boot. Neither is evidence of an app running right now.
@@ -496,7 +496,7 @@ class MissionConfig:
             unavailable = selected - recipes.keys() | (selected - compiled)
             if unavailable:
                 raise ValueError("No built startup entry for: " + ", ".join(sorted(unavailable)))
-            # Never remove/reorder libraries. Only app startup membership changes.
+            # Libraries keep their records and order; only app startup membership changes.
             retained = [entry for entry in active if entry.kind == "CFE_LIB" or entry.name in selected]
             retained_names = {entry.name for entry in retained}
             for entry in defaults + archived:

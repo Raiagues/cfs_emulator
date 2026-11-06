@@ -17,7 +17,8 @@ if [[ ! -f "$SSH_DIR/config" || ! -f "$SSH_DIR/id_ed25519.pub" ]]; then
     exit 1
 fi
 
-IMAGE="$(cat config/image)"
+IMAGE="$(python3 -m hardware.infrastructure image)"
+EMULATOR_SSH_PORT="$(python3 -m hardware.infrastructure ssh_port)"
 if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
     echo "Run ./scripts/setup.sh first to prepare Docker and the emulator image." >&2
     exit 1
@@ -35,7 +36,7 @@ mkdir -p board
 echo "Booting Raspberry Pi OS..."
 docker run --rm "${MODE[@]}" --name pi4-cfs \
     --user "$(id -u):$(id -g)" \
-    -p 127.0.0.1:2222:2222 \
+    -p "127.0.0.1:$EMULATOR_SSH_PORT:2222" \
     -v /etc/passwd:/etc/passwd:ro -v /etc/group:/etc/group:ro \
     -v "$PWD/board:/work/board" -v "$PWD/logs:/work/logs" \
     -v "$PWD/project:/work/project:ro" -v "$PWD/sensors:/work/sensors:ro" \
@@ -47,7 +48,7 @@ if [[ "${1:-}" == --interactive ]]; then
     exit 0
 fi
 
-# Follow real boot output while checking that Linux accepts our SSH identity.
+# Follow the boot output while checking that Linux accepts this machine's SSH key.
 docker logs --follow pi4-cfs &
 LOG_PID=$!
 stop_logs() {
@@ -60,7 +61,7 @@ trap 'exit 143' TERM
 
 SSH_DEADLINE=$((SECONDS + 600))
 NEXT_STATUS=0
-until SSH_ERROR="$(LC_ALL=C ssh -F "$SSH_DIR/config" -o ConnectTimeout=3 pi4-cfs true 2>&1)"; do
+until SSH_ERROR="$(LC_ALL=C ssh -F "$SSH_DIR/config" -p "$EMULATOR_SSH_PORT" -o ConnectTimeout=3 pi4-cfs true 2>&1)"; do
     case "$SSH_ERROR" in
         *"Permission denied"*|*"Host key verification failed"*)
             printf '%s\n' "$SSH_ERROR" >&2

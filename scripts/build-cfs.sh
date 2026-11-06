@@ -13,7 +13,7 @@ if [[ $# -gt 0 && ( $# -ne 2 || "$1" != "--target" ) ]]; then
     exit 2
 fi
 if [[ -z "$MISSION_TARGET" ]]; then
-    MISSION_TARGET=$(python3 -c 'import json; c=json.load(open("project/config.json")); print("native" if c.get("board") is None else "qemu")')
+    MISSION_TARGET=$(python3 -c 'import json; from pathlib import Path; p=Path("hardware/.runtime/target.json"); c=json.load(open("project/config.json")); print(json.loads(p.read_text())["target"] if p.is_file() else "native" if c.get("board") is None else "qemu")')
 fi
 case "$MISSION_TARGET" in
     native) MISSION_PROFILE=native ;;
@@ -22,7 +22,11 @@ case "$MISSION_TARGET" in
 esac
 
 "${AS_USER[@]}" python3 project/manage.py sync
-MISSION_ARCH=$(python3 -c 'from pathlib import Path; from project.cfs_config import build_profile; print(build_profile(Path.cwd())["architecture"])')
+if [[ "$MISSION_TARGET" == native ]]; then
+    MISSION_ARCH=native
+else
+    MISSION_ARCH=$(python3 -c 'from pathlib import Path; from project.cfs_config import build_profile; print(build_profile(Path.cwd())["architecture"])')
+fi
 if [[ ! "$MISSION_ARCH" =~ ^[a-zA-Z0-9_-]+$ ]] || [[ "$MISSION_PROFILE" == native && "$MISSION_ARCH" != native ]] || [[ "$MISSION_PROFILE" == flight && "$MISSION_ARCH" == native ]]; then
     echo "Select the matching native or board/OS profile before building." >&2
     exit 1

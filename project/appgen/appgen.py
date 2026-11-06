@@ -164,7 +164,7 @@ def renderer():
 
 
 def render_mission(manifests, libraries=None):
-    """Small generated fragments consumed by the existing mission files."""
+    """Small generated fragments included by the mission files."""
     apps = sorted(manifests, key=lambda app: app["name"])
     if libraries is None:
         libraries = []
@@ -297,7 +297,7 @@ def planned_files(root, manifests, libraries=None, excluded=()):
 
 
 def plan_library(root, name):
-    """Plan a sample_lib-style library; do not create files or mission entries."""
+    """Plan a sample_lib-style library in memory; the caller writes files and mission entries."""
     valid_name(name)
     directory = safe_path(root, "libs/" + name)
     if directory.exists():

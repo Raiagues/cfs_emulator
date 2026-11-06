@@ -18,9 +18,20 @@ from interface.backend.workspace import Workspace
 from interface.backend.terminal import Shells
 from interface.backend.hardware_settings import device_settings, update_device
 from hardware.manager import HardwareManager
+from hardware import infrastructure
 from hardware.ground_link import resolve_ground_link
 from ground_station.station import GroundStation
 from ground_station.catalog import apply_overrides, CATALOG_VERSION
+
+# Infrastructure opens at /; the editor and diagrams open at /studio.
+STATIC_FILES = {'app.js', 'style.css', 'prototype.css', 'panels.css', 'panels.js', 'board.js', 'board.css', 'ui.js',
+                'layout.js', 'terminal.js', 'selectors.js', 'terminal.css', 'shell.js', 'architecture.js',
+                'architecture.css', 'mission-diagram.js', 'mission-diagram.css', 'app-diagram.js', 'app-diagram.css',
+                'communication.js', 'communication.css', 'simulation.js', 'simulation.css',
+                'vendor/xterm.js', 'vendor/xterm.css', 'vendor/addon-fit.js', 'infrastructure.js', 'infrastructure.css'}
+CONTENT_TYPES = {'html': 'text/html; charset=utf-8', 'js': 'text/javascript; charset=utf-8', 'css': 'text/css; charset=utf-8'}
+CONTENT_SECURITY_POLICY = ("default-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; "
+                           "img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'")
 
 
 class Studio:
@@ -57,14 +68,9 @@ class Studio:
                 raise ValueError('The server is shutting down.')
             destination = tuple(sorted(connection.items())) if connection else None
             key = (action, target, kind, destination, options.get('device'), options.get('model'))
-            if not exclusive:
-                # A boot or run job keeps streaming the log this reader would open.
-                for existing in self.jobs.values():
-                    if (existing['status'] == 'running' and not existing['cancel'].is_set()
-                            and (existing['key'] == key or action == 'logs'
-                                 and existing['action'] in {'boot', 'run'} and existing['kind'] == kind
-                                 and existing['target'] == target and existing['connection'] == connection)):
-                        return {'id': existing['id'], 'existing': True}
+            existing = None if exclusive else self._running_reader(action, key, target, kind, connection)
+            if existing:
+                return {'id': existing['id'], 'existing': True}
             if exclusive and not self.operation.acquire(blocking=False):
                 raise ValueError('An operation is already running. Follow its progress in the terminal.')
             ident = secrets.token_hex(6)
@@ -89,6 +95,19 @@ class Studio:
             raise
         return {'id': ident}
 
+    def _running_reader(self, action, key, target, kind, connection):
+        """A running job that already streams what this reader would open; called with self.lock held."""
+        for existing in self.jobs.values():
+            if existing['status'] != 'running' or existing['cancel'].is_set():
+                continue
+            if existing['key'] == key:
+                return existing
+            # A boot or run job keeps streaming the log this reader would open.
+            same_log = existing['kind'] == kind and existing['target'] == target and existing['connection'] == connection
+            if action == 'logs' and existing['action'] in {'boot', 'run'} and same_log:
+                return existing
+        return None
+
     def _job_request(self, action, options):
         """Validate a job request: (options with target, log kind, sensor script, SSH connection)."""
         if not isinstance(action, str) or action not in self.ACTIONS or not isinstance(options, dict):
@@ -105,7 +124,7 @@ class Studio:
             raise ValueError('Invalid connection')
         if options.get('kind', 'flight') not in ('boot', 'flight'):
             raise ValueError('Invalid log type')
-        if any(key in options and (not isinstance(options[key], str) or not options[key]) for key in ('board', 'os')):
+        if any(key in options and options[key] is not None and (not isinstance(options[key], str) or not options[key]) for key in ('board', 'os')):
             raise ValueError('Invalid board or operating system')
         options = dict(options)
         target = options.setdefault('target', self.hardware.default_target())
@@ -119,9 +138,11 @@ class Studio:
             if 'model' in options:
                 from sensors.simulator import simulation_scripts
                 scripts = simulation_scripts(self.workspace.root)
-                if action != 'simulate-preview' or options.get('device') or not isinstance(options['model'], str) or options['model'] not in scripts:
+                model = options['model']
+                known = isinstance(model, str) and model in scripts
+                if action != 'simulate-preview' or options.get('device') or not known:
                     raise ValueError('Select one Python sensor model to preview')
-                script = scripts[options['model']]
+                script = scripts[model]
             elif not options.get('device'):
                 session = self.workspace.simulation_snapshot()
                 if not any(sensor['enabled'] for sensor in session['settings']['sensors']):
@@ -215,8 +236,8 @@ class Studio:
             # Stop readers/writers before SSH and QMP disappear normally.
             self._cancel_readers(target, connection)
         # A run replaces the readers only once its build and target checks pass.
-        hooks = {'on_start': replace_readers} if action == 'run' else {}
-        result = self.hardware.execute(action, emit, cancel=record['cancel'], **hooks, **options)
+        on_start = replace_readers if action == 'run' else None
+        result = self.hardware.execute(action, emit, cancel=record['cancel'], on_start=on_start, **options)
         if action in {'stop', 'shutdown'}:
             # Readers opened meanwhile would follow software that no longer runs.
             self._cancel_readers(target, connection, kind='flight' if action == 'stop' else None)
@@ -247,12 +268,20 @@ class Studio:
             return {'id': ident, 'status': record['status'], 'cancel_requested': record['cancel'].is_set()}
 
     def jobs_snapshot(self):
+        jobs = []
         with self.lock:
-            return [{**{k: v for k, v in j.items() if k not in ('cancel', 'thread', 'key', 'lines')},
-                     'lines': list(j['lines'])} for j in self.jobs.values()] + self.shells.snapshots()
+            for job in self.jobs.values():
+                public = {key: value for key, value in job.items() if key not in ('cancel', 'thread', 'key', 'lines')}
+                public['lines'] = list(job['lines'])
+                jobs.append(public)
+        return jobs + self.shells.snapshots()
 
     def freeze_catalog(self, state, sensorless=False):
-        """Preserve compiled packet layouts so source edits cannot reinterpret telemetry."""
+        """Catalog of one build, saved per build fingerprint.
+
+        Packet layouts come from that build's compiler output, so later source
+        edits do not change how its telemetry is decoded.
+        """
         fingerprint = state.get('fingerprint', '')
         if len(fingerprint) != 64 or any(c not in '0123456789abcdef' for c in fingerprint):
             raise ValueError('Invalid build identifier')
@@ -265,8 +294,8 @@ class Studio:
         build_root, _, build_state = self.hardware._require_build(sensorless, target=target)
         if build_state.get('fingerprint') != fingerprint:
             raise ValueError('The target uses a different build. Build and run before reconnecting.')
-        catalog = self.ground.catalog(refresh=True, build_root=build_root,
-                                      build_dir=build_root / self.hardware.build_directory(target))
+        build_dir = build_root / self.hardware.build_directory(target)
+        catalog = self.ground.catalog(refresh=True, build_root=build_root, build_dir=build_dir)
         # An external editor can bypass the UI lock while the compiler inspects headers.
         self.hardware._require_build(sensorless, target=target)
         if not catalog.get('transport'):
@@ -301,8 +330,13 @@ class Studio:
         if target == 'physical' and self.hardware.connection(options.get('connection')) != deployment.get('connection'):
             raise ValueError('This SSH connection does not match the board used for the last deployment.')
         hardware = self.hardware.status()
-        running = ((hardware['physical'].get('last_probe') or {}).get('service') == 'active' if target == 'physical' else
-                   hardware['native'].get('running') if target == 'native' else hardware['qemu'].get('flight_running'))
+        if target == 'physical':
+            probe = hardware['physical'].get('last_probe') or {}
+            running = probe.get('service') == 'active'
+        elif target == 'native':
+            running = hardware['native'].get('running')
+        else:
+            running = hardware['qemu'].get('flight_running')
         if not running:
             raise ValueError('cFS is not available on this target. Run it from the workbench before connecting the ground station.')
         catalog = self.ground_catalog(target)
@@ -311,7 +345,8 @@ class Studio:
         else:
             argv = self.hardware.ssh_argv(target, options.get('connection'))
             service = 'cfs-studio.service' if target == 'physical' else 'cfs.service'
-            code, instance = self.hardware._capture(argv + [f'systemctl show --property=InvocationID --value {service}'], 5)
+            command = f'systemctl show --property=InvocationID --value {service}'
+            code, instance = self.hardware._capture(argv + [command], 5)
             if code or len(instance) != 32 or any(c not in '0123456789abcdef' for c in instance):
                 instance = None
         link = resolve_ground_link(self.hardware, target, catalog, options.get('connection'))
@@ -396,6 +431,7 @@ class Handler(BaseHTTPRequestHandler):
                 '/api/files/search': lambda: app.workspace.search_files(query.get('root', 'cFS'), query.get('q', '')),
                 '/api/file': lambda: app.workspace.read_file(query['path']),
                 '/api/hardware': app.hardware.status,
+                '/api/infrastructure': lambda: infrastructure.snapshot(app.hardware),
                 '/api/simulation': app.workspace.simulation_snapshot,
                 '/api/hardware/device': lambda: device_settings(app.workspace, query.get('id')),
                 '/api/jobs': app.jobs_snapshot,
@@ -405,17 +441,20 @@ class Handler(BaseHTTPRequestHandler):
             }
             if url.path in routes:
                 return self.reply(routes[url.path]())
-            name = {'/': 'index.html', '/app.js': 'app.js', '/style.css': 'style.css', '/prototype.css': 'prototype.css', '/panels.css': 'panels.css', '/panels.js': 'panels.js', '/board.js': 'board.js', '/board.css': 'board.css', '/ui.js': 'ui.js', '/layout.js': 'layout.js', '/terminal.js': 'terminal.js', '/selectors.js': 'selectors.js', '/terminal.css': 'terminal.css'}.get(url.path)
-            if url.path in ('/shell.js', '/architecture.js', '/architecture.css', '/mission-labels.js', '/mission-diagram.js', '/mission-diagram.css', '/app-diagram.js', '/app-diagram.css', '/communication.js', '/communication.css', '/simulation.js', '/simulation.css', '/vendor/xterm.js', '/vendor/xterm.css', '/vendor/addon-fit.js'):
+            if url.path == '/':
+                name = 'infrastructure.html'
+            elif url.path in {'/studio', '/studio/'}:
+                name = 'index.html'
+            elif url.path[1:] in STATIC_FILES:
                 name = url.path[1:]
-            if name is None:
+            else:
                 return self.reply({'error': 'Not found'}, 404)
             data = (ROOT / 'interface/static' / name).read_bytes()
             self.send_response(200)
-            self.send_header('Content-Type', {'html': 'text/html; charset=utf-8', 'js': 'text/javascript; charset=utf-8', 'css': 'text/css; charset=utf-8'}[name.split('.')[-1]])
+            self.send_header('Content-Type', CONTENT_TYPES[name.split('.')[-1]])
             self.send_header('Content-Length', str(len(data)))
             self.send_header('Cache-Control', 'no-store')
-            self.send_header('Content-Security-Policy', "default-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'")
+            self.send_header('Content-Security-Policy', CONTENT_SECURITY_POLICY)
             self.end_headers()
             self.wfile.write(data)
         except (BrokenPipeError, ConnectionResetError):
@@ -433,7 +472,8 @@ class Handler(BaseHTTPRequestHandler):
         app = self.server.studio
         origin = self.headers.get('Origin')
         allowed_origins = {f'http://127.0.0.1:{self.server.server_port}', f'http://localhost:{self.server.server_port}'}
-        if not self.valid_host() or (origin and origin not in allowed_origins) or not secrets.compare_digest(self.headers.get('X-Studio-Token', ''), app.token):
+        token = self.headers.get('X-Studio-Token', '')
+        if not self.valid_host() or (origin and origin not in allowed_origins) or not secrets.compare_digest(token, app.token):
             return self.reply({'error': 'Invalid session. Reload the page.'}, 403)
         try:
             length = int(self.headers.get('Content-Length', 0))
@@ -448,6 +488,10 @@ class Handler(BaseHTTPRequestHandler):
             path = urlparse(self.path).path
             if path == '/api/file':
                 result = app.exclusive(app.workspace.write_file, body['path'], body['content'], body.get('expected_hash'))
+            elif path == '/api/infrastructure':
+                result = app.exclusive(infrastructure.save, app, body)
+            elif path == '/api/infrastructure/check':
+                result = app.exclusive(infrastructure.check, app.hardware, body.get('target'))
             elif path == '/api/mutate':
                 result = app.exclusive(app.workspace.mutate, body['action'], body.get('payload', {}))
             elif path == '/api/mission/app':
@@ -458,17 +502,19 @@ class Handler(BaseHTTPRequestHandler):
             elif path == '/api/mission/library':
                 result = app.exclusive(app.workspace.mission_library, body.get('action'), body.get('name'), body.get('expected_hash'))
             elif path == '/api/mission/draft':
-                result = app.exclusive(app.workspace.mission_draft, body.get('kind'), body.get('name'),
-                                       body.get('settings'), body.get('expected_hash'), body.get('mode', 'create'))
+                draft = (body.get('kind'), body.get('name'), body.get('settings'), body.get('expected_hash'))
+                result = app.exclusive(app.workspace.mission_draft, *draft, body.get('mode', 'create'))
             elif path == '/api/mission/save':
-                result = app.exclusive(app.workspace.save_mission_draft, body.get('kind'), body.get('name'),
-                                       body.get('settings'), body.get('expected_hash'), body.get('plan_hash'), body.get('mode', 'create'))
+                draft = (body.get('kind'), body.get('name'), body.get('settings'), body.get('expected_hash'))
+                result = app.exclusive(app.workspace.save_mission_draft, *draft, body.get('plan_hash'), body.get('mode', 'create'))
             elif path == '/api/mission/profile':
                 result = app.exclusive(app.workspace.select_profile, body.get('board'), body.get('os'), body.get('expected_hash'))
             elif path == '/api/simulation':
                 if any(job['action'] == 'simulate' and job['status'] == 'running' for job in app.jobs_snapshot()):
                     raise ValueError('Stop synthetic data before changing its session settings')
                 result = app.exclusive(app.workspace.save_simulation, body.get('settings'), body.get('expected_hash'))
+            elif path == '/api/hardware/target':
+                result = app.exclusive(app.hardware.select_target, body.get('target'))
             elif path == '/api/hardware/device':
                 result = app.exclusive(update_device, app.workspace, body)
             elif path == '/api/job':

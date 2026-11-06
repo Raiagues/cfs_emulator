@@ -1,4 +1,4 @@
-/* Traffic observed by Ground Station; no inferred internal Software Bus traffic. */
+/* UDP traffic observed by the Ground Station; internal Software Bus traffic is not shown. */
 const midLabel = mid => Number.isInteger(mid) ? '0x'+mid.toString(16).toUpperCase().padStart(4,'0') : '—';
 const clock = seconds => seconds ? new Date(seconds*1000).toLocaleTimeString('en-GB',{hour12:false}) : '—';
 const eventKey = (event,kind) => kind+':'+(event.event_id??[event.received_at||event.sent_at,event.mid,event.sequence??event.id].join('-'));

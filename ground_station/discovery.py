@@ -1,7 +1,7 @@
 """Read explicit dispatch and packet initialization relationships from C sources.
 
 Discovery names the wire objects; catalog.py asks the target compiler for every
-MID, code, size and field offset. No app-specific command dictionary lives here.
+MID, code, size and field offset.
 """
 from collections import Counter, defaultdict
 import re
@@ -31,8 +31,8 @@ def command_mappings(text, structs, defined, prefix):
 
     A code belongs to the MID that reaches its dispatch: a CFE_SB_MsgId_Equal
     branch, a negated test that returns for every other MID, or an explicit
-    handler table entry. Without that evidence the code is returned with the
-    reason, never with a MID chosen from the application name.
+    handler table entry. A code without one of these is returned as unresolved,
+    with the reason.
     Returns (mappings, {unresolved code: reason}, size-only mappings).
     """
     packet_types = {name for name, fields in structs.items()
@@ -132,7 +132,8 @@ def command_mappings(text, structs, defined, prefix):
         if code == '0': layouts[table_mid].add((table_mid, '0', typ))
         elif code in defined:
             expected.add(code); layouts[code].add((table_mid, code, typ))
-    # A MID whose messages reach function-code dispatch is not itself a command.
+    # MIDs that reach function-code cases are dispatched by CC. Any other MID
+    # branch with a single command type is one command with code 0.
     dispatched = set()
     for function, body in bodies.items():
         for match in re.finditer(r'\bcase\s+(\w+_CC)\s*:|\[\s*(\w+_CC)\s*\]\s*=', body):
@@ -241,7 +242,7 @@ def telemetry_mappings(text, structs, packet_types, declarations):
         typ = resolve(expression)
         if typ not in packet_types: continue
         # sizeof(packet) - maximum trailing data + used bytes is the firmware's
-        # exact lower bound, not an inferred payload length from field names.
+        # exact lower bound for the message length.
         sizes = re.findall(r'\b' + re.escape(args[1]) + r'\s*=\s*(sizeof\s*\(\s*' + re.escape(typ) + r'\s*\)\s*-\s*[^;+]+)\s*\+', text[:position])
         if sizes: variable[typ] = sizes[-1].strip()
     return mappings, variable, used

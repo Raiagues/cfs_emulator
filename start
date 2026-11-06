@@ -89,10 +89,12 @@ def main(argv=None):
     for action in ('setup', 'build', 'boot', 'run', 'stop', 'shutdown', 'connect', 'probe', 'logs', 'values', 'simulate-preview'):
         command = commands.add_parser(action)
         command.add_argument('--target', choices=('native', 'qemu', 'physical'),
-                             help='Defaults to native without a board, otherwise QEMU')
+                             help='Defaults to the target selected in the interface or profile command')
         command.add_argument('--host', help='Physical board hostname, IP or SSH alias')
         command.add_argument('--user', help='SSH user; defaults to OpenSSH configuration')
         command.add_argument('--ssh-port', type=int, default=22)
+        command.add_argument('--identity-file', help='Local SSH private key path')
+        command.add_argument('--directory', help="cFS installation folder relative to the board user's home")
         if action in {'build', 'run'}:
             command.add_argument('--sensorless', action='store_true', help='Physical build without sensor apps')
         if action == 'run':
@@ -115,13 +117,17 @@ def main(argv=None):
         from interface.backend.workspace import Workspace
         workspace = Workspace(ROOT)
         try:
-            if args.native or args.board:
-                result = workspace.select_profile(None if args.native else args.board, None if args.native else args.os)
+            from hardware.manager import HardwareManager
+            manager = HardwareManager(ROOT)
+            if args.native:
+                print(json.dumps(manager.select_target('native'), indent=2))
+            elif args.board:
+                result = workspace.select_profile(args.board, args.os)
+                manager.select_target('qemu')
                 print(json.dumps({'board': args.board, 'os': args.os, 'changed': result['changed']}, indent=2))
             else:
-                from hardware.manager import HardwareManager
                 config = workspace.model.load_config(ROOT)
-                print(json.dumps({'board': config['board'], 'os': config['os'], 'profiles': HardwareManager(ROOT).profiles()}, indent=2))
+                print(json.dumps({'target': manager.default_target(), 'board': config['board'], 'os': config['os'], 'profiles': manager.profiles()}, indent=2))
             return 0
         except (OSError, ValueError, RuntimeError) as error:
             print(f'Error: {error}', file=sys.stderr)
@@ -162,11 +168,12 @@ def main(argv=None):
     target = getattr(args, 'target', None) or manager.default_target()
     host, user = getattr(args, 'host', None), getattr(args, 'user', None)
     port = getattr(args, 'ssh_port', 22)
+    identity, directory = getattr(args, 'identity_file', None), getattr(args, 'directory', None)
     sensorless = getattr(args, 'sensorless', False)
-    if (host or user or port != 22) and target != 'physical':
+    if (host or user or port != 22 or identity or directory) and target != 'physical':
         parser.error('SSH options require --target physical')
-    if (user or port != 22) and not host:
-        parser.error('--user and --ssh-port require --host')
+    if (user or port != 22 or identity or directory) and not host:
+        parser.error('SSH and installation options require --host')
     if sensorless and target != 'physical':
         parser.error('--sensorless requires --target physical')
     if args.command in {'connect', 'probe'} and target != 'physical':
@@ -184,6 +191,11 @@ def main(argv=None):
             print(json.dumps(manager.status(), indent=2))
             return 0
         connection = {'host': host, 'user': user or '', 'port': port} if host else None
+        if connection is not None:
+            if identity:
+                connection['identity_file'] = identity
+            if directory:
+                connection['directory'] = directory
         options = {'target': target, 'connection': connection, 'sensorless': sensorless}
         if args.command == 'logs':
             options['kind'] = args.kind

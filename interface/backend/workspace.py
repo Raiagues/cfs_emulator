@@ -1,4 +1,7 @@
-"""Local source workspace. The existing project CLI remains the app generator."""
+"""Project files and source changes requested by the Studio UI.
+
+Generated files are written through project.manage.commit or scripts/project.sh.
+"""
 
 import copy
 import hashlib
@@ -36,16 +39,29 @@ class Workspace:
         if not isinstance(relative, str) or "\x00" in relative:
             raise ValueError("Invalid path")
         parts = Path(relative).parts
-        if Path(relative).is_absolute() or ".." in parts or any(
-                part in self.HIDDEN or part == ".env" or part.startswith(".env.") or
-                part.endswith((".pem", ".key")) for part in parts):
+        private = [part for part in parts if part in self.HIDDEN or part == ".env" or part.startswith(".env.") or part.endswith((".pem", ".key"))]
+        if Path(relative).is_absolute() or ".." in parts or private:
             raise ValueError("Path is private or outside the project")
         return self.model.safe_path(self.root, relative)
 
     def editable(self, relative):
         parts = Path(relative).parts
-        return bool(parts and parts[0] in self.EDIT_ROOTS and
-                    not any(part.startswith("build") or part in (".venv", "dist") for part in parts))
+        generated = any(part.startswith("build") or part in (".venv", "dist") for part in parts)
+        return bool(parts and parts[0] in self.EDIT_ROOTS and not generated)
+
+    def _read_bytes(self, relative):
+        path = self.path(relative)
+        return path.read_bytes() if path.exists() else None
+
+    def _read_text(self, relative, missing=""):
+        path = self.path(relative)
+        return path.read_text() if path.exists() else missing
+
+    def _assert_inputs(self, inputs, message):
+        """Raise ValueError(message) if any file differs from its bytes in inputs (None: absent)."""
+        for relative, content in inputs.items():
+            if self._read_bytes(relative) != content:
+                raise ValueError(message)
 
     def tree(self, path=""):
         directory = self.path(path)
@@ -58,10 +74,9 @@ class Workspace:
                 self.path(relative)
             except ValueError:
                 continue
-            entries.append({"name": item.name, "path": relative,
-                            "type": "directory" if item.is_dir() else "file",
-                            "size": item.stat().st_size if item.is_file() else None,
-                            "editable": self.editable(relative)})
+            entry = {"name": item.name, "path": relative, "type": "directory" if item.is_dir() else "file",
+                     "size": item.stat().st_size if item.is_file() else None, "editable": self.editable(relative)}
+            entries.append(entry)
         return {"path": path, "entries": entries}
 
     def read_file(self, path):
@@ -179,10 +194,15 @@ class Workspace:
                 app["behavior"] = summarize_application(app, recipes.get(name, {}).get("entry_point"), root=self.root)
                 apps.append(app)
             libraries = inspect_libraries(self.root, apps, self.source_index, mission)
-            return {"name": self.root.name, "core_modules": [{"name": p.name, "path": p.relative_to(self.root).as_posix(), "type": "directory"} for p in sorted((self.root / "cFS/cfe/modules").glob("*")) if (p / "CMakeLists.txt").is_file() and (p / "fsw/src").is_dir()], "project": config, "catalog": catalog, "apps": apps,
+            core_modules = []
+            for module in sorted((self.root / "cFS/cfe/modules").glob("*")):
+                if (module / "CMakeLists.txt").is_file() and (module / "fsw/src").is_dir():
+                    core_modules.append({"name": module.name, "path": module.relative_to(self.root).as_posix(), "type": "directory"})
+            bindings = {device["id"]: binding(device) for device in config["devices"]}
+            simulation = {"root": "sensors", "scripts": simulation_scripts(self.root), "bindings": bindings}
+            return {"name": self.root.name, "core_modules": core_modules, "project": config, "catalog": catalog, "apps": apps,
                     "mission": mission, "libraries": libraries, "changes": hardware_changes(self.root, config),
-                    "simulation": {"root": "sensors", "scripts": simulation_scripts(self.root),
-                                   "bindings": {device["id"]: binding(device) for device in config["devices"]}}}
+                    "simulation": simulation}
 
     def mission_app(self, action, name, expected_hash):
         with self.lock:
@@ -213,8 +233,14 @@ class Workspace:
             return {**self.simulation_snapshot(), 'changed': changed}
 
     def _mission_draft_plan(self, kind, name, settings, expected_hash, mode="create"):
-        """Build a deterministic preview entirely in memory."""
+        """Build a deterministic preview entirely in memory.
+
+        Returns the public preview, the file plan, the input bytes it was planned
+        from and the module paths. Inputs are read again at the end, so a file saved
+        meanwhile rejects the draft.
+        """
         from project.appgen.native_startup import parse_startup, render_startup
+        from project.cfs_config import module_limits_plan
         if kind not in ("app", "library") or mode not in ("create", "edit"):
             raise ValueError("Choose an app or library creation mode")
         if not isinstance(settings, dict):
@@ -227,132 +253,154 @@ class Workspace:
         for item in config["apps"]:
             path = f"project/apps/{item['name']}.json"
             inputs[path] = self.path(path).read_bytes()
-        generator = self.model.appgen(self.root)
         manifests = self.model.read_manifests(self.root, config)
         target = next((item for item in manifests if item["name"] == name), None)
         if mode == "create":
-            if name in self.model.protected_apps(self.root) or name in self.mission._evaluate(revision)["compiled"]:
+            compiled = self.mission._evaluate(revision)["compiled"]
+            if name in self.model.protected_apps(self.root) or name in compiled:
                 raise ValueError("A mission module already uses this name: " + name)
             if any(self.path(f"cFS/{directory}/{name}").exists() for directory in ("apps", "libs")):
                 raise ValueError("A source directory already uses this name: " + name)
         elif kind != "app" or target is None:
             raise ValueError("Edit this module's native source files to change its configuration")
-        native = self.mission.STARTUP
         original = self.mission.startup_text()
-        active, archived = parse_startup(original)
-        native_entry = next((item for item in active + archived if item.name == name), None)
-        schedule = None
-        blocks = []
         if kind == "app":
-            if set(settings) - {"priority", "stack_size", "wakeup_hz", "hk_hz"}:
-                raise ValueError("Unknown application draft setting")
-            if mode == "create":
-                target = generator.new_app(name, manifests)
-                manifests.append(target)
-                config["apps"].append({"name": name, "sensors": {}, "telemetry_bindings": {}, "command_bindings": {}})
-            elif native_entry:
-                target["priority"], target["stack_size"] = int(native_entry.fields[4], 0), int(native_entry.fields[5], 0)
-            scheduler = self.mission.schedule_config()
-            tick_hz = scheduler["tick_hz"]
-            if not tick_hz:
-                raise ValueError("The scheduler TickRate must be a numeric value before configuring application frequencies")
-            schedule_path = self.path(scheduler["generated_path"])
-            if mode == "edit" and schedule_path.is_file():
-                source_schedule = re.sub(r'/\*[\s\S]*?\*/|//[^\n]*', '', schedule_path.read_text())
-                for suffix, field in (("WAKEUP_MID", "period_ticks"), ("SEND_HK_MID", "hk_period_ticks")):
-                    match = re.search(r'\bCFE_SB_MSGID_WRAP_VALUE\(\s*' + re.escape(name.upper() + "_" + suffix) +
-                                      r'\s*\)\s*,\s*(\d+)\s*,', source_schedule)
-                    if match and int(match[1]) > 0:
-                        target[field] = int(match[1])
-            normalized = {"priority": target["priority"], "stack_size": target["stack_size"],
-                          "wakeup_hz": tick_hz / target["period_ticks"],
-                          "hk_hz": tick_hz / target["hk_period_ticks"]}
-            normalized.update(settings)
-            for key, field in (("wakeup_hz", "period_ticks"), ("hk_hz", "hk_period_ticks")):
-                value = normalized[key]
-                if type(value) not in (int, float) or not math.isfinite(value) or value <= 0:
-                    raise ValueError("Frequency must be a positive finite number")
-                ticks = tick_hz / value
-                if ticks > 65535 or ticks < 1 or abs(ticks - round(ticks)) > 0.000001:
-                    raise ValueError(f"{key} must correspond to a whole number of scheduler ticks ({tick_hz} Hz)")
-                target[field] = int(round(ticks))
-                normalized[key] = tick_hz / target[field]
-            target["priority"], target["stack_size"] = normalized["priority"], normalized["stack_size"]
-            self.model.validate_config(self.root, config, manifests, [name] if mode == "create" else [])
-            self.model.mapped_manifests(config, manifests, self.root)
-            plan = self.model.planned_project_files(self.root, config, manifests)
-            if mode == "create":
-                plan["project/config.json"] = json.dumps(config, indent=2) + "\n"
-            fragment = "cFS/sample_defs/generated/appgen_startup.scr"
-            previous = self.path(fragment).read_text() if self.path(fragment).exists() else ""
-            content = self.mission.reconcile_generated_modules(previous, plan[fragment], original)
-            active, archived = parse_startup(content)
-            recipes, _ = parse_startup(plan[fragment])
-            entry = next((item for item in recipes if item.kind == "CFE_APP" and item.name == name), native_entry)
-            if native_entry and mode == "edit":
-                fields = list(native_entry.fields)
-                fields[4:6] = [str(target["priority"]), str(target["stack_size"])]
-                entry = parse_startup(", ".join(fields) + ";")[0][0]
-            if mode == "create":
-                active.append(entry)
-            else:
-                active = [entry if item.name == name else item for item in active]
-                archived = [entry if item.name == name else item for item in archived]
-            path = f"cFS/apps/{name}"
-            source = path + f"/fsw/src/{name}_user.c"
-            prefix = name.upper()
-            blocks = [{"id": "initialize", "title": "Initialize", "symbol": prefix + "_UserInit"},
-                      {"id": "wakeup", "title": "Wakeup", "symbol": prefix + "_UserWakeup", "frequency_hz": normalized["wakeup_hz"]},
-                      {"id": "housekeeping", "title": "Housekeeping", "symbol": prefix + "_SendHkCmd", "frequency_hz": normalized["hk_hz"]},
-                      {"id": "commands", "title": "Commands", "symbol": prefix + "_ProcessGroundCommand"}]
-            schedule = {"path": fragment.replace("appgen_startup.scr", "appgen_schedule.inc"),
-                        "tick_hz": tick_hz, "wakeup_ticks": target["period_ticks"], "hk_ticks": target["hk_period_ticks"],
-                        "scheduler_enabled": any(item.name == "sch_lab" for item in active)}
-            build = {"path": "cFS/sample_defs/targets.cmake", "module": name,
-                     "statement": "list(APPEND cpu1_APPLIST ${APPGEN_LIBS} ${APPGEN_APPS})"}
+            draft = self._app_draft(name, settings, mode, config, manifests, target, original)
         else:
-            if settings:
-                raise ValueError("Libraries do not have application scheduler settings")
-            generated = generator.plan_library(self.root / "cFS", name)
-            from project.cfs_config import bootstrap_plan
-            plan = bootstrap_plan(self.root, config)
-            plan.update({"cFS/" + path: content for path, content in generated["files"].items()})
-            entry = parse_startup(", ".join(str(value) for value in generated["startup"]["fields"]) + ";")[0][0]
-            first_app = next((index for index, item in enumerate(active) if item.kind == "CFE_APP"), len(active))
-            active.insert(first_app, entry)
-            cmake = "cFS/sample_defs/libraries.cmake"
-            previous = self.path(cmake).read_text() if self.path(cmake).exists() else "set(MISSION_LIBRARIES)\n"
-            plan[cmake] = previous.rstrip() + f"\nlist(APPEND MISSION_LIBRARIES {name})\n"
-            path = f"cFS/libs/{name}"
-            source = path + f"/fsw/src/{name}.c"
-            normalized = {}
-            blocks = [{"id": "initialize", "title": "Library initialization", "symbol": entry.fields[2]},
-                      {"id": "interface", "title": "Public interface", "symbol": generated["include"]}]
-            build = {"path": cmake, "statement": f"list(APPEND MISSION_LIBRARIES {name})"}
-        plan[native] = render_startup(active, archived)
+            draft = self._library_draft(name, settings, config, original)
+        plan = draft["plan"]
+        native = self.mission.STARTUP
+        plan[native] = render_startup(draft["active"], draft["archived"])
         parse_startup(plan[native])
-        from project.cfs_config import module_limits_plan
         plan.update(module_limits_plan(self.root, plan))
         for relative in plan:
-            path_on_disk = self.path(relative)
-            inputs.setdefault(relative, path_on_disk.read_bytes() if path_on_disk.exists() else None)
+            inputs.setdefault(relative, self._read_bytes(relative))
         self.mission.assert_revision(revision)
+        self._assert_inputs(inputs, "Project source changed while preparing the draft. Reload it before saving.")
+        input_hashes = {}
         for relative, content in inputs.items():
-            path_on_disk = self.path(relative)
-            current = path_on_disk.read_bytes() if path_on_disk.exists() else None
-            if current != content:
-                raise ValueError("Project source changed while preparing the draft. Reload it before saving.")
-        payload = {"revision": revision, "kind": kind, "mode": mode, "name": name,
-                   "settings": normalized, "files": plan,
-                   "inputs": {path: hashlib.sha256(value).hexdigest() if value is not None else None
-                              for path, value in inputs.items()}}
+            input_hashes[relative] = hashlib.sha256(content).hexdigest() if content is not None else None
+        settings = draft["settings"]
+        payload = {"revision": revision, "kind": kind, "mode": mode, "name": name, "settings": settings, "files": plan, "inputs": input_hashes}
         plan_hash = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
-        public = {"draft": {"kind": kind, "mode": mode, "name": name, "settings": normalized},
-                  "preview": {"entry_point": entry.fields[2], "blocks": blocks,
-                              "startup": {"path": native, "record": entry.raw}, "build": build,
-                              "schedule": schedule, "source": {"path": source, "content": plan.get(source) or self.path(source).read_text()}},
-                  "plan_hash": plan_hash, "expected_hash": revision}
-        return public, plan, inputs, {"name": name, "path": path, "entry": source}
+        entry, source = draft["entry"], draft["source"]
+        content = plan.get(source) or self.path(source).read_text()
+        preview = {"entry_point": entry.fields[2], "blocks": draft["blocks"],
+                   "startup": {"path": native, "record": entry.raw}, "build": draft["build"],
+                   "schedule": draft["schedule"], "source": {"path": source, "content": content}}
+        public = {"draft": {"kind": kind, "mode": mode, "name": name, "settings": settings},
+                  "preview": preview, "plan_hash": plan_hash, "expected_hash": revision}
+        return public, plan, inputs, {"name": name, "path": draft["path"], "entry": source}
+
+    def _app_draft(self, name, settings, mode, config, manifests, target, original):
+        """Generated files and startup record of an app, from its scheduler frequencies."""
+        from project.appgen.native_startup import parse_startup
+        if set(settings) - {"priority", "stack_size", "wakeup_hz", "hk_hz"}:
+            raise ValueError("Unknown application draft setting")
+        active, archived = parse_startup(original)
+        native_entry = next((item for item in active + archived if item.name == name), None)
+        if mode == "create":
+            target = self.model.appgen(self.root).new_app(name, manifests)
+            manifests.append(target)
+            config["apps"].append({"name": name, "sensors": {}, "telemetry_bindings": {}, "command_bindings": {}})
+        elif native_entry:
+            target["priority"] = int(native_entry.fields[4], 0)
+            target["stack_size"] = int(native_entry.fields[5], 0)
+        scheduler = self.mission.schedule_config()
+        tick_hz = scheduler["tick_hz"]
+        if not tick_hz:
+            raise ValueError("The scheduler TickRate must be a numeric value before configuring application frequencies")
+        if mode == "edit":
+            target.update(self._scheduled_periods(name, scheduler["generated_path"]))
+        normalized = {"priority": target["priority"], "stack_size": target["stack_size"],
+                      "wakeup_hz": tick_hz / target["period_ticks"], "hk_hz": tick_hz / target["hk_period_ticks"]}
+        normalized.update(settings)
+        for key, field in (("wakeup_hz", "period_ticks"), ("hk_hz", "hk_period_ticks")):
+            target[field] = self._scheduler_ticks(key, normalized[key], tick_hz)
+            normalized[key] = tick_hz / target[field]
+        target["priority"], target["stack_size"] = normalized["priority"], normalized["stack_size"]
+        new_apps = [name] if mode == "create" else []
+        self.model.validate_config(self.root, config, manifests, new_apps)
+        self.model.mapped_manifests(config, manifests, self.root)
+        plan = self.model.planned_project_files(self.root, config, manifests)
+        if mode == "create":
+            plan["project/config.json"] = json.dumps(config, indent=2) + "\n"
+        fragment = "cFS/sample_defs/generated/appgen_startup.scr"
+        content = self.mission.reconcile_generated_modules(self._read_text(fragment), plan[fragment], original)
+        active, archived = parse_startup(content)
+        recipes, _ = parse_startup(plan[fragment])
+        entry = next((item for item in recipes if item.kind == "CFE_APP" and item.name == name), native_entry)
+        if native_entry and mode == "edit":
+            fields = list(native_entry.fields)
+            fields[4:6] = [str(target["priority"]), str(target["stack_size"])]
+            entry = parse_startup(", ".join(fields) + ";")[0][0]
+        if mode == "create":
+            active.append(entry)
+        else:
+            active = [entry if item.name == name else item for item in active]
+            archived = [entry if item.name == name else item for item in archived]
+        prefix = name.upper()
+        blocks = [{"id": "initialize", "title": "Initialize", "symbol": prefix + "_UserInit"},
+                  {"id": "wakeup", "title": "Wakeup", "symbol": prefix + "_UserWakeup", "frequency_hz": normalized["wakeup_hz"]},
+                  {"id": "housekeeping", "title": "Housekeeping", "symbol": prefix + "_SendHkCmd", "frequency_hz": normalized["hk_hz"]},
+                  {"id": "commands", "title": "Commands", "symbol": prefix + "_ProcessGroundCommand"}]
+        schedule = {"path": fragment.replace("appgen_startup.scr", "appgen_schedule.inc"),
+                    "tick_hz": tick_hz, "wakeup_ticks": target["period_ticks"], "hk_ticks": target["hk_period_ticks"],
+                    "scheduler_enabled": any(item.name == "sch_lab" for item in active)}
+        build = {"path": "cFS/sample_defs/targets.cmake", "module": name,
+                 "statement": "list(APPEND cpu1_APPLIST ${APPGEN_LIBS} ${APPGEN_APPS})"}
+        path = f"cFS/apps/{name}"
+        return {"plan": plan, "active": active, "archived": archived, "entry": entry, "settings": normalized,
+                "blocks": blocks, "schedule": schedule, "build": build, "path": path, "source": path + f"/fsw/src/{name}_user.c"}
+
+    def _scheduled_periods(self, name, relative):
+        """Wakeup and housekeeping periods, in scheduler ticks, from the generated schedule table."""
+        periods = {}
+        path = self.path(relative)
+        if not path.is_file():
+            return periods
+        table = re.sub(r'/\*[\s\S]*?\*/|//[^\n]*', '', path.read_text())
+        for suffix, field in (("WAKEUP_MID", "period_ticks"), ("SEND_HK_MID", "hk_period_ticks")):
+            mid = re.escape(name.upper() + "_" + suffix)
+            match = re.search(r'\bCFE_SB_MSGID_WRAP_VALUE\(\s*' + mid + r'\s*\)\s*,\s*(\d+)\s*,', table)
+            if match and int(match[1]) > 0:
+                periods[field] = int(match[1])
+        return periods
+
+    @staticmethod
+    def _scheduler_ticks(key, frequency, tick_hz):
+        """Whole number of scheduler ticks (1 to 65535) for a frequency in Hz."""
+        if type(frequency) not in (int, float) or not math.isfinite(frequency) or frequency <= 0:
+            raise ValueError("Frequency must be a positive finite number")
+        ticks = tick_hz / frequency
+        if ticks > 65535 or ticks < 1 or abs(ticks - round(ticks)) > 0.000001:
+            raise ValueError(f"{key} must correspond to a whole number of scheduler ticks ({tick_hz} Hz)")
+        return int(round(ticks))
+
+    def _library_draft(self, name, settings, config, original):
+        """Generated files of a library, its CFE_LIB record before the first app and its CMake entry."""
+        from project.appgen.native_startup import parse_startup
+        from project.cfs_config import bootstrap_plan
+        if settings:
+            raise ValueError("Libraries do not have application scheduler settings")
+        generated = self.model.appgen(self.root).plan_library(self.root / "cFS", name)
+        plan = bootstrap_plan(self.root, config)
+        for relative, content in generated["files"].items():
+            plan["cFS/" + relative] = content
+        record = ", ".join(str(value) for value in generated["startup"]["fields"]) + ";"
+        entry = parse_startup(record)[0][0]
+        active, archived = parse_startup(original)
+        first_app = next((index for index, item in enumerate(active) if item.kind == "CFE_APP"), len(active))
+        active.insert(first_app, entry)
+        cmake = "cFS/sample_defs/libraries.cmake"
+        statement = f"list(APPEND MISSION_LIBRARIES {name})"
+        plan[cmake] = self._read_text(cmake, "set(MISSION_LIBRARIES)\n").rstrip() + "\n" + statement + "\n"
+        blocks = [{"id": "initialize", "title": "Library initialization", "symbol": entry.fields[2]},
+                  {"id": "interface", "title": "Public interface", "symbol": generated["include"]}]
+        path = f"cFS/libs/{name}"
+        return {"plan": plan, "active": active, "archived": archived, "entry": entry, "settings": {},
+                "blocks": blocks, "schedule": None, "build": {"path": cmake, "statement": statement},
+                "path": path, "source": path + f"/fsw/src/{name}.c"}
 
     def mission_draft(self, kind, name, settings, expected_hash, mode="create"):
         with self.lock:
@@ -364,46 +412,41 @@ class Workspace:
             public, plan, inputs, module = self._mission_draft_plan(kind, name, {} if settings is None else settings, expected_hash, mode)
             if not isinstance(plan_hash, str) or plan_hash != public["plan_hash"]:
                 raise ValueError("The draft or source has changed. Preview the updated configuration before saving.")
-            for relative, content in inputs.items():
-                path = self.path(relative)
-                if (path.read_bytes() if path.exists() else None) != content:
-                    raise ValueError("Project source changed. Preview the draft again before saving.")
-            changed = commit(self.root, plan, library_names=[name] if kind == "library" else [])
-            return {"mission": self.mission.snapshot(), "changed": changed,
-                    "deleted": [path for path, content in plan.items() if content is None], kind: module}
+            self._assert_inputs(inputs, "Project source changed. Preview the draft again before saving.")
+            libraries = [name] if kind == "library" else []
+            changed = commit(self.root, plan, library_names=libraries)
+            deleted = [path for path, content in plan.items() if content is None]
+            return {"mission": self.mission.snapshot(), "changed": changed, "deleted": deleted, kind: module}
 
     def select_profile(self, board, os_name, expected_hash=None):
         """Persist a supported hardware profile and its native library inputs."""
         from project.manage import commit
         with self.lock, self.mission.transaction(expected_hash or self.mission._revision()) as revision:
             config_path = "project/config.json"
-            previous_config = self.path(config_path).read_bytes()
+            inputs = {config_path: self.path(config_path).read_bytes()}
             config = copy.deepcopy(self.model.load_config(self.root))
             if (board, os_name) == (config["board"], config["os"]):
                 return {"mission": self.mission.snapshot(), "changed": [], "deleted": []}
             config["board"], config["os"] = board, os_name
-            generator = self.model.appgen(self.root)
-            before = {f"project/apps/{app['name']}.json": self.path(f"project/apps/{app['name']}.json").read_bytes()
-                      for app in config["apps"]}
+            for app in config["apps"]:
+                manifest = f"project/apps/{app['name']}.json"
+                inputs[manifest] = self.path(manifest).read_bytes()
             manifests = self.model.read_manifests(self.root, config)
             self.model.validate_config(self.root, config, manifests)
             self.model.mapped_manifests(config, manifests, self.root)
             plan = self.model.planned_project_files(self.root, config, manifests)
             plan[config_path] = json.dumps(config, indent=2) + "\n"
             fragment = "cFS/sample_defs/generated/appgen_startup.scr"
-            plan[self.mission.STARTUP] = self.mission.reconcile_generated_modules(
-                self.path(fragment).read_text() if self.path(fragment).exists() else "", plan[fragment],
-                plan.get(self.mission.STARTUP, self.mission.startup_text()))
-            if self.path(config_path).read_bytes() != previous_config or any(
-                    self.path(path).read_bytes() != content for path, content in before.items()):
-                raise ValueError("Project configuration changed. Reload it before selecting a profile.")
+            startup = plan.get(self.mission.STARTUP, self.mission.startup_text())
+            plan[self.mission.STARTUP] = self.mission.reconcile_generated_modules(self._read_text(fragment), plan[fragment], startup)
+            self._assert_inputs(inputs, "Project configuration changed. Reload it before selecting a profile.")
             self.mission.assert_revision(revision)
             changed = commit(self.root, plan)
-            return {"mission": self.mission.snapshot(), "changed": changed,
-                    "deleted": [path for path, content in plan.items() if content is None]}
+            deleted = [path for path, content in plan.items() if content is None]
+            return {"mission": self.mission.snapshot(), "changed": changed, "deleted": deleted}
 
     def mutate(self, action, payload):
-        """Run a fixed CLI operation; no shell command or caller-supplied options."""
+        """Run one scripts/project.sh operation with validated arguments."""
         if not isinstance(payload, dict):
             raise ValueError("Invalid parameters")
         with self.lock:
@@ -441,8 +484,8 @@ class Workspace:
                     args += ["--sensor", self.model.identifier(payload["sensor"])]
             else:
                 raise ValueError("Unknown operation")
-            result = subprocess.run(["bash", str(self.root / "scripts/project.sh"), *args],
-                                    cwd=self.root, text=True, capture_output=True, timeout=60)
+            command = ["bash", str(self.root / "scripts/project.sh"), *args]
+            result = subprocess.run(command, cwd=self.root, text=True, capture_output=True, timeout=60)
             if result.returncode:
                 raise ValueError(result.stderr.strip() or result.stdout.strip())
             return json.loads(result.stdout)
@@ -486,15 +529,17 @@ class Workspace:
                 if kind == "sensor" and entity in registry["telemetry_bindings"].values():
                     raise ValueError("Remove the telemetry linked to this reader first")
                 manifest[collection].remove(found)
-                registry[{"sensor": "sensors", "command": "command_bindings", "telemetry": "telemetry_bindings"}[kind]].pop(entity, None)
+                bindings = {"sensor": "sensors", "command": "command_bindings", "telemetry": "telemetry_bindings"}[kind]
+                registry[bindings].pop(entity, None)
                 deleted = ["cFS/" + path for path in generator.entity_files(name, kind, entity)]
         else:
             raise ValueError("Unknown operation")
         self.model.validate_config(self.root, config, manifests)
         membership = self.mission.selection()
-        plan = self.model.planned_project_files(self.root, config, manifests,
-                    excluded=membership['removed'] | ({name} if action == 'remove-app' else set()),
-                    selected=membership['added'] - ({name} if action == 'remove-app' else set()))
+        removed_app = {name} if action == 'remove-app' else set()
+        excluded = membership['removed'] | removed_app
+        selected = membership['added'] - removed_app
+        plan = self.model.planned_project_files(self.root, config, manifests, excluded=excluded, selected=selected)
         plan["project/config.json"] = json.dumps(config, indent=2) + "\n"
         if action == 'remove-app':
             plan.update(self.mission.selection_plan(forget=[name], sources=plan))
@@ -506,8 +551,7 @@ class Workspace:
             startup = self.path(native).read_text()
             if action == "remove-app":
                 startup = self.mission.reconcile_removed_modules([name], startup)
-            plan[native] = self.mission.reconcile_generated_modules(
-                self.path(fragment).read_text() if self.path(fragment).exists() else "", plan[fragment], startup)
+            plan[native] = self.mission.reconcile_generated_modules(self._read_text(fragment), plan[fragment], startup)
         plan.update({path: None for path in deleted})
         changed = commit(self.root, plan)
         if action == "remove-app":

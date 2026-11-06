@@ -4,6 +4,7 @@
 Installs an on-demand cFS service and grants only its exact control commands.
 The calling user's flight binary runs as root, as with sudo ./core-cpu1.
 """
+import argparse
 import os
 from pathlib import Path
 import pwd
@@ -26,6 +27,11 @@ def install(path, content, mode):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--directory", default="cfs-arm64", help="Installation folder relative to the SSH user's home")
+    directory = parser.parse_args().directory
+    if not re.fullmatch(r"[a-zA-Z0-9_][a-zA-Z0-9_./-]*", directory) or any(p in {".", ".."} for p in directory.split("/")):
+        raise SystemExit("Choose a relative installation folder without '..'.")
     if os.geteuid() != 0:
         raise SystemExit("Run with sudo from your regular Raspberry Pi account.")
     user = os.environ.get("SUDO_USER", "")
@@ -49,7 +55,11 @@ def main():
         path = Path(name)
         if path.is_symlink() or (path.exists() and not path.read_text().startswith(marker)):
             raise SystemExit(f"An existing file does not belong to this Flight Studio user: {name}. No files were replaced.")
-    current = home / "cfs-arm64/studio/current/cpu1"
+    current = home / directory / "studio/current/cpu1"
+    service = Path(destinations[0])
+    if service.exists() and f"WorkingDirectory={current}\n" not in service.read_text():
+        if subprocess.run([commands["systemctl"], "is-active", "--quiet", "cfs-studio.service"]).returncode == 0:
+            raise SystemExit("Stop cFS before changing its installation folder.")
     unit = marker + f'''[Unit]
 Description=cFS Flight Studio (on demand)
 After=network.target

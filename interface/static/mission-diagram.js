@@ -1,4 +1,3 @@
-import {appLabel} from './mission-labels.js';
 /* Mission composition: native startup apps, cFE services and project hardware. */
 const coreServices = [
   ['es', 'ES', 'Executive', 'Application lifecycle'],
@@ -35,7 +34,7 @@ function libraryChips(items,esc,icon){
 function application(app, state, {esc, icon}, available = false) {
  const busy=!!state.missionBusy,enabled=app.enabled,editing=state.missionEditing;
  return `<article class="mission-map-app ${app.managed?'mission-map-app-custom':''} change-${app.change||'clean'} ${!enabled&&!available?'is-disabled':''} ${state.missionBusy===app.name?'is-busy':''} ${state.archApp===app.name?'is-selected':''}" data-mission-block="${esc(app.name)}">
-  <button class="mission-map-app-main" ${available?`data-mission-action="add" data-name="${esc(app.name)}"`:`data-arch-app="${esc(app.name)}"`} title="${available?'Add':'Open'} ${esc(app.name)}"><span class="mission-map-app-icon">${icon(app.managed?'code':'cube')}</span><span class="mission-map-app-copy"><strong>${esc(app.name)}</strong><small>${esc(appLabel(app))}</small></span></button>
+  <button class="mission-map-app-main" ${available?`data-mission-action="add" data-name="${esc(app.name)}"`:`data-arch-app="${esc(app.name)}"`} title="${available?'Add':'Open'} ${esc(app.name)}"><span class="mission-map-app-icon">${icon(app.managed?'code':'cube')}</span><span class="mission-map-app-copy"><strong>${esc(app.name)}</strong></span></button>
   ${editing?`<div class="mission-map-app-controls">${available?`<button data-mission-action="add" data-name="${esc(app.name)}" title="Add ${esc(app.name)}" aria-label="Add ${esc(app.name)}" ${busy?'disabled':''}>${icon('plus')}</button>${app.managed?`<button data-module-options="app" data-name="${esc(app.name)}" title="Delete ${esc(app.name)} files" aria-label="Delete ${esc(app.name)} files" ${busy?'disabled':''}>${icon('minus')}</button>`:''}`:`<button class="mission-map-power ${enabled?'is-enabled':''}" data-mission-action="${enabled?'disable':'enable'}" data-name="${esc(app.name)}" title="${enabled?'Disable':'Enable'} ${esc(app.name)}" aria-label="${enabled?'Disable':'Enable'} ${esc(app.name)}" aria-pressed="${enabled}" ${busy?'disabled':''}>${icon('power')}</button><button data-module-options="app" data-name="${esc(app.name)}" title="Remove ${esc(app.name)} from mission" aria-label="Remove ${esc(app.name)} from mission" ${busy?'disabled':''}>${icon('minus')}</button>`}</div>`:''}
   ${libraryChips(app.libraries,esc,icon)}
  </article>`;
@@ -55,7 +54,7 @@ function libraries(state,{esc,icon}){
 }
 
 export function renderMissionDiagram(state, {esc, icon}) {
-  const workspace = state.workspace, project = workspace.project, mission = workspace.mission || {};
+  const workspace = state.workspace, project = workspace.project, mission = workspace.mission || {}, native = state.target === 'native';
   const included=new Set(mission.included||mission.enabled||[]);
   const members=workspace.apps.filter(app=>included.has(app.name));
   const custom=members.filter(app=>app.managed),standard=members.filter(app=>!app.managed);
@@ -63,7 +62,7 @@ export function renderMissionDiagram(state, {esc, icon}) {
   const selectedCore = new Set((mission.core_services || []).map(service => service.name.toLowerCase()));
   const services = coreServices.filter(([name]) => selectedCore.has(name));
   const profile = state.hardware?.profiles?.find(item => item.board === project.board && item.os === project.os);
-  const boardName = profile?.board_label || workspace.catalog.name || project.board, osName = profile?.os_label || workspace.catalog.os_labels?.[project.os] || project.os || 'Host OS';
+  const boardName = profile?.board_label || workspace.catalog.name || project.board, osName = native ? (state.hardware?.native?.os || 'Host OS') : profile?.os_label || workspace.catalog.os_labels?.[project.os] || project.os || 'Host OS';
   const devices = project.devices || [];
   const address = value => Number.isInteger(value) ? '0x' + value.toString(16).toUpperCase().padStart(2, '0') : '—';
   const helpers = {esc, icon},editing=!!state.missionEditing;
@@ -86,16 +85,16 @@ export function renderMissionDiagram(state, {esc, icon}) {
             <button class="mission-map-platform-block change-${mission.source_changes?.osal||'clean'}" data-file="cFS/osal/README.md">${icon('layers')}<span><strong>OSAL</strong><small>OS abstraction</small></span>${icon('arrow-up-right')}</button>
             <button class="mission-map-platform-block change-${mission.source_changes?.psp||'clean'}" data-file="cFS/psp/README.md">${icon('cpu')}<span><strong>PSP</strong><small>Platform support</small></span>${icon('arrow-up-right')}</button>
           </div>
-          <div class="mission-map-system">${icon('terminal')}<span><strong>${esc(osName)}</strong><small>${esc(project.board||'Native')}</small></span><span class="mission-map-system-label">Operating system</span></div>
+          <div class="mission-map-system">${icon('terminal')}<span><strong>${esc(osName)}</strong><small>${esc(native?'Native':project.board||'No board')}</small></span><span class="mission-map-system-label">Operating system</span></div>
         </div>
       </section>
       <div class="mission-map-bridge" aria-hidden="true"><span>↔</span></div>
-      <section class="mission-map-hardware" aria-label="Board and sensors">
-        <header class="mission-map-section-heading"><span class="mission-map-section-icon">${icon('cpu')}</span><div><h2>Hardware</h2><p>Board and sensors</p></div></header>
+      <section class="mission-map-hardware" aria-label="${native?'Local computer':'Board and sensors'}">
+        <header class="mission-map-section-heading"><span class="mission-map-section-icon">${icon('cpu')}</span><div><h2>Hardware</h2><p>${native?'Local execution':'Board and sensors'}</p></div></header>
         <div class="mission-map-hardware-body">
-          ${project.board?`<button class="mission-map-board change-${workspace.changes?.board||'clean'}" data-view="bench" data-inspect="board" title="Open board in the hardware workbench"><span class="mission-map-computer-label">Flight computer</span>${boardIllustration()}<strong>${esc(boardName)}</strong><small>${esc(project.board)}</small><span class="mission-map-board-footer">Hardware workbench ${icon('arrow-up-right')}</span></button>
+          ${!native&&project.board?`<button class="mission-map-board change-${workspace.changes?.board||'clean'}" data-view="bench" data-inspect="board" title="Open board in the hardware workbench"><span class="mission-map-computer-label">Flight computer</span>${boardIllustration()}<strong>${esc(boardName)}</strong><small>${esc(project.board)}</small><span class="mission-map-board-footer">Hardware workbench ${icon('arrow-up-right')}</span></button>
           ${devices.length ? `<div class="mission-map-bus-link" aria-hidden="true"><span></span><small>${devices.every(device => String(device.bus).startsWith('i2c')) ? 'I²C' : 'Peripherals'}</small><span></span></div><section class="mission-map-sensors" aria-label="Connected sensors"><div class="mission-map-group-heading"><h3>Sensors</h3>${editing?`<button data-create="device">${icon('plus')}Add</button>`:''}</div>${devices.map(device => `<button class="mission-map-sensor change-${workspace.changes?.devices?.[device.id]||'clean'}" data-view="bench" data-device="${esc(device.id)}" data-inspect="${esc(device.id)}" title="Open ${esc(device.model)} in the hardware workbench">${icon('cpu')}<span><strong>${esc(device.model)}</strong><small>${esc(device.bus)} · ${address(device.address)}</small></span>${icon('arrow-up-right')}</button>`).join('')}</section>` : editing?`<button class="mission-map-add-tile" data-create="device">${icon('plus')}Add sensor</button>`:''}
-          <button class="mission-map-open-workbench" data-view="bench">${icon('circuit')}Open workbench${icon('arrow-up-right')}</button>`:`<div class="hardware-empty">${icon('cpu')}<strong>Native execution</strong><span>This computer · Host OS</span><button data-choose-board>${icon('plus')}Select board</button></div>`}
+          <button class="mission-map-open-workbench" data-view="bench">${icon('circuit')}Open workbench${icon('arrow-up-right')}</button>`:`${native?`<button class="mission-map-board native-computer" data-view="bench" title="Open local computer"><span class="mission-map-computer-label">Native execution</span><svg class="mission-map-board-drawing" viewBox="0 0 240 155" aria-hidden="true"><rect x="35" y="12" width="170" height="103" rx="2" fill="#303e4a" stroke="#8096a5"/><rect x="44" y="21" width="152" height="84" fill="#1a2834"/><text x="120" y="70" text-anchor="middle" fill="#c2d5df" font-size="22">cFS</text><path d="M110 115v18h-35v8h90v-8h-35v-18" fill="#8096a5"/></svg><strong>This computer</strong><small>${esc(osName)} · ${esc(state.hardware?.native?.architecture||'')}</small></button>`:`<div class="hardware-empty">${icon('cpu')}<strong>No board selected</strong><button data-choose-board>Select board</button></div>`}`}
         </div>
       </section>
     </div>

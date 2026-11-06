@@ -24,10 +24,12 @@
       <div class="project-title"><span class="slash">/</span><span id="project-title"></span></div>
     </div>
     <div class="execution-toolbar">
+      <a class="infrastructure-link" href="/" title="Infrastructure settings" aria-label="Infrastructure settings"><span class="icon" data-icon="settings"></span></a>
       <div class="profile-selectors" aria-label="Build configuration">
         <div class="toolbar-field board-field"><button id="board-select" class="profile-trigger" aria-label="Board" aria-haspopup="listbox" aria-expanded="false" aria-controls="board-select-options" disabled><span class="icon" data-icon="cpu"></span><span class="profile-value">Loading…</span><span class="icon profile-chevron" data-icon="chevron-down"></span></button><div id="board-select-options" class="profile-menu" role="listbox" aria-label="Board" hidden></div></div>
         <div class="toolbar-field system-field"><button id="os-select" class="profile-trigger" aria-label="Operating system" aria-haspopup="listbox" aria-expanded="false" aria-controls="os-select-options" disabled><span class="profile-value">Loading…</span><span class="icon profile-chevron" data-icon="chevron-down"></span></button><div id="os-select-options" class="profile-menu" role="listbox" aria-label="Operating system" hidden></div></div>
       </div>
+      <span id="native-host" class="native-host" hidden></span>
       <div class="target-switch" role="group" aria-label="Run cFS on">
         <button data-target="native" aria-pressed="true" title="Run cFS on this computer">Native</button>
         <button data-target="qemu" aria-pressed="false" title="Run in the QEMU emulator">Emulator</button>

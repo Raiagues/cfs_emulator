@@ -84,7 +84,7 @@ def reconcile_removed_modules(startup, names):
 
 
 def reconcile_generated_modules(startup, previous, replacement):
-    """Update generated dependencies, never select or re-enable applications."""
+    """Update generated dependencies; which applications start is unchanged."""
     before, _ = parse_startup(previous)
     after, _ = parse_startup(replacement)
     removed = {entry.name for entry in before} - {entry.name for entry in after}
