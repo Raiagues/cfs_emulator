@@ -82,7 +82,18 @@ class Shell:
             if cursor > self.end:
                 raise ValueError('Terminal cursor exceeds output')
             offset = max(cursor, self.start)
-            data = b''.join(self.chunks)[offset - self.start:offset - self.start + 65536]
+            # Copy only the requested window, not the whole 1 MiB backlog.
+            skip, parts, size = offset - self.start, [], 0
+            for chunk in self.chunks:
+                if skip >= len(chunk):
+                    skip -= len(chunk)
+                    continue
+                parts.append(chunk[skip:skip + 65536 - size])
+                size += len(parts[-1])
+                skip = 0
+                if size >= 65536:
+                    break
+            data = b''.join(parts)
             return {'data': base64.b64encode(data).decode(), 'cursor': offset + len(data),
                     'truncated': cursor < self.start, 'exited': self.exit_code is not None}
 

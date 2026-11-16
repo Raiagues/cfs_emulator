@@ -539,8 +539,10 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
         if previous.get("target") == target and (target != "physical" or previous.get("connection") == connection):
             self._save("active.json", dict(previous, phase="stopped", updated_at=time.time()))
         deployed = self._load("deployed.json", {})
-        if target in deployed:
-            deployed[target]["stopped_at"] = time.time()
+        record = deployed.get(target)
+        # Stopping a different board must not clear the guard for the deployed one.
+        if record is not None and (target != "physical" or record.get("connection") == connection):
+            record["stopped_at"] = time.time()
             self._save("deployed.json", deployed)
 
     def status(self):
@@ -717,17 +719,15 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
         self._save("deployed.json", records)
         return records[target]
 
-    def _run_physical(self, emit, cancel, connection, sensorless):
+    def _run_physical(self, emit, cancel, connection, sensorless, board):
         root, payload, state = self._require_build(sensorless, target="physical")
-        board = self.probe(connection, emit, cancel)
         if not board["systemd"]:
             raise HardwareError("The board requires systemd.")
         if not board["ready"]:
-            if board["sudo"]:
-                self.prepare_board(connection, emit, cancel, authorize=True)
-                board = self.probe(connection, emit, cancel)
-            else:
-                prepared = self.prepare_board(connection, emit, cancel)
+            # prepare_board authorizes when sudo needs no password, then probes again.
+            prepared = self.prepare_board(connection, emit, cancel)
+            board = self._last_probe
+            if not board["ready"]:
                 raise HardwareError("Authorize the service once in your terminal: " + prepared["setup_command"])
         argv = self.ssh_argv("physical", connection)
         if not sensorless:
@@ -745,14 +745,22 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
             archive.seek(0)
             self._stream(argv + [unpack], emit, cancel, stdin=archive, timeout=180)
         current = self.board_directory(board, connection) + "/studio/current"
+        releases = self.board_directory(board, connection) + "/releases"
         self.assert_can_start('physical', connection)
+        # After a successful start, keep this release and the one it replaced (for rollback);
+        # older and failed uploads would otherwise fill the board's storage.
+        prune = ("for d in " + shlex.quote(releases) + "/*/; do d=${d%/}; "
+                 "if [ -d \"$d\" ] && [ \"$d\" != " + shlex.quote(remote) + " ] && [ \"$d\" != \"$previous\" ]; "
+                 "then rm -rf -- \"$d\"; fi; done")
         command = ("set -e; "
                    "if pgrep -x core-cpu1 >/dev/null; then echo 'Another cFS instance is running. Stop it before starting this one.'; exit 1; fi; "
                    "test ! -e " + shlex.quote(current) + " || test -L " + shlex.quote(current) + "; "
+                   "previous=$(readlink " + shlex.quote(current) + " 2>/dev/null || true); "
                    "ln -sfn " + shlex.quote(remote) + " " + shlex.quote(current + ".new") +
                    " && mv -Tf " + shlex.quote(current + ".new") + " " + shlex.quote(current) +
                    " && sudo -n systemctl start cfs-studio.service" +
-                   " && sleep 2 && sudo -n systemctl is-active --quiet cfs-studio.service")
+                   " && sleep 2 && sudo -n systemctl is-active --quiet cfs-studio.service || exit 1; " +
+                   "{ " + prune + "; } || echo 'Could not remove old cFS releases from the board.'")
         self._stream(argv + [command], emit, cancel, timeout=30)
         self.probe(connection, emit, cancel)
         return self._deploy_record("physical", state, sensorless=sensorless, connection=self.connection(connection), release=remote)
@@ -949,14 +957,15 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
         self._require_build(sensorless, target=target)
         if on_start:
             on_start()
+        board = None
         if target == "physical":
             connection = self.connection(connection)
-            self.probe(connection, emit, cancel)
+            board = self.probe(connection, emit, cancel)
         self._save_active(target, connection, "starting")
         if target == "native":
             result = self._run_native(emit, cancel)
         elif target == "physical":
-            result = self._run_physical(emit, cancel, connection, sensorless)
+            result = self._run_physical(emit, cancel, connection, sensorless, board)
         else:
             result = self._run_qemu(emit, cancel)
         self._save_active(target, connection, "running")

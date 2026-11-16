@@ -23,10 +23,13 @@ if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
     echo "Run ./scripts/setup.sh first to prepare Docker and the emulator image." >&2
     exit 1
 fi
-if docker container inspect pi4-cfs >/dev/null 2>&1; then
-    echo "The emulator is already running. Use ./run.sh or ./stop.sh." >&2
-    exit 1
-fi
+# A stopped container is kept so ./logs.sh can show why it exited; replace it now.
+case "$(docker container inspect --format '{{.State.Running}}' pi4-cfs 2>/dev/null)" in
+    true)
+        echo "The emulator is already running. Use ./run.sh or ./stop.sh." >&2
+        exit 1 ;;
+    false) docker rm pi4-cfs >/dev/null ;;
+esac
 mkdir -p logs
 LOG_FILE="$(mktemp "logs/boot-$(date +%Y%m%d-%H%M%S)-XXXXXX.log")"
 ln -sfn "${LOG_FILE##*/}" logs/latest.log
@@ -34,7 +37,7 @@ mkdir -p board
 
 # Read current project hardware without rebuilding the emulator image.
 echo "Booting Raspberry Pi OS..."
-docker run --rm "${MODE[@]}" --name pi4-cfs \
+docker run "${MODE[@]}" --name pi4-cfs \
     --user "$(id -u):$(id -g)" \
     -p "127.0.0.1:$EMULATOR_SSH_PORT:2222" \
     -v /etc/passwd:/etc/passwd:ro -v /etc/group:/etc/group:ro \

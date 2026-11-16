@@ -8,4 +8,4 @@ if (($#)); then
     exit 2
 fi
 # Reuse Studio's process checks and execution.lock; never restart an active cFS.
-exec python3 -m hardware.run
+exec python3 start --no-ui run
