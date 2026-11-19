@@ -1,11 +1,40 @@
+import hashlib
 import tempfile
 import unittest
 from pathlib import Path
 
+from interface.backend.workspace import nasa_module_title
+from project.manage import command_source_changes
 from interface.backend.architecture_details import Constants, _calls, _command_sources, _read, _ref
 
 
 class EditorTrailTests(unittest.TestCase):
+    def test_generated_diff_only_marks_actual_command_changes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            module = root / "mission/apps/reader"
+            module.mkdir(parents=True)
+            header = "mission/apps/reader/ids.h"
+            (root / header).write_text("first\nlast\n")
+            fresh = "mission/apps/reader/sense.c"
+            plan = {header: "first\nsense\nlast\n", fresh: "one\ntwo\n", "project/config.json": "{}"}
+            changes = command_source_changes(root, plan, "reader")
+            self.assertEqual(changes[header]["ranges"], [[2, 2]])
+            self.assertEqual(changes[fresh]["ranges"], [[1, 2]])
+            self.assertEqual(changes[fresh]["hash"], hashlib.sha256(plan[fresh].encode()).hexdigest())
+            self.assertEqual(set(changes), {header, fresh})
+
+    def test_upstream_module_titles_use_the_checkout(self):
+        with tempfile.TemporaryDirectory() as directory:
+            module = Path(directory)
+            self.assertEqual(nasa_module_title(module), "")
+            for heading, expected in [
+                ("# core Flight System (cFS) Housekeeping Application (HK)", "Housekeeping"),
+                ("# Core Flight System : Framework : App : Command Ingest Lab", "Command Ingest Lab"),
+            ]:
+                (module / "README.md").write_text("badge\n\n" + heading + "\n\nDescription")
+                self.assertEqual(nasa_module_title(module), expected)
+
     def test_prototypes_tags_and_evs_come_from_the_handlers_real_c(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

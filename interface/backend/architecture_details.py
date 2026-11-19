@@ -542,7 +542,10 @@ def describe_application(app, *, root):
             candidate = {'handler': _fnref(fn), 'via': via, **packet_record(typ[1] if typ else None)}
             handler_file = files[fn['path']]
             first, last = _bounds(handler_file, fn)
-            candidate['placeholder'] = bool(re.search(r'\breturn\s+CFE_STATUS_NOT_IMPLEMENTED\s*;', handler_file['mask'][first:last]))
+            stub = re.search(r'\breturn\s+CFE_STATUS_NOT_IMPLEMENTED\s*;', handler_file['mask'][first:last])
+            candidate['placeholder'] = bool(stub)
+            if stub:
+                candidate['edit_source'] = _ref(handler_file, first + stub.start(), fn['symbol'])
             fallback = fallback or candidate
             if typ:
                 return candidate

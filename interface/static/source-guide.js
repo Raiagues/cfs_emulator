@@ -77,7 +77,7 @@ export function commandContext(state) {
     if (!item || !sourcesFor(item).flat().some(ref=>ref.path===state.path)) return null;
   }
   if (!items.length) return null;
-  const selected=items.find(i=>selectKey(i)===state.sourceCommand) || items.find(i=>i.id===state.commandTask?.id && app.name===state.commandTask.app) || items[0];
+  const selected=items.find(i=>i.id===state.commandTask?.id && app.name===state.commandTask.app) || items.find(i=>selectKey(i)===state.sourceCommand) || items[0];
   const refs=sourcesFor(selected);
   const inferred=refs.findIndex(group=>group.some(ref=>ref.path===state.path));
   const explicit=state.sourceStep?.command===selectKey(selected) && state.sourceStep?.app===app.name;
@@ -95,7 +95,8 @@ export function syncCommandToFile(state, line) {
   const ctx=commandContext(state);
   if (!ctx) {state.sourceStep=null;return false;}
   const {app,items,selected}=ctx;
-  const ordered=[selected,...items.filter(i=>i!==selected)];
+  const active=state.commandTask?.app===app.name && state.commandTask.id===selected.id;
+  const ordered=active?[selected]:[selected,...items.filter(i=>i!==selected)];
   const matches=[];
   for(const item of ordered){
     sourcesFor(item).forEach((refs,index)=>refs.forEach(ref=>{
@@ -180,11 +181,15 @@ export function renderSourceGuide(state,esc) {
   const rows=tagGroup;
   let body='';
   if(step===0){
-    body+=rows('@brief','Commands',items.map(item=>{
+    body+='<button class="guide-shortcut" data-source-tab="packet">'+icon('cube')+'See the packet</button>';
+    body+=rows('@brief','Commands',items.filter(item=>item.handler?.cc || Number.isInteger(item.packet?.code)).map(item=>{
       const fn=item.handler?.cc, ref=fn?.source||item.packet?.locations?.identifier||item.route?.mid?.source;
       const note=annotationsFor(state,ref,item.handler?.annotations).find(a=>a.tag==='brief');
       const fc=fn?.value??item.packet?.code;
-      return jumpRow(ref,item.id,note?.value,esc,'data-select-source-command="'+esc(selectKey(item))+'" aria-current="'+(item===selected?'true':'false')+'"',Number.isInteger(fc)?'FC '+fc:'MID');
+      const prefix=app.name.toUpperCase()+'_';
+      const name=(item.id.startsWith(prefix)?item.id.slice(prefix.length):item.id).replace(/_CC$/,'');
+      const attrs=ref?'data-source-jump="'+esc(ref.path)+'" data-line="'+Number(ref.line)+'" aria-current="'+(item===selected)+'" title="'+esc(item.id)+'"':'';
+      return jumpRow(ref,name,note?.value,esc,attrs,Number.isInteger(fc)?'FC '+fc:'');
     }),esc)+rows('struct','Parameters',fieldRows(state,selected,esc),esc);
   }else if(step===1){
     body+=rows('struct','Packet type',[jumpRow(primary,h?.packet_type||packet?.struct||id,'',esc)],esc)+rows('field','Payload',fieldRows(state,selected,esc),esc);
@@ -197,9 +202,11 @@ export function renderSourceGuide(state,esc) {
     if(h?.handler)body+=rows('fn','Handler',[jumpRow(h.handler,h.handler.symbol,guideRef(h.handler),esc)],esc);
   }else if(step===4){
     const events=h?.events || [];
+    if(!events.length && h?.handler)body+='<button class="guide-shortcut" data-edit-handler>'+icon('edit')+'Edit event emission</button>';
     body+=rows('EVS','Emissions',events.map(event=>jumpRow(event.source,event.id.symbol,event.severity,esc)),esc);
     body+=rows('ID','Event definitions',events.filter(e=>e.id.source).map(e=>jumpRow(e.id.source,e.id.symbol,Number.isInteger(e.id.value)?String(e.id.value):e.id.expression,esc)),esc);
   }else if(step===5){
+    if(h?.handler)body+='<button class="guide-shortcut" data-edit-handler>'+icon('edit')+'Edit handler</button>';
     body+=rows('fn','Handler',refs[5].map(ref=>jumpRow(ref,ref.symbol,guideRef(ref),esc)),esc);
     for(const tag of ['brief','check'])body+=rows('@'+tag,tag==='brief'?'Description':'Checks',notes.filter(a=>a.tag===tag).map(a=>jumpRow(a,a.value,'',esc)),esc);
     body+=rows('EVS','Reports',(h?.events||[]).map(e=>jumpRow(e.source,e.id.symbol,e.severity,esc)),esc);
@@ -225,7 +232,7 @@ export function renderCommandTrail(state,esc) {
     '<button data-dismiss-command aria-label="Close activity">'+icon('close')+'</button><small class="task-count">'+count+'/7</small></div>'+
     '<nav aria-label="Command implementation">'+stepNames.map((name,i)=>{
       const available=complete(i),current=i===step;
-      return '<button type="button" data-guide-step="'+i+'" data-state="'+(available?'resolved':'pending')+'" '+(current?'aria-current="step" ':'')+'title="'+esc(name+' · '+(i===6?(test?'Test passed':'Ground Station'):available?guideRef(refs[i][0]):'Pending'))+'"><span class="trail-circle">'+icon(current?'edit':available?'check':i===6?'play':'more')+'</span><span>'+name+'</span></button>';
+      return '<button type="button" data-guide-step="'+i+'" data-state="'+(available?'resolved':'pending')+'" '+(current?'aria-current="step" ':'')+'title="'+esc(name+' · '+(i===6?(test?'Test passed':'Ground Station'):available?guideRef(refs[i][0]):'Pending'))+'"><span class="trail-circle">'+(current?icon('edit'):available?'<svg viewBox="0 0 16 16" class="fs-tick"><path pathLength="1" d="m3 8 3 3 7-7"/></svg>':i===6?icon('play'):i+1)+'</span><span>'+name+'</span></button>';
     }).join('')+'</nav>';
 }
 

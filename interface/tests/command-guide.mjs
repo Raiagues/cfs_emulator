@@ -83,3 +83,17 @@ test('the Code action selects only mission apps and receipts belong to the curre
   s.catalog.build_fingerprint='prior';
   assert.doesNotMatch(renderInspectorDialog(s,'packet',esc).body,/10 B/);
 });
+
+test('looking up another function code preserves the current author activity',()=>{
+  const s=state();
+  s.commandTask={app:'reader',id:'CALIBRATE_CC',reviewed:[]};
+  s.sourceCommand='READ_CC/6144';
+  assert.equal(commandContext(s).selected.id,'CALIBRATE_CC');
+  assert.equal(syncCommandToFile(s,10),false);
+  const guide=renderSourceGuide(s,esc);
+  assert.match(guide,/data-source-jump="mission\/apps\/reader\/ids.h" data-line="10"/);
+  assert.doesNotMatch(guide,/data-select-source-command/);
+  assert.match(renderCommandTrail(s,esc),/0\/7/);
+  s.sourceStep={app:'reader',command:'CALIBRATE_CC/6144',index:4};
+  assert.match(renderSourceGuide(s,esc),/data-edit-handler/);
+});

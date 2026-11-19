@@ -3,6 +3,8 @@
 
 import argparse
 import copy
+from difflib import SequenceMatcher
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -124,6 +126,24 @@ def commit(root, files, check=False, library_names=(), mutable_libraries=(), val
                 parent.rmdir()
                 parent = parent.parent
     return changed
+
+
+def command_source_changes(root, plan, app):
+    """Capture only lines introduced by this command in its owning app."""
+    result = {}
+    prefix = f"mission/apps/{app}/"
+    for relative, content in plan.items():
+        if not relative.startswith(prefix) or Path(relative).suffix not in {".c", ".h"} or content is None:
+            continue
+        path = safe_path(root, relative)
+        previous = path.read_text() if path.exists() else ""
+        if previous == content:
+            continue
+        delta = SequenceMatcher(None, previous.splitlines(), content.splitlines(), autojunk=False)
+        ranges = [[start + 1, end] for kind, _, _, start, end in delta.get_opcodes() if start < end and kind != "equal"]
+        if ranges:
+            result[relative] = {"hash": hashlib.sha256(content.encode()).hexdigest(), "ranges": ranges}
+    return result
 
 
 def registry_app(config, name):
@@ -352,10 +372,12 @@ def run(args):
         plan[STARTUP] = render_startup(active, [entry for entry in archived if entry.name != args.app])
     if args.action not in ("sync", "check"):
         plan["project/config.json"] = json.dumps(config, indent=2) + "\n"
+    changes = command_source_changes(root, plan, args.app) if args.action == "add-command" else None
     changed = commit(root, plan, check=args.action == "check")
     result = {"changed": changed, "deleted": [path for path, content in plan.items() if content is None],
               "check": args.action == "check"}
     if args.action == "add-command":
+        result["source_changes"] = changes
         result["implementation"] = "Command handler is a user-code stub; use locate to implement it"
     return result, 1 if args.action == "check" and changed else 0
 

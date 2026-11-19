@@ -64,7 +64,7 @@ button.source-index-row:hover { background: var(--fs-raised); }
 .guide-step-title small,.guide-step-title>div>span {font:var(--fs-small) var(--fs-mono);color:var(--fs-muted)}
 .guide-step-title small {text-transform:uppercase;letter-spacing:.09em}
 .guide-step-title>div>span {padding:2px 5px;border:1px solid var(--fs-line);border-radius:var(--fs-radius-control)}
-.guide-step-title strong {font:600 var(--fs-heading) var(--fs-sans);color:var(--fs-text)}
+.guide-step-title strong {font:600 var(--fs-title) var(--fs-sans);color:var(--fs-text)}
 .guide-step-title>button {display:flex;align-items:center;gap:5px;width:fit-content;max-width:100%;font:var(--fs-caption) var(--fs-mono);color:var(--fs-muted);text-align:left;overflow-wrap:anywhere}
 .guide-step-title>button svg {width:12px;height:12px}
 .guide-section {margin:0 0 14px}
@@ -77,6 +77,21 @@ button.source-index-row:hover { background: var(--fs-raised); }
 .guide-body .source-index-row:has(em)>strong,.guide-body .source-index-row:has(em)>small {grid-column:2}
 .guide-body .source-index-row:has(em)>span {grid-column:3}
 .guide-body .source-index-row[aria-current=true] {background:color-mix(in srgb,var(--fs-accent) 9%,var(--fs-panel));border-radius:var(--fs-radius-control)}
+#source-guide .guide-shortcut {display:flex;align-items:center;width:100%;gap:8px;margin:0 0 16px;padding:10px 12px;border:1px solid var(--fs-line);border-radius:var(--fs-radius-control);color:var(--fs-text);background:var(--fs-panel);font:500 var(--fs-label) var(--fs-sans)}
+.guide-shortcut svg {width:14px;height:14px;stroke:var(--fs-blue)}
+#source-guide .source-index-row {padding:9px;margin-top:3px;border:1px solid var(--fs-line);border-radius:var(--fs-radius-control);background:var(--fs-panel)}
+#source-guide .source-index-row:hover,#source-guide .source-index-row[aria-current=true] {border-color:var(--fs-accent);background:var(--fs-accent-bg)}
+#source-guide .source-index-row>small {overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--fs-muted)}
+#source-guide .source-index-row:has(em) {grid-template-columns:minmax(0,1fr) auto auto}
+#source-guide .source-index-row:has(em)>em {grid-column:2;grid-row:1;color:var(--fs-code);background:transparent}
+#source-guide .source-index-row:has(em)>strong {grid-column:1;grid-row:1}
+#source-guide .source-index-row:has(em)>small {grid-column:1/-1;grid-row:2}
+#source-guide .source-index-row:has(em)>span {grid-column:3;grid-row:1;align-self:center}
+.code-only:has(.command-trail:not([hidden])) :is(#code,.highlight-layer,#line-numbers) {padding-bottom:50vh}
+.code-only .token-directive {color:var(--fs-code)}
+.code-only .token-constant {color:var(--fs-accent)}
+.code-only #line-numbers b {display:inline-block;width:100%;box-sizing:border-box;border-left:3px solid var(--fs-success);color:var(--fs-success);font-weight:500}
+.code-only:has(.command-trail:not([hidden])) #source-line {border-color:var(--fs-success);background:color-mix(in srgb,var(--fs-success) 10%,transparent)}
 .guide-test {display:grid;gap:10px;justify-items:start}
 .guide-test code,.guide-object-name {font:var(--fs-label) var(--fs-mono);color:var(--fs-accent);overflow-wrap:anywhere}
 #source-inspector-dialog {position:fixed;inset:0;margin:auto;width:min(610px,calc(100vw - 32px));padding:0;border:1px solid var(--fs-line);background:var(--fs-panel);color:var(--fs-text);border-radius:var(--fs-radius-card);box-shadow:0 15px 70px var(--fs-shadow-5)}

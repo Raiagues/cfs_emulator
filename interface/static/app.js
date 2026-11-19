@@ -143,7 +143,20 @@ function syncScroll(){
   marker.style.top=((state.activeLine-1)*height-layer.scrollTop)+'px';
  }
 }
-function lineNumbers(){const value=$('#code').value;$('#line-numbers').textContent=Array.from({length:value.split('\n').length},(_,i)=>i+1).join('\n');$('#highlight-code').innerHTML=highlight(value,state.path||'');syncScroll();}
+function lineNumbers(){
+ const value=$('#code').value, gutter=$('#line-numbers');
+ const file=state.files.get(state.path), edit=state.commandTask?.changes?.[state.path];
+ const ranges=file && edit && file.hash===edit.hash && value===file.saved ? edit.ranges : [];
+ const count=value.split('\n').length;
+ if(ranges.length){
+  const marked=new Set();
+  for(const [start,end] of ranges)for(let n=start;n<=end;n++)marked.add(n);
+  gutter.innerHTML=Array.from({length:count},(_,i)=>marked.has(i+1)?'<b title="Added by this command">'+(i+1)+'</b>':i+1).join('\n');
+ }else{
+  gutter.textContent=Array.from({length:count},(_,i)=>i+1).join('\n');
+ }
+ $('#highlight-code').innerHTML=highlight(value,state.path||'');syncScroll();
+}
 async function saveFile(path) {
  const file=state.files.get(path);
  if(!file?.editable)return;
@@ -601,7 +614,7 @@ function newCodeCommand(preferred) {
   const start = handler?.cc?.source || handler?.handler;
   const path = start?.path || result.changed.find(path => path.endsWith('/'+app+'_'+name+'_cmd.c'));
   state.sourceCommand=id+'/'+(route?.mid?.value ?? '');
-  state.commandTask={app,id,reviewed:[]};
+  state.commandTask={app,id,reviewed:[],changes:result.source_changes};
   state.catalogTarget=null;
   await selectView('code',path,start?.line || 1);
   refreshJourney();
@@ -1160,6 +1173,18 @@ document.addEventListener('click',guarded(async e=>{
   await openGroundRoute(app,id);
  }
  else if ('codeCommand' in d) newCodeCommand(d.codeCommand);
+ else if('editHandler' in d){
+  const handler=commandContext(state)?.selected.handler;
+  const ref=handler?.edit_source || handler?.handler;
+  if(!ref)return;
+  await openFile(ref.path,ref.line);
+  const editor=$('#code');
+  if(handler.edit_source && state.path===ref.path && state.files.get(ref.path)?.content===state.files.get(ref.path)?.saved){
+   const start=editor.selectionStart,end=editor.value.indexOf('\n', start);
+   editor.setSelectionRange(start,end<0?editor.value.length:end);
+  }
+  editor.focus({preventScroll:true});
+ }
  else if(d.selectSourceCommand){await chooseSourceCommand(d.selectSourceCommand);}
  else if('guideStep' in d || 'stepMove' in d){
   const ctx=commandContext(state);if(!ctx)return;
@@ -1169,7 +1194,7 @@ document.addEventListener('click',guarded(async e=>{
   }
   state.sourceCommand=command;
   state.sourceStep={app:ctx.app.name,command,index};
-  const ref=ctx.refs[index]?.[0];
+  const ref=(index===5 || index===4 && !ctx.refs[4].length) && ctx.selected.handler?.edit_source || ctx.refs[index]?.[0];
   if(ref)await openFile(ref.path,ref.line);
   if(index===6){
    const snapshot=await api('ground');
