@@ -93,6 +93,12 @@ function pager(section) {
 
 function groupSection(key, group, state, esc) {
   const members = group.modules.filter(item => item.included);
+  if(key==='mission' && !group.modules.length){
+    const enabled=new Set(state.workspace.mission.enabled);
+    return '<section class="map-group map-group-mission" data-section="mission"><div class="map-group-head"><h3>Your apps<small>0</small></h3></div><div class="empty-apps">'+
+      ['ci_lab','to_lab','sch_lab','sample_app'].filter(name=>enabled.has(name)).map(name=>'<code>'+esc(name)+'</code>').join('')+
+      '<code class="slot" aria-hidden="true">+</code><button class="primary" data-first-app>Create your first app</button></div></section>';
+  }
   return `<section class="map-group map-group-${key}" data-section="${key}" aria-label="${group.title}">
     <div class="map-group-head"><h3>${group.title}<small>${members.length}</small></h3>${pager(key)}${controls(key, group, state.missionBusy || state.missionDraft)}</div>
     ${members.length ? `<div class="map-grid">${members.map(item => moduleTile(item, group, state, esc)).join('')}</div>` : ''}

@@ -122,7 +122,7 @@
 .mission-map .map-legend span:first-child {font-family:var(--fs-mono)}
 .mission-map .map-columns {flex:1;min-height:0;width:100%;max-width:none;gap:12px;grid-template-columns:minmax(0,1fr) clamp(185px,21%,320px);align-content:start}
 .mission-map .map-software {
-  display:grid;align-content:start;min-height:0;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+  display:grid;align-content:start;min-height:0;grid-template-columns:minmax(0,1fr);gap:10px;
 }
 .mission-map .map-software > .map-group {padding:9px 11px; min-width:0;--visible-rows:2}
 .mission-map .map-group-cfs,.mission-map .map-core,.mission-map .map-group-platform {grid-column:1 / -1}

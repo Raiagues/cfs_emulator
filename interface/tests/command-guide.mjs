@@ -23,10 +23,14 @@ function state() {
 
 test('source trail distinguishes indexed source, unavailable EVS and observed ground results',()=>{
   const s=state();
+  assert.equal(renderCommandTrail(s,esc),'');
+  s.commandTask={app:'reader',id:'READ_CC',reviewed:[]};
+  assert.match(renderCommandTrail(s,esc),/0\/7/);
+  s.commandTask.reviewed=[0,1,2,3,4,5];
   assert.equal((renderCommandTrail(s,esc).match(/data-guide-step=/g)||[]).length,7);
   assert.match(renderCommandTrail(s,esc),/6\/7/);
-  assert.doesNotMatch(renderCommandTrail(s,esc),/<strong>New command/);
-  assert.match(renderCommandTrail(s,esc),/data-code-command="reader"/);
+  assert.match(renderCommandTrail(s,esc),/<strong>New command/);
+  assert.match(renderCommandTrail(s,esc),/aria-label="Close activity"/);
   assert.match(renderSourceGuide(s,esc),/Collect samples/);
   assert.match(renderSourceGuide(s,esc),/FC 0/);
   assert.match(renderSourceGuide(s,esc),/byte 8 · 2 B/);
@@ -41,7 +45,7 @@ test('source trail distinguishes indexed source, unavailable EVS and observed gr
   assert.equal(commandContext(s).test,false);
   s.workspace.builds.native.current=false;
   assert.doesNotMatch(renderInspectorDialog(s,'packet',esc).body,/10 B/);
-  s.sourceCommand='CALIBRATE_CC/6144';
+  s.sourceCommand='CALIBRATE_CC/6144';s.commandTask.id='CALIBRATE_CC';
   assert.match(renderCommandTrail(s,esc),/data-guide-step="4" data-state="pending"/);
 });
 
@@ -63,9 +67,9 @@ test('source line and mission overrides keep command identity across real file j
 test('the Code action selects only mission apps and receipts belong to the current build',()=>{
   const s=state(),app=s.workspace.apps[0];
   app.managed=false;
-  assert.match(renderCommandTrail(s,esc),/data-create="app"/);
+  assert.equal(renderCommandTrail(s,esc),'');
   s.workspace.apps.push({name:'mine',path:'mission/apps/mine',managed:true});
-  assert.match(renderCommandTrail(s,esc),/data-code-command="mine"/);
+  assert.match(renderSourceTools(s,esc),/data-code-command="mine"/);
   s.sourceCommand='READ_CC/6144';s.sourceStep={app:'reader',command:s.sourceCommand,index:6};
   s.ground.commands=[{id:'READ_CC',mid:6144,app:'reader',hex:'1800c001000300ff0007'}];
   s.catalog.transport={command_header_size:8};

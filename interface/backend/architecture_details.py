@@ -540,6 +540,9 @@ def describe_application(app, *, root):
                 continue
             typ = re.search(r'\b(\w+Cmd_t)\b', fn['signature'])
             candidate = {'handler': _fnref(fn), 'via': via, **packet_record(typ[1] if typ else None)}
+            handler_file = files[fn['path']]
+            first, last = _bounds(handler_file, fn)
+            candidate['placeholder'] = bool(re.search(r'\breturn\s+CFE_STATUS_NOT_IMPLEMENTED\s*;', handler_file['mask'][first:last]))
             fallback = fallback or candidate
             if typ:
                 return candidate

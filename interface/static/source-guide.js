@@ -173,7 +173,7 @@ function newCommandAction(state,app,esc) {
 
 export function renderSourceGuide(state,esc) {
   const ctx=commandContext(state),file=state.files.get(state.path);
-  if(!ctx)return '<header class="guide-step-title"><strong>Source</strong>'+newCommandAction(state,null,esc)+'</header><section class="guide-body">'+(fileIndex(state,file,esc)||fallback('No indexed declarations in this file.'))+'</section>';
+  if(!ctx)return '<header class="guide-step-title"><strong>Source</strong>'+newCommandAction(state,null,esc)+'</header><section class="guide-body">'+(fileIndex(state,file,esc)||fallback('No declarations'))+'</section>';
   const {app,items,selected,step,refs,test,run}=ctx;
   const {handler:h,route,packet,id}=selected;
   const primary=refs[step][0], notes=annotationsFor(state,h?.handler,annotationsFor(state,h?.cc?.source,h?.annotations));
@@ -206,9 +206,9 @@ export function renderSourceGuide(state,esc) {
   }else {
     body+='<div class="guide-test"><code>'+esc(id)+'</code><button type="button" class="guide-new" data-command-test>'+icon('antenna')+'Open Ground Station</button></div>';
   }
-  if(!body)body=fallback(step===4?'No direct EVS emission indexed in this handler.':'No matching source declaration indexed.');
+  if(!body)body=fallback(step===4?'No event emission':'No indexed declaration');
   const move=(direction,label)=>'<button data-step-move="'+(step+direction)+'" '+(step+direction<0 || step+direction>=stepNames.length?'disabled':'')+'>'+label+'</button>';
-  const stepStatus=step===6?(test?'Passed':run?.status?.replaceAll('_',' ') || 'Pending'):(primary?'Indexed':'Unresolved');
+  const stepStatus=step===6?(test?'Passed':run?.status?.replaceAll('_',' ') || 'Pending'):(step===5&&h?.placeholder?'Edit handler':primary?'Indexed':'Pending');
   return '<header class="guide-step-title"><div><small>Step '+(step+1)+' of 7</small><span>'+esc(stepStatus)+'</span></div><strong>'+stepTitles[step]+'</strong>'+
     (primary?'<button data-source-jump="'+esc(primary.path)+'" data-line="'+Number(primary.line||1)+'">'+icon('link')+esc(guideRef(primary))+'</button>':'')+'</header><section class="guide-body">'+body+'</section><footer class="guide-pager">'+move(-1,'Back')+move(1,'Next step')+'</footer>';
 }
@@ -216,18 +216,22 @@ export function renderSourceGuide(state,esc) {
 export function renderCommandTrail(state,esc) {
   const ctx=commandContext(state);if(!ctx)return '';
   const {app,selected,items,refs,step,test}=ctx;
-  const pending=state.commandTask?.app===app.name && state.commandTask.id===selected.id;
-  return '<div class="task-command-name">'+icon('send')+'<strong>'+(pending?'New command':'Command')+'</strong><select aria-label="Source command" data-guide-command>'+
-    items.map(item=>'<option value="'+esc(selectKey(item))+'" '+(item===selected?'selected':'')+'>'+esc(item.id)+'</option>').join('')+'</select>'+newCommandAction(state,app,esc)+'<small class="task-count" title="Indexed source steps and passed ground test">'+(refs.slice(0,6).filter(group=>group.length).length+Number(test))+'/7</small></div>'+
+  const activity=state.commandTask;
+  if(!app.managed || activity?.app!==app.name || activity.id!==selected.id)return '';
+  const reviewed=activity.reviewed || [];
+  const complete=i=>i===6?Boolean(test):reviewed.includes(i) && refs[i].length>0 && (i!==5 || !selected.handler?.placeholder);
+  const count=stepNames.filter((_,i)=>complete(i)).length;
+  return '<div class="task-command-name">'+icon('send')+'<strong>New command</strong><code>'+esc(selected.id)+'</code>'+
+    '<button data-dismiss-command aria-label="Close activity">'+icon('close')+'</button><small class="task-count">'+count+'/7</small></div>'+
     '<nav aria-label="Command implementation">'+stepNames.map((name,i)=>{
-      const available=i===6?Boolean(test):Boolean(refs[i].length),current=i===step;
-      return '<button type="button" data-guide-step="'+i+'" data-state="'+(available?'resolved':'pending')+'" '+(current?'aria-current="step" ':'')+'title="'+esc(name+' · '+(i===6?(test?'Test passed':'Ground Station'):available?guideRef(refs[i][0]):'Unresolved'))+'"><span class="trail-circle">'+icon(current?'edit':available?'check':i===6?'play':'more')+'</span><span>'+name+'</span></button>';
+      const available=complete(i),current=i===step;
+      return '<button type="button" data-guide-step="'+i+'" data-state="'+(available?'resolved':'pending')+'" '+(current?'aria-current="step" ':'')+'title="'+esc(name+' · '+(i===6?(test?'Test passed':'Ground Station'):available?guideRef(refs[i][0]):'Pending'))+'"><span class="trail-circle">'+icon(current?'edit':available?'check':i===6?'play':'more')+'</span><span>'+name+'</span></button>';
     }).join('')+'</nav>';
 }
 
 export function renderSourceTools(state,esc) {
   const ctx=commandContext(state);
-  return tabs.map(([id,label])=>'<button type="button" data-source-tab="'+id+'" aria-haspopup="dialog" '+(id!=='source'&&!ctx?'disabled':'')+'>'+
+  return (!state.commandTask && state.workspace?.apps?.some(app=>app.managed) ? newCommandAction(state,null,esc) : '')+tabs.map(([id,label])=>'<button type="button" data-source-tab="'+id+'" aria-haspopup="dialog" '+(id!=='source'&&!ctx?'disabled':'')+'>'+
     (id==='source'?'@':icon(id==='packet'?'cube':'workflow'))+esc(label)+'</button>').join('');
 }
 

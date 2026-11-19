@@ -333,7 +333,12 @@ class Workspace:
         preview = {"entry_point": entry.fields[2], "blocks": draft["blocks"],
                    "startup": {"path": native, "record": entry.raw}, "build": draft["build"],
                    "schedule": draft["schedule"], "source": {"path": source, "content": content}}
-        public = {"draft": {"kind": kind, "mode": mode, "name": name, "settings": settings},
+        changed = {path: ("delete" if content is None else "create" if inputs[path] is None else "update")
+                   for path, content in plan.items()
+                   if inputs[path] != (None if content is None else content.encode())}
+        if kind == "app":
+            preview["mids"] = draft["mids"]
+        public = {"files": changed, "draft": {"kind": kind, "mode": mode, "name": name, "settings": settings},
                   "preview": preview, "plan_hash": plan_hash, "expected_hash": revision}
         return public, plan, inputs, {"name": name, "path": draft["path"], "entry": source}
 
@@ -396,7 +401,8 @@ class Workspace:
                  "statement": "list(APPEND cpu1_APPLIST ${APPGEN_LIBS} ${APPGEN_APPS})"}
         path = f"mission/apps/{name}"
         return {"plan": plan, "active": active, "archived": archived, "entry": entry, "settings": normalized,
-                "blocks": blocks, "schedule": schedule, "build": build, "path": path, "source": path + f"/fsw/src/{name}_user.c"}
+                "blocks": blocks, "schedule": schedule, "build": build, "path": path, "source": path + f"/fsw/src/{name}_user.c",
+                "mids": {key: target[key] for key in ("cmd_mid", "hk_request_mid", "wakeup_mid", "hk_tlm_mid")}}
 
     def _scheduled_periods(self, name, relative):
         """Wakeup and housekeeping periods, in scheduler ticks, from the generated schedule table."""
