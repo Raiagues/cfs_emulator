@@ -47,8 +47,15 @@
       <button type="button" id="inspect" class="quiet" disabled>Details</button>
     </footer>
     <p id="feedback" role="status" aria-live="polite"></p>
-    <dialog id="settings-sheet" aria-labelledby="settings-title"><header><h2 id="settings-title">Target settings</h2><button type="button" class="close-dialog" aria-label="Close settings">×</button></header><div id="advanced"></div></dialog>
   </form></main>
+  <dialog id="settings-sheet" aria-labelledby="settings-title">
+    <header><h2 id="settings-title">Target settings</h2><button type="button" class="close-dialog" aria-label="Close settings">×</button></header>
+    <form id="target-settings-form">
+      <div id="advanced"></div>
+      <output id="settings-error" role="alert"></output>
+      <footer><button id="settings-cancel" type="button">Cancel</button><button type="submit" class="primary">Save settings</button></footer>
+    </form>
+  </dialog>
   <dialog id="verification" aria-labelledby="check-status">
     <header><h2 id="check-status">Setup details</h2><button type="button" class="close-dialog" aria-label="Close details">×</button></header>
     <div id="check-groups" role="group" aria-label="Check group"></div>

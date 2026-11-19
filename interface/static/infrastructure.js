@@ -6,6 +6,8 @@ import {groupsByTarget, groupFor, repairFor, nextRepair} from './setup-plan.js';
 for (const art of document.querySelectorAll('[data-art]')) art.innerHTML = targetDrawing(art.dataset.art);
 const $ = selector => document.querySelector(selector);
 const form = $('#infrastructure-form');
+const settingsForm = $('#target-settings-form');
+const settingsDialog = $('#settings-sheet');
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const targets = ['native','qemu','physical'];
 const checksByTarget = new Map();
@@ -42,65 +44,55 @@ async function api(path, body) {
   return (await request(path, body)).json();
 }
 
-function readForm() {
-  const fields = form.elements;
-  if (target === 'native') {
-    settings.build_jobs = Number(fields.build_jobs.value);
-    return;
-  }
-  settings.board = fields.board.value;
-  settings.os = fields.os.value;
-  if (target === 'qemu') {
-    settings.emulator = {ssh_port:Number(fields.ssh_port.value),image:fields.image.value.trim()};
-  } else {
-    settings.connection = {
-      host:fields.host.value.trim(), user:fields.user.value.trim(), port:Number(fields.port.value),
-      identity_file:fields.identity_file.value.trim(), directory:settings.connection?.directory || 'cfs-arm64'
-    };
-  }
-}
 function selectField(name, label, options, selected) {
   const choices = options.map(([value,text]) =>
     `<option value="${escapeHtml(value)}" ${value === selected ? 'selected' : ''}>${escapeHtml(text)}</option>`
   ).join('');
   return `<select name="${name}" aria-label="${label}" required>${choices}</select>`;
 }
-function profileFields() {
+function profileOptions(board = settings.board, os = settings.os) {
   const profiles = settings.profiles.filter(p => p.targets.includes(target));
-  if (!profiles.some(p => p.board === settings.board)) settings.board = profiles[0]?.board || '';
-  const systems = profiles.filter(p => p.board === settings.board);
-  if (!systems.some(p => p.os === settings.os)) settings.os = systems[0]?.os || '';
   const boards = [...new Map(profiles.map(p => [p.board,p.board_label]))];
-  return selectField('board','Board',boards,settings.board) +
-    selectField('os','Operating system',systems.map(p => [p.os,p.os_label]),settings.os);
+  const selectedBoard = boards.some(([id]) => id === board) ? board : boards[0]?.[0];
+  const systems = profiles.filter(p => p.board === selectedBoard).map(p => [p.os,p.os_label]);
+  const selectedOS = systems.some(([id]) => id === os) ? os : systems[0]?.[0];
+  return {boards,systems,board:selectedBoard,os:selectedOS};
+}
+
+function profileFields(labeled = false) {
+  const {boards, systems, board, os} = profileOptions();
+  const boardField = selectField('board','Board',boards,board);
+  const osField = selectField('os','Operating system',systems,os);
+  return labeled ? '<label>Board' + boardField + '</label><label>Operating system' + osField + '</label>' : boardField + osField;
+}
+
+function connectionButton(field, glyph, label, value) {
+  return `<button type="button" class="connection-value" data-setting="${field}" aria-haspopup="dialog" aria-controls="settings-sheet" aria-label="Edit ${label}: ${escapeHtml(value || 'Not set')}">${icon(glyph)}<span><small>${label}</small><strong>${escapeHtml(value || 'Not set')}</strong></span></button>`;
 }
 
 function renderFields() {
-  const data = settings.connection || {};
-  const more = `<button type="button" class="settings-button" id="advanced-toggle" aria-label="Target settings" title="Target settings" aria-haspopup="dialog" aria-controls="settings-sheet">${icon('settings')}</button>`;
-  let fields, details = '';
+  const configure = `<button type="button" class="settings-button" id="advanced-toggle" aria-haspopup="dialog" aria-controls="settings-sheet">${icon('sliders')}Configure</button>`;
+  let fields;
   if (target === 'native') {
     fields = `<div class="stepper-field"><label for="build-jobs">Jobs</label><div class="stepper">
       <button type="button" data-step="-1" aria-label="Fewer build jobs">−</button>
       <input id="build-jobs" title="Parallel build jobs" aria-label="Parallel build jobs" name="build_jobs" type="number" value="${settings.build_jobs}" min="1" max="64" required>
       <button type="button" data-step="1" aria-label="More build jobs">+</button></div></div>`;
   } else if (target === 'qemu') {
-    fields = profileFields() + more;
-    details = `<div class="fields"><label>Local SSH port<input name="ssh_port" type="number" required min="1024" max="65535" value="${settings.emulator.ssh_port}"></label>
-      <label class="wide">Emulator image<input name="image" required value="${escapeHtml(settings.emulator.image)}" spellcheck="false"></label></div>`;
+    fields = profileFields() + configure;
   } else {
-    fields = `<label class="input-wrap">${icon('antenna')}<input aria-label="SSH host or alias" name="host" placeholder="Host or SSH alias" value="${escapeHtml(data.host)}" list="ssh-hosts" autocomplete="off"></label>
-      <datalist id="ssh-hosts">${settings.ssh_hosts.map(h => `<option value="${escapeHtml(h.host)}">`).join('')}</datalist>
-      <label class="input-wrap">${icon('terminal')}<input name="user" aria-label="SSH user" placeholder="SSH user" value="${escapeHtml(data.user)}" autocomplete="off"></label>` + more;
-    details = `<div class="fields">${profileFields()}<label>SSH port<input name="port" type="number" required min="1" max="65535" value="${data.port || 22}"></label>
-      <label class="wide">SSH private key<input name="identity_file" value="${escapeHtml(data.identity_file)}" placeholder="From SSH config or agent" list="ssh-keys" spellcheck="false"></label>
-      <datalist id="ssh-keys">${settings.ssh_keys.map(k => `<option value="${escapeHtml(k)}">`).join('')}</datalist></div>`;
+    const connection = settings.connection || {};
+    fields = connectionButton('host','antenna','Host',connection.host) +
+      connectionButton('user','terminal','SSH user',connection.user || (connection.host ? 'SSH config' : '')) + configure;
   }
   $('#configuration').innerHTML = fields;
-  $('#advanced').innerHTML = details;
   $('#project-name').textContent = settings.project;
-  renderChecks();
   controls();
+}
+
+function updateOperatingSystems(fields) {
+  const {systems, os} = profileOptions(fields.board.value,fields.os.value);
+  fields.os.replaceChildren(...systems.map(([value,label]) => new Option(label,value,false,value === os)));
 }
 
 function reportFor(mode) {
@@ -125,7 +117,6 @@ function groups(mode) {
 }
 const tick = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10" pathLength="1"/></svg>';
 const spin = '<svg class="spin-arc" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" pathLength="100"/></svg>';
-const download = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/></svg>';
 const installerLabels = {
   'clone-cfs':'NASA cFS', 'native-tools':'Native tools', dependencies:'Toolchain',
   'emulator-image':'Emulator image', 'board-service':'cFS service', 'board-key':'SSH key'
@@ -176,7 +167,7 @@ function renderChecks() {
   const ready = !dirty && !checking && !busy && plans.every(x => x.state === 'ready');
   const probe = reportFor(target).find(row => row.status === 'running');
   const note = fixing ? 'Installing ' + installerLabels[installation.setup_action] :
-    probe ? 'Checking ' + probe.label : missing ? missing + ' to fix' : '';
+    probe ? 'Checking ' + probe.label : missing ? 'Click + to fix' : '';
   $('#group-summary').textContent = note;
   const parent = $('#requirements');
   if (parent.dataset.target !== target) {
@@ -187,7 +178,7 @@ function renderChecks() {
     const button = parent.children[index];
     if (button.dataset.state !== group.state) {
       button.dataset.state = group.state;
-      button.querySelector('.tool-glyph').innerHTML = group.state === 'missing' ? download : icon(group.glyph);
+      button.querySelector('.tool-glyph').innerHTML = icon(group.glyph);
     }
     const repair = group.state === 'missing' && !checking && !busy;
     button.title = repair ? (group.action === 'settings' ? 'Configure ' : 'Install ') + group.name : 'Inspect ' + group.name;
@@ -212,7 +203,7 @@ function controls() {
     card.disabled = !settings || busy;
     card.setAttribute('aria-pressed', String(card.dataset.target === target));
   }
-  for (const field of form.querySelectorAll('#configuration :is(input,select,button), #advanced :is(input,select)')) {
+  for (const field of form.querySelectorAll('#configuration :is(input,select,button)')) {
     field.disabled = busy;
   }
   $('#inspect').disabled = !settings;
@@ -220,16 +211,21 @@ function controls() {
   $('#save-state').dataset.state = dirty ? 'dirty' : '';
   renderChecks();
 }
-async function saveForm() {
-  readForm();
-  const {build_jobs,board,os,connection,emulator} = settings;
-  const mode=target,version=selectedVersion;
+async function saveForm(changes = {}) {
+  const fields = form.elements, mode = target, version = selectedVersion;
+  const profile = mode === 'qemu' ? {board:fields.board.value,os:fields.os.value} : profileOptions();
+  const values = {target:mode,build_jobs:mode === 'native' ? Number(fields.build_jobs.value) : settings.build_jobs,
+    board:profile.board,os:profile.os,connection:settings.connection || {},emulator:settings.emulator,...changes};
   // Serialize saves from rapid selections so the last click is the saved target.
-  const values={target:mode,build_jobs,board,os,connection:connection||{},emulator};
   const result = saving.then(()=>api('infrastructure',values));
   saving=result.catch(()=>{});
   const next=await result;
-  if(version===selectedVersion){settings=next;dirty=false;}
+  if (version === selectedVersion) {
+    settings = next;
+    // The mission profile can only be written after the checkout has been installed.
+    if (mode !== 'native' && !next.sources_ready) Object.assign(settings,{board:values.board,os:values.os});
+    dirty = false;
+  }
 }
 function abortChecks(mode) {
   checkRequests.get(mode)?.abort();
@@ -246,7 +242,6 @@ async function runChecks(groupName) {
     // Persist connection values before SSH checks. Mission profile changes wait for the NASA checkout.
     if(dirty || !settings.target_saved || mode!==settings.target) await saveForm();
     if(controller.signal.aborted || version!==selectedVersion)return;
-    if (mode!=='native') { settings.board=form.elements.board.value; settings.os=form.elements.os.value; }
     const report=reportFor(mode);
     const batch=groupsByTarget[mode].filter(([name])=>!groupName || name===groupName)
       .flatMap(([name])=>report.filter(row=>groupFor(mode,row.label)===name));
@@ -317,14 +312,70 @@ async function followInstaller(session, groupName) {
   return success && checked;
 }
 
-function openSettings() {
+function openSettings(field) {
   if ($('#verification').open) $('#verification').close();
-  if (target === 'physical') form.elements.host.focus();
-  else {
-    showDialog('#settings-sheet');
-    form.elements.ssh_port?.focus();
-  }
+  const connection = settings.connection || {};
+  $('#settings-title').textContent = target === 'physical' ? 'Board settings' : 'Emulator settings';
+  $('#settings-error').textContent = '';
+  $('#advanced').innerHTML = target === 'physical' ? `
+    <div class="fields">
+      ${profileFields(true)}
+      <label>Host or SSH alias<input name="host" required value="${escapeHtml(connection.host)}" list="ssh-hosts" autocomplete="off" spellcheck="false"></label>
+      <label>SSH user<input name="user" value="${escapeHtml(connection.user)}" placeholder="From SSH config" autocomplete="off" spellcheck="false"></label>
+      <label>SSH port<input name="port" type="number" min="1" max="65535" required value="${connection.port || 22}"></label>
+      <label>SSH private key<input name="identity_file" value="${escapeHtml(connection.identity_file)}" placeholder="From SSH config" list="ssh-keys" spellcheck="false"></label>
+    </div>
+    <datalist id="ssh-hosts">${settings.ssh_hosts.map(h => `<option value="${escapeHtml(h.host)}">`).join('')}</datalist>
+    <datalist id="ssh-keys">${settings.ssh_keys.map(k => `<option value="${escapeHtml(k)}">`).join('')}</datalist>` : `
+    <div class="fields emulator-fields">
+      <label>Local SSH port<input name="ssh_port" type="number" required min="1024" max="65535" value="${settings.emulator.ssh_port}"></label>
+      <label>Emulator image<input name="image" required value="${escapeHtml(settings.emulator.image)}" spellcheck="false"></label>
+    </div>`;
+  showDialog('#settings-sheet');
+  settingsForm.elements[field || (target === 'physical' ? 'host' : 'ssh_port')].focus();
 }
+
+settingsForm.addEventListener('change', event => {
+  if (event.target.name === 'board') updateOperatingSystems(settingsForm.elements);
+});
+$('#settings-cancel').addEventListener('click', () => settingsDialog.close());
+settingsDialog.addEventListener('cancel', event => {
+  if (settingsDialog.getAttribute('aria-busy') === 'true') event.preventDefault();
+});
+settingsForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (busy) return;
+  const f = settingsForm.elements;
+  const changes = target === 'physical' ? {board:f.board.value, os:f.os.value,
+    connection:{host:f.host.value.trim(), user:f.user.value.trim(), port:Number(f.port.value),
+      identity_file:f.identity_file.value.trim(), directory:settings.connection?.directory || 'cfs-arm64'}} :
+    {emulator:{ssh_port:Number(f.ssh_port.value),image:f.image.value.trim()}};
+  abortChecks(target);
+  selectedVersion++;
+  busy = true;
+  controls();
+  settingsDialog.setAttribute('aria-busy','true');
+  for (const control of settingsDialog.querySelectorAll('button,select,input')) control.disabled = true;
+  let saved = false;
+  try {
+    await saveForm(changes);
+    checksByTarget.delete(target);
+    settingsDialog.close();
+    renderFields();
+    saved = true;
+  } catch (error) {
+    $('#settings-error').textContent = error.message;
+  } finally {
+    busy = false;
+    settingsDialog.removeAttribute('aria-busy');
+    for (const control of settingsDialog.querySelectorAll('button,select,input')) control.disabled = false;
+    controls();
+  }
+  if (saved) {
+    $('#advanced-toggle').focus({preventScroll:true});
+    await verify();
+  }
+});
 
 async function installRequirements(groupName) {
   if (!settings || busy || !form.reportValidity()) return;
@@ -343,7 +394,7 @@ async function installRequirements(groupName) {
       const repair = nextRepair(mode,reportFor(mode),groupName);
       if (!repair) break;
       const {action,group,label} = repair;
-      if (action === 'settings') {
+      if (action === 'settings' || (!settings.connection?.host && ['board-key','board-service'].includes(action))) {
         busy = false;
         controls();
         openSettings();
@@ -396,7 +447,7 @@ $('#check').addEventListener('click', () => verify(activeGroup).catch(showError)
 for (const dialog of document.querySelectorAll('dialog')) {
   dialog.querySelector('.close-dialog').addEventListener('click', () => dialog.close());
   dialog.addEventListener('click', event => {
-    if (event.target !== dialog) return;
+    if (event.target !== dialog || dialog.getAttribute('aria-busy') === 'true') return;
     const bounds = dialog.getBoundingClientRect();
     if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) dialog.close();
   });
@@ -412,7 +463,7 @@ $('#setup-terminal').addEventListener('close', () => { if (!$('#setup-terminal')
 form.addEventListener('click', event => {
   const button = event.target.closest('button');
   if (!button) return;
-  if (button.id === 'advanced-toggle') showDialog('#settings-sheet');
+  if (button.id === 'advanced-toggle' || button.dataset.setting) openSettings(button.dataset.setting);
   if (button.dataset.step) {
     const input = form.elements.build_jobs;
     if (button.dataset.step === '-1') input.stepDown(); else input.stepUp();
@@ -428,7 +479,7 @@ form.addEventListener('input', () => {
 });
 form.addEventListener('change', event => {
   dirty = true;
-  if (event.target.name === 'board') { readForm(); renderFields(); }
+  if (event.target.name === 'board') updateOperatingSystems(form.elements);
   verify().catch(showError);
 });
 form.addEventListener('submit', event => {

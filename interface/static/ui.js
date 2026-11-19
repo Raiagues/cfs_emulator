@@ -25,6 +25,7 @@ const icons = {
   'plus':'M12 5v14 M5 12h14',
   'minus':'M5 12h14',
   'settings':'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M9 2h6l1 4 4 1 2 5-3 3v5l-5 2-3-3H6l-4-5 2-4V5z',
+  'sliders':'M3 7h5m6 0h7 M3 17h10m6 0h2 M8 7a3 3 0 1 0 6 0 3 3 0 1 0-6 0 M13 17a3 3 0 1 0 6 0 3 3 0 1 0-6 0',
   'more':'M5 12h.1 M12 12h.1 M19 12h.1',
   'arrow-down':'M12 3v18 m-6-6 6 6 6-6',
   'close':'M5 5l14 14 M19 5 5 19',
