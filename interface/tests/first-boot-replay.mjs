@@ -64,4 +64,10 @@ test('each startup card requires its own observation; a batched record can be in
   runOnly.job.action='run';
   runOnly.trace=runOnly.trace.filter(e=>!['build','boot'].includes(e.phase));
   assert.deepEqual(bootStages(runOnly).preparation.map(c=>c.state),['waiting','waiting']);
+  const osalFirst = at(3);
+  osalFirst.flight.platform_layers = ['osal'];
+  osalFirst.flight.process_started = true;
+  const platform = bootLayers(osalFirst).layers;
+  assert.equal(platform.find(([id])=>id==='osal')[4],true);
+  assert.equal(platform.find(([id])=>id==='psp')[4],false);
 });

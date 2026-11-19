@@ -21,6 +21,7 @@ body[data-view=boot] .execution-toolbar,body[data-view=boot] #operation-status,b
 .boot-clock {margin-left:auto; color:var(--fs-muted);font:var(--fs-label) var(--fs-mono);}
 .boot-control {width:30px;height:30px;padding:0;display:grid;place-items:center;color:var(--fs-muted);border:1px solid var(--fs-line);background:transparent;border-radius:var(--fs-radius-control);}
 .boot-control:disabled {opacity:.45;}
+.boot-control:has(span) {width:auto;display:inline-flex;align-items:center;gap:5px;padding-inline:8px;font:500 var(--fs-label) var(--fs-sans);color:var(--fs-text);}
 .boot-stages {display:grid;grid-template-columns:minmax(0,var(--prep-width)) minmax(0,5fr);gap:18px;}
 .boot-stage-group {min-width:0;}
 .boot-stage-group h2 {display:flex;align-items:baseline;gap:8px;min-height:21px;font:500 var(--fs-small)/1.4 var(--fs-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--fs-muted);}

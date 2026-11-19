@@ -28,7 +28,7 @@ export function bootLayers(data) {
   const guest=phase==='boot'?job.guest_stage||0:0;
   const core=es.includes('CORE_READY'), coreStarted=es.length>0;
   // Earlier receipts captured process entry, but did not distinguish PSP from OSAL.
-  const psp=Boolean(process || flight.platform_layers?.includes('psp'));
+  const psp=flight.platform_layers ? flight.platform_layers.includes('psp') || coreStarted : process;
   const osal=Boolean(flight.platform_layers?.includes('osal') || coreStarted);
   const apps=data.apps.map(app=>[app.name,Boolean(initialized[app.task])]);
   const svc=data.services.map(name=>[name,core || Boolean(initialized['CFE_'+name])]);
@@ -140,7 +140,7 @@ function updateNode(current,next){
 
 // Replay only observations that the backend had received at this instant.
 export function bootFrame(snapshot,milliseconds,lastIndex=snapshot.trace.length-1) {
-  const flight={states:[],initialized:{},platform_layers:[],process_started:false}, lines=[];
+  const flight={states:[],initialized:{},process_started:false}, lines=[];
   const job={action:snapshot.job.action||'first-boot',id:snapshot.job.id||'recorded',status:'running'};
   for(let i=0;i<=lastIndex;i++){
     const event=snapshot.trace[i];
@@ -152,7 +152,10 @@ export function bootFrame(snapshot,milliseconds,lastIndex=snapshot.trace.length-
     if(event.activity) job.build_activity=event.activity;
     if(event.fact) {
       flight.process_started=true;
-      if(event.fact.layer) flight.platform_layers.push(event.fact.layer);
+      if(event.fact.layer) {
+        flight.platform_layers ??= [];
+        flight.platform_layers.push(event.fact.layer);
+      }
       if(event.fact.state) flight.states.push(event.fact.state);
       if(event.fact.app) flight.initialized[event.fact.app]=event.fact;
     }
@@ -199,7 +202,7 @@ export function mountFirstBoot(container,{api,target,onNext}) {
     fragment.innerHTML=`<section class="first-boot">
       <header class="boot-title"><h1>First boot</h1><span>${icon(target==='native'?'monitor':'cpu')}${escape(title)}</span><a href="/">Change</a>
       <time class="boot-clock" aria-label="Boot elapsed">${clock(elapsed())}</time>
-      <button class="boot-control" data-pause data-boot-focus="pause" aria-label="${pausedAt==null?'Pause view':'Resume view'}" title="${pausedAt==null?'Pause view':'Resume view'}" ${!live.trace.length || (!replayStart && pausedAt==null && live.running)?'disabled':''}>${pausedAt==null?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14m8-14v14"/></svg>':icon('play')}</button>
+      <button class="boot-control" data-pause data-boot-focus="pause" aria-label="${pausedAt==null?'Pause view':'Resume view'}" title="${pausedAt==null?'Pause view':'Resume view'}" ${!live.trace.length || (!replayStart && pausedAt==null && live.running)?'disabled':''}>${pausedAt==null?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14m8-14v14"/></svg>':icon('play')+'<span>Resume</span>'}</button>
       <button class="boot-control" data-replay data-boot-focus="replay" aria-label="Replay boot" title="Replay boot" ${live.trace.length<2?'disabled':''}>${icon('rotate')}</button></header>
       <div class="boot-stages" style="--prep-width:${preparation.length}fr">
         <section class="boot-stage-group"><h2>${escape(names[target])}<small>${escape(prepStatus||'')}</small></h2>
@@ -280,13 +283,13 @@ export function mountFirstBoot(container,{api,target,onNext}) {
   };
   container.innerHTML='<section class="first-boot"><h1>First boot</h1></section>';
   const closeDetails=event=>{
-    if(event.key==='Escape' && consoleOpen){
-      const fromConsole=consoleOpen&&event.target.closest('.boot-console');
+    if(event.key==='Escape' && consoleOpen && !event.defaultPrevented && !document.querySelector('dialog[open]')){
+      const fromConsole=event.target.closest?.('.boot-console');
       consoleOpen=false;draw();
       if(fromConsole)container.querySelector('[data-console]').focus({preventScroll:true});
     }
   };
   container.addEventListener('click',click);
-  container.addEventListener('keydown',closeDetails);poll();
-  return ()=>{disposed=true;clearTimeout(timer);clearTimeout(replayTimer);container.removeEventListener('click',click);container.removeEventListener('keydown',closeDetails);};
+  document.addEventListener('keydown',closeDetails);poll();
+  return ()=>{disposed=true;clearTimeout(timer);clearTimeout(replayTimer);container.removeEventListener('click',click);document.removeEventListener('keydown',closeDetails);};
 }
