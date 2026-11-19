@@ -43,9 +43,21 @@ def observe(hardware, job, line):
         return
     if job.get("phase") == "build":
         match = PERCENT.search(line)
+        activity = None
+        if line.startswith(("-- Configuring", "-- Generating", "-- The C compiler identification")):
+            activity = "Configuring"
+        elif line.startswith(("-- Installing:", "-- Up-to-date:", "Install the project")):
+            activity = "Installing"
+        elif match and job.get("build_activity") != "Installing":
+            activity = "Compiling"
+        update = {}
+        if activity and activity != job.get("build_activity"):
+            job["build_activity"] = update["activity"] = activity
         if match and min(100, int(match[1])) > job.get("build_percent", -1):
-            job["build_percent"] = min(100, int(match[1]))
-            _record(job, line, percent=job["build_percent"])
+            job["build_percent"] = update["percent"] = min(100, int(match[1]))
+        trace = job.get("boot_trace", [])
+        if update or (line.strip() and (not trace or len(trace) == 1 and not trace[0]["line"])):
+            _record(job, line, **update)
         return
     if job["action"] == "first-boot" and job.get("phase") not in ("copy", "run"):
         return
@@ -138,7 +150,7 @@ def snapshot(studio, target):
             "apps": apps,
             "services": [name for name in SERVICES if (hardware.root / "cFS/cfe/modules" / name.lower()).is_dir()], "es_states": STATES, "flight": flight, "stopped": stopped,
             "running": live, "unverified": bool(unknown),
-            "job": {k: job[k] for k in ("id", "status", "action", "phase", "build_percent", "error", "started") if k in job},
+            "job": {k: job[k] for k in ("id", "status", "action", "phase", "build_percent", "build_activity", "error", "started") if k in job},
             "trace": (job or (receipt if matching_receipt else {})).get("boot_trace", []),
             "lines": lines[-300:]}
 
