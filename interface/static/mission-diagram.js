@@ -1,11 +1,8 @@
-/* Mission composition: native startup apps, cFE services and project hardware. */
-const coreServices = [
-  ['es', 'ES', 'Executive', 'Application lifecycle'],
-  ['evs', 'EVS', 'Events', 'Event reporting'],
-  ['sb', 'SB', 'Software Bus', 'Message routing'],
-  ['time', 'TIME', 'Time', 'Mission time'],
-  ['tbl', 'TBL', 'Tables', 'Table management'],
-  ['fs', 'FS', 'Files', 'File services'],
+import {icon} from './ui.js';
+
+const services = [
+  ['SB', 'Software Bus'], ['ES', 'Executive'], ['EVS', 'Events'],
+  ['TIME', 'Time'], ['TBL', 'Tables'], ['FS', 'Files'],
 ];
 
 function boardIllustration() {
@@ -27,77 +24,123 @@ function boardIllustration() {
   </svg>`;
 }
 
-function libraryChips(items,esc,icon){
- return items?.length?`<div class="mission-map-library-chips">${items.map(lib=>`<button data-arch-library="${esc(lib.name)}" title="${lib.calls?.length?'API calls':'Build dependency'} · ${esc(lib.name)}">${icon('files')}${esc(lib.name)}</button>`).join('')}</div>`:'';
+export function moduleGroups(workspace) {
+  const mission = workspace.mission;
+  const appSources = new Map(workspace.apps.map(app => [app.name, app]));
+  const apps = mission.available.map(recipe => ({...appSources.get(recipe.name), ...recipe}));
+  const libSources = new Map(workspace.libraries.map(lib => [lib.name, lib]));
+  const libraries = new Map(mission.available_libraries.filter(recipe => recipe.editable || libSources.has(recipe.name))
+    .map(recipe => [recipe.name, {...libSources.get(recipe.name), ...recipe}]));
+  const included = new Set(mission.included);
+  // A dependency may have a native source tree without its own startup recipe.
+  for (const lib of libSources.values()) {
+    const used = lib.used_by.some(user => user.kind === 'app' && included.has(user.name));
+    if ((lib.built || lib.loaded || used) && !libraries.get(lib.name)?.included) {
+      libraries.set(lib.name, {...lib, included: true, editable: false});
+    }
+  }
+  return {
+    mission: {title: 'Mission apps', kind: 'app', create: true, modules: apps.filter(app => app.managed)},
+    cfs: {title: 'cFS apps', kind: 'app', create: false, modules: apps.filter(app => !app.managed)},
+    library: {title: 'Libraries', kind: 'library', create: true, modules: [...libraries.values()]},
+  };
 }
 
-function application(app, state, {esc, icon}, available = false) {
- const busy=!!state.missionBusy,enabled=app.enabled,editing=state.missionEditing;
- return `<article class="mission-map-app ${app.managed?'mission-map-app-custom':''} change-${app.change||'clean'} ${!enabled&&!available?'is-disabled':''} ${state.missionBusy===app.name?'is-busy':''} ${state.archApp===app.name?'is-selected':''}" data-mission-block="${esc(app.name)}">
-  <button class="mission-map-app-main" ${available?`data-mission-action="add" data-name="${esc(app.name)}"`:`data-arch-app="${esc(app.name)}"`} title="${available?'Add':'Open'} ${esc(app.name)}"><span class="mission-map-app-icon">${icon(app.managed?'code':'cube')}</span><span class="mission-map-app-copy"><strong>${esc(app.name)}</strong></span></button>
-  ${editing?`<div class="mission-map-app-controls">${available?`<button data-mission-action="add" data-name="${esc(app.name)}" title="Add ${esc(app.name)}" aria-label="Add ${esc(app.name)}" ${busy?'disabled':''}>${icon('plus')}</button>${app.managed?`<button data-module-options="app" data-name="${esc(app.name)}" title="Delete ${esc(app.name)} files" aria-label="Delete ${esc(app.name)} files" ${busy?'disabled':''}>${icon('minus')}</button>`:''}`:`<button class="mission-map-power ${enabled?'is-enabled':''}" data-mission-action="${enabled?'disable':'enable'}" data-name="${esc(app.name)}" title="${enabled?'Disable':'Enable'} ${esc(app.name)}" aria-label="${enabled?'Disable':'Enable'} ${esc(app.name)}" aria-pressed="${enabled}" ${busy?'disabled':''}>${icon('power')}</button><button data-module-options="app" data-name="${esc(app.name)}" title="Remove ${esc(app.name)} from mission" aria-label="Remove ${esc(app.name)} from mission" ${busy?'disabled':''}>${icon('minus')}</button>`}</div>`:''}
-  ${libraryChips(app.libraries,esc,icon)}
- </article>`;
+export function moduleChoices(group, action) {
+  return group.modules.filter(item => {
+    if (action === 'new') return !item.included && item.editable;
+    if (!item.included || !item.editable) return false;
+    if (action === 'edit') return group.kind === 'app' ? item.managed || !item.required : item.renamable;
+    return !item.required && !item.required_by?.length;
+  });
 }
 
-function newModule(state,{esc,icon},kind){
- if(state.missionCreating!==kind)return `<button class="mission-map-add-tile" data-mission-create="${kind}" ${state.missionBusy?'disabled':''}>${icon('plus')}<span>New ${kind}</span></button>`;
- return `<form class="mission-map-new-app" id="mission-new-app" data-kind="${kind}"><div><label for="mission-new-name">New ${kind}</label><button type="button" data-mission-create-close title="Cancel" aria-label="Cancel" ${state.missionBusy?'disabled':''}>${icon('close')}</button></div><input id="mission-new-name" name="name" aria-label="Name" placeholder="${kind==='app'?'app_name':'name_lib'}" value="${esc(state.missionNewName||'')}" pattern="[a-z][a-z0-9]*(_[a-z0-9]+)*" maxlength="19" title="snake_case, up to 19 characters" required autocomplete="off" ${state.missionBusy?'disabled':''}><button class="mission-map-create-submit" type="submit" ${state.missionBusy?'disabled':''}>${icon('arrow-up-right')}${state.missionBusy?'Preparing…':'Configure '+kind}</button></form>`;
+function controls(key, group, locked) {
+  const actions = [['new', 'plus', 'New'], ['edit', 'pencil', 'Edit'], ['remove', 'minus', 'Remove']];
+  return `<div class="map-actions" role="group" aria-label="${group.title} actions">${actions.map(([action, glyph, label]) => {
+    const available = action === 'new' && group.create || moduleChoices(group, action).length > 0;
+    const hint = available ? label + ' · ' + group.title : {
+      new: 'All available modules are already included',
+      edit: group.kind === 'library' ? 'Only project-created libraries can be renamed' : 'No editable apps in this group',
+      remove: 'No removable modules in this group',
+    }[action];
+    return `<button class="map-action" data-module-group="${key}" data-module-action="${action}" title="${hint}" ${locked || !available ? 'disabled' : ''}>${icon(glyph)}${label}</button>`;
+  }).join('')}</div>`;
 }
 
-function libraries(state,{esc,icon}){
- const included=new Set(state.workspace.mission.included||[]);
- const visible=(state.workspace.libraries||[]).filter(lib=>lib.built||lib.loaded||lib.used_by.some(user=>user.kind==='app'&&included.has(user.name)));
- const available=(state.workspace.mission.available_libraries||[]).filter(lib=>!lib.included&&lib.editable);
- const tile=(lib,available=false)=>`<article class="mission-map-library change-${lib.change||'clean'} ${state.archLibrary===lib.name?'is-selected':''}"><button class="mission-map-app-main" ${available?`data-mission-library-action="add" data-name="${esc(lib.name)}"`:`data-arch-library="${esc(lib.name)}"`} title="${available?'Add':'Open'} ${esc(lib.name)}">${icon('files')}<span class="mission-map-app-copy"><strong>${esc(lib.name)}</strong></span></button>${state.missionEditing?`<div class="mission-map-app-controls"><button ${available?`data-mission-library-action="add"`:'data-module-options="library"'} data-name="${esc(lib.name)}" title="${available?'Add':'Remove'} ${esc(lib.name)}" aria-label="${available?'Add':'Remove'} ${esc(lib.name)}" ${state.missionBusy?'disabled':''}>${icon(available?'plus':'minus')}</button>${available&&lib.deletable?`<button data-module-options="library" data-name="${esc(lib.name)}" title="Delete ${esc(lib.name)} files" aria-label="Delete ${esc(lib.name)} files">${icon('minus')}</button>`:''}</div>`:''}${libraryChips(lib.libraries,esc,icon)}</article>`;
- return `<section class="mission-map-app-group" aria-label="Libraries"><div class="mission-map-group-heading"><h3>Libraries <small>${visible.length}</small></h3>${state.missionEditing?'<button data-library-catalog>'+icon('plus')+'Add library</button>':''}</div><div class="mission-map-library-grid">${visible.map(lib=>tile(lib)).join('')}${state.missionEditing?newModule(state,{esc,icon},'library'):''}</div></section>${state.missionEditing&&state.libraryCatalog?`<section class="mission-map-catalog"><div class="mission-map-group-heading"><h3>Available libraries</h3><button data-library-catalog aria-label="Close available libraries">${icon('close')}</button></div><div class="mission-map-library-grid">${available.map(lib=>tile(lib,true)).join('')||'<span class="mission-map-empty">All available libraries are in the mission.</span>'}</div></section>`:''}`;
+function moduleTile(item, group, state, esc) {
+  const library = group.kind === 'library';
+  const name = esc(item.name);
+  const status = esc(item.change || 'clean');
+  const deps = state.showLibraries ? item.libraries || [] : [];
+  const disabled = !library && !item.enabled;
+  return `<article class="map-tile map-module change-${status}" data-mission-block="${name}">
+    <button class="map-module-open" ${library ? 'data-arch-library' : 'data-arch-app'}="${name}" title="Open ${name}">
+      <span class="map-tile-title">${icon(library ? 'files' : item.managed ? 'code' : 'cube')}<strong>${name}</strong></span>
+      ${disabled ? '<small>Startup disabled</small>' : ''}
+    </button>
+    ${deps.length ? `<div class="map-dependencies">${deps.map(dep => `<button data-arch-library="${esc(dep.name)}" title="Open library ${esc(dep.name)}">${icon('files')}${esc(dep.name)}</button>`).join('')}</div>` : ''}
+  </article>`;
 }
 
-export function renderMissionDiagram(state, {esc, icon}) {
-  const workspace = state.workspace, project = workspace.project, mission = workspace.mission || {}, native = state.target === 'native';
-  const included=new Set(mission.included||mission.enabled||[]);
-  const members=workspace.apps.filter(app=>included.has(app.name));
-  const custom=members.filter(app=>app.managed),standard=members.filter(app=>!app.managed);
-  const available=(mission.available||[]).filter(item=>!included.has(item.name)&&item.editable).map(item=>({...workspace.apps.find(app=>app.name===item.name),...item}));
-  const selectedCore = new Set((mission.core_services || []).map(service => service.name.toLowerCase()));
-  const services = coreServices.filter(([name]) => selectedCore.has(name));
+function groupSection(key, group, state, esc) {
+  const members = group.modules.filter(item => item.included);
+  return `<section class="map-group" aria-label="${group.title}">
+    <div class="map-group-head"><h3>${group.title}<small>${members.length}</small></h3>${controls(key, group, state.missionBusy || state.missionDraft)}</div>
+    ${members.length ? `<div class="map-grid">${members.map(item => moduleTile(item, group, state, esc)).join('')}</div>` : ''}
+  </section>`;
+}
+
+function systemTile(name, subtitle, glyph, attrs = '', change = 'clean') {
+  const tag = attrs ? 'button' : 'div';
+  return `<${tag} class="map-tile map-system-tile change-${change}" ${attrs}><span class="map-tile-title">${icon(glyph)}<strong>${name}</strong></span><small>${subtitle}</small></${tag}>`;
+}
+
+function hardwarePanel(state, esc, native, osName) {
+  const {project, catalog} = state.workspace;
   const profile = state.hardware?.profiles?.find(item => item.board === project.board && item.os === project.os);
-  const boardName = profile?.board_label || workspace.catalog.name || project.board, osName = native ? (state.hardware?.native?.os || 'Host OS') : profile?.os_label || workspace.catalog.os_labels?.[project.os] || project.os || 'Host OS';
+  const boardName = profile?.board_label || catalog.name || project.board;
+  const drawing = native ? `<svg class="mission-map-board-drawing" viewBox="0 0 240 155" aria-hidden="true">
+    <rect x="36" y="12" width="168" height="106" rx="5" fill="#354650" stroke="#8a9fa8"/>
+    <rect x="43" y="19" width="154" height="89" rx="2" fill="#1c2930" stroke="#57716e"/>
+    <text x="120" y="71" text-anchor="middle" stroke="none" fill="#c0d5ca" font-size="19">${esc(osName)}</text>
+    <path d="M111 118h18v14h31v6H80v-6h31z" fill="#839b9d" stroke="none"/></svg>` : boardIllustration();
   const devices = project.devices || [];
-  const address = value => Number.isInteger(value) ? '0x' + value.toString(16).toUpperCase().padStart(2, '0') : '—';
-  const helpers = {esc, icon},editing=!!state.missionEditing;
+  return `<section class="map-panel map-hardware" aria-label="Hardware"><header class="map-panel-head">${icon('cpu')}<h2>Hardware</h2></header>
+    ${native || project.board ? `<button class="map-computer change-${native ? 'clean' : esc(state.workspace.changes?.board || 'clean')}" data-view="bench" data-inspect="board" title="Open hardware workbench">
+      ${drawing}<strong>${native ? 'This computer' : esc(boardName)}</strong><small>${[osName, native && state.hardware?.native?.architecture].filter(Boolean).map(esc).join(' · ')}</small></button>` :
+    '<div class="hardware-empty"><button data-choose-board>Select board</button></div>'}
+    ${!native && project.board ? `<section class="map-peripherals"><div class="map-group-head"><h3>Sensors<small>${devices.length}</small></h3><button class="map-action" data-create="device">${icon('plus')}New</button></div>
+      ${devices.map(device => `<button class="map-tile map-system-tile change-${esc(state.workspace.changes?.devices?.[device.id] || 'clean')}" data-view="bench" data-device="${esc(device.id)}" data-inspect="${esc(device.id)}" title="${esc(device.model)}"><span class="map-tile-title">${icon('cpu')}<strong>${esc(device.id)}</strong></span><small>${esc(device.bus)} · 0x${Number(device.address).toString(16).toUpperCase().padStart(2, '0')}</small></button>`).join('')}</section>` : ''}
+  </section>`;
+}
 
-  return `<div class="mission-map ${editing?'is-editing':''}">
-    <div class="mission-map-heading"><div>${icon('layers')}<span>Mission architecture</span><i>/</i><small>Software &amp; hardware</small></div>${mission.pending_build?'<span class="mission-map-pending">Build to apply</span>':''}</div>
-    ${state.missionError?`<div class="mission-map-error" role="alert">${esc(state.missionError)}<button data-mission-error-close aria-label="Dismiss error">${icon('close')}</button></div>`:''}
-    <div class="mission-map-columns">
-      <section class="mission-map-software" aria-label="Flight software architecture">
-        <header class="mission-map-section-heading"><span class="mission-map-section-icon">${icon('code')}</span><div><h2>Software</h2><p>Flight software</p></div><span class="mission-map-tag">cFS</span></header>
-        <div class="mission-map-software-body">
-          <section class="mission-map-app-group" aria-label="Mission applications"><div class="mission-map-group-heading"><h3>Mission apps</h3>${editing?`<button data-mission-create="app" ${state.missionBusy?'disabled':''}>${icon('plus')}New app</button>`:''}</div><div class="mission-map-custom-grid">${custom.map(app=>application(app,state,helpers)).join('')}${editing?newModule(state,helpers,'app'):''}</div></section>
-          <section class="mission-map-app-group" aria-label="cFS applications"><div class="mission-map-group-heading"><h3>cFS apps <small>${standard.length}</small></h3>${editing?`<button data-mission-catalog ${state.missionBusy?'disabled':''}>${icon('plus')}Add app</button>`:''}</div><div class="mission-map-app-grid">${standard.map(app=>application(app,state,helpers)).join('')}${editing?`<button class="mission-map-add-tile compact" data-mission-catalog ${state.missionBusy?'disabled':''}>${icon('plus')}<span>Add app</span></button>`:''}</div></section>
-          ${editing&&state.missionCatalog?`<section class="mission-map-catalog"><div class="mission-map-group-heading"><h3>Available apps</h3><button data-mission-catalog-close aria-label="Close available apps">${icon('close')}</button></div><div class="mission-map-app-grid">${available.map(app=>application(app,state,helpers,true)).join('')||'<span class="mission-map-empty">All available apps are in the mission.</span>'}</div></section>`:''}
-          ${libraries(state,helpers)}
-          <div class="mission-map-layer-link" aria-hidden="true"><span></span><small>cFE services</small><span></span></div>
-          <section class="mission-map-core change-${mission.source_changes?.core||'clean'}" aria-label="Core Flight Executive services"><div class="mission-map-group-heading"><h3>cFE core</h3></div><div class="mission-map-service-grid">${services.filter(([name])=>name==='sb').concat(services.filter(([name])=>name!=='sb')).map(([id, short, name, purpose]) => `<div class="mission-map-service ${id==='sb'?'mission-map-service-bus':''}" title="${esc(purpose)}"><strong>${short}</strong><small>${esc(name)}</small></div>`).join('')}</div></section>
-          <div class="mission-map-platform-label">Platform</div>
-          <div class="mission-map-platform-grid">
-            <button class="mission-map-platform-block change-${mission.source_changes?.osal||'clean'}" data-file="cFS/osal/README.md">${icon('layers')}<span><strong>OSAL</strong><small>OS abstraction</small></span>${icon('arrow-up-right')}</button>
-            <button class="mission-map-platform-block change-${mission.source_changes?.psp||'clean'}" data-file="cFS/psp/README.md">${icon('cpu')}<span><strong>PSP</strong><small>Platform support</small></span>${icon('arrow-up-right')}</button>
-          </div>
-          <div class="mission-map-system">${icon('terminal')}<span><strong>${esc(osName)}</strong><small>${esc(native?'Native':project.board||'No board')}</small></span><span class="mission-map-system-label">Operating system</span></div>
-        </div>
+export function renderMissionDiagram(state, {esc}) {
+  const {mission, project, catalog} = state.workspace;
+  const groups = moduleGroups(state.workspace);
+  const native = state.target === 'native';
+  const osName = native ? state.hardware?.native?.os || 'Host OS' : catalog.os_labels?.[project.os] || project.os || 'Host OS';
+  const active = new Set(mission.core_services.map(service => service.name.toUpperCase()));
+  const serviceTile = ([short, name]) => {
+    const id = short.toLowerCase();
+    const path = `cFS/cfe/modules/${id}/fsw/src/cfe_${id}_${id === 'fs' ? 'api' : 'task'}.c`;
+    return systemTile(short, name, id === 'sb' ? 'workflow' : 'cube', `data-arch-source="${path}" data-symbol="${name}"`, mission.source_changes?.core);
+  };
+  return `<div class="mission-map">
+    <header class="map-heading"><h1>${icon('layers')}Mission architecture</h1><button class="map-action map-library-toggle" data-toggle-libraries aria-pressed="${!!state.showLibraries}">${icon('files')}${state.showLibraries ? 'Hide libraries' : 'Show libraries'}</button></header>
+    ${state.missionError ? `<div class="mission-map-error" role="alert">${esc(state.missionError)}<button data-mission-error-close aria-label="Dismiss error">${icon('close')}</button></div>` : ''}
+    <div class="map-columns"><section class="map-panel map-software" aria-label="Software"><header class="map-panel-head">${icon('code')}<h2>Flight software</h2></header>
+      ${groupSection('mission', groups.mission, state, esc)}${groupSection('cfs', groups.cfs, state, esc)}${state.showLibraries ? groupSection('library', groups.library, state, esc) : ''}
+      <section class="map-group map-core" aria-label="Core Flight Executive services"><div class="map-group-head"><h3>cFE core</h3></div>
+        ${active.has('SB') ? `<div class="map-grid map-bus">${serviceTile(services[0])}</div>` : ''}
+        <div class="map-grid">${services.slice(1).filter(([id]) => active.has(id)).map(serviceTile).join('')}</div>
       </section>
-      <div class="mission-map-bridge" aria-hidden="true"><span>↔</span></div>
-      <section class="mission-map-hardware" aria-label="${native?'Local computer':'Board and sensors'}">
-        <header class="mission-map-section-heading"><span class="mission-map-section-icon">${icon('cpu')}</span><div><h2>Hardware</h2><p>${native?'Local execution':'Board and sensors'}</p></div></header>
-        <div class="mission-map-hardware-body">
-          ${!native&&project.board?`<button class="mission-map-board change-${workspace.changes?.board||'clean'}" data-view="bench" data-inspect="board" title="Open board in the hardware workbench"><span class="mission-map-computer-label">Flight computer</span>${boardIllustration()}<strong>${esc(boardName)}</strong><small>${esc(project.board)}</small><span class="mission-map-board-footer">Hardware workbench ${icon('arrow-up-right')}</span></button>
-          ${devices.length ? `<div class="mission-map-bus-link" aria-hidden="true"><span></span><small>${devices.every(device => String(device.bus).startsWith('i2c')) ? 'I²C' : 'Peripherals'}</small><span></span></div><section class="mission-map-sensors" aria-label="Connected sensors"><div class="mission-map-group-heading"><h3>Sensors</h3>${editing?`<button data-create="device">${icon('plus')}Add</button>`:''}</div>${devices.map(device => `<button class="mission-map-sensor change-${workspace.changes?.devices?.[device.id]||'clean'}" data-view="bench" data-device="${esc(device.id)}" data-inspect="${esc(device.id)}" title="Open ${esc(device.model)} in the hardware workbench">${icon('cpu')}<span><strong>${esc(device.model)}</strong><small>${esc(device.bus)} · ${address(device.address)}</small></span>${icon('arrow-up-right')}</button>`).join('')}</section>` : editing?`<button class="mission-map-add-tile" data-create="device">${icon('plus')}Add sensor</button>`:''}
-          <button class="mission-map-open-workbench" data-view="bench">${icon('circuit')}Open workbench${icon('arrow-up-right')}</button>`:`${native?`<button class="mission-map-board native-computer" data-view="bench" title="Open local computer"><span class="mission-map-computer-label">Native execution</span><svg class="mission-map-board-drawing" viewBox="0 0 240 155" aria-hidden="true"><rect x="35" y="12" width="170" height="103" rx="2" fill="#303e4a" stroke="#8096a5"/><rect x="44" y="21" width="152" height="84" fill="#1a2834"/><text x="120" y="70" text-anchor="middle" fill="#c2d5df" font-size="22">cFS</text><path d="M110 115v18h-35v8h90v-8h-35v-18" fill="#8096a5"/></svg><strong>This computer</strong><small>${esc(osName)} · ${esc(state.hardware?.native?.architecture||'')}</small></button>`:`<div class="hardware-empty">${icon('cpu')}<strong>No board selected</strong><button data-choose-board>Select board</button></div>`}`}
-        </div>
-      </section>
-    </div>
-    <div class="mission-map-legend" aria-label="Source changes in Git"><span class="change-clean">Unchanged</span><span class="change-modified">Modified</span><span class="change-new">New</span><small>Git · source files</small></div>
+      <section class="map-group" aria-label="Platform"><div class="map-group-head"><h3>Platform</h3></div><div class="map-grid">
+        ${systemTile('OSAL', 'OS abstraction', 'layers', 'data-arch-source="cFS/osal/README.md" data-symbol="OSAL"', mission.source_changes?.osal)}
+        ${systemTile('PSP', 'Platform support', 'cpu', 'data-arch-source="cFS/psp/README.md" data-symbol="PSP"', mission.source_changes?.psp)}
+        ${systemTile(esc(osName), 'Operating system', 'terminal', 'data-view="bench"')}
+      </div></section>
+    </section>${hardwarePanel(state, esc, native, osName)}</div>
+    <footer class="map-legend" aria-label="Git source status"><span>Git</span><span class="change-clean">Unchanged</span><span class="change-modified">Modified</span><span class="change-new">New</span></footer>
   </div>`;
 }

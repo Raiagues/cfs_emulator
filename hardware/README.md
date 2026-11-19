@@ -12,7 +12,7 @@ The diagram shows where cFS runs for each target and how Flight Studio reaches i
 flowchart LR
     subgraph computer["This computer"]
         manager["Flight Studio<br/>hardware/manager.py"]
-        native["Native cFS process<br/>cFS/build-native/exe/cpu1"]
+        native["Native cFS process<br/>mission/build-native/exe/cpu1"]
         builder["Container cfs-builder:local<br/>ARM64 cross compiler"]
         subgraph emulator["Container pi4-cfs"]
             qemu["qemu-system-aarch64 -M raspi4b"]
@@ -25,7 +25,7 @@ flowchart LR
         boardcfs["cfs-studio.service<br/>~/cfs-arm64/studio/current"]
     end
     manager -->|"starts the process"| native
-    manager -->|"builds cFS/build-flight"| builder
+    manager -->|"builds mission/build-flight"| builder
     manager -->|"QMP board/qmp.sock"| qemu
     manager -->|"SSH · configured local port"| guestcfs
     manager -->|"SSH"| boardcfs
@@ -47,7 +47,7 @@ Private SSH keys remain in the local SSH configuration.
 ## Native
 
 Native builds with this computer's compiler and runs `core-cpu1` as a local process.
-The installed mission is in `cFS/build-native/exe/cpu1/`; output also goes to
+The installed mission is in `mission/build-native/exe/cpu1/`; output also goes to
 `hardware/.runtime/native.log`. Selecting Native preserves the saved board and
 sensors for the other targets. Driver code uses the devices available on the host.
 
@@ -90,7 +90,7 @@ the Linux console, which is also saved in `logs/latest.log`, and `logs --kind fl
 shows the cFS output.
 
 Builds for the emulator and the board run the ARM64 cross compiler inside the
-`cfs-builder:local` image and install the mission in `cFS/build-flight/exe/cpu1/`. Run
+`cfs-builder:local` image and install the mission in `mission/build-flight/exe/cpu1/`. Run
 then loads `i2c-dev` in the guest when the project has sensors, copies the build to a
 staging directory over SSH, swaps it with the installed one and starts `cfs.service`.
 Flight Studio confirms that the service is active two seconds later, which shows that
@@ -187,7 +187,7 @@ board are not deleted automatically.
 ### Sensorless builds use a separate copy
 
 Testing on a board without sensors should not change the mission configuration. With
-`--sensorless`, Flight Studio copies `cFS/`, `project/`, `scripts/`, `sensors/` and
+`--sensorless`, Flight Studio copies `cFS/`, `mission/`, `project/`, `scripts/`, `sensors/` and
 `config/` to `hardware/.runtime/sensorless/`, removes the apps that read sensors and
 their drivers from that copy, and builds it there. The project stays as it is, and the
 Ground Station uses a separate catalog for that build. The apps that read sensors are

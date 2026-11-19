@@ -23,6 +23,10 @@ if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
     echo "Run ./scripts/setup.sh first to prepare Docker and the emulator image." >&2
     exit 1
 fi
+if [[ "$(docker image inspect --format '{{index .Config.Labels "org.flight-studio.register-models"}}' "$IMAGE")" != "$(python3 project/qemu/generate.py --fingerprint)" ]]; then
+    echo "Install the updated emulator image in workspace setup to load this project's register models." >&2
+    exit 1
+fi
 if docker container inspect pi4-cfs >/dev/null 2>&1; then
     echo "The emulator is already running. Use ./run.sh or ./stop.sh." >&2
     exit 1
@@ -33,7 +37,9 @@ ln -sfn "${LOG_FILE##*/}" logs/latest.log
 mkdir -p board
 
 # Read current project hardware without rebuilding the emulator image.
-echo "Booting Raspberry Pi OS..."
+BOOT_TIMEOUT=600
+if [[ ! -f board/raspios.qcow2 ]]; then BOOT_TIMEOUT=1800; fi
+echo "[emulator] Image ready. Opening the guest disk."
 docker run --rm "${MODE[@]}" --name pi4-cfs \
     --user "$(id -u):$(id -g)" \
     -p "127.0.0.1:$EMULATOR_SSH_PORT:2222" \
@@ -59,7 +65,7 @@ trap stop_logs EXIT
 trap 'echo "Boot continues in the background. Use ./logs.sh to follow it."; exit 130' INT
 trap 'exit 143' TERM
 
-SSH_DEADLINE=$((SECONDS + 600))
+SSH_DEADLINE=$((SECONDS + BOOT_TIMEOUT))
 NEXT_STATUS=0
 until SSH_ERROR="$(LC_ALL=C ssh -F "$SSH_DIR/config" -p "$EMULATOR_SSH_PORT" -o ConnectTimeout=3 pi4-cfs true 2>&1)"; do
     case "$SSH_ERROR" in

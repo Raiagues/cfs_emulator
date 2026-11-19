@@ -3,6 +3,8 @@ from collections import defaultdict
 from pathlib import Path
 import re
 
+from project.flight_sources import module_directories
+
 
 FLAG = "CFS_CPU1_MODULE_SELECTION"
 
@@ -14,10 +16,13 @@ def _mask(text):
 
 def _owners(root):
     headers, symbols = defaultdict(set), defaultdict(set)
-    for application in sorted((root / "cFS/apps").iterdir()):
+    for application in module_directories(root, "apps"):
         if application.is_symlink() or not (application / "CMakeLists.txt").is_file():
             continue
-        for header in application.rglob("*.h"):
+        # Example missions (notably SBN's) redeclare the entire cFE MID map.
+        # Only the app's flight and configuration headers are part of this build.
+        roots = (application / "fsw", application / "config")
+        for header in (h for directory in roots for h in directory.rglob("*.h")):
             if header.is_symlink():
                 continue
             # cFE exposes default_/eds_ configuration headers without their
@@ -33,6 +38,11 @@ def _owners(root):
 def _guard_tables(text, headers, symbols):
     if not re.search(r'\bCFE_SB_MSGID_WRAP_VALUE\s*\(', _mask(text)):
         return text
+    # Recompute only guards emitted by this function. This also repairs
+    # older missions that attributed a core MID to an example application.
+    wrapper = (r"^#if !defined\(CFS_CPU1_MODULE_SELECTION\) \|\| \(defined\(CFS_MODULE_[A-Z0-9_]+\)"
+               r"(?: && defined\(CFS_MODULE_[A-Z0-9_]+\))*\)\n([^#]*?|#include[^\n]*)\n#endif$")
+    text = re.sub(wrapper, r"\1", text, flags=re.M)
     spans = {}
     for match in re.finditer(r'^[ \t]*#[ \t]*include\s+"([^"\n]+)"[^\n]*', text, re.M):
         owner = headers.get(Path(match[1]).name)
@@ -71,8 +81,28 @@ def _guard_tables(text, headers, symbols):
 
 
 def _guard_install(text):
+    declaration = 'list(APPEND APP_DEFINITION_TABLE_LIST "CFS_MODULE_${MODULE_SYMBOL}")'
+    # CPU1 can compile a module while its startup entry is archived. Only
+    # loaded modules should contribute scheduled messages and subscriptions.
+    startup = 'set(STUDIO_STARTUP "${MISSION_DEFS}/../cpu1_cfe_es_startup.scr")'
+    read_startup = "\n".join([
+        startup, 'if(EXISTS "${STUDIO_STARTUP}")',
+        '    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${STUDIO_STARTUP}")',
+        '    file(STRINGS "${STUDIO_STARTUP}" STUDIO_ACTIVE_LINES REGEX "^[ \\t]*CFE_(APP|LIB),")',
+        '    set(STUDIO_LOADED_MODULES)',
+        '    foreach(RECORD IN LISTS STUDIO_ACTIVE_LINES)',
+        '        string(REGEX REPLACE "^[^,]+,[ \\t]*([^, \\t]+).*" "\\\\1" ACTIVE_MODULE "${RECORD}")',
+        '        list(APPEND STUDIO_LOADED_MODULES "${ACTIVE_MODULE}")',
+        '    endforeach()', 'endif()', ''])
+    def apply_startup(source):
+        if startup in source:
+            return source
+        guard = ('if(NOT EXISTS "${STUDIO_STARTUP}" OR MODULE IN_LIST STUDIO_LOADED_MODULES)\n'
+                 '            ' + declaration + '\n        endif()')
+        return source.replace('list(APPEND APP_DEFINITION_TABLE_LIST ' + FLAG + ')',
+                              read_startup + 'list(APPEND APP_DEFINITION_TABLE_LIST ' + FLAG + ')').replace(declaration, guard)
     if FLAG in text:
-        return text
+        return apply_startup(text)
     # Remove references to a fixed set of app targets; derive them from the
     # actual APPLIST below. Keep custom non-target include paths intact.
     text = re.sub(r'^\s*\$<TARGET_PROPERTY:[A-Za-z][A-Za-z0-9_]*,INCLUDE_DIRECTORIES>\s*$', '', text, flags=re.M)
@@ -95,7 +125,7 @@ def _guard_install(text):
         indent, command, target, arguments = match.groups()
         return (f'{indent}if(TARGET {target})\n{indent}    {command}({target}{arguments})\n'
                 f'{indent}endif()')
-    return re.sub(pattern, guard, text)
+    return apply_startup(re.sub(pattern, guard, text))
 
 
 def table_membership_plan(root, sources=None):
@@ -108,7 +138,7 @@ def table_membership_plan(root, sources=None):
     sources = sources or {}
     headers, symbols = _owners(root)
     plan = {}
-    definitions = root / "cFS/sample_defs"
+    definitions = root / "mission/sample_defs"
     for path in sorted(definitions.rglob("*.c")):
         if path.is_symlink():
             raise ValueError("Mission tables must remain inside the project")

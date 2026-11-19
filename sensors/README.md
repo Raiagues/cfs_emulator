@@ -33,16 +33,15 @@ flowchart TB
 
 ## In Flight Studio
 
-Open Synthetic data in the left rail, or the settings button next to Start synthetic
-data. The left side shows the board with its sensors and their live values. On the
-right, Widgets select the sensors, the update interval and each signal's initial value
-and function, and Code edits the sensor's Python file. Both views change the same
-Python settings, and Save writes them.
+Open **Synthetic data** in the left rail and select a sensor on the board.
+Each output has a baseline, waveform, noise type and amplitude-over-time plot.
+Enable the outputs you want, choose the sample interval, then press **Save**.
 
-Test code prints eight samples in the terminal without sending anything, so it works
-without QEMU and without a board. Start synthetic data sends the selected signals to
-QEMU, which must already be running, and Stop synthetic data ends the session. Buses
-and addresses belong to the Hardware view, and changing them requires a new QEMU boot.
+**Start test** samples the configured outputs locally until you press **Stop test**.
+To inject the same signals into the emulated devices, start the emulator and choose
+**Start simulation**. In Board mode the plots can still be tested locally. The
+physical sensor supplies its own measurements. Configure I²C buses and addresses
+in Hardware and restart the emulator after changing them.
 
 ## Sensor modules
 

@@ -19,6 +19,8 @@ ROOT = Path(__file__).resolve().parents[1] / 'cFS/tools/cFS-GroundSystem'
 for directory in (ROOT, ROOT / 'Subsystems/cmdGui', ROOT / 'Subsystems/tlmGUI'):
     if str(directory) not in sys.path:
         sys.path.insert(0, str(directory))
+_bytecode_setting = sys.dont_write_bytecode
+sys.dont_write_bytecode = True
 try:
     import zmq
     from PyQt5.QtCore import QThread
@@ -27,6 +29,8 @@ try:
     import GenericTelemetry
 except ImportError as error:
     raise RuntimeError('The official cFS-GroundSystem requires PyQt5 and pyzmq. Install the dependencies in ground_station/requirements.txt.') from error
+finally:
+    sys.dont_write_bytecode = _bytecode_setting
 
 # Official MiniCmdUtil owns a class socket for its desktop dialogs; each web
 # connection instead receives a socket with an explicit lifetime.

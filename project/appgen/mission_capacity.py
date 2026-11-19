@@ -23,7 +23,7 @@ def _clean(text):
 
 
 def _read(root, path):
-    if not path.resolve().is_relative_to(root) or path.is_symlink():
+    if not any(path.resolve().is_relative_to(base) for base in (root, root.parent / "cFS")) or path.is_symlink():
         raise Unresolved()
     try:
         return _clean(path.read_text())
@@ -37,14 +37,14 @@ def _select(root, app, name, subdir):
         # SCH/TO table and interface headers belong to MISSION_CONFIG_FILE_LIST,
         # so generate_configfile_set runs without architecture/CPU prefixes.
         candidates = [mission / 'config' / name, mission / name]
-        candidates.extend([root / 'apps' / app / 'config' / ('default_' + name),
-                           root / 'apps' / app / 'fsw' / 'inc' / name,
-                           root / 'apps' / app / 'fsw' / 'public_inc' / name])
+        candidates.extend([root.parent / 'cFS/apps' / app / 'config' / ('default_' + name),
+                           root.parent / 'cFS/apps' / app / 'fsw' / 'inc' / name,
+                           root.parent / 'cFS/apps' / app / 'fsw' / 'public_inc' / name])
     else:
         candidates = [mission / 'cpu1' / subdir / name, mission / subdir / ('cpu1_' + name),
                       mission / subdir / name, mission / 'cpu1' / name,
                       mission / ('cpu1_' + name), mission / name]
-        candidates.append(root / 'apps' / app / 'fsw' / subdir / name)
+        candidates.append(root.parent / 'cFS/apps' / app / 'fsw' / subdir / name)
     return next((path for path in candidates if path.is_file()), None)
 
 
@@ -119,8 +119,8 @@ def _compile_definitions(root):
             'cmake_minimum_required(VERSION 3.16)',
             f'set(SIMULATION {architecture})', 'set(CFE_EDS_ENABLED OFF)', 'set(TGTNAME cpu1)',
             f'set(MISSION_DEFS {quote(root / "sample_defs")})',
-            f'set(MISSION_SOURCE_DIR {quote(root)})',
-            f'include({quote(root / "cfe/cmake/mission_defaults.cmake")} OPTIONAL)',
+            f'set(MISSION_SOURCE_DIR {quote(root.parent / "cFS")})',
+            f'include({quote(root.parent / "cFS/cfe/cmake/mission_defaults.cmake")} OPTIONAL)',
             f'include({quote(root / "sample_defs/targets.cmake")})',
             'set(CAPACITY_MODULES ${MISSION_GLOBAL_APPLIST} ${MISSION_GLOBAL_STATIC_APPLIST} ${cpu1_APPLIST} ${cpu1_STATIC_APPLIST})',
             'function(install)\nendfunction()', 'function(add_cfe_tables)\nendfunction()',
@@ -224,6 +224,6 @@ def validate_mission_capacity(root, manifests):
         except Unresolved:
             continue
         if overflow:
-            raise ValueError(f'{table.relative_to(root)}: {rows} {field} entries exceed '
+            raise ValueError(f'{table.relative_to(root.parent)}: {rows} {field} entries exceed '
                              f'{expression} ({count} generated rows). '
                              'Reduce the generated entries or update the mission table capacity.')

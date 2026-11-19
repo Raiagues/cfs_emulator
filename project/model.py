@@ -1,6 +1,5 @@
 """Project hardware and custom-app registry; cFS manifests own message IDs."""
 
-import configparser
 import importlib.util
 import json
 from pathlib import Path
@@ -12,7 +11,7 @@ class ProjectError(ValueError):
     pass
 
 
-PROTECTED_PATHS = ["cFS/cfe", "cFS/osal", "cFS/psp", "cFS/libs", "cFS/tools", "cFS/.git"]
+PROTECTED_PATHS = ["cFS", "mission/libs"]
 
 
 def safe_path(root, relative):
@@ -80,18 +79,24 @@ def planned_project_files(root, config, manifests, excluded=None, selected=None)
     if excluded is None:
         excluded = selection(root)["removed"]
     # New sensor adapters declare dependencies in their native CMake source.
-    sources = {f"cFS/apps/{app['name']}/CMakeLists.txt": generator.merged_app_cmake(root / "cFS", app)
+    sources = {f"mission/apps/{app['name']}/CMakeLists.txt": generator.merged_app_cmake(root / "mission", app)
                for app in manifests}
     libraries = requirements(root, config, manifests, excluded, selected, sources)[0]
     from project.cfs_config import bootstrap_plan
     files = bootstrap_plan(root, config)
-    files.update({"cFS/" + path: content for path, content in generator.planned_files(
-        root / "cFS", manifests, libraries=libraries, excluded=excluded).items()})
+    files.update({"mission/" + path: content for path, content in generator.planned_files(
+        root / "mission", manifests, libraries=libraries, excluded=excluded).items()})
+    # Reconcile earlier Studio guards against flight headers when syncing an
+    # existing mission, including missions with archived application records.
+    install = root / "mission/sample_defs/cpu1/install_custom.cmake"
+    if (root / "mission/modules.cmake").is_file() or (install.is_file() and "CFS_CPU1_MODULE_SELECTION" in install.read_text()):
+        from interface.backend.mission_tables import table_membership_plan
+        files.update(table_membership_plan(root, sources=files))
     files.update(plan_drivers(root, libraries))
     for manifest in manifests:
         name = manifest["name"]
         files[f"project/apps/{name}.json"] = json.dumps(manifest, indent=2) + "\n"
-        legacy = f"cFS/apps/{name}/app.json"
+        legacy = f"mission/apps/{name}/app.json"
         if safe_path(root, legacy).exists():
             files[legacy] = None
     return files
@@ -134,6 +139,8 @@ def validate_hardware(config, root=None):
             raise ProjectError("Unsupported bus; run ./scripts/project.sh devices")
         if type(device["address"]) is not int or not 0x08 <= device["address"] <= 0x77:
             raise ProjectError("I2C address must be an integer in 0x08..0x77")
+        if device["model"] == "mpu6050" and device["address"] not in (0x68, 0x69):
+            raise ProjectError("MPU6050 AD0 selects I²C address 0x68 or 0x69")
         address = (device["bus"], device["address"])
         if device["id"] in ids or address in addresses:
             raise ProjectError(f"Duplicate device ID or I2C bus/address: {device['id']}")
@@ -168,15 +175,8 @@ def appgen(root):
 def protected_apps(root):
     config = load_config(root)
     protected = set(board_catalog(config["board"], root)["protected_apps"])
-    modules = safe_path(root, "cFS/.gitmodules")
-    if modules.exists():
-        parser = configparser.ConfigParser()
-        parser.read(modules)
-        for section in parser.sections():
-            path = parser.get(section, "path", fallback="")
-            if path.startswith("apps/"):
-                protected.add(path.split("/")[1])
-    return protected
+    from project.flight_sources import nasa_module_names
+    return protected | nasa_module_names(root, "apps")
 
 
 def read_manifests(root, config):
@@ -187,7 +187,7 @@ def read_manifests(root, config):
         safe_path(root, path.relative_to(root))
         if path.stem in protected or path.stem not in registered:
             raise ProjectError(f"Protected or unregistered app: {path.stem}")
-    return appgen(root).read_manifests(safe_path(root, "cFS"))
+    return appgen(root).read_manifests(safe_path(root, "mission"))
 
 
 def validate_config(root, config, manifests=None, new_apps=()):
@@ -206,8 +206,8 @@ def validate_config(root, config, manifests=None, new_apps=()):
             if not isinstance(app[key], dict):
                 raise ProjectError(f"{app['name']}.{key} must be an object")
         if app["name"] not in new_apps:
-            path = safe_path(root, f"cFS/apps/{app['name']}/CMakeLists.txt")
-            if not path.is_file() or not any(marker in path.read_text() for marker in ("Generated application configuration.", "Generated from app.json.")):
+            path = safe_path(root, f"mission/apps/{app['name']}/CMakeLists.txt")
+            if not path.is_file() or not any(marker in path.read_text() for marker in ("Generated application configuration.", "Generated from app.json.", "# APPGEN BEGIN SOURCES")):
                 raise ProjectError(f"App was not created by appgen: {app['name']}")
     if manifests is None:
         manifests = read_manifests(root, config)

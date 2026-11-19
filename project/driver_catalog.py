@@ -39,7 +39,7 @@ def _native_set(path, variable):
 
 
 def selection(root):
-    path = _safe(root, "cFS/sample_defs/modules.cmake")
+    path = _safe(root, "mission/modules.cmake")
     return {"added": _native_set(path, "MISSION_CPU1_ADDED_MODULES"),
             "removed": _native_set(path, "MISSION_CPU1_REMOVED_MODULES")}
 
@@ -113,6 +113,7 @@ def dependencies(root, name, sources=None):
     from project.model import identifier
     identifier(name)
     candidates = [f"cFS/apps/{name}/CMakeLists.txt", f"cFS/libs/{name}/CMakeLists.txt",
+                  f"mission/apps/{name}/CMakeLists.txt", f"mission/libs/{name}/CMakeLists.txt",
                   f"project/drivers/{name}/CMakeLists.txt"]
     text = None
     for relative in candidates:
@@ -143,7 +144,7 @@ def dependencies(root, name, sources=None):
     config = load_config(root)
     architecture = build_profile(root, config)["architecture"]
     build = "build-flight" if config["board"] else "build-native"
-    cache_path = _safe(root, f"cFS/{build}/cache/{architecture}/default_cpu1/CMakeCache.txt")
+    cache_path = _safe(root, f"mission/{build}/cache/{architecture}/default_cpu1/CMakeCache.txt")
     cache = cache_path.read_text() if cache_path.is_file() else ""
     result = []
     for module, values in _dependency_values(text, cache):
@@ -167,7 +168,7 @@ def requirements(root, config, manifests=None, excluded=None, selected=None, sou
     membership = selection(root)
     excluded = membership["removed"] if excluded is None else set(excluded)
     selected = membership["added"] if selected is None else set(selected)
-    explicit = (_native_set(_safe(root, "cFS/sample_defs/libraries.cmake"), "MISSION_LIBRARIES") | selected) - excluded
+    explicit = (_native_set(_safe(root, "mission/libraries.cmake"), "MISSION_LIBRARIES") | selected) - excluded
     reasons, ordered, visiting = {}, [], set()
 
     def visit(name, reason):
@@ -191,7 +192,7 @@ def requirements(root, config, manifests=None, excluded=None, selected=None, sou
     apps = {app["name"] for app in manifests or []} | {app["name"] for app in config["apps"]}
     # Native startup records cover stock/custom apps configured without Studio.
     from project.appgen.native_startup import parse_startup
-    startup = _safe(root, "cFS/sample_defs/cpu1_cfe_es_startup.scr")
+    startup = _safe(root, "mission/cpu1_cfe_es_startup.scr")
     if startup.is_file():
         enabled, disabled = parse_startup(startup.read_text())
         apps.update(record.name for record in [*enabled, *disabled] if record.fields[0] == "CFE_APP"
@@ -221,7 +222,7 @@ def plan_drivers(root, libraries):
     digest = lambda data: hashlib.sha256(data).hexdigest()
     for name in sorted(set(catalog) | set(old)):
         template = _safe(root, f"project/drivers/{name}")
-        destination = _safe(root, f"cFS/libs/{name}")
+        destination = _safe(root, f"mission/libs/{name}")
         templates = {path.relative_to(template).as_posix(): path.read_bytes()
                      for path in sorted(template.rglob("*")) if path.is_file() and not path.is_symlink()}
         recorded = old.get(name, {})
@@ -237,7 +238,7 @@ def plan_drivers(root, libraries):
                 not path.is_symlink() and digest(path.read_bytes()) == recorded[relative]
                 for relative, path in actual.items())
             if unchanged:
-                files.update({f"cFS/libs/{name}/{relative}": None for relative in actual})
+                files.update({f"mission/libs/{name}/{relative}": None for relative in actual})
                 retained.pop(name, None)
             else:
                 retained[name] = "Local source edits preserved; excluded from automatic driver selection"
@@ -247,13 +248,13 @@ def plan_drivers(root, libraries):
         managed[name] = {}
         retained.pop(name, None)
         for relative, content in templates.items():
-            path = _safe(root, f"cFS/libs/{name}/{relative}")
+            path = _safe(root, f"mission/libs/{name}/{relative}")
             current = path.read_bytes() if path.is_file() else None
             expected = recorded.get(relative)
             if current is not None and digest(current) not in {expected, digest(content)}:
                 managed[name][relative] = expected or digest(content)
                 continue
-            files[f"cFS/libs/{name}/{relative}"] = content.decode()
+            files[f"mission/libs/{name}/{relative}"] = content.decode()
             managed[name][relative] = digest(content)
     payload = {"modules": managed, "retained": retained}
     if payload["modules"] or payload["retained"] or state_path.exists():

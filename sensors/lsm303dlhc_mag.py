@@ -8,7 +8,7 @@ PERIOD_SECONDS = 30.0
 
 
 SIGNALS = {'mag-x': {'initial': 0, 'function': 'hold'},
- 'mag-y': {'initial': 0, 'function': 'script'},
+ 'mag-y': {'initial': 0, 'function': 'sine', 'amplitude': 70, 'period': 300},
  'mag-z': {'initial': 0, 'function': 'script'}}
 
 

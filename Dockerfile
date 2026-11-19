@@ -84,10 +84,15 @@ RUN cd /tmp/qemu && patch -p1 < /tmp/qemu-signed.patch && \
     ninja -j4 qemu-system-aarch64 && \
     install -D -s -m755 qemu-system-aarch64 /output/qemu-system-aarch64
 
+# Reuse the base build when a student adds a register model.
+COPY project/qemu/ /tmp/studio-devices/
+RUN python3 /tmp/studio-devices/generate.py /tmp/qemu/hw/sensor && \
+    ninja -C /tmp/qemu/build -j4 qemu-system-aarch64 && \
+    install -D -s -m755 /tmp/qemu/build/qemu-system-aarch64 /output/qemu-system-aarch64
+
 FROM base
 
 LABEL org.flight-studio.qemu-lsm-signed="1"
-COPY --from=qemu-builder /output/qemu-system-aarch64 /usr/bin/qemu-system-aarch64
 
 # Keep only the prepared disk and boot files in the distributed image.
 COPY --from=prepare /opt/raspi-os/raspios.qcow2 \
@@ -96,6 +101,9 @@ COPY --from=prepare /opt/raspi-os/raspios.qcow2 \
     /opt/raspi-os/initramfs8 \
     /opt/raspi-os/
 
+ARG REGISTER_MODELS
+LABEL org.flight-studio.register-models="$REGISTER_MODELS"
+COPY --from=qemu-builder /output/qemu-system-aarch64 /usr/bin/qemu-system-aarch64
 COPY --chmod=755 scripts/emulator.sh /usr/local/bin/emulator
 WORKDIR /work
 

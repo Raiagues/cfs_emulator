@@ -1,4 +1,6 @@
 """Local infrastructure settings and preflight checks, separate from mission sources."""
+from project.qemu.generate import fingerprint
+from project.nasa_source import source_status
 import importlib.util
 import json
 import platform
@@ -8,6 +10,10 @@ import shlex
 import shutil
 import socket
 import sys
+
+
+def sources_ready(root):
+    return source_status(root)["state"] == "ready"
 
 
 def emulator_config(root):
@@ -49,7 +55,8 @@ def snapshot(hardware):
         probe = hardware._load("probe.json", {})
         if probe.get("admin_setup_command"):
             commands["authorize_service"] = probe["admin_setup_command"]
-    return {"project": hardware.root.name, "target": hardware.default_target(),
+    source = source_status(hardware.root)
+    return {"source": source, "build_jobs": hardware._load("native-build-settings.json", {}).get("jobs", 4), "sources_ready": source["state"] == "ready", "project": hardware.root.name, "target": hardware.default_target(),
             "board": config["board"], "os": config["os"], "profiles": hardware.profiles(),
             "host": {"os": platform.system(), "architecture": platform.machine(),
                      "package_manager": "apt" if shutil.which("apt-get") else None},
@@ -67,6 +74,9 @@ def save(studio, body):
     if target != "native" and not any(p["board"] == board and p["os"] == system and target in p["targets"] for p in hardware.profiles()):
         raise ValueError("Select a supported board and operating system.")
     emulator = validate_emulator(body.get("emulator")) if target == "qemu" else None
+    jobs = body.get("build_jobs", hardware._load("native-build-settings.json", {}).get("jobs", 4))
+    if type(jobs) is not int or not 1 <= jobs <= 64:
+        raise ValueError("Choose 1 to 64 parallel build jobs.")
     value = body.get("connection", {})
     if not isinstance(value, dict):
         raise ValueError("Invalid SSH connection.")
@@ -74,8 +84,11 @@ def save(studio, body):
     previous = hardware._load("connection.json")
     if target == "physical" and connection != previous:
         deployed = hardware._load("deployed.json", {}).get("physical", {})
-        if deployed and not deployed.get("stopped_at"):
-            raise ValueError("Stop cFS on the board before changing its connection or installation folder.")
+        prior_board = deployed.get("connection") or previous
+        if deployed and not deployed.get("stopped_at") and not hardware.same_board(connection, prior_board):
+            if not prior_board or hardware._flight_state("physical", prior_board)["running"] is not False:
+                raise ValueError("Stop cFS on the previous board before changing its connection.")
+            hardware._mark_stopped("physical", prior_board)
     profile_changed = target != "native" and (board, system) != (config["board"], config["os"])
     emulator_changed = emulator is not None and emulator != emulator_config(hardware.root)
     if (profile_changed or emulator_changed) and hardware._qemu_running() is True:
@@ -92,6 +105,8 @@ def save(studio, body):
         (hardware.runtime / "probe.json").unlink(missing_ok=True)
         hardware._last_probe = None
         hardware._physical_observation = None
+    if target == "native":
+        hardware._save("native-build-settings.json", {"jobs": jobs})
     hardware.select_target(target)
     return snapshot(hardware)
 
@@ -102,14 +117,19 @@ def check(hardware, target):
     checks = []
     def add(label, ready, detail, command=None):
         checks.append({"label": label, "ready": bool(ready), "detail": detail, "command": command})
-    tools = ("git", "cmake", "make", "cc") if target == "native" else ("git", "docker", "ssh", "scp")
+    tools = ["git", "cmake", "make", "cc"]
+    if target != "native":
+        tools.extend(["docker", "ssh", "scp"])
     for tool in tools:
         path = shutil.which(tool)
         add(tool, path, path or "Not installed")
-    code, output = hardware._capture(["git", "-C", str(hardware.root), "submodule", "status", "--recursive"], 20)
-    missing = [line.split()[1] for line in output.splitlines() if line.startswith("-") and len(line.split()) > 1]
-    add("Repository dependencies", not code and not missing, ", ".join(missing) if missing else "Submodules available" if not code else output,
-        "git submodule update --init --recursive" if code or missing else None)
+    source = source_status(hardware.root)
+    ready = source["state"] == "ready"
+    add("NASA cFS source", ready, source["revision"] if ready else {
+        "missing": "Clone the official NASA repository",
+        "incomplete": "Complete the NASA submodule download",
+        "occupied": "The cFS directory contains a different checkout",
+    }[source["state"]], None if ready else "./scripts/install-cfs.sh")
     modules = [name for name in ("PyQt5", "zmq") if importlib.util.find_spec(name) is None]
     add("Ground Station Python packages", not modules, ", ".join(modules) if modules else "PyQt5 · pyzmq",
         shlex.join([sys.executable, "-m", "pip", "install", "-r", "ground_station/requirements.txt"]) if modules else None)
@@ -130,8 +150,8 @@ def check(hardware, target):
             running = hardware._qemu_running()
             emulator = emulator_config(hardware.root)
             code, label = hardware._capture(["docker", "image", "inspect", "--format",
-                                            '{{index .Config.Labels "org.flight-studio.qemu-lsm-signed"}}', emulator["image"]], 30)
-            add("Emulator image", not code and label == "1", emulator["image"])
+                                            '{{index .Config.Labels "org.flight-studio.register-models"}}', emulator["image"]], 30)
+            add("Emulator image", not code and label == fingerprint(), emulator["image"])
             ssh_dir = Path.home() / ".ssh/cfs-emulator"
             add("Emulator SSH identity", all((ssh_dir / name).is_file() for name in ("config", "id_ed25519", "id_ed25519.pub")), str(ssh_dir))
             available = True

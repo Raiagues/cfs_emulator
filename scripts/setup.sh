@@ -52,6 +52,9 @@ elif [[ "$(dpkg-query -W -f='${Status}' docker-buildx-plugin 2>/dev/null)" == 'i
     BUILDX_PACKAGE=docker-buildx-plugin
 fi
 PACKAGES=()
+for package in build-essential cmake python3-pyqt5 python3-zmq; do
+    dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q 'install ok installed' || PACKAGES+=("$package")
+done
 docker_current || PACKAGES+=("${DOCKER_PACKAGES[@]}")
 buildx_current || PACKAGES+=("$BUILDX_PACKAGE")
 ssh_current || PACKAGES+=(openssh-client)
@@ -101,15 +104,6 @@ fi
 "${SUDO[@]}" docker buildx version
 ssh -V
 
-# Initialize missing submodules over HTTPS, including nested GitHub repositories.
-echo "Checking repository dependencies..."
-SUBMODULES="$(git submodule status --recursive)"
-if grep -q '^-' <<< "$SUBMODULES"; then
-    git -c url.https://github.com/.insteadOf=git@github.com: submodule update --init --recursive --progress
-else
-    echo "Repository dependencies are already present."
-fi
-
 if [[ "${1:-}" == --build-only ]]; then
     echo "Build tools ready. Connect the board from Infrastructure."
     exit 0
@@ -156,8 +150,8 @@ else
     echo "Using the installed emulator image."
 fi
 
-if [[ "$("${SUDO[@]}" docker image inspect --format '{{index .Config.Labels "org.flight-studio.qemu-lsm-signed"}}' "$IMAGE")" != 1 ]]; then
-    echo "Updating the emulator's signed sensor support..."
+if [[ "$("${SUDO[@]}" docker image inspect --format '{{index .Config.Labels "org.flight-studio.register-models"}}' "$IMAGE")" != "$(python3 project/qemu/generate.py --fingerprint)" ]]; then
+    echo "Building the configured sensor models..."
     "${SUDO[@]}" ./scripts/build.sh --network=host
 fi
 

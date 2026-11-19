@@ -1,7 +1,12 @@
 /**
  * Workbench renderer for the local computer or the configured board and sensors.
- * Links show configured buses, not physical wiring or connection status.
+ * The diagram routes each sensor signal to a compatible board pin.
  */
+const viewModes = new Map();
+export const sensorHeaderPins = {VCC:[1,17], GND:[6,9,14,20,25,30,34,39], SDA:[3], SCL:[5]};
+const pinRoles = Object.keys(sensorHeaderPins);
+const wireColors = ['#dc8277', '#a5b2c1', '#e8c476', '#81c5cd'];
+
 export function mountBoard(container, options = {}) {
   let settings = {...options};
   let disposed = false;
@@ -26,8 +31,8 @@ export function mountBoard(container, options = {}) {
   function restoreLayout() {
     try {
       const saved = JSON.parse(localStorage.getItem(storageKey()));
+      mode = viewModes.get(storageKey()) || '3d';
       if (!saved) return;
-      mode = saved.mode === '2d' ? '2d' : '3d';
       cameraAngle = Number.isFinite(saved.angle) ? saved.angle : .36;
       cameraTilt = Number.isFinite(saved.tilt) ? Math.max(.3, Math.min(1.35, saved.tilt)) : .64;
       cameraZoom = Number.isFinite(saved.zoom) ? Math.max(.5, Math.min(2.4, saved.zoom)) : 1;
@@ -52,9 +57,7 @@ export function mountBoard(container, options = {}) {
   controls.className = 'board-view-controls';
   controls.setAttribute('role', 'group');
   controls.setAttribute('aria-label', 'Workbench view');
-  const hint = document.createElement('span');
-  hint.className = 'board-drag-hint';
-  container.append(boardCanvas, labels, controls, hint);
+  container.append(boardCanvas, labels, controls);
   const boardContext = boardCanvas.getContext('2d');
 
   function visibleDevices() {
@@ -65,7 +68,6 @@ export function mountBoard(container, options = {}) {
     selectedModel = id;
     updateModel();
     settings.onSelect?.(id);
-    settings.onInspect?.(id);
   }
 function box(x, y, z, width, height, depth, color, group = 'board', edge = null) {
   modelParts.push({x, y, z, width, height, depth, color, group, edge})
@@ -83,7 +85,7 @@ function offset(group) {
   const move = positions[group] || [0, 0];
   if (group === 'board') return [-1.25 + move[0], 0, move[1]];
   const index = Math.max(0, visibleDevices().findIndex(sensor => sensor.id === group));
-  return [5.5 + move[0], .3, (index % 2 ? 2.2 : -3) + move[1]];
+  return [5.5 + Math.floor(index/2)*2.6 + move[0], .3, (index % 2 ? 2.2 : -3) + move[1]];
 }
 
 function syncModelDevices() {
@@ -109,21 +111,17 @@ function syncModelDevices() {
   updateModel();
 }
 
-function boardConnector(group, pin = 1.5) {
-  const devices = visibleDevices();
-  const bus = devices.find(sensor => sensor.id === group)?.bus;
-  const buses = [...new Set(devices.map(sensor => sensor.bus).filter(Boolean))];
-  const shift = offset('board');
-  return [shift[0] + 1.25 + pin * .18, .78, shift[2] - 2.25 + Math.max(0, buses.indexOf(bus)) * .2];
+function signalPin(group, index) {
+  return settings.pinAssignments?.[group]?.[pinRoles[index]] || sensorHeaderPins[pinRoles[index]][0];
+}
+function boardConnector(group, index) {
+  const pin = signalPin(group, index);
+  const shift=offset('board');
+  return [shift[0]-3+Math.floor((pin-1)/2)*.26, .8, shift[2]+(pin%2?-2.19:-2.43)];
 }
 
 function rotate(x, y, z, group) {
-  if (group === 'board') return [x, y, z];
-  const center = offset(group), connector = boardConnector(group);
-  // The sensor's pin edge is local -Z; keep it facing the board connector.
-  const angle = Math.atan2(connector[0] - center[0], center[2] - connector[2]);
-  const cos = Math.cos(angle), sin = Math.sin(angle);
-  return [x * cos - z * sin, y, x * sin + z * cos];
+  return [x,y,z];
 }
 
 function point(x, y, z, group) {
@@ -183,7 +181,7 @@ function addComputer() {
   box(0, .27, -.2, 6.6, .05, 3.9, '#151e29');
   box(0, .3, -.2, 6.1, .02, 3.35, '#263b4a');
   boardText('cFS', -1.3, .34, -.35, .75, '#c5d4df');
-  boardText('NATIVE', -.95, .34, .5, .26, '#95b4c5');
+  boardText(settings.hostOS || 'Native', -.95, .34, .5, .26, '#95b4c5');
   box(0, .05, 3, 6, .18, 1.5, '#47525d');
   for(let row=0;row<3;row++)for(let col=0;col<12;col++)
     box(-2.6+col*.47, .16, 2.53+row*.35, .35, .04, .24, '#87939d');
@@ -301,11 +299,11 @@ function drawFloor() {
 }
 
 function drawWires() {
-  // These jumpers visualize the configured bus, not a physical pinout.
+  // The sensor connector follows the role order used by the pinout panel.
   const devices = visibleDevices();
   for (const sensor of devices) {
     if (!sensor.bus) continue;
-    for (const [index, color] of ['#b8665b', '#444c59', '#c8ad70', '#6c9ea5'].entries()) {
+    for (const [index, color] of wireColors.entries()) {
       const start = boardConnector(sensor.id, index);
       const end = point(-.65 + index * .43, .6, -.66, sensor.id);
       const span = Math.hypot(end[0] - start[0], end[2] - start[2]);
@@ -314,7 +312,9 @@ function drawWires() {
       const a = [start[0], start[1] + lift, start[2] - bend];
       const outward = rotate(0, 0, -bend, sensor.id);
       const b = [end[0] + outward[0], end[1] + lift, end[2] + outward[2]];
-      const points = Array.from({length:41}, (_, i) => {
+      const source=project(start), sink=project(end);
+      const lane=source[1]-(index+1)*9-(settings.pinAssignments?.[sensor.id]?.bend||0);
+      const points = mode==='2d'?[source,[source[0],lane],[sink[0],lane],sink]:Array.from({length:41}, (_, i) => {
         const t = i / 40, u = 1 - t;
         return project(start.map((value, axis) => u*u*u*value + 3*u*u*t*a[axis] + 3*u*t*t*b[axis] + t*t*t*end[axis]));
       });
@@ -336,6 +336,16 @@ function drawWires() {
         boardContext.arc(end[0], end[1], Math.max(1.5, width), 0, Math.PI * 2);
         boardContext.fillStyle = '#c1ac7e';
         boardContext.fill();
+      }
+      if (mode === '2d' && scale() >= 33) {
+        const number = String(signalPin(sensor.id, index));
+        boardContext.font = 'bold 11px monospace';
+        boardContext.textAlign = 'center';
+        boardContext.lineWidth = 3;
+        boardContext.strokeStyle = '#182029';
+        boardContext.strokeText(number, sink[0], sink[1] + 15);
+        boardContext.fillStyle = color;
+        boardContext.fillText(number, sink[0], sink[1] + 15);
       }
       boardContext.restore();
     }
@@ -446,12 +456,15 @@ function resetCamera() {
 }
 function syncControls() {
   container.dataset.boardMode = mode;
+  pinButton.hidden = mode !== '2d' || settings.board !== 'raspi4b';
+  pinPanel.hidden = pinButton.hidden || pinButton.getAttribute('aria-pressed') !== 'true';
+  if (!pinPanel.hidden) renderPinout();
   for (const button of controls.querySelectorAll('[data-board-mode]')) {
     const active = button.dataset.boardMode === mode;
     button.classList.toggle('active', active);
     button.setAttribute('aria-pressed', String(active));
   }
-  hint.textContent = mode === '2d' ? 'Drag parts to arrange · background to pan' : 'Drag parts to arrange · background to orbit';
+
 }
 const modeControls = document.createElement('div');
 modeControls.className = 'board-mode-switch';
@@ -461,10 +474,70 @@ for (const value of ['3d', '2d']) {
   button.textContent = value.toUpperCase();
   button.dataset.boardMode = value;
   button.title = value === '2d' ? 'Top view' : 'Perspective view';
-  button.addEventListener('click', () => { mode = value; syncControls(); saveLayout(); updateModel(); }, {signal});
+  button.addEventListener('click', () => { mode = value; viewModes.set(storageKey(), mode); syncControls(); saveLayout(); updateModel(); }, {signal});
   modeControls.append(button);
 }
 controls.append(modeControls);
+const pinButton = document.createElement('button');
+pinButton.type = 'button';
+pinButton.textContent = 'Pinout';
+pinButton.setAttribute('aria-pressed', 'false');
+pinButton.setAttribute('aria-controls', 'workbench-pinout');
+const pinPanel = document.createElement('section');
+pinPanel.id = 'workbench-pinout';
+pinPanel.className = 'board-pinout';
+pinPanel.setAttribute('aria-label', 'Physical pin numbers');
+controls.append(pinButton);
+container.append(pinPanel);
+function renderPinout() {
+  const devices = visibleDevices();
+  const connections = new Map();
+  for (const sensor of devices) {
+    pinRoles.forEach((role, i) => {
+      const pin = signalPin(sensor.id, i);
+      if (!connections.has(pin)) connections.set(pin, []);
+      connections.get(pin).push(sensor.id + ' · ' + role);
+    });
+  }
+  const heading = document.createElement('strong');
+  heading.textContent = 'Raspberry Pi 4B · 40-pin header';
+  const grid = document.createElement('div');
+  grid.className = 'pinout-header';
+  for (let number = 1; number <= 40; number++) {
+    const pin = document.createElement('span');
+    pin.style.gridColumn = Math.ceil(number / 2);
+    pin.style.gridRow = number % 2 ? 2 : 1;
+    pin.textContent = number;
+    const role = pinRoles.find(role => sensorHeaderPins[role].includes(number));
+    if (role) {
+      const label = document.createElement('small');
+      label.textContent = role === 'VCC' ? '3V3' : role;
+      pin.append(label);
+    }
+    pin.classList.toggle('wired', connections.has(number));
+    pin.title = ['Pin ' + number, ...(connections.get(number) || [])].join(' · ');
+    grid.append(pin);
+  }
+  pinPanel.replaceChildren(heading, grid);
+  for (const sensor of devices) {
+    const row = document.createElement('div');
+    row.className = 'pinout-device';
+    const label = document.createElement('strong');
+    label.textContent = sensor.name || sensor.id;
+    row.append(label);
+    pinRoles.forEach((role, i) => {
+      const line = document.createElement('span');
+      line.style.borderColor = wireColors[i];
+      line.textContent = role + ' · ' + signalPin(sensor.id, i);
+      row.append(line);
+    });
+    pinPanel.append(row);
+  }
+}
+pinButton.addEventListener('click', () => {
+  pinButton.setAttribute('aria-pressed', String(pinPanel.hidden));
+  syncControls();
+}, {signal});
 const icons = {
   minus: '<path d="M5 12h14"/>',
   plus: '<path d="M5 12h14M12 5v14"/>',
@@ -488,23 +561,25 @@ for (const [action, title] of [['minus','Zoom out'], ['plus','Zoom in'], ['reset
 syncControls();
 
 function beginDrag(event, group) {
-  if (event.button !== 0) return;
+  if (event.button !== 0 || pointerStart) return;
   event.preventDefault();
   const rect = boardCanvas.getBoundingClientRect();
   group ??= hitGroup(event.clientX - rect.left, event.clientY - rect.top);
   pointerStart = {x:event.clientX, y:event.clientY, group, pointer:event.pointerId, travel:0};
   boardCanvas.setPointerCapture(event.pointerId);
   boardCanvas.style.cursor = 'grabbing';
-  if (group && group !== 'board') { selectedModel = group; updateModel(); }
 }
 boardCanvas.addEventListener('pointerdown', event => beginDrag(event), {signal});
-boardCanvas.addEventListener('pointermove', event => {
+window.addEventListener('pointermove', event => {
   if (!pointerStart) {
+    if(event.target!==boardCanvas)return;
     const rect = boardCanvas.getBoundingClientRect();
     boardCanvas.style.cursor = hitGroup(event.clientX - rect.left, event.clientY - rect.top) ? 'move' : 'grab';
     return;
   }
+  if (event.pointerId !== pointerStart.pointer) return;
   const dx = event.clientX - pointerStart.x, dy = event.clientY - pointerStart.y;
+  if (!pointerStart.travel && Math.hypot(dx, dy) < 5) return;
   pointerStart.travel += Math.hypot(dx, dy);
   if (pointerStart.group) {
     const delta = planeDelta(dx, dy), previous = positions[pointerStart.group] || [0, 0];
@@ -520,17 +595,18 @@ boardCanvas.addEventListener('pointermove', event => {
   updateModel();
 }, {signal});
 function endDrag(event) {
-  if (!pointerStart) return;
+  if (!pointerStart || event.pointerId !== pointerStart.pointer) return;
   const {group, pointer, travel} = pointerStart;
   pointerStart = null;
   if (boardCanvas.hasPointerCapture(pointer)) boardCanvas.releasePointerCapture(pointer);
   boardCanvas.style.cursor = 'grab';
-  saveLayout();
-  if (group && group !== 'board') settings.onSelect?.(group);
-  if (event.type === 'pointerup' && travel < 5) settings.onInspect?.(group);
+  if (travel) saveLayout();
+  if (event.type !== 'pointerup' || travel) return;
+  if (group && group !== 'board') selectSensor(group);
+  else settings.onInspect?.(group);
 }
-boardCanvas.addEventListener('pointerup', endDrag, {signal});
-boardCanvas.addEventListener('pointercancel', endDrag, {signal});
+window.addEventListener('pointerup', endDrag, {signal});
+window.addEventListener('pointercancel', endDrag, {signal});
 boardCanvas.addEventListener('wheel', event => {
   event.preventDefault();
   cameraZoom = Math.min(2.4, Math.max(.5, cameraZoom - event.deltaY * .001));
@@ -546,6 +622,7 @@ syncModelDevices();
 return {
   update(next) {
     const previousBoard = settings.board;
+    const changedDevices = JSON.stringify(settings.devices) !== JSON.stringify(next.devices);
     settings = {...settings, ...next};
     if (previousBoard !== settings.board) {
       modelParts.length = modelLines.length = modelTexts.length = 0;
@@ -555,7 +632,9 @@ return {
       else if (settings.board === 'raspi4b') addBoard();
     }
     if (Object.hasOwn(next, 'selected')) selectedModel = next.selected;
-    syncModelDevices();
+    if (!pinPanel.hidden) renderPinout();
+    if(changedDevices || previousBoard!==settings.board) syncModelDevices();
+    else updateModel();
   },
   select(id) { selectedModel = visibleDevices().some(device => device.id === id) ? id : null; updateModel(); },
   reset: resetCamera,

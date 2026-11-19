@@ -101,7 +101,7 @@ def table_packets(root, app, evaluate, build_dir=None):
     dependencies = compiler_build.glob('**/default_cpu1/apps/hk/CMakeFiles/tblobj_*.dir/DependInfo.cmake')
     for dependency in dependencies:
         for candidate in re.findall(r'"([^"\n]+\.c)"', dependency.read_text()):
-            path = root / 'cFS' / candidate.removeprefix('/cFS/') if candidate.startswith('/cFS/') else Path(candidate)
+            path = root / candidate[1:] if candidate.startswith(('/cFS/', '/mission/')) else Path(candidate)
             if path.stem == table_path.stem and path.is_file() and path.is_relative_to(root):
                 source = str(path.relative_to(root))
     packets = []

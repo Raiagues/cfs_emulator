@@ -25,17 +25,13 @@ with no build step, and the xterm.js files it uses are kept in `static/vendor/`.
 
 ## Architecture
 
-**Open workspace** on the Infrastructure page opens `/studio`, with the CPU1 startup
-script next to the mission architecture. The
-mission view lists the cFS apps and libraries, the board and its sensors. Colors on
-files and blocks mark changes since the last Git commit.
+**Open workspace** opens the 3D hardware workbench. Select Architecture to see the mission apps, libraries, cFE services and platform. The file explorer marks new files with A and modified files with M. Folder badges include changes in their contents.
 
 Selecting an app opens its diagram, grouped into initialization, message handling,
 commands and telemetry, and support routines. Under each message ID the app receives,
 the diagram lists the command codes that reach it, the handler function of each code
 and the tables and libraries that handler uses. Clicking a function, route, payload
-field, table or library opens its C source at the matching line. In full screen, the
-app diagram is on the left and the mission on the right.
+field or table opens its source at the matching line alongside the diagram and file explorer. App and library details open full width. Use the Mission architecture tab to return to the overview.
 
 ![The SAMPLE_APP diagram with Commands and telemetry expanded. SAMPLE_APP_CMD_MID leads to four command codes and their handlers, SAMPLE_APP_SEND_HK_MID leads to SendHkCmd, and SAMPLE_APP_HK_TLM_MID is the published telemetry. The editor shows SAMPLE_APP_NoopCmd in sample_app_cmds.c, opened from the NoopCmd card.](../docs/images/sample-app-command-routes.png)
 

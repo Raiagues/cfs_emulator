@@ -21,3 +21,12 @@
 .cad-details .icon-button{width:22px;height:22px;flex:none;margin-top:-3px}.cad-details .icon-button svg{width:12px;height:12px}
 .cad-details dl{margin:7px 0 0}.cad-details dl>div{display:flex;align-items:baseline;justify-content:space-between;gap:14px;padding:6px 0}.cad-details dt{font-size:10px;color:#8c9baa}.cad-details dd{margin:0;color:#c7d2de;font:10px var(--mono);text-align:right;overflow-wrap:anywhere;max-width:65%}
 @media(max-width:760px){.cad-details{left:12px;bottom:78px;padding:10px 12px;width:245px;max-height:calc(100% - 88px)}}
+.board-view-controls button[hidden],.board-pinout[hidden]{display:none}
+.board-view-controls button[aria-pressed=true]{background:#bda584;color:#1c2026}
+.board-pinout{position:absolute;top:12px;left:12px;max-width:calc(100% - 24px);max-height:42%;overflow:auto;padding:14px;box-sizing:border-box;border:1px solid #49606c;border-radius:6px;background:#1b232cf5;color:#dce6eb;font:12px/1.5 var(--sans);box-shadow:0 6px 18px #0004}
+.pinout-header{display:grid;grid-template-columns:repeat(20,minmax(23px,1fr));gap:3px;overflow-x:auto;margin-top:10px;padding-bottom:4px}
+.pinout-header span{text-align:center;border:1px solid #455460;border-radius:3px;background:#2c3742;color:#cbd6de;font:11px/23px var(--mono)}
+.pinout-header .wired{border-color:#d0b47d;background:#524836;color:#fff0ca}
+.pinout-device{display:flex;gap:8px 12px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.pinout-device span{border-bottom:2px solid;padding:2px 0;font:11px var(--mono)}
+.pinout-header small{display:block;font:8px/12px var(--mono);color:#d4c39e}

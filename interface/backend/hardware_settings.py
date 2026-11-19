@@ -49,7 +49,7 @@ def update_device(workspace, payload):
         model.mapped_manifests(config, manifests, workspace.root)
         plan = model.planned_project_files(workspace.root, config, manifests)
         plan[CONFIG] = json.dumps(config, indent=2) + "\n"
-        fragment = "cFS/sample_defs/generated/appgen_startup.scr"
+        fragment = "mission/sample_defs/generated/appgen_startup.scr"
         plan[workspace.mission.STARTUP] = workspace.mission.reconcile_generated_modules(
             workspace.path(fragment).read_text() if workspace.path(fragment).exists() else "", plan[fragment])
         if workspace.path(CONFIG).read_bytes() != before_config or any(

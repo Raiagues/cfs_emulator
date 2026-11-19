@@ -14,11 +14,12 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from project.flight_sources import module_directory
 from ground_station.discovery import command_mappings, telemetry_mappings, raw_telemetry_mappings
 from ground_station.tables import table_packets
 from ground_station.subscriptions import subscription_metadata
 
-CATALOG_VERSION = 11
+CATALOG_VERSION = 12
 
 TYPES = {'uint8': 'B', 'uint16': 'H', 'uint32': 'I', 'uint64': 'Q',
          'int8': 'b', 'int16': 'h', 'int32': 'i', 'int64': 'q',
@@ -136,11 +137,11 @@ def resolve_build(root, build_dir=None):
     root = Path(root).resolve()
     if build_dir is None:
         from project.model import load_config
-        build_dir = 'cFS/build-flight' if load_config(root)['board'] else 'cFS/build-native'
+        build_dir = 'mission/build-flight' if load_config(root)['board'] else 'mission/build-native'
     path = Path(build_dir)
     path = (path if path.is_absolute() else root / path).resolve()
-    if not path.is_relative_to(root / 'cFS'):
-        raise ValueError('Build directory must remain in this cFS checkout')
+    if not path.is_relative_to(root / 'mission'):
+        raise ValueError('Build directory must remain in the mission directory')
     return path
 
 
@@ -194,7 +195,7 @@ def _build_catalog(root, overrides_root=None, container=None, temp_root=None, bu
             match = re.search(r'^' + key + r' = (.*)$', flags_text, re.M)
             if match:
                 args += shlex.split(match[1])
-        appdir = root / 'cFS/cfe/modules' / target if core_module else root / 'cFS/apps' / app
+        appdir = root / 'cFS/cfe/modules' / target if core_module else module_directory(root, 'apps', app)
         if not list(appdir.rglob('*' + app + '_msg.h')):
             continue
         if core_module:
@@ -217,9 +218,12 @@ def _build_catalog(root, overrides_root=None, container=None, temp_root=None, bu
                 if not container:
                     raise ValueError('Docker compiler unavailable')
                 prefix = ['docker', 'exec', '-i', container]
-                argv = [str(a).replace(str(root / 'cFS'), '/cFS') for a in argv]
-                if 'input' in kwargs:
-                    kwargs['input'] = kwargs['input'].replace(str(root / 'cFS').encode(), b'/cFS')
+                for directory in ('cFS', 'mission'):
+                    host_path = str(root / directory)
+                    mount = '/' + directory
+                    argv = [str(a).replace(host_path, mount) for a in argv]
+                    if 'input' in kwargs:
+                        kwargs['input'] = kwargs['input'].replace(host_path.encode(), mount.encode())
                 argv = prefix + argv
             return run(argv, **kwargs)
 
@@ -264,7 +268,7 @@ def _build_catalog(root, overrides_root=None, container=None, temp_root=None, bu
             prefix = app.upper()
             dependencies = flags_file.with_name('DependInfo.cmake')
             paths = re.findall(r'"([^"\n]+\.c)"', dependencies.read_text()) if dependencies.exists() else []
-            sources = [Path(path.replace('/cFS/', str(root / 'cFS') + '/', 1)) if path.startswith('/cFS/') else Path(path) for path in paths]
+            sources = [root / path[1:] if path.startswith(('/cFS/', '/mission/')) else Path(path) for path in paths]
             sources = [p for p in sources if p.is_file() and p.is_relative_to(appdir)]
             if not sources:
                 raise ValueError('Compiled source list unavailable; the catalog cannot be inferred.')
@@ -416,7 +420,7 @@ def build_catalog(root, overrides_root=None, build_dir=None):
     with tempfile.TemporaryDirectory(prefix='flight-schema-') as temp:
         container = run(['docker', 'run', '--rm', '-d', '--network', 'none',
                          '--user', f'{os.getuid()}:{os.getgid()}',
-                         '-v', str(root / 'cFS') + ':/cFS:ro', '-v', temp + ':' + temp,
+                         '-v', str(root / 'cFS') + ':/cFS:ro', '-v', str(root / 'mission') + ':/mission:ro', '-v', temp + ':' + temp,
                          image[1], 'sleep', '600']).decode().strip()
         try:
             return _build_catalog(root, overrides_root, container, temp, build_dir=build)

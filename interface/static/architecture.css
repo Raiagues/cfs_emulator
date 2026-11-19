@@ -4,26 +4,12 @@
 .architecture-surface button{font:inherit;cursor:pointer}
 .architecture-surface button:disabled{opacity:.45;cursor:default}
 .architecture-surface :is(button,input,summary):focus-visible{outline:1px solid #c4ac8d;outline-offset:3px}
-.architecture-header{height:40px;flex:none;display:flex;align-items:stretch;justify-content:space-between;border-bottom:1px solid #303740;background:#191d23;font-size:10px;padding-right:12px}
-.architecture-tabs{display:flex;align-items:stretch;min-width:0;overflow:auto;scrollbar-width:thin}
-.architecture-tab,.architecture-open-tab{display:flex;align-items:stretch;color:#8598a7;border:0;border-right:1px solid #303740;border-top:1px solid transparent;background:none;flex:none;min-width:0}
-.architecture-tab,.architecture-open-tab>button:first-child{display:flex;align-items:center;gap:8px;padding:0 13px;font:10px var(--mono);border:0;background:none;color:inherit;white-space:nowrap}
-.architecture-tab{border-right:1px solid #303740;border-top:1px solid transparent}
-.architecture-tab.active,.architecture-open-tab.active{border-top-color:#bba282;color:#d1bfa4;background:#21242a}
-.architecture-close-tab{display:flex;align-items:center;justify-content:center;border:0;padding:0 8px 0 0;background:none;color:#75858d}
-.architecture-close-tab svg{width:11px;height:11px}
-.architecture-tabs svg{width:12px;height:12px}
 .architecture-scroll{flex:1;min-height:0;overflow:auto;padding:22px 28px 26px;background-image:radial-gradient(#74868f20 .6px,transparent .6px);background-size:19px 19px;scrollbar-width:thin;scrollbar-color:#424d57 transparent}
 .architecture-action{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid #53554f;background:#24282b;color:#cfbea6;padding:8px 12px;border-radius:2px;white-space:nowrap;font-size:11px!important}
 .architecture-action:hover{background:#302e2b;border-color:#9d8b71}
 .architecture-action.primary{background:#c4ac8d;border-color:#c4ac8d;color:#242528}
 .architecture-eyebrow{font:9px/1.6 var(--mono);color:#8e9d9a;letter-spacing:.11em}
 @container architecture (max-width:700px){.architecture-scroll{padding:14px 12px}}
-.architecture-tools{display:flex;align-items:center;gap:5px;padding-left:6px;flex:none}
-.architecture-tools>button{display:flex;align-items:center;justify-content:center;gap:5px;background:none;border:0;color:#91a3b1;padding:5px;font:10px var(--sans)}
-.architecture-tools>button svg{width:12px;height:12px}
-.architecture-tools>.architecture-edit{padding:5px 8px;border:1px solid transparent}
-.architecture-tools>.architecture-edit.active{border-color:#81745f;background:#c4ac8d12;color:#cbb99b}
 .library-map{display:grid;grid-template-columns:140px minmax(240px,1fr);gap:25px;padding-top:12px}
 .library-map h3{font:10px var(--sans);font-weight:400;color:#9db0ba;margin:0 0 14px}
 .library-map aside p{font:10px var(--sans);color:#7c929f}
@@ -61,10 +47,6 @@
 .mission-draft-blocks>footer svg{width:12px;height:12px}
 @container architecture (max-width:560px){.library-map{grid-template-columns:100px minmax(190px,1fr);gap:12px}.library-map .app-map-sections{padding:12px}.mission-draft-blocks{padding:12px}.mission-draft>header{flex-wrap:wrap}.mission-draft>header span{margin-left:0}}
 
-.architecture-mode{display:flex;align-items:center;gap:2px;margin-right:5px}
-.architecture-mode button{display:flex;align-items:center;gap:5px;padding:6px 8px;border:0;background:none;color:#8297a5;font:9px var(--sans);white-space:nowrap}
-.architecture-mode button[aria-pressed="true"]{color:#d0bda1;background:#c4ac8d12}
-.architecture-mode svg{width:12px;height:12px}
 .architecture-scroll.is-split{padding:0;overflow:hidden}
 .architecture-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);height:100%;min-height:0}
 .architecture-pane{display:flex;flex-direction:column;min-width:0;min-height:0;container:architecture/inline-size}
@@ -76,4 +58,16 @@
 .architecture-pane-content{min-height:0;overflow:auto;padding:16px 14px;flex:1;scrollbar-width:thin;scrollbar-color:#424d57 transparent}
 .architecture-pane .app-map{margin-top:0}
 .architecture-pane .mission-map{max-width:none}
-@container architecture (max-width:560px){.architecture-mode button{padding:6px}.architecture-mode button span{display:none}}
+.architecture-split{grid-template-columns:minmax(0,1.13fr) minmax(0,1fr)}
+.architecture-split.detail-only{grid-template-columns:minmax(0,1fr)}
+.architecture-detail{border:0;border-left:1px solid #39414a}
+.architecture-detail>header>div,.app-sensor-bindings header,.app-sensor-binding,.app-sensor-binding>span{display:flex;gap:8px;align-items:center}
+.architecture-detail>header button,.app-sensor-bindings button{display:inline-flex;align-items:center;gap:5px;border:1px solid #47525c;background:#252d34;color:#c6d3dc;border-radius:4px;padding:5px 9px;font:12px var(--sans)}
+.app-sensor-bindings{margin-bottom:12px;background:#242c32;border:1px solid #36414a;border-radius:6px;padding:10px 12px}
+.app-sensor-bindings svg{width:14px;height:14px}.app-sensor-bindings header{justify-content:space-between}.app-sensor-binding{margin:8px 0;padding-top:8px;border-top:1px solid #33404b;flex-wrap:wrap}.app-sensor-binding>span{margin-right:auto;font:12px var(--mono)}
+@media(max-width:760px){.architecture-scroll.is-split{overflow:auto}.architecture-split{display:flex;flex-direction:column;height:auto}.architecture-pane-content{overflow:visible}.architecture-pane.architecture-detail{border:0;border-top:1px solid #39414a}}
+.arch-tabs{display:flex;gap:6px;padding:7px 14px 0;background:#1b2028;border-bottom:1px solid #37424d;flex:none}
+.arch-tabs button{display:inline-flex;align-items:center;gap:8px;background:none;color:#a4b5c2;border:0;border-bottom:2px solid transparent;padding:8px 10px;font:12px var(--sans)}
+.arch-tabs button[aria-pressed=true]{color:#ebd6b8;border-color:#c4aa8b}
+.tree-git{margin-left:auto;padding:0 6px;font:600 11px var(--mono)}.tree-git.new{color:#93d7bc}.tree-git.modified{color:#e0be83}
+.architecture-detail{border:0}

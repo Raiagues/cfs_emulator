@@ -13,7 +13,7 @@ def entity_name(name):
     return "".join(part.capitalize() for part in name.split("_"))
 
 
-def render_app(manifest):
+def render_app(manifest, root=None):
     """Return {relative_path: (contents, managed)} for one app manifest.
 
     Managed files are derived from project app settings. User files are created once, then
@@ -156,4 +156,7 @@ def render_app(manifest):
         emit(f"app_{suffix}.h.in", f"fsw/inc/{app}_{suffix}.h")
     for filename in ("CMakeLists.txt", "mission_build.cmake", "arch_build.cmake"):
         emit(filename + ".in", filename)
+    if manifest["schema_version"] == 2:
+        from project.appgen.sample import extend_app
+        return extend_app(root or TEMPLATES.parents[2] / "mission", manifest, result, values)
     return result

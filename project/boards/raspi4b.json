@@ -66,6 +66,65 @@
           "unit": "milli-microtesla"
         }
       }
+    },
+    "mpu6050": {
+      "cfs_driver": "mpu6050",
+      "library": "mpu6050_lib",
+      "default_address": 104,
+      "default_values": {
+        "accel-x": 1044,
+        "accel-y": -5,
+        "accel-z": 178,
+        "temperature": 28480,
+        "gyro-x": -2060,
+        "gyro-y": 690,
+        "gyro-z": -540
+      },
+      "kind": "sensor",
+      "properties": {
+        "accel-x": {
+          "type": "integer",
+          "min": -2000,
+          "max": 1999,
+          "unit": "millig"
+        },
+        "accel-y": {
+          "type": "integer",
+          "min": -2000,
+          "max": 1999,
+          "unit": "millig"
+        },
+        "accel-z": {
+          "type": "integer",
+          "min": -2000,
+          "max": 1999,
+          "unit": "millig"
+        },
+        "temperature": {
+          "type": "integer",
+          "min": -59846,
+          "max": 132903,
+          "unit": "millidegrees Celsius"
+        },
+        "gyro-x": {
+          "type": "integer",
+          "min": -250137,
+          "max": 250129,
+          "unit": "millidegrees per second"
+        },
+        "gyro-y": {
+          "type": "integer",
+          "min": -250137,
+          "max": 250129,
+          "unit": "millidegrees per second"
+        },
+        "gyro-z": {
+          "type": "integer",
+          "min": -250137,
+          "max": 250129,
+          "unit": "millidegrees per second"
+        }
+      }
     }
   },
   "os_families": {

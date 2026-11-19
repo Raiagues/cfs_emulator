@@ -24,7 +24,7 @@ from sensors.schema import Sensor, Signal
 
 # These are the units of the official QEMU QOM properties, not I2C wire fields.
 # TMP105: 1000 = 1 °C; LSM303DLHC: 1000 = 1 µT. QEMU builds the register bytes.
-UNITS = {"millidegrees Celsius": (1000, "°C"), "milli-microtesla": (1000, "µT")}
+UNITS = {"counts": (1, "counts"), "millig": (1000, "g"), "millidegrees per second": (1000, "°/s"), "millidegrees Celsius": (1000, "°C"), "milli-microtesla": (1000, "µT")}
 
 
 def simulation_scripts(root=ROOT):
@@ -93,6 +93,8 @@ def sample_values(devices, elapsed_s, waveforms=None, configurations=None, root=
                 raise ValueError(f"sample() must return {len(config.signals)} numbers in the declared signal order")
             converted = {}
             for signal, value in zip(config.signals, values):
+                if hasattr(waveform, "enabled") and signal.property not in waveform.enabled:
+                    continue
                 name, prop = signal.property, properties[signal.property]
                 if type(value) not in (int, float) or not math.isfinite(value):
                     raise ValueError(f"{name}: sample() must return a finite number")
@@ -143,12 +145,15 @@ def simulate(root, sensor_ids=(), interval=1.0, steps=None, waveforms=None, trac
 
     if dry_run:
         print("Preview · no data sent to QEMU", flush=True)
-        for count in range(steps if steps is not None else 8):
+        count = 0
+        while steps is None or count < steps:
             elapsed = count * interval
             samples = sample_values(devices, elapsed, waveforms, configurations, root, catalog)
             print_samples(samples, elapsed, catalog)
             if on_sample:
                 on_sample(elapsed, samples)
+            count += 1
+            if steps is None: time.sleep(interval)
         return
 
     check_record(root, config)

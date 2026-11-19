@@ -1,10 +1,10 @@
 import {icon} from './ui.js';
 import {mountShells} from './shell.js';
 
-const actionLabels = {run:'Run cFS',build:'Build cFS',stop:'Stop cFS',connect:'Connect board',probe:'Connection check',simulate:'Synthetic data','simulate-preview':'Test sensor code',values:'Sensor values'};
+const actionLabels = {run:'Run cFS',build:'Build cFS',stop:'Stop cFS',connect:'Prepare board service',probe:'Check connection',simulate:'Synthetic data','simulate-preview':'Signal test',values:'Sensor values'};
 export function actionLabel(action,target){
- if(action==='boot')return target==='physical'?'Connect board':'Start QEMU + Linux';
- if(action==='shutdown')return target==='physical'?'Shut down board':'Stop QEMU';
+ if(action==='boot')return target==='physical'?'Connect board':'Start emulator';
+ if(action==='shutdown')return target==='physical'?'Shut down board':'Stop emulator';
  if(action==='setup')return target==='physical'?'Set up board':'Set up QEMU';
  return actionLabels[action]||action;
 }

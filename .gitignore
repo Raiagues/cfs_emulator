@@ -4,3 +4,9 @@ logs/
 __pycache__/
 .venv/
 project/generated/build*.json
+/cFS/
+/.nasa-cfs-*/
+/mission/sample_defs/
+/mission/build-*/
+/mission/.prepare.lock
+/mission/.prepare-*/

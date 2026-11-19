@@ -15,12 +15,14 @@ import sys
 import tempfile
 import threading
 
+from project.flight_sources import module_directories
+
 
 class Workspace:
     """Filesystem operations and cFS metadata, serialized against source mutations."""
 
-    HIDDEN = {".git", ".ssh", ".aws", ".agents", ".codex", "__pycache__", "node_modules", ".state", ".runtime"}
-    EDIT_ROOTS = {"cFS", "project", "sensors", "ground_station", "hardware", "interface"}
+    HIDDEN = {".git", ".ssh", ".aws", ".agents", ".codex", "__pycache__", "node_modules", ".state", ".runtime", ".prepare.lock"}
+    EDIT_ROOTS = {"mission", "project", "sensors", "ground_station", "hardware", "interface"}
     MAX_TEXT = 2 * 1024 * 1024
 
     def __init__(self, root):
@@ -64,9 +66,19 @@ class Workspace:
                 raise ValueError(message)
 
     def tree(self, path=""):
+        if path == "flight":
+            return {"path": path, "entries": [
+                {"type": "directory", "name": label, "path": directory}
+                for directory, label in (("mission", "Mission"), ("cFS", "NASA cFS"))
+                if (self.root / directory).is_dir()]}
         directory = self.path(path)
         if not directory.is_dir():
             raise ValueError("Expected a directory")
+        from interface.backend.library_index import _changes, _module_change
+        repo = directory
+        while repo != self.root and not (repo / ".git").exists():
+            repo = repo.parent
+        changes = _changes(repo, directory.relative_to(repo)) if (repo / ".git").exists() else []
         entries = []
         for item in sorted(directory.iterdir(), key=lambda p: (not p.is_dir(), p.name.lower())):
             relative = item.relative_to(self.root).as_posix()
@@ -76,6 +88,7 @@ class Workspace:
                 continue
             entry = {"name": item.name, "path": relative, "type": "directory" if item.is_dir() else "file",
                      "size": item.stat().st_size if item.is_file() else None, "editable": self.editable(relative)}
+            entry["change"] = _module_change(item.relative_to(repo).as_posix(), changes)
             entries.append(entry)
         return {"path": path, "entries": entries}
 
@@ -102,13 +115,14 @@ class Workspace:
         return dict(result, content=content, binary=False, editable=self.editable(path))
 
     def search_files(self, root, query):
-        if root not in ('cFS', 'sensors') or not isinstance(query, str) or len(query) > 200:
+        if root not in ('flight', 'cFS', 'mission', 'sensors') or not isinstance(query, str) or len(query) > 200:
             raise ValueError('Invalid file search')
         query = query.strip().lower()
         results = []
         if not query:
             return {'files': results, 'limited': False}
-        for directory, dirs, files in os.walk(self.path(root), followlinks=False):
+        roots = ('mission', 'cFS') if root == 'flight' else (root,)
+        for directory, dirs, files in (entry for base in roots for entry in os.walk(self.path(base), followlinks=False)):
             dirs[:] = sorted(d for d in dirs if d not in self.HIDDEN and not d.startswith(('build', '.venv')))
             for name in sorted(files):
                 relative = (Path(directory) / name).relative_to(self.root).as_posix()
@@ -156,6 +170,16 @@ class Workspace:
         finally:
             temporary.unlink(missing_ok=True)
 
+    def _device_catalog(self, config):
+        catalog = copy.deepcopy(self.model.board_catalog(config["board"], self.root))
+        for model, details in catalog["models"].items():
+            existing = next((d for d in config["devices"] if d["model"] == model), None)
+            if details.get("default_address") is None and existing:
+                details["default_address"] = existing["address"]
+            details["register_model"] = (self.root / "project/qemu/models" / (model + ".json")).is_file()
+            details["can_add"] = details.get("default_address") is not None
+        return catalog
+
     def snapshot(self):
         from sensors.simulator import simulation_scripts, binding
         from interface.backend.architecture import summarize_application
@@ -165,18 +189,14 @@ class Workspace:
             generator = self.model.appgen(self.root)
             manifests = self.model.read_manifests(self.root, config)
             self.model.validate_config(self.root, config, manifests)
-            catalog = copy.deepcopy(self.model.board_catalog(config["board"], self.root))
-            for model, details in catalog["models"].items():
-                existing = next((d for d in config["devices"] if d["model"] == model), None)
-                details["default_address"] = existing["address"] if existing else details.get("default_address")
-                details["can_add"] = details["default_address"] is not None
+            catalog = self._device_catalog(config)
             registered = {manifest["name"]: manifest for manifest in manifests}
             apps = []
             mission = self.mission.snapshot()
             enabled = set(mission["enabled"])
             installed = set(mission["installed_enabled"])
             recipes = {app["name"]: app for app in mission["available"]}
-            for directory in sorted((self.root / "cFS/apps").iterdir()):
+            for directory in module_directories(self.root, "apps"):
                 if not directory.is_dir() or directory.is_symlink():
                     continue
                 name = directory.name
@@ -188,8 +208,8 @@ class Workspace:
                        "built": name in installed, "enabled": name in enabled,
                        "manifest": manifest, "locations": []}
                 if manifest:
-                    locations = generator.locations(self.root / "cFS", manifest)["locations"]
-                    app["locations"] = [dict(location, path="cFS/" + location["path"]) for location in locations]
+                    locations = generator.locations(self.root / "mission", manifest)["locations"]
+                    app["locations"] = [dict(location, path="mission/" + location["path"]) for location in locations]
                 app.update(self.source_index.application(directory, app["locations"]))
                 app["behavior"] = summarize_application(app, recipes.get(name, {}).get("entry_point"), root=self.root)
                 apps.append(app)
@@ -212,11 +232,13 @@ class Workspace:
         with self.lock:
             return self.mission.change_library(action, name, expected_hash)
 
+    def rename_module(self, kind, name, new_name, expected_hash):
+        from interface.backend.module_rename import rename_module
+        with self.lock, self.mission.transaction(expected_hash) as revision:
+            return rename_module(self, kind, name, new_name, revision)
+
     def delete_app(self, name, expected_hash):
-        with self.lock, self.mission.transaction(expected_hash):
-            self.mission.assert_can_remove(name)
-            result = self._remove('remove-app', {'app': name}, self.model.load_config(self.root))
-            return {**result, 'mission': self.mission.snapshot()}
+        return self.mission_app("remove", name, expected_hash)
 
     def simulation_snapshot(self):
         from sensors.session import load_session
@@ -256,11 +278,7 @@ class Workspace:
         manifests = self.model.read_manifests(self.root, config)
         target = next((item for item in manifests if item["name"] == name), None)
         if mode == "create":
-            compiled = self.mission._evaluate(revision)["compiled"]
-            if name in self.model.protected_apps(self.root) or name in compiled:
-                raise ValueError("A mission module already uses this name: " + name)
-            if any(self.path(f"cFS/{directory}/{name}").exists() for directory in ("apps", "libs")):
-                raise ValueError("A source directory already uses this name: " + name)
+            self.mission.available_module_name(name, self.mission._evaluate(revision))
         elif kind != "app" or target is None:
             raise ValueError("Edit this module's native source files to change its configuration")
         original = self.mission.startup_text()
@@ -325,7 +343,7 @@ class Workspace:
         plan = self.model.planned_project_files(self.root, config, manifests)
         if mode == "create":
             plan["project/config.json"] = json.dumps(config, indent=2) + "\n"
-        fragment = "cFS/sample_defs/generated/appgen_startup.scr"
+        fragment = "mission/sample_defs/generated/appgen_startup.scr"
         content = self.mission.reconcile_generated_modules(self._read_text(fragment), plan[fragment], original)
         active, archived = parse_startup(content)
         recipes, _ = parse_startup(plan[fragment])
@@ -347,9 +365,9 @@ class Workspace:
         schedule = {"path": fragment.replace("appgen_startup.scr", "appgen_schedule.inc"),
                     "tick_hz": tick_hz, "wakeup_ticks": target["period_ticks"], "hk_ticks": target["hk_period_ticks"],
                     "scheduler_enabled": any(item.name == "sch_lab" for item in active)}
-        build = {"path": "cFS/sample_defs/targets.cmake", "module": name,
+        build = {"path": "mission/sample_defs/targets.cmake", "module": name,
                  "statement": "list(APPEND cpu1_APPLIST ${APPGEN_LIBS} ${APPGEN_APPS})"}
-        path = f"cFS/apps/{name}"
+        path = f"mission/apps/{name}"
         return {"plan": plan, "active": active, "archived": archived, "entry": entry, "settings": normalized,
                 "blocks": blocks, "schedule": schedule, "build": build, "path": path, "source": path + f"/fsw/src/{name}_user.c"}
 
@@ -383,21 +401,21 @@ class Workspace:
         from project.cfs_config import bootstrap_plan
         if settings:
             raise ValueError("Libraries do not have application scheduler settings")
-        generated = self.model.appgen(self.root).plan_library(self.root / "cFS", name)
+        generated = self.model.appgen(self.root).plan_library(self.root / "mission", name)
         plan = bootstrap_plan(self.root, config)
         for relative, content in generated["files"].items():
-            plan["cFS/" + relative] = content
+            plan["mission/" + relative] = content
         record = ", ".join(str(value) for value in generated["startup"]["fields"]) + ";"
         entry = parse_startup(record)[0][0]
         active, archived = parse_startup(original)
         first_app = next((index for index, item in enumerate(active) if item.kind == "CFE_APP"), len(active))
         active.insert(first_app, entry)
-        cmake = "cFS/sample_defs/libraries.cmake"
+        cmake = "mission/libraries.cmake"
         statement = f"list(APPEND MISSION_LIBRARIES {name})"
         plan[cmake] = self._read_text(cmake, "set(MISSION_LIBRARIES)\n").rstrip() + "\n" + statement + "\n"
         blocks = [{"id": "initialize", "title": "Library initialization", "symbol": entry.fields[2]},
                   {"id": "interface", "title": "Public interface", "symbol": generated["include"]}]
-        path = f"cFS/libs/{name}"
+        path = f"mission/libs/{name}"
         return {"plan": plan, "active": active, "archived": archived, "entry": entry, "settings": {},
                 "blocks": blocks, "schedule": None, "build": {"path": cmake, "statement": statement},
                 "path": path, "source": path + f"/fsw/src/{name}.c"}
@@ -436,7 +454,7 @@ class Workspace:
             self.model.mapped_manifests(config, manifests, self.root)
             plan = self.model.planned_project_files(self.root, config, manifests)
             plan[config_path] = json.dumps(config, indent=2) + "\n"
-            fragment = "cFS/sample_defs/generated/appgen_startup.scr"
+            fragment = "mission/sample_defs/generated/appgen_startup.scr"
             startup = plan.get(self.mission.STARTUP, self.mission.startup_text())
             plan[self.mission.STARTUP] = self.mission.reconcile_generated_modules(self._read_text(fragment), plan[fragment], startup)
             self._assert_inputs(inputs, "Project configuration changed. Reload it before selecting a profile.")
@@ -452,6 +470,9 @@ class Workspace:
         with self.lock:
             config = self.model.load_config(self.root)
             self.model.validate_config(self.root, config)
+            if action == "remove-app":
+                name = payload.get("app", payload.get("name"))
+                return self.mission.change_app("remove", name, payload.get("expected_hash") or self.mission._revision())
             if action.startswith("remove-"):
                 return self._remove(action, payload, config)
             args = [action]
@@ -459,7 +480,7 @@ class Workspace:
                 args.append(self.model.identifier(payload.get("name", "")))
             elif action == "add-device":
                 model = payload.get("model")
-                catalog = self.snapshot()["catalog"]
+                catalog = self._device_catalog(config)
                 details = catalog["models"].get(model)
                 if not details or not details["can_add"]:
                     raise ValueError("This model has no default address validated by the platform")
@@ -503,62 +524,35 @@ class Workspace:
             if not any(d["id"] == device_id for d in config["devices"]):
                 raise ValueError("Device not found")
             config["devices"] = [d for d in config["devices"] if d["id"] != device_id]
-        elif action in ("remove-app", "remove-sensor", "remove-command", "remove-telemetry"):
+        elif action in ("remove-sensor", "remove-command", "remove-telemetry"):
             name = self.model.identifier(payload.get("app", payload.get("name", "")))
             registry = next((app for app in config["apps"] if app["name"] == name), None)
             if registry is None:
                 raise ValueError("Only registered apps can be removed")
             manifest = generator.app_by_name(manifests, name)
-            if action == "remove-app":
-                self.mission.assert_can_remove(name)
-                config["apps"].remove(registry)
-                manifests.remove(manifest)
-                deleted.append(f"project/apps/{name}.json")
-                for target in self.path("cFS/apps/" + name).rglob("*"):
-                    relative = target.relative_to(self.root).as_posix()
-                    self.path(relative)
-                    if target.is_file():
-                        deleted.append(relative)
-            else:
-                kind = action.removeprefix("remove-")
-                entity = self.model.identifier(payload.get("name", ""))
-                collection = generator.KINDS[kind]
-                found = next((item for item in manifest[collection] if item["name"] == entity), None)
-                if not found:
-                    raise ValueError("Component not found")
-                if kind == "sensor" and entity in registry["telemetry_bindings"].values():
-                    raise ValueError("Remove the telemetry linked to this reader first")
-                manifest[collection].remove(found)
-                bindings = {"sensor": "sensors", "command": "command_bindings", "telemetry": "telemetry_bindings"}[kind]
-                registry[bindings].pop(entity, None)
-                deleted = ["cFS/" + path for path in generator.entity_files(name, kind, entity)]
+            kind = action.removeprefix("remove-")
+            entity = self.model.identifier(payload.get("name", ""))
+            collection = generator.KINDS[kind]
+            found = next((item for item in manifest[collection] if item["name"] == entity), None)
+            if not found:
+                raise ValueError("Component not found")
+            if kind == "sensor" and entity in registry["telemetry_bindings"].values():
+                raise ValueError("Remove the telemetry linked to this reader first")
+            manifest[collection].remove(found)
+            bindings = {"sensor": "sensors", "command": "command_bindings", "telemetry": "telemetry_bindings"}[kind]
+            registry[bindings].pop(entity, None)
+            deleted = ["mission/" + path for path in generator.entity_files(name, kind, entity)]
         else:
             raise ValueError("Unknown operation")
         self.model.validate_config(self.root, config, manifests)
         membership = self.mission.selection()
-        removed_app = {name} if action == 'remove-app' else set()
-        excluded = membership['removed'] | removed_app
-        selected = membership['added'] - removed_app
-        plan = self.model.planned_project_files(self.root, config, manifests, excluded=excluded, selected=selected)
+        plan = self.model.planned_project_files(self.root, config, manifests, excluded=membership['removed'], selected=membership['added'])
         plan["project/config.json"] = json.dumps(config, indent=2) + "\n"
-        if action == 'remove-app':
-            plan.update(self.mission.selection_plan(forget=[name], sources=plan))
-            from interface.backend.mission_tables import table_membership_plan
-            plan.update(table_membership_plan(self.root, sources=plan))
-        fragment = "cFS/sample_defs/generated/appgen_startup.scr"
+        fragment = "mission/sample_defs/generated/appgen_startup.scr"
         native = self.mission.STARTUP
         if fragment in plan and self.path(native).is_file():
             startup = self.path(native).read_text()
-            if action == "remove-app":
-                startup = self.mission.reconcile_removed_modules([name], startup)
             plan[native] = self.mission.reconcile_generated_modules(self._read_text(fragment), plan[fragment], startup)
         plan.update({path: None for path in deleted})
         changed = commit(self.root, plan)
-        if action == "remove-app":
-            directory = self.path("cFS/apps/" + name)
-            for child in sorted(directory.rglob("*"), key=lambda p: len(p.parts), reverse=True):
-                if child.is_dir() and not any(child.iterdir()):
-                    child.rmdir()
-            if directory.exists() and not any(directory.iterdir()):
-                directory.rmdir()
         return {"changed": changed, "deleted": [path for path, content in plan.items() if content is None]}

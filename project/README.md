@@ -1,6 +1,6 @@
 # Project and mission
 
-Applications, libraries and their native cFS configuration live in this checkout.
+Studio-created applications, libraries and configuration live in `mission/`. NASA supplies the framework and stock modules in the independent `cFS/` checkout.
 The web interface and `./start --no-ui app` use the same mission operations. Each
 operation prepares all of its files before replacing any, and an operation that fails
 partway restores the files it had already replaced.
@@ -23,10 +23,8 @@ flowchart LR
 
 ## Unmodified cFS checkout
 
-Opening Flight Studio on an unmodified cFS submodule leaves it unchanged, because the
-mission view derives the startup list from the upstream `generate_startup.cmake`.
-Mission edits then write `cpu1_cfe_es_startup.scr` and the other files listed under
-[Native configuration](#native-configuration), each one when a change first needs it.
+The setup screen clones NASA cFS and initializes the mission definitions from its `sample_defs/` templates. Studio passes the local definitions to cFE through `MISSION_DEFS` and finds custom apps and libraries through `CFS_APP_PATH`. The editor opens the NASA source files read-only. Repeating the installation uses the existing revision and definitions.
+Project-owned startup and membership choices live directly in `mission/` alongside the app and library sources. The local working definitions and build directories are ignored by Git.
 The generator itself lives in [`appgen/`](appgen/README.md).
 
 ```sh
@@ -57,7 +55,7 @@ takes it out of startup. `remove` takes the app out of the CPU1 build, the start
 script and the generated schedule while keeping its sources, and `add` brings an
 existing app back. `delete` also removes the sources of an app the project created.
 
-Initialization and periodic logic go in `cFS/apps/<name>/fsw/src/<name>_user.c`.
+Initialization and periodic logic go in `mission/apps/<name>/fsw/src/<name>_user.c`.
 Regenerating an app rewrites its framework files and leaves `<name>_user.c` and
 `<name>_user.h` as they are. Libraries follow the layout of `cFS/libs/sample_lib`, with
 `fsw/src/`, `fsw/public_inc/` and `CMakeLists.txt`.
@@ -96,8 +94,8 @@ flowchart LR
 it supports. Dependencies come from the native `CMakeLists.txt` files, and libraries
 are loaded before the apps that use them. A generated driver that no device or app
 uses anymore leaves the build and the source tree. If its sources were edited, they
-stay in `cFS/libs/`. `project/generated/drivers.json` keeps the hash of each generated
-file for that check, so the driver directories in cFS hold only their sources.
+stay in `mission/libs/`. `project/generated/drivers.json` keeps the hash of each generated
+file for that check, so the generated driver directories hold only their sources.
 
 To support another sensor, add its capability to the board catalog, a native source
 template in `project/drivers/<library>/` and an adapter in `project/adapters/<driver>/`.
@@ -125,18 +123,18 @@ Devices are removed in the Hardware view.
 
 | File | Contents |
 | --- | --- |
-| `cFS/sample_defs/targets.cmake` | CPU build lists |
-| `cFS/sample_defs/modules.cmake` | CPU1 module additions and removals |
-| `cFS/sample_defs/libraries.cmake` | Libraries created by the project, added to the CPU1 build |
-| `cFS/sample_defs/cpu1_cfe_es_startup.scr` | Enabled applications and libraries |
-| `cFS/sample_defs/generate_startup.cmake` | Installs the startup script above in place of the generated one |
-| `cFS/sample_defs/cpu1/install_custom.cmake` | Lets the SCH_LAB and TO_LAB tables include the generated entries |
-| `cFS/sample_defs/toolchain-<architecture>.cmake` | CMake toolchain of the selected board and OS |
-| `cFS/sample_defs/default_osconfig.cmake` | OSAL loader capacity and name limits the mission needs |
-| `cFS/sample_defs/cfe_core_api_interface_cfg_values.h` | Matching cFE command and telemetry name fields |
-| `cFS/sample_defs/tables/sch_lab_table.c` | Periodic command schedule |
-| `cFS/sample_defs/tables/to_lab_sub.c` | Telemetry forwarding subscriptions |
-| `cFS/sample_defs/generated/` | Generated application integration fragments |
+| `mission/sample_defs/targets.cmake` | CPU build lists |
+| `mission/modules.cmake` | CPU1 module additions and removals |
+| `mission/libraries.cmake` | Libraries created by the project, added to the CPU1 build |
+| `mission/cpu1_cfe_es_startup.scr` | Enabled applications and libraries |
+| `mission/sample_defs/generate_startup.cmake` | Installs the startup script above in place of the generated one |
+| `mission/sample_defs/cpu1/install_custom.cmake` | Lets the SCH_LAB and TO_LAB tables include the generated entries |
+| `mission/sample_defs/toolchain-<architecture>.cmake` | CMake toolchain of the selected board and OS |
+| `mission/sample_defs/default_osconfig.cmake` | OSAL loader capacity and name limits the mission needs |
+| `mission/sample_defs/cfe_core_api_interface_cfg_values.h` | Matching cFE command and telemetry name fields |
+| `mission/sample_defs/tables/sch_lab_table.c` | Periodic command schedule |
+| `mission/sample_defs/tables/to_lab_sub.c` | Telemetry forwarding subscriptions |
+| `mission/sample_defs/generated/` | Generated application integration fragments |
 | `project/config.json` | Selected board and OS, devices and app-to-device bindings |
 | `project/apps/<app>.json` | Flight Studio settings and components of each app |
 | `project/drivers/catalog.json` | Available driver templates and supported systems |

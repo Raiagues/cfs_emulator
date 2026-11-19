@@ -6,7 +6,7 @@ bindings go through the [project workflow](../README.md).
 
 ## Source ownership
 
-| Files under `apps/<app>/` | Owner |
+| Files under `mission/apps/<app>/` | Owner |
 | --- | --- |
 | `fsw/src/<app>_user.c/.h` | User initialization and periodic logic |
 | `fsw/src/sensors/`, `commands/`, `telemetry/` implementations | User sampling, handlers and payloads |

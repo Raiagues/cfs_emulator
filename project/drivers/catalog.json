@@ -22,5 +22,11 @@
     "systems": [
       "linux"
     ]
+  },
+  "mpu6050_lib": {
+    "entry_point": "MPU6050_LIB_Init",
+    "systems": [
+      "linux"
+    ]
   }
 }

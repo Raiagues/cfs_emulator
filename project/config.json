@@ -2,29 +2,6 @@
   "schema_version": 1,
   "board": "raspi4b",
   "os": "raspios",
-  "devices": [
-    {
-      "name": "tmp105",
-      "id": "tmp105",
-      "model": "tmp105",
-      "bus": "i2c-bus.1",
-      "address": 72,
-      "values": {
-        "temperature": 23500
-      }
-    },
-    {
-      "name": "lsm303dlhc_mag",
-      "id": "lsm303dlhc_mag",
-      "model": "lsm303dlhc_mag",
-      "bus": "i2c-bus.1",
-      "address": 30,
-      "values": {
-        "mag-x": 0,
-        "mag-y": 0,
-        "mag-z": 0
-      }
-    }
-  ],
+  "devices": [],
   "apps": []
 }

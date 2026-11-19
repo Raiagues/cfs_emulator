@@ -5,6 +5,7 @@ import copy
 import hashlib
 import json
 import math
+import random
 from pathlib import Path
 import pprint
 from types import SimpleNamespace
@@ -93,7 +94,7 @@ def _signal_settings(device, prop, limits, model, overrides=None):
         raw = overrides
     if not isinstance(raw, dict):
         raise ValueError(device["id"] + "." + prop + ": settings must be a dictionary")
-    if set(raw) - {"initial", "function", "amplitude", "period", "slope", "custom"}:
+    if set(raw) - {"initial", "function", "amplitude", "period", "slope", "custom", "enabled", "noise", "noise_level"}:
         raise ValueError(device["id"] + "." + prop + ": unknown waveform setting")
     kind = raw.get("function", "script")
     custom = raw.get("custom", "") if kind == "custom" else kind if kind not in FUNCTIONS else ""
@@ -104,6 +105,11 @@ def _signal_settings(device, prop, limits, model, overrides=None):
         raise ValueError(f"Define sample(seconds, initial) in sensors/{device['model']}.py")
     initial = raw.get("initial", device["values"].get(prop, 0) / scale)
     settings = {"initial": _number(initial, prop + " initial"), "function": kind}
+    if type(raw.get("enabled", True)) is not bool or raw.get("noise", "none") not in ("none", "uniform", "gaussian"):
+        raise ValueError("Choose a valid output and noise distribution")
+    settings.update(enabled=raw.get("enabled", True), noise=raw.get("noise", "none"), noise_level=_number(raw.get("noise_level", 0), "Noise"))
+    if settings["noise_level"] < 0:
+        raise ValueError("Noise deviation must be nonnegative")
     if kind == "sine":
         settings.update(amplitude=_number(raw.get("amplitude", 1.0), prop + " amplitude"),
                         period=_number(raw.get("period", 30.0), prop + " period", True))
@@ -177,6 +183,10 @@ def load_session(root=ROOT):
 
 def _compact(settings):
     result = {"initial": settings["initial"], "function": settings["function"]}
+    if not settings.get("enabled", True):
+        result["enabled"] = False
+    if settings.get("noise", "none") != "none":
+        result.update(noise=settings["noise"], noise_level=settings["noise_level"])
     if settings["function"] == "custom":
         result["function"] = settings["custom"]
     elif settings["function"] == "sine":
@@ -257,9 +267,16 @@ def waveform_for(root, device, settings, catalog=None):
             elif kind == "sine": value += signal["amplitude"] * math.sin(2 * math.pi * seconds / signal["period"])
             elif kind == "ramp": value += signal["slope"] * seconds
             elif kind == "custom": value = getattr(original, signal["custom"])(seconds, value)
+            level = signal.get("noise_level", 0)
+            if signal.get("noise") == "uniform": value += random.uniform(-level, level)
+            if signal.get("noise") == "gaussian": value += random.gauss(0, level)
+            if signal.get("noise", "none") != "none":
+                prop = (catalog or board_catalog(load_config(root)["board"], root))["models"][device["model"]]["properties"][sensor.signals[index].property]
+                scale = sensor.signals[index].scale
+                value = max(prop["min"]/scale, min(prop["max"]/scale, value))
             values.append(value)
         return values[0] if len(values) == 1 else tuple(values)
-    return SimpleNamespace(configure=original.configure, sample=sample)
+    return SimpleNamespace(configure=original.configure, sample=sample, enabled={prop for prop,s in settings["signals"].items() if s.get("enabled", True)})
 
 
 def run_session(root=ROOT, steps=None, events=False, dry_run=False, device_id=None,
@@ -281,7 +298,7 @@ def run_session(root=ROOT, steps=None, events=False, dry_run=False, device_id=No
     waveforms = {}
     for sensor in selected:
         device = devices[sensor["device"]]
-        waveforms[device["id"]] = waveform_for(root, device, sensor)
+        waveforms[device["id"]] = waveform_for(root, device, sensor, catalog)
     def report(elapsed, samples):
         payload = []
         for device, values in samples:

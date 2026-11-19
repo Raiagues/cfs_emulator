@@ -9,3 +9,9 @@
 !config/serial-console.conf
 !config/sshd.conf
 !config/watchdog.conf
+!project/
+!project/qemu/
+!project/qemu/device.c.in
+!project/qemu/generate.py
+!project/qemu/models/
+!project/qemu/models/*.json

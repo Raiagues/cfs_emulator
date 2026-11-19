@@ -19,9 +19,7 @@ int32 LINUX_I2C_LIB_Init(void)
     return CFE_SUCCESS;
 }
 
-int32 LINUX_I2C_Transfer(const char *Device, uint16 Address,
-                       const uint8 *WriteData, uint16 WriteLength,
-                       uint8 *ReadData, uint16 ReadLength)
+int32 LINUX_I2C_Transfer(const char *Device, uint16 Address, const uint8 *WriteData, uint16 WriteLength, uint8 *ReadData, uint16 ReadLength)
 {
     int Bus;
     int Result;
@@ -29,35 +27,34 @@ int32 LINUX_I2C_Transfer(const char *Device, uint16 Address,
     struct i2c_msg Messages[LINUX_I2C_MAX_MESSAGES];
     struct i2c_rdwr_ioctl_data Transfer = {.msgs = Messages, .nmsgs = 0};
 
-    if (Device == NULL || Device[0] == '\0' || Address > LINUX_I2C_MAX_ADDRESS ||
-        (WriteLength == 0 && ReadLength == 0) ||
-        (WriteLength != 0 && WriteData == NULL) || (ReadLength != 0 && ReadData == NULL))
+    /* Validate each buffer before handing its pointer to the kernel. */
+    bool EmptyTransfer = WriteLength == 0 && ReadLength == 0;
+    bool MissingBuffer = (WriteLength != 0 && WriteData == NULL) || (ReadLength != 0 && ReadData == NULL);
+    if (Device == NULL || Device[0] == '\0' || Address > LINUX_I2C_MAX_ADDRESS || EmptyTransfer || MissingBuffer)
     {
         return -EINVAL;
     }
     if (WriteLength != 0)
     {
-        Messages[Transfer.nmsgs++] = (struct i2c_msg){
-            .addr = Address, .flags = 0, .len = WriteLength, .buf = (uint8 *)WriteData};
+        Messages[Transfer.nmsgs++] = (struct i2c_msg){.addr = Address, .flags = 0, .len = WriteLength, .buf = (uint8 *)WriteData};
     }
     if (ReadLength != 0)
     {
-        Messages[Transfer.nmsgs++] = (struct i2c_msg){
-            .addr = Address, .flags = I2C_M_RD, .len = ReadLength, .buf = ReadData};
+        Messages[Transfer.nmsgs++] = (struct i2c_msg){.addr = Address, .flags = I2C_M_RD, .len = ReadLength, .buf = ReadData};
     }
     Bus = open(Device, O_RDWR | O_CLOEXEC);
     if (Bus < 0)
     {
         return -errno;
     }
+    /* I2C_RDWR executes both messages as one bus transaction. */
     Result = ioctl(Bus, I2C_RDWR, &Transfer);
     Status = Result < 0 ? -errno : ((unsigned int)Result == Transfer.nmsgs ? CFE_SUCCESS : -EIO);
     close(Bus);
     return Status;
 }
 
-int32 LINUX_I2C_ReadRegister(const char *Device, uint16 Address, uint8 Register,
-                           uint8 *Data, uint16 Length)
+int32 LINUX_I2C_ReadRegister(const char *Device, uint16 Address, uint8 Register, uint8 *Data, uint16 Length)
 {
     if (Length == 0)
     {

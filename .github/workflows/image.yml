@@ -33,11 +33,16 @@ jobs:
             type=raw,value=latest
             type=sha,format=long
 
+      - name: Identify the compiled sensor models
+        id: models
+        run: echo "digest=$(python3 project/qemu/generate.py --fingerprint)" >> "$GITHUB_OUTPUT"
+
       - name: Build and publish
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           platforms: linux/amd64
+          build-args: REGISTER_MODELS=${{ steps.models.outputs.digest }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

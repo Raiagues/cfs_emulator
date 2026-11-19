@@ -17,12 +17,12 @@ from project.model import (ProjectError, appgen, board_catalog, identifier, load
                            validate_config, required_libraries, planned_project_files)
 
 
-def commit(root, files, check=False, library_names=(), mutable_libraries=()):
+def commit(root, files, check=False, library_names=(), mutable_libraries=(), validate=None):
     """Validate and stage the complete plan before replacing any source file."""
     # App generation owns its library dependencies, while the native script
     # owns application selection. Keep both in this same atomic transaction.
-    fragment = "cFS/sample_defs/generated/appgen_startup.scr"
-    startup = "cFS/sample_defs/cpu1_cfe_es_startup.scr"
+    fragment = "mission/sample_defs/generated/appgen_startup.scr"
+    startup = "mission/cpu1_cfe_es_startup.scr"
     if fragment in files and (startup in files or safe_path(root, startup).is_file()):
         from project.appgen.native_startup import reconcile_generated_modules
         previous = safe_path(root, fragment)
@@ -35,22 +35,29 @@ def commit(root, files, check=False, library_names=(), mutable_libraries=()):
     allowed_libraries = set()
     for name in library_names:
         identifier(name)
-        relative = "cFS/libs/" + name
+        relative = "mission/libs/" + name
         if safe_path(root, relative).exists():
             raise ProjectError(f"Library directory already exists: {name}")
         allowed_libraries.add(relative)
     for name in mutable_libraries:
         identifier(name)
-        relative = "cFS/libs/" + name
+        relative = "mission/libs/" + name
         directory = safe_path(root, relative)
         if (directory / ".git").exists():
             raise ProjectError(f"Cannot replace a library submodule: {name}")
         allowed_libraries.add(relative)
     from project.driver_catalog import load_catalog
-    allowed_libraries.update("cFS/libs/" + name for name in load_catalog(root))
+    allowed_libraries.update("mission/libs/" + name for name in load_catalog(root))
     selected = load_config(root)
-    protected = board_catalog(selected["board"], root)["protected_paths"] + [f"cFS/apps/{name}" for name in protected_apps(root)]
+    from project.flight_sources import nasa_module_names
+    reserved = protected_apps(root) | nasa_module_names(root, "libs")
+    protected = board_catalog(selected["board"], root)["protected_paths"]
     for relative in files:
+        parts = Path(relative).parts
+        if parts[:1] == ("cFS",):
+            raise ProjectError(f"NASA sources are read-only: {relative}")
+        if len(parts) >= 3 and parts[:2] in (("mission", "apps"), ("mission", "libs")) and parts[2] in reserved:
+            raise ProjectError(f"Reserved NASA module name: {parts[2]}")
         if any(relative.startswith(path + "/") for path in allowed_libraries):
             continue
         if any(relative == path or relative.startswith(path + "/") for path in protected):
@@ -63,6 +70,8 @@ def commit(root, files, check=False, library_names=(), mutable_libraries=()):
                if (path.exists() if files[relative] is None else
                    not path.exists() or path.read_text() != files[relative])]
     if check or not changed:
+        if validate and not check:
+            validate()
         return changed
     previous, modes, staged, replaced, directories = {}, {}, {}, [], []
     try:
@@ -92,6 +101,8 @@ def commit(root, files, check=False, library_names=(), mutable_libraries=()):
             else:
                 staged[relative].replace(paths[relative])
             replaced.append(relative)
+        if validate:
+            validate()
     except BaseException:
         for relative in reversed(replaced):
             if previous[relative] is None:
@@ -128,7 +139,7 @@ def sensor_packet(app, packet, sensor, generator):
     values = {"app": app, "packet": packet, "sensor": sensor, "prefix": app.upper(),
               "entity": generator.pascal(packet), "source": generator.pascal(sensor),
               "packet_upper": packet.upper(), "guard": f"{app.upper()}_{packet.upper()}_TLM_H"}
-    stem = f"cFS/apps/{app}/fsw/src/telemetry/{app}_{packet}_tlm"
+    stem = f"mission/apps/{app}/fsw/src/telemetry/{app}_{packet}_tlm"
     templates = Path(__file__).parent / "templates"
     return {stem + suffix: Template(safe_path(templates, f"sensor_telemetry{suffix}.in").read_text()).substitute(values)
             for suffix in (".h", ".c")}
@@ -179,6 +190,8 @@ def run(args):
     root = args.root.resolve()
     if args.action == "devices":
         return board_catalog(load_config(root)["board"], root), 0
+    from project.flight_sources import prepare_mission
+    prepare_mission(root)
     config = copy.deepcopy(load_config(root))
     validate_config(root, config)
     generator = appgen(root)
@@ -200,7 +213,7 @@ def run(args):
             if not path.is_file() or json.loads(path.read_text()) != signature:
                 raise ProjectError("cFS build configuration is missing or stale; run ./scripts/build-cfs.sh")
             return {"build": "current"}, 0
-        payload = safe_path(root, f"cFS/build-{kind}/exe/cpu1")
+        payload = safe_path(root, f"mission/build-{kind}/exe/cpu1")
         if not (payload / "core-cpu1").is_file() or not (payload / "cf").is_dir():
             raise ProjectError("Build payload is missing; run ./scripts/build-cfs.sh before stamping")
         plan = planned_project_files(root, config, manifests) if configured(root, config) else {}
@@ -211,13 +224,13 @@ def run(args):
         return {"project": config, "manifests": manifests}, 0
     if args.action == "locate":
         registry_app(config, args.app)
-        return generator.locations(root / "cFS", generator.app_by_name(manifests, args.app)), 0
+        return generator.locations(root / "mission", generator.app_by_name(manifests, args.app)), 0
     new_apps, extra = [], {}
     if args.action == "add-app":
         identifier(args.app)
         if args.app in protected_apps(root):
             raise ProjectError(f"Protected app: {args.app}")
-        if safe_path(root, f"cFS/apps/{args.app}").exists():
+        if safe_path(root, f"mission/apps/{args.app}").exists():
             raise ProjectError(f"App directory already exists: {args.app}")
         manifests.append(generator.new_app(args.app, manifests))
         config["apps"].append({"name": args.app, "sensors": {}, "telemetry_bindings": {}, "command_bindings": {}})
@@ -243,7 +256,7 @@ def run(args):
         if any(entity["name"] == args.name for entity in manifest[collection]):
             raise ProjectError(f"{kind} already exists: {args.name}")
         for relative in generator.entity_files(args.app, kind, args.name):
-            if safe_path(root, "cFS/" + relative).exists():
+            if safe_path(root, "mission/" + relative).exists():
                 raise ProjectError(f"Conflicting entity file: {relative}")
         used = {mid for app in manifests for mid in generator.mids(app)}
         if kind == "sensor":
@@ -260,7 +273,7 @@ def run(args):
             registry["sensors"][args.name] = args.device
         elif kind == "command":
             code = args.code if args.code is not None else generator.allocate(
-                range(2, 128), {command["code"] for command in manifest[collection]}, "command code")
+                range(4 if manifest["schema_version"] == 2 else 2, 128), {command["code"] for command in manifest[collection]}, "command code")
             manifest[collection].append({"name": args.name, "code": code})
             if args.actuator:
                 registry["command_bindings"][args.name] = args.actuator
@@ -286,7 +299,7 @@ def run(args):
         from project.cfs_config import STARTUP, native_startup
         current = plan[STARTUP] if STARTUP in plan else native_startup(root, config)
         active, archived = parse_startup(current)
-        recipes, _ = parse_startup(plan['cFS/sample_defs/generated/appgen_startup.scr'])
+        recipes, _ = parse_startup(plan['mission/sample_defs/generated/appgen_startup.scr'])
         active.append(next(entry for entry in recipes if entry.name == args.app))
         plan[STARTUP] = render_startup(active, [entry for entry in archived if entry.name != args.app])
     if args.action not in ("sync", "check"):

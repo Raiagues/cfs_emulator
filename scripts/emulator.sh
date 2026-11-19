@@ -11,6 +11,7 @@ if [[ ! -e board/raspios.qcow2 ]]; then
     echo "Preparing the guest disk for its first boot..."
     cp /opt/raspi-os/raspios.qcow2 board/raspios.qcow2.new
     # Provision without a command history in the host user's home directory.
+    echo "[emulator] Disk copied. Provisioning the guest SSH key."
     env -u HOME guestfish --rw -a board/raspios.qcow2.new \
         run : mount /dev/sda2 / : \
         mkdir-p /root/.ssh : chmod 0700 /root/.ssh : \
@@ -25,6 +26,7 @@ fi
 
 # Retain guest changes. The inactive watchdog driver provides clean power-off.
 python3 sensors/runtime.py record
+echo "[emulator] Disk ready. Starting the guest kernel."
 exec qemu-system-aarch64 -M raspi4b \
     -kernel board/kernel8.img \
     -dtb board/bcm2711-rpi-4-b.dtb \

@@ -5,14 +5,17 @@ from pathlib import Path
 import re
 import subprocess
 
+from project.flight_sources import module_directories
+
 
 def _git(root, *args):
     result = subprocess.run(['git', '-C', str(root), *args], capture_output=True, timeout=10)
     return result.stdout if result.returncode == 0 else b''
 
 
-def _changes(root):
-    records = _git(root, 'status', '--porcelain=v1', '-z', '--untracked-files=normal').decode().split('\0')
+def _changes(root, directory=None):
+    scope = ['--', ':(literal)' + directory.as_posix()] if directory and directory.parts else []
+    records = _git(root, '--no-optional-locks', 'status', '--porcelain=v1', '-z', '--untracked-files=all', *scope).decode(errors='surrogateescape').split('\0')
     changed = []
     skip = False
     for record in records:
@@ -57,13 +60,14 @@ def _declared(root, module, names):
 def inspect_libraries(root, apps, source_index, mission):
     root = Path(root)
     changes = _changes(root / 'cFS')
+    mission_changes = _changes(root, Path('mission'))
     mission['source_changes'] = {name: _module_change(path, changes) for name, path in
                                  [('core', 'cfe'), ('osal', 'osal'), ('psp', 'psp')]}
     app_names = {app['name'] for app in apps}
     compiled = set(mission.get('compiled', []))
     loaded = {item['name']: item['entry_point'] for item in mission.get('libraries', [])}
     libraries = []
-    for directory in sorted((root / 'cFS/libs').glob('*')):
+    for directory in module_directories(root, 'libs'):
         if directory.is_symlink() or not (directory / 'CMakeLists.txt').is_file():
             continue
         inventory = source_index.application(directory)
@@ -80,7 +84,9 @@ def inspect_libraries(root, apps, source_index, mission):
         for function in lib['exports']:
             symbols[function['symbol']].append((lib['name'], function))
     for module in [*apps, *libraries]:
-        module['change'] = _module_change(module['path'].removeprefix('cFS/'), changes)
+        path = module['path']
+        module['change'] = (_module_change(path.removeprefix('cFS/'), changes) if path.startswith('cFS/')
+                            else _module_change(path, mission_changes))
         dependencies = {}
         for name, source in _declared(root, module, by_name):
             dependencies[name] = {'name': name, 'declared': source, 'calls': []}

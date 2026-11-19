@@ -29,7 +29,8 @@ ENTITY_KEYS = {
     "telemetry": {"name", "mid"},
 }
 KINDS = {"sensor": "sensors", "command": "commands", "telemetry": "telemetry"}
-ROOT_DEFAULT = Path(__file__).resolve().parents[2] / "cFS"
+ROOT_DEFAULT = Path(__file__).resolve().parents[2] / "mission"
+sys.path.insert(0, str(ROOT_DEFAULT.parent))
 TEMPLATE_DIR = Path(__file__).resolve().parent
 
 
@@ -66,7 +67,7 @@ def keys(value, expected, label):
 def validate_manifest(manifest):
     keys(manifest, APP_KEYS, "application configuration")
     valid_name(manifest["name"])
-    integer(manifest["schema_version"], "schema_version", 1, 1)
+    integer(manifest["schema_version"], "schema_version", 1, 2)
     for field in ("cmd_mid", "hk_request_mid", "wakeup_mid"):
         integer(manifest[field], field, COMMAND_IDS.start, COMMAND_IDS.stop - 1)
     integer(manifest["hk_tlm_mid"], "hk_tlm_mid", TELEMETRY_IDS.start, TELEMETRY_IDS.stop - 1)
@@ -83,6 +84,8 @@ def validate_manifest(manifest):
             keys(entity, expected, collection)
             valid_name(entity["name"])
             symbol = pascal(entity["name"])
+            if manifest["schema_version"] == 2 and symbol in {"Process", "DisplayParam"}:
+                raise AppgenError("Reserved sample_app command name")
             if symbol in {"Hk", "HkTlm", "Noop", "ResetCounters", "SendHk", "Wakeup"}:
                 raise AppgenError(f"Entity name is reserved by the standard app interface: {entity['name']}")
             if symbol in symbols:
@@ -95,7 +98,7 @@ def validate_manifest(manifest):
                 integer(entity["address"], "sensor address", 0, adapter["max_address"])
                 integer(entity["tlm_mid"], "sensor tlm_mid", TELEMETRY_IDS.start, TELEMETRY_IDS.stop - 1)
             elif collection == "commands":
-                integer(entity["code"], "command code", 2, 127)
+                integer(entity["code"], "command code", 4 if manifest["schema_version"] == 2 else 2, 127)
             else:
                 integer(entity["mid"], "telemetry mid", TELEMETRY_IDS.start, TELEMETRY_IDS.stop - 1)
     codes = [command["code"] for command in manifest["commands"]]
@@ -178,6 +181,8 @@ def render_mission(manifests, libraries=None):
     for app in apps:
         name, prefix = app["name"], app["name"].upper()
         startup.append(f"CFE_APP, {name}, {prefix}_Main, {prefix}, {app['priority']}, {app['stack_size']}, 0x0, 0;\n")
+        for section in (includes, schedule, telemetry):
+            section.append(f"#if !defined(CFS_CPU1_MODULE_SELECTION) || defined(CFS_MODULE_{prefix})\n")
         includes.append(f'#include "{name}_msgids.h"\n')
         schedule.append(f"{{CFE_SB_MSGID_WRAP_VALUE({prefix}_WAKEUP_MID), {app['period_ticks']}, 0}},\n")
         schedule.append(f"{{CFE_SB_MSGID_WRAP_VALUE({prefix}_SEND_HK_MID), {app['hk_period_ticks']}, 0}},\n")
@@ -186,6 +191,8 @@ def render_mission(manifests, libraries=None):
             telemetry.append(f"{{CFE_SB_MSGID_WRAP_VALUE(0x{sensor['tlm_mid']:04X}), {{0, 0}}, 1}},\n")
         for packet in app["telemetry"]:
             telemetry.append(f"{{CFE_SB_MSGID_WRAP_VALUE(0x{packet['mid']:04X}), {{0, 0}}, 1}},\n")
+        for section in (includes, schedule, telemetry):
+            section.append("#endif\n")
     return {
         "sample_defs/generated/appgen.cmake": cmake,
         "sample_defs/generated/appgen_startup.scr": "".join(startup),
@@ -197,7 +204,7 @@ def render_mission(manifests, libraries=None):
 
 def merged_app_cmake(root, manifest, generated=None):
     """Replace generated source/dependency blocks while preserving native edits."""
-    generated = generated if generated is not None else renderer()(manifest)["CMakeLists.txt"][0]
+    generated = generated if generated is not None else renderer()(manifest, root)["CMakeLists.txt"][0]
     path = safe_path(root, f"apps/{manifest['name']}/CMakeLists.txt")
     if not path.exists():
         return generated
@@ -216,7 +223,7 @@ def merged_app_cmake(root, manifest, generated=None):
             previous_path = safe_path(root, f"apps/{manifest['name']}/app.json")
         if not previous_path.is_file():
             raise AppgenError(f"Cannot identify generated CMake entries without previous app settings: {path}")
-        previous = renderer()(json.loads(previous_path.read_text()))["CMakeLists.txt"][0]
+        previous = renderer()(json.loads(previous_path.read_text()), root)["CMakeLists.txt"][0]
         source_sets = list(re.finditer(r"\bset\s*\(\s*APP_SRC_FILES\b([^)]*)\)", current))
         if len(source_sets) != 1:
             raise AppgenError(f"Expected one native APP_SRC_FILES list in {path}")
@@ -282,7 +289,7 @@ def planned_files(root, manifests, libraries=None, excluded=()):
                 marker = re.search(r"APPGEN: DRIVER ([a-z0-9_]+)", source.read_text())
                 if marker and marker.group(1) != sensor["driver"]:
                     raise AppgenError(f"Sensor driver is immutable: {name}/{sensor['name']}; remove/add the sensor")
-        for relative, (content, managed) in render_app(manifest).items():
+        for relative, (content, managed) in render_app(manifest, root).items():
             target = f"apps/{name}/{relative}"
             path = safe_path(root, target)
             if relative == "CMakeLists.txt":
@@ -303,19 +310,8 @@ def plan_library(root, name):
     if directory.exists():
         raise AppgenError(f"Library directory already exists: {name}")
     prefix = name.upper()
-    replacements = {"NAME": name, "PREFIX": prefix}
-    files = {}
-    for template, destination in (
-            ("library_cmake.in", "CMakeLists.txt"),
-            ("library.h.in", f"fsw/public_inc/{name}.h"),
-            ("library.c.in", f"fsw/src/{name}.c"),
-            ("library_internal.h.in", f"fsw/src/{name}_internal.h"),
-            ("library_version.h.in", f"fsw/src/{name}_version.h"),
-            ("library_readme.md.in", "README.md")):
-        content = safe_path(TEMPLATE_DIR / "templates", template).read_text()
-        for key, value in replacements.items():
-            content = content.replace("@" + key + "@", value)
-        files["libs/" + name + "/" + destination] = content
+    from project.appgen.sample import copy_sample
+    files = {f"libs/{name}/{path}": source for path, source in copy_sample(root, "sample_lib", name).items()}
     entry = prefix + "_Init"
     return {"files": files, "startup": {"module": name, "entry_point": entry,
             "fields": ["CFE_LIB", name, entry, prefix, "0", "0", "0x0", "0"]},
@@ -383,7 +379,7 @@ def new_app(name, manifests):
         command_ids.append(mid)
         used.add(mid)
     return {
-        "schema_version": 1, "name": name,
+        "schema_version": 2, "name": name,
         "cmd_mid": command_ids[0], "hk_request_mid": command_ids[1], "wakeup_mid": command_ids[2],
         "hk_tlm_mid": allocate(TELEMETRY_IDS, used, "telemetry MID"),
         "period_ticks": 20, "hk_period_ticks": 40, "priority": 55, "stack_size": 32768,
@@ -422,7 +418,11 @@ def locations(root, manifest):
         "SendHkCmd": "telemetry.hk",
     }
     app_dir = safe_path(root, f"apps/{manifest['name']}")
-    for path in sorted(app_dir.rglob("*")):
+    # Managed apps are built with the non-EDS sample dispatch. The NASA sample
+    # also ships an alternative implementation and unit-test stubs.
+    for path in sorted((app_dir / "fsw").rglob("*")):
+        if path.name == manifest["name"] + "_eds_dispatch.c":
+            continue
         if path.suffix not in (".c", ".h") or not path.is_file():
             continue
         path = safe_path(root, path.relative_to(root))
@@ -450,7 +450,7 @@ def locations(root, manifest):
 
 def parser():
     cli = argparse.ArgumentParser(description=__doc__)
-    cli.add_argument("--root", type=Path, default=ROOT_DEFAULT, help="cFS source root")
+    cli.add_argument("--root", type=Path, default=ROOT_DEFAULT, help="Studio mission directory")
     commands = cli.add_subparsers(dest="action", required=True)
     for action in ("create-app", "delete-app", "locate"):
         command = commands.add_parser(action)
@@ -474,6 +474,11 @@ def parser():
 
 def run(args):
     root = args.root.resolve()
+    if root.name not in {"mission", "cFS"} or not (root.parent / "project/config.json").is_file():
+        raise ValueError("Select the mission directory of a Flight Studio project.")
+    from project.flight_sources import prepare_mission
+    prepare_mission(root.parent)
+    root = root.parent / "mission"
     manifests = read_manifests(root)
     if args.action == "list":
         return {"apps": manifests}, 0
@@ -517,7 +522,7 @@ def run(args):
         elif kind == "command":
             code = args.code
             if code is None:
-                code = allocate(range(2, 128), {item["code"] for item in app[collection]}, "command code")
+                code = allocate(range(4 if app["schema_version"] == 2 else 2, 128), {item["code"] for item in app[collection]}, "command code")
             entity = {"name": args.name, "code": code}
         else:
             entity = {"name": args.name, "mid": allocate(TELEMETRY_IDS, used, "telemetry MID")}

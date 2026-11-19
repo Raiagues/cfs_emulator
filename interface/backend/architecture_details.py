@@ -10,6 +10,8 @@ from collections import defaultdict, deque
 from pathlib import Path
 import re
 
+from project.flight_sources import module_directories
+
 from ground_station.c_source import (arguments, blank_lexemes, calls, closing, entry_routes,
                                      mid_aliases, mid_regions, mids_at)
 from interface.backend.source_index import SourceIndex, mask_source
@@ -242,14 +244,14 @@ def _configuration_files(root, files):
 
     Generated build headers are not read.
     """
-    paths = set(root.glob('cFS/apps/*/config/*.h')) | set(root.glob('cFS/apps/*/fsw/inc/*ids.h'))
+    paths = {p for app in module_directories(root, 'apps') for pattern in ('config/*.h', 'fsw/inc/*ids.h') for p in app.glob(pattern)}
     paths |= set(root.glob('cFS/cfe/modules/*/config/*msgid*.h'))
     paths |= set(root.glob('cFS/cfe/modules/*/config/*topicid*.h'))
     paths |= set(root.glob('cFS/cfe/modules/*/fsw/inc/*topicids.h'))
-    paths |= set(root.glob('cFS/sample_defs/inc/*.h')) | set(root.glob('cFS/sample_defs/cpu1/*.h'))
+    paths |= set(root.glob('mission/sample_defs/inc/*.h')) | set(root.glob('mission/sample_defs/cpu1/*.h'))
     selected = {file['path']: file for file in files}
-    overrides = {path.name: path for path in root.glob('cFS/sample_defs/inc/*.h')}
-    overrides.update({path.name: path for path in root.glob('cFS/sample_defs/cpu1/*.h')})
+    overrides = {path.name: path for path in root.glob('mission/sample_defs/inc/*.h')}
+    overrides.update({path.name: path for path in root.glob('mission/sample_defs/cpu1/*.h')})
     for path in sorted(paths):
         if path.name.startswith('eds_') or '_eds_' in path.name:
             continue
@@ -318,7 +320,7 @@ def _structures(files):
 
 def _table_source(root, path):
     name = path.name
-    mission = root / 'cFS/sample_defs'
+    mission = root / 'mission/sample_defs'
     for candidate in (mission / 'cpu1/tables' / name, mission / 'tables' / ('cpu1_' + name),
                       mission / 'tables' / name, mission / 'cpu1' / name,
                       mission / ('cpu1_' + name), mission / name, path):
@@ -547,7 +549,7 @@ def describe_application(app, *, root):
             continue
         table_files = [(definition['file'], [])]
         for include in re.finditer(r'^\s*#\s*include\s+"([^"\n]+\.inc)"', definition['file']['clean'], re.M):
-            included = _read(root, root / 'cFS/sample_defs/generated' / include[1])
+            included = _read(root, root / 'mission/sample_defs/generated' / include[1])
             if included:
                 table_files.append((included, _conditions(definition['file'], include.start())))
         dynamic_subs = []
@@ -583,7 +585,7 @@ def describe_application(app, *, root):
 
     index = _INDEXES.setdefault(root, SourceIndex(root))
     library_symbols = defaultdict(list)
-    for directory in sorted((root / 'cFS/libs').glob('*')):
+    for directory in module_directories(root, 'libs'):
         if directory.is_dir() and not directory.is_symlink():
             for fn in index.application(directory)['functions']:
                 if not fn.get('static'):

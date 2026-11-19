@@ -32,6 +32,7 @@ class GroundStation:
         self._ready = threading.Event()
         self._latest = {}
         self._history = deque(maxlen=256)
+        self._events = deque(maxlen=256)
         self._commands = deque(maxlen=100)
         self._communication = {}
         self._session_started = None
@@ -92,6 +93,7 @@ class GroundStation:
                 self._definitions_files = definitions
                 self._latest.clear()
                 self._history.clear()
+                self._events.clear()
                 self._commands.clear()
                 self._communication.clear()
                 self._session_started = time.time()
@@ -227,6 +229,8 @@ class GroundStation:
             packet['event_id'] = self._record_communication(packet['app'], 'telemetry', len(data), packet['received_at'])
             self._latest[mid] = packet
             self._history.append(packet)
+            if "Message" in values and "PacketID.AppName" in values:
+                self._events.append(packet)
             self._updates.notify_all()
 
     def send(self, command_id, values=None, *, automatic=False):
@@ -274,5 +278,5 @@ class GroundStation:
                                   'last_received': self._last_received,
                                   'communication': {'since': self._session_started,
                                                     'apps': list(self._communication.values())},
-                                  'packets': list(self._latest.values()), 'history': list(self._history),
+                                  'events': list(self._events), 'packets': list(self._latest.values()), 'history': list(self._history),
                                   'commands': list(self._commands)})

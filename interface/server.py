@@ -26,16 +26,16 @@ from ground_station.catalog import apply_overrides, CATALOG_VERSION
 # Infrastructure opens at /; the editor and diagrams open at /studio.
 STATIC_FILES = {'app.js', 'style.css', 'prototype.css', 'panels.css', 'panels.js', 'board.js', 'board.css', 'ui.js',
                 'layout.js', 'terminal.js', 'selectors.js', 'terminal.css', 'shell.js', 'architecture.js',
-                'architecture.css', 'mission-diagram.js', 'mission-diagram.css', 'app-diagram.js', 'app-diagram.css',
+                'architecture.css', 'mission-diagram.js', 'mission-diagram.css', 'module-actions.js', 'app-diagram.js', 'app-diagram.css',
                 'communication.js', 'communication.css', 'simulation.js', 'simulation.css',
-                'vendor/xterm.js', 'vendor/xterm.css', 'vendor/addon-fit.js', 'infrastructure.js', 'infrastructure.css'}
+                'vendor/xterm.js', 'vendor/xterm.css', 'vendor/addon-fit.js', 'infrastructure.js', 'infrastructure.css', 'emulator-guide.html', 'sensor-designer.js'}
 CONTENT_TYPES = {'html': 'text/html; charset=utf-8', 'js': 'text/javascript; charset=utf-8', 'css': 'text/css; charset=utf-8'}
 CONTENT_SECURITY_POLICY = ("default-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; "
                            "img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'")
 
 
 class Studio:
-    ACTIONS = {'connect', 'probe', 'logs', 'simulate', 'setup', 'build', 'boot',
+    ACTIONS = {'clone-cfs', 'model-test', 'sensor-test', 'connect', 'probe', 'logs', 'simulate', 'setup', 'build', 'boot',
                'run', 'stop', 'shutdown', 'values', 'simulate-preview'}
     BACKGROUND = {'logs', 'simulate', 'simulate-preview'}
 
@@ -149,10 +149,13 @@ class Studio:
                     raise ValueError('Select at least one sensor in Synthetic data')
             if script is None:
                 script = self.hardware.simulation_script(options.get('device'))
+        elif action in {'sensor-test', 'model-test'}:
+            if not isinstance(options.get('device'), str) or not options['device'] or 'model' in options:
+                raise ValueError('Select a sensor on the workbench.')
         elif 'device' in options or 'model' in options:
             raise ValueError('A device can only be selected for synthetic data.')
         connection = None
-        if target == 'physical' and action in {'logs', 'boot', 'run', 'stop', 'shutdown', 'connect', 'probe', 'setup'}:
+        if target == 'physical' and action in {'sensor-test', 'logs', 'boot', 'run', 'stop', 'shutdown', 'connect', 'probe', 'setup'}:
             connection = self.hardware.connection(options.get('connection'))
             options['connection'] = connection
         return options, kind, script, connection
@@ -167,6 +170,18 @@ class Studio:
                 if isinstance(samples, dict):
                     record['samples'] = dict(samples, received_at=time.time())
                     return
+            if record['action'] == 'boot' and record['target'] == 'qemu':
+                output = str(line)
+                stage = record.get('boot_stage', 0)
+                if output.startswith('[emulator] Image ready'):
+                    stage = 1
+                elif output.startswith('[emulator] Disk copied'):
+                    stage = 2
+                elif output.startswith('[emulator] Disk ready') or 'Booting Linux on physical CPU' in output:
+                    stage = 3
+                elif ' login:' in output or ('Started' in output and 'OpenBSD Secure Shell server' in output):
+                    stage = 4
+                record['boot_stage'] = max(stage, record.get('boot_stage', 0))
             record['lines'].append(str(line))
             record['line_count'] += 1
 
@@ -197,6 +212,7 @@ class Studio:
                 # lock so a long-running log tail never blocks Build/Run/Stop.
                 with self.lock:
                     record['operation_complete'] = True
+                    record['ready_at'] = time.time()
                     record['streaming'] = True
                     self.operation.release()
                     owns_operation = False
@@ -222,6 +238,10 @@ class Studio:
 
     def _execute_job(self, record, options, emit):
         action, target, kind, connection = record['action'], record['target'], record['kind'], record['connection']
+        if action == 'clone-cfs':
+            self.hardware._stream([str(self.workspace.root / 'scripts/install-cfs.sh')], emit,
+                                  cancel=record['cancel'], cwd=self.workspace.root)
+            return infrastructure.source_status(self.workspace.root)
         if action == 'boot' and target == 'qemu':
             # Refuse an impossible boot before disconnecting anything.
             self.hardware.assert_can_boot(options.get('retry', False))
@@ -326,12 +346,10 @@ class Studio:
         target = options.get('target', self.hardware.default_target())
         deployment = self.hardware._load('deployed.json', {}).get(target)
         if not deployment:
-            raise ValueError('Run the build on this target through the interface before connecting the ground station.')
-        if target == 'physical' and self.hardware.connection(options.get('connection')) != deployment.get('connection'):
-            raise ValueError('This SSH connection does not match the board used for the last deployment.')
+            raise ValueError('Build and run cFS on this target before connecting the ground station.')
         hardware = self.hardware.status()
         if target == 'physical':
-            probe = hardware['physical'].get('last_probe') or {}
+            probe = self.hardware.probe(options.get('connection'))
             running = probe.get('service') == 'active'
         elif target == 'native':
             running = hardware['native'].get('running')
@@ -339,6 +357,11 @@ class Studio:
             running = hardware['qemu'].get('flight_running')
         if not running:
             raise ValueError('cFS is not available on this target. Run it from the workbench before connecting the ground station.')
+        if target == 'physical':
+            current = self.hardware.connection(options.get('connection'))
+            prior = deployment.get('connection') or {}
+            if not self.hardware.same_board(current, prior):
+                raise ValueError('Run cFS on the selected board to deploy this mission there.')
         catalog = self.ground_catalog(target)
         if target == 'native':
             instance = deployment.get('instance') if deployment.get('pid') in hardware['native']['pids'] else None
@@ -365,7 +388,9 @@ class Studio:
             raise ValueError('Definition not found in this build.')
         from ground_station.catalog import source_locations
         app = packet['app']
-        appdir = self.workspace.root / ('cFS/cfe/modules/' + app[4:] if app.startswith('cfe_') else 'cFS/apps/' + app)
+        from project.flight_sources import module_directory
+        appdir = (self.workspace.root / 'cFS/cfe/modules' / app[4:] if app.startswith('cfe_')
+                  else module_directory(self.workspace.root, 'apps', app))
         # Resolve again against the current workspace so added comments cannot shift navigation.
         locations = source_locations(self.workspace.root, appdir, packet)
         kind = query.get('section') or ('dispatch' if category == 'commands' else 'packet')
@@ -426,7 +451,7 @@ class Handler(BaseHTTPRequestHandler):
             app = self.server.studio
             routes = {
                 '/api/session': lambda: {'token': app.token},
-                '/api/workspace': app.workspace.snapshot,
+                '/api/workspace': lambda: {**app.workspace.snapshot(), 'builds': app.hardware.builds_status()},
                 '/api/tree': lambda: app.workspace.tree(query.get('path', '')),
                 '/api/files/search': lambda: app.workspace.search_files(query.get('root', 'cFS'), query.get('q', '')),
                 '/api/file': lambda: app.workspace.read_file(query['path']),
@@ -441,7 +466,7 @@ class Handler(BaseHTTPRequestHandler):
             }
             if url.path in routes:
                 return self.reply(routes[url.path]())
-            if url.path == '/':
+            if url.path in {'/', '/infrastructure'} or (url.path in {'/studio', '/studio/'} and not infrastructure.sources_ready(ROOT)):
                 name = 'infrastructure.html'
             elif url.path in {'/studio', '/studio/'}:
                 name = 'index.html'
@@ -501,6 +526,9 @@ class Handler(BaseHTTPRequestHandler):
                     result = app.exclusive(app.workspace.mission_app, body.get('action'), body.get('name'), body.get('expected_hash'))
             elif path == '/api/mission/library':
                 result = app.exclusive(app.workspace.mission_library, body.get('action'), body.get('name'), body.get('expected_hash'))
+            elif path == '/api/mission/rename':
+                result = app.exclusive(app.workspace.rename_module, body.get('kind'), body.get('name'),
+                                       body.get('new_name'), body.get('expected_hash'))
             elif path == '/api/mission/draft':
                 draft = (body.get('kind'), body.get('name'), body.get('settings'), body.get('expected_hash'))
                 result = app.exclusive(app.workspace.mission_draft, *draft, body.get('mode', 'create'))
@@ -510,11 +538,16 @@ class Handler(BaseHTTPRequestHandler):
             elif path == '/api/mission/profile':
                 result = app.exclusive(app.workspace.select_profile, body.get('board'), body.get('os'), body.get('expected_hash'))
             elif path == '/api/simulation':
-                if any(job['action'] == 'simulate' and job['status'] == 'running' for job in app.jobs_snapshot()):
+                if any(job['action'] in {'simulate', 'simulate-preview'} and job['status'] == 'running' for job in app.jobs_snapshot()):
                     raise ValueError('Stop synthetic data before changing its session settings')
                 result = app.exclusive(app.workspace.save_simulation, body.get('settings'), body.get('expected_hash'))
             elif path == '/api/hardware/target':
                 result = app.exclusive(app.hardware.select_target, body.get('target'))
+            elif path == '/api/hardware/model':
+                if not str(body.get("name", "")).startswith("lab_"):
+                    raise ValueError("Start a custom device name with lab_")
+                from project.qemu.catalog import register
+                result = app.exclusive(register, app.workspace.root, body)
             elif path == '/api/hardware/device':
                 result = app.exclusive(update_device, app.workspace, body)
             elif path == '/api/job':

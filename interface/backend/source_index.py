@@ -175,6 +175,8 @@ class SourceIndex:
             dirs[:] = sorted(d for d in dirs if d not in _EXCLUDED and not d.startswith('build')
                              and not (Path(base) / d).is_symlink())
             for name in sorted(names):
+                if anchors and name == directory.name + '_eds_dispatch.c':
+                    continue
                 path = Path(base) / name
                 relative = path.relative_to(directory)
                 if path.suffix.lower() in {'.c', '.h'} and not path.is_symlink() and (

@@ -1,0 +1,156 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later
+ * I2C register sensor. The description supplies the bus-visible register map.
+ * Latch output words at START_RECV so a burst observes one coherent sample. */
+#include "qemu/osdep.h"
+#include "hw/i2c/i2c.h"
+#include "migration/vmstate.h"
+#include "qapi/error.h"
+#include "qapi/visitor.h"
+#include "qemu/module.h"
+
+typedef struct RegisterSensor {
+    I2CSlave parent;
+    uint8_t registers[256];
+    uint8_t pointer;
+    bool awaiting_pointer;
+    int32_t values[@COUNT@];
+} RegisterSensor;
+
+typedef struct Output {
+    const char *name;
+    uint8_t reg;
+    int32_t initial, offset, counts, divisor;
+    int16_t range_reg;
+    uint8_t range_shift;
+} Output;
+
+static const Output outputs[] = {
+@OUTPUTS@
+};
+
+static void reset_registers(RegisterSensor *s)
+{
+    memset(s->registers, 0, sizeof(s->registers));
+    s->registers[@ID_REG@] = @ID_VALUE@;
+@RESET@
+}
+
+static void latch(RegisterSensor *s)
+{
+@SLEEP@
+    for (size_t i = 0; i < ARRAY_SIZE(outputs); i++) {
+        const Output *o = &outputs[i];
+        int64_t raw = ((int64_t)s->values[i] - o->offset) * o->counts / o->divisor;
+        /* A two-bit full-scale selector doubles range at each step. */
+        if (o->range_reg >= 0) {
+            raw /= 1 << ((s->registers[o->range_reg] >> o->range_shift) & 3);
+        }
+        uint16_t word = (uint16_t)CLAMP(raw, INT16_MIN, INT16_MAX);
+        s->registers[o->reg] = word >> 8;
+        s->registers[o->reg + 1] = word;
+    }
+}
+
+static int sensor_event(I2CSlave *dev, enum i2c_event event)
+{
+    RegisterSensor *s = (RegisterSensor *)dev;
+    if (event == I2C_START_SEND) {
+        s->awaiting_pointer = true;
+    } else if (event == I2C_START_RECV) {
+        latch(s);
+    }
+    return 0;
+}
+
+static int sensor_send(I2CSlave *dev, uint8_t byte)
+{
+    RegisterSensor *s = (RegisterSensor *)dev;
+    if (s->awaiting_pointer) {
+        s->pointer = byte;
+        s->awaiting_pointer = false;
+    } else {
+        switch (s->pointer++) {
+@WRITES@
+        default:
+            break;
+        }
+    }
+    return 0;
+}
+
+static uint8_t sensor_recv(I2CSlave *dev)
+{
+    RegisterSensor *s = (RegisterSensor *)dev;
+    return s->registers[s->pointer++];
+}
+
+static void sensor_get(Object *obj, Visitor *v, const char *name, void *opaque, Error **errp)
+{
+    int32_t *value = opaque;
+    visit_type_int32(v, name, value, errp);
+}
+
+static void sensor_set(Object *obj, Visitor *v, const char *name, void *opaque, Error **errp)
+{
+    int32_t value;
+    if (visit_type_int32(v, name, &value, errp)) {
+        *(int32_t *)opaque = value;
+    }
+}
+
+static void sensor_init(Object *obj)
+{
+    RegisterSensor *s = (RegisterSensor *)obj;
+    for (size_t i = 0; i < ARRAY_SIZE(outputs); i++) {
+        s->values[i] = outputs[i].initial;
+        object_property_add(obj, outputs[i].name, "int", sensor_get, sensor_set, NULL, &s->values[i]);
+    }
+}
+
+static void sensor_reset(DeviceState *dev)
+{
+    RegisterSensor *s = (RegisterSensor *)dev;
+    s->pointer = 0;
+    s->awaiting_pointer = true;
+    reset_registers(s);
+}
+
+static const VMStateDescription vmstate_sensor = {
+    .name = "@MODEL@",
+    .version_id = 1,
+    .minimum_version_id = 1,
+    .fields = (const VMStateField[]) {
+        VMSTATE_I2C_SLAVE(parent, RegisterSensor),
+        VMSTATE_UINT8_ARRAY(registers, RegisterSensor, 256),
+        VMSTATE_UINT8(pointer, RegisterSensor),
+        VMSTATE_BOOL(awaiting_pointer, RegisterSensor),
+        VMSTATE_INT32_ARRAY(values, RegisterSensor, @COUNT@),
+        VMSTATE_END_OF_LIST()
+    }
+};
+
+static void sensor_class(ObjectClass *klass, const void *data)
+{
+    DeviceClass *dc = DEVICE_CLASS(klass);
+    I2CSlaveClass *bus = I2C_SLAVE_CLASS(klass);
+    device_class_set_legacy_reset(dc, sensor_reset);
+    dc->vmsd = &vmstate_sensor;
+    bus->event = sensor_event;
+    bus->send = sensor_send;
+    bus->recv = sensor_recv;
+}
+
+static const TypeInfo sensor_type = {
+    .name = "@MODEL@",
+    .parent = TYPE_I2C_SLAVE,
+    .instance_size = sizeof(RegisterSensor),
+    .instance_init = sensor_init,
+    .class_init = sensor_class,
+};
+
+static void register_sensor(void)
+{
+    type_register_static(&sensor_type);
+}
+
+type_init(register_sensor)

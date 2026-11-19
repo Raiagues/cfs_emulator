@@ -11,19 +11,20 @@ from pathlib import Path
 import re
 import threading
 
+from project.flight_sources import module_directories, module_directory, nasa_module_names, prepare_mission
 from project.appgen.native_startup import (
     parse_startup, render_startup, reconcile_removed_modules, reconcile_generated_modules,
 )
 
 
 class MissionConfig:
-    STARTUP = "cFS/sample_defs/cpu1_cfe_es_startup.scr"
-    MODULES = "cFS/sample_defs/modules.cmake"
+    STARTUP = "mission/cpu1_cfe_es_startup.scr"
+    MODULES = "mission/modules.cmake"
     @property
     def INSTALLED(self):
         from project.model import load_config
         build = 'build-flight' if load_config(self.root)['board'] else 'build-native'
-        return f"cFS/{build}/exe/cpu1/cf/cfe_es_startup.scr"
+        return f"mission/{build}/exe/cpu1/cf/cfe_es_startup.scr"
 
     CORE = {"es": "Executive services", "evs": "Events", "fs": "Files",
             "sb": "Software bus", "tbl": "Tables", "time": "Time"}
@@ -45,15 +46,17 @@ class MissionConfig:
         return path
 
     def _inputs(self):
+        prepare_mission(self.root)
         inputs = [self._path("cFS/cfe/cmake/mission_defaults.cmake")]
-        definitions = self._path("cFS/sample_defs")
+        inputs.extend(self._path(path) for path in (self.STARTUP, self.MODULES, "mission/libraries.cmake") if self._path(path).is_file())
+        definitions = self._path("mission/sample_defs")
         inputs.extend(sorted(p for p in definitions.rglob("*")
                              if p.is_file() and p.suffix in (".cmake", ".scr", ".c", ".h", ".inc")))
         project = self._path("project")
         inputs.extend(sorted(p for p in project.rglob("*") if p.is_file()
                              and (p.suffix in (".json", ".cmake", ".c", ".h") or p.name == "CMakeLists.txt")))
         for group in ("apps", "libs"):
-            inputs.extend(sorted(self._path("cFS/" + group).glob("*/CMakeLists.txt")))
+            inputs.extend((p / "CMakeLists.txt" for p in module_directories(self.root, group) if (p / "CMakeLists.txt").is_file()))
         return inputs
 
     def selection(self):
@@ -95,10 +98,10 @@ class MissionConfig:
             "list(REMOVE_DUPLICATES cpu1_APPLIST)", "",
         ])
         plan = {self.MODULES: content}
-        path = "cFS/sample_defs/targets.cmake"
+        path = "mission/sample_defs/targets.cmake"
         source = (sources or {}).get(path, self._path(path).read_text())
         if not re.search(r'\binclude\s*\([^)]*[/]modules\.cmake', source, re.I):
-            plan[path] = source.rstrip() + "\n\ninclude(${CMAKE_CURRENT_LIST_DIR}/modules.cmake OPTIONAL)\n"
+            plan[path] = source.rstrip() + "\n\ninclude(${CMAKE_CURRENT_LIST_DIR}/../modules.cmake OPTIONAL)\n"
         return plan
 
     def dependents(self, name, compiled=None):
@@ -110,7 +113,7 @@ class MissionConfig:
         index = SourceIndex(self.root)
         apps, declared = [], set()
         for group in ("apps", "libs"):
-            for path in sorted(self._path("cFS/" + group).glob("*/CMakeLists.txt")):
+            for path in (p / "CMakeLists.txt" for p in module_directories(self.root, group) if (p / "CMakeLists.txt").is_file()):
                 if path.parent.name not in compiled or path.parent.name == name:
                     continue
                 if name in dependencies(self.root, path.parent.name):
@@ -130,7 +133,7 @@ class MissionConfig:
         from project.driver_catalog import requirement_details
         config = load_config(self.root)
         required = requirement_details(self.root, config, read_manifests(self.root, config))
-        blockers = {("app " if self._path(f"cFS/apps/{module}/CMakeLists.txt").is_file() else "library ") + module
+        blockers = {("app " if (module_directory(self.root, "apps", module) / "CMakeLists.txt").is_file() else "library ") + module
                     for module in self.dependents(name)}
         blockers.update(reason for reason in required.get(name, []) if reason != "library " + name)
         return sorted(blockers)
@@ -140,11 +143,32 @@ class MissionConfig:
         if blockers:
             raise ValueError(name + " is required by: " + ", ".join(blockers))
 
+    def upstream_libraries(self):
+        return nasa_module_names(self.root, "libs")
+
+    def available_module_name(self, name, evaluated):
+        """Validate the shared native namespace used by New and Rename."""
+        from project.driver_catalog import load_catalog
+        from project.model import protected_apps
+        active, archived = parse_startup(self.startup_text())
+        reserved = {"cfe", "osal", "psp"} | set(evaluated["compiled"]) | set(evaluated["core"])
+        reserved.update(load_catalog(self.root))
+        reserved.update(protected_apps(self.root) | self.upstream_libraries())
+        for entry in active + archived:
+            reserved.update((entry.name, entry.fields[3].lower()))
+        for group in ("apps", "libs"):
+            reserved.update(path.name for path in module_directories(self.root, group))
+        for group in ("cfe/modules", "psp/fsw/modules"):
+            reserved.update(path.name for path in self._path("cFS/" + group).glob("*"))
+        if name in reserved or self._path("project/apps/" + name + ".json").exists():
+            raise ValueError("A module already uses this name: " + name)
+        return reserved
+
     def _library_deletable(self, name, evaluated=None):
         from project.driver_catalog import load_catalog
-        if name in load_catalog(self.root):
+        if name in load_catalog(self.root) or name in self.upstream_libraries():
             return False
-        source = self._path("cFS/libs/" + name)
+        source = module_directory(self.root, "libs", name)
         roots = (evaluated or self._evaluate(self._revision()))["library_roots"]
         selection = self.selection()
         return (name in set(roots) | selection["added"] | selection["removed"] and source.is_dir()
@@ -223,7 +247,7 @@ class MissionConfig:
                 plan.update(table_membership_plan(self.root, sources=plan))
             plan.update(self.selection_plan(add=added, remove=removed,
                                            forget=selection["added"] - added | selection["removed"] - removed, sources=plan))
-            fragment = "cFS/sample_defs/generated/appgen_startup.scr"
+            fragment = "mission/sample_defs/generated/appgen_startup.scr"
             generated, _ = parse_startup(plan[fragment])
             recipes.update({item.name: item for item in generated})
             if action == "add":
@@ -248,11 +272,11 @@ class MissionConfig:
             plan[self.STARTUP] = render_startup(active, archived)
             if action == "delete":
                 roots = [item for item in evaluated["library_roots"] if item != name]
-                plan["cFS/sample_defs/libraries.cmake"] = (
+                plan["mission/libraries.cmake"] = (
                     "# Mission libraries built for CPU1. Native CFE_LIB startup entries load them.\n"
                     "set(MISSION_LIBRARIES " + " ".join(roots) + ")\n")
                 plan.update(self.selection_plan(forget=[name], sources=plan))
-                source = self._path("cFS/libs/" + name)
+                source = module_directory(self.root, "libs", name)
                 plan.update({path.relative_to(self.root).as_posix(): None
                              for path in source.rglob("*") if path.is_file()})
             self.assert_revision(revision)
@@ -263,11 +287,11 @@ class MissionConfig:
     def schedule_config(self):
         """Use cfe_locate_implementation_file's CPU1 table precedence."""
         filename = "sch_lab_table.c"
-        candidates = [f"cFS/sample_defs/cpu1/tables/{filename}",
-                      f"cFS/sample_defs/tables/cpu1_{filename}",
-                      f"cFS/sample_defs/tables/{filename}",
-                      f"cFS/sample_defs/cpu1/{filename}",
-                      f"cFS/sample_defs/cpu1_{filename}", f"cFS/sample_defs/{filename}",
+        candidates = [f"mission/sample_defs/cpu1/tables/{filename}",
+                      f"mission/sample_defs/tables/cpu1_{filename}",
+                      f"mission/sample_defs/tables/{filename}",
+                      f"mission/sample_defs/cpu1/{filename}",
+                      f"mission/sample_defs/cpu1_{filename}", f"mission/sample_defs/{filename}",
                       f"cFS/apps/sch_lab/fsw/tables/{filename}"]
         relative = next((name for name in candidates if self._path(name).is_file()), None)
         if relative is None:
@@ -278,7 +302,7 @@ class MissionConfig:
         rate = int(match[1], 16 if match[1].lower().startswith("0x") else 10) if match else None
         return {"path": relative, "line": clean.count('\n', 0, match.start()) + 1 if match else 1,
                 "tick_hz": (rate or 1) if rate is not None else None,
-                "generated_path": "cFS/sample_defs/generated/appgen_schedule.inc"}
+                "generated_path": "mission/sample_defs/generated/appgen_schedule.inc"}
 
     def _revision(self):
         digest = hashlib.sha256()
@@ -333,21 +357,21 @@ class MissionConfig:
             # Catalog only applications with usable startup recipes. Library
             # plugins and arbitrary source directories are not launchable apps.
             names = {name for name in recipes if name in compiled or name in included
-                     or self._path(f"cFS/apps/{name}/CMakeLists.txt").is_file()}
+                     or (module_directory(self.root, "apps", name) / "CMakeLists.txt").is_file()}
             available = []
             for name in sorted(names):
                 entry = recipes.get(name)
                 # An invalid active entry must still be removable; only adding
                 # an entry requires a corresponding binary in APPLIST.
-                editable = bool(entry and (name in included or self._path(f"cFS/apps/{name}/CMakeLists.txt").is_file()))
+                editable = bool(entry and (name in included or (module_directory(self.root, "apps", name) / "CMakeLists.txt").is_file()))
                 warnings = [self.WARNINGS[name]] if name in self.WARNINGS else []
                 if not entry:
                     warnings.append("No native startup entry is defined for this module.")
-                source = self.STARTUP if any(item.name == name for item in active + archived) else "cFS/sample_defs/generate_startup.cmake"
+                source = self.STARTUP if any(item.name == name for item in active + archived) else "mission/sample_defs/generate_startup.cmake"
                 available.append({"name": name, "entry_point": entry.fields[2] if entry else None,
                                   "enabled": name in enabled, "included": name in included,
                                   "build_included": name in compiled,
-                                  "editable": editable, "warnings": warnings,
+                                  "editable": editable, "required": name in self.WARNINGS, "warnings": warnings,
                                   "priority": int(entry.fields[4], 0) if entry else None,
                                   "stack_size": int(entry.fields[5], 0) if entry else None,
                                   "source": {"path": source, "line": entry.line if source == self.STARTUP and entry else 1}})
@@ -358,18 +382,19 @@ class MissionConfig:
             catalog = load_catalog(self.root)
             required = requirement_details(self.root, config, read_manifests(self.root, config))
             for module in sorted(compiled):
-                label = ("app " if self._path(f"cFS/apps/{module}/CMakeLists.txt").is_file() else "library ") + module
+                label = ("app " if (module_directory(self.root, "apps", module) / "CMakeLists.txt").is_file() else "library ") + module
                 for dependency in dependencies(self.root, module):
                     if label not in required.setdefault(dependency, []):
                         required[dependency].append(label)
             available_libraries = []
             for name in sorted(library_recipes.keys() | catalog.keys()):
                 entry = library_recipes.get(name)
+                project_library = self._library_deletable(name, evaluated)
                 available_libraries.append({
                     "name": name, "entry_point": entry.fields[2] if entry else catalog[name]["entry_point"],
                     "included": name in compiled, "loaded": any(item.name == name for item in active),
-                    "editable": name in catalog or self._path(f"cFS/libs/{name}/CMakeLists.txt").is_file(),
-                    "deletable": self._library_deletable(name, evaluated),
+                    "editable": name in catalog or (module_directory(self.root, "libs", name) / "CMakeLists.txt").is_file(),
+                    "deletable": project_library, "renamable": project_library,
                     "required_by": [reason for reason in required.get(name, []) if reason != "library " + name],
                     "source": {"path": self.STARTUP, "line": entry.line if entry else 1},
                 })
@@ -390,7 +415,7 @@ class MissionConfig:
             defaults = {"priority": seed["priority"], "stack_size": seed["stack_size"],
                         "wakeup_hz": schedule["tick_hz"] / seed["period_ticks"] if schedule["tick_hz"] else None,
                         "hk_hz": schedule["tick_hz"] / seed["hk_period_ticks"] if schedule["tick_hz"] else None} if seed else None
-            build_path = "cFS/sample_defs/targets.cmake"
+            build_path = "mission/sample_defs/targets.cmake"
             build_text = self._path(build_path).read_text()
             app_list = re.search(r'\b(?:set|list)\s*\(\s*(?:APPEND\s+)?cpu1_APPLIST\b', build_text, re.IGNORECASE)
             return {
@@ -405,7 +430,7 @@ class MissionConfig:
                 "build_config": {"path": build_path, "line": build_text.count('\n', 0, app_list.start()) + 1 if app_list else 1,
                                  "modules": evaluated["compiled"],
                                  "selection_path": self.MODULES,
-                                 "libraries_path": "cFS/sample_defs/libraries.cmake"},
+                                 "libraries_path": "mission/libraries.cmake"},
                 "schedule_config": schedule,
                 "creation_defaults": {"app": defaults, "library": {}},
                 "core_services": [{"name": name.upper(), "title": title, "path": f"cFS/cfe/modules/{name}"}
@@ -447,6 +472,8 @@ class MissionConfig:
         if path.exists() and path.read_text() == content:
             return
         plan = bootstrap_plan(self.root)
+        from interface.backend.mission_tables import table_membership_plan
+        plan.update(table_membership_plan(self.root, sources=plan))
         plan[self.STARTUP] = content
         self.assert_revision(revision)
         commit(self.root, plan)
@@ -456,6 +483,8 @@ class MissionConfig:
             raise ValueError("Unknown mission application action")
         if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*", name):
             raise ValueError("Invalid application name")
+        if name in self.WARNINGS and action in {"disable", "remove"}:
+            raise ValueError(name + " provides scheduling or the ground link for this mission.")
         if action in {"add", "remove"}:
             return self._change_membership("CFE_APP", action, name, expected_hash)
         snapshot = self.snapshot()
@@ -493,6 +522,8 @@ class MissionConfig:
             compiled = set(evaluated["compiled"])
             recipes = {entry.name: entry for entry in defaults + archived + active if entry.kind == "CFE_APP"}
             selected = set(names)
+            if ({e.name for e in active} & {"sch_lab", "ci_lab", "to_lab"}) - selected:
+                raise ValueError("Keep the mission scheduler, command input and telemetry output enabled.")
             unavailable = selected - recipes.keys() | (selected - compiled)
             if unavailable:
                 raise ValueError("No built startup entry for: " + ", ".join(sorted(unavailable)))

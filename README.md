@@ -23,21 +23,20 @@ Raspberry Pi keeps its disk in `board/raspios.qcow2`, which takes about 3 GB.
 ## Install
 
 ```sh
-git clone --recurse-submodules https://github.com/Raiagues/cfs_emulator.git
+git clone https://github.com/Raiagues/cfs_emulator.git
 cd cfs_emulator
 python3 -m venv .venv
 . .venv/bin/activate
 python3 -m pip install -r ground_station/requirements.txt
 ```
 
-The `cFS` submodule is the [official NASA cFS repository](https://github.com/nasa/cFS).
-Mission edits change files in `cFS/sample_defs/` and create apps and libraries in
-`cFS/apps/` and `cFS/libs/`, as described in [Project and mission](project/README.md).
+Open Flight Studio and select **Clone NASA cFS** on the setup screen. It downloads the default branch and the submodule revisions specified by the [official NASA repository](https://github.com/nasa/cFS). The screen shows the installed commit. To perform the same step from a terminal, run `./scripts/install-cfs.sh`.
+
+The platform Git repository ignores the independent checkout in `cFS/`. Studio reads the NASA sources and builds with its own `mission/sample_defs/`, custom modules in `mission/apps/` and `mission/libs/`, and output under `mission/build-*/`. See [Project and mission](project/README.md).
 
 ## First run
 
-The checked-in project selects a Raspberry Pi 4B with Raspberry Pi OS and one emulated
-TMP105 temperature sensor on I²C bus 1, address 0x48. The four steps below start the
+The checked-in project selects a Raspberry Pi 4B with Raspberry Pi OS. Add devices from the hardware workbench to populate I²C bus 1. The four steps below start the
 interface, the emulator, cFS and the Ground Station separately. Each step ends with
 the sign to look for before going on. Native execution, which needs no Docker, is
 described after them.
@@ -49,11 +48,8 @@ described after them.
 ```
 
 Open http://127.0.0.1:8765. The server only accepts connections from this computer,
-and `./start --ui --port 8766` selects another port. **Infrastructure** opens first:
-choose Native, Emulator or Physical board, configure access and press **Check**.
-Preparation commands run in the page's terminal. **Open workspace** opens the CPU1
-startup script and mission architecture. The toolbar's settings button returns to
-Infrastructure.
+and `./start --ui --port 8766` selects another port. **Infrastructure** opens first. Choose Native, Emulator or Physical board, configure access and press **Run all checks**.
+Preparation commands run in the page's terminal. **Open workspace** opens the 3D hardware workbench. The initial mission includes the NASA cFS apps, with no project-created apps or attached sensors. Select the Flight Studio name to return to Infrastructure.
 
 ```mermaid
 flowchart LR
@@ -65,8 +61,7 @@ flowchart LR
 
 ### 2. QEMU
 
-Run the setup script once. It checks Docker, Buildx and OpenSSH, initializes missing
-submodules, creates the emulator's SSH key in `~/.ssh/cfs-emulator/` and downloads the
+Run the setup script once. It checks Docker, Buildx and OpenSSH, creates the emulator's SSH key in `~/.ssh/cfs-emulator/` and downloads the
 emulator image. When the download fails, it builds the image locally. It asks for
 sudo when it has to install packages, start Docker or add your user to the `docker`
 group, and a group change takes effect after you sign in again.
@@ -75,11 +70,11 @@ group, and a group change takes effect after you sign in again.
 ./scripts/setup.sh
 ```
 
-Until setup has run, the toolbar shows Set up QEMU in place of Start QEMU + Linux.
-In the toolbar, choose Emulator and press Start QEMU + Linux. The first boot copies
+Until setup has run, the toolbar shows Set up QEMU in place of Start emulator.
+In the toolbar, choose Emulator and press Start emulator. The first boot copies
 the Raspberry Pi OS disk to `board/` and adds this computer's SSH key to it. Linux is
 ready when the terminal prints `Sensor values applied.` and then
-`Raspberry Pi ready.`. Stop QEMU powers Linux off and waits for the emulator to exit.
+`Raspberry Pi ready.`. Stop emulator powers Linux off and waits for the emulator to exit.
 From a terminal, the same steps are `./start --no-ui boot` and
 `./start --no-ui shutdown`.
 
@@ -106,13 +101,11 @@ asks TO_LAB to send telemetry to this computer. The status reads `QEMU · Connec
 once the receiver is listening, and telemetry is arriving when the packet counters
 grow.
 
-To check the command path, choose `sample_app` as the application, select
-`SAMPLE_APP_NOOP_CC` and press Send command. The Activity tab then lists the command
-under Sent, which only means that the UDP datagram left this computer. SAMPLE_APP
-processed it when Activity shows `SAMPLE: NOOP command` under Events and the
-`CommandCounter` field of the next `SAMPLE_APP_HkTlm_t` packet, in the Telemetry tab,
-has gone up by one. The [Ground Station guide](ground_station/README.md) shows this
-sequence step by step.
+To check the command path, select `SAMPLE_APP_NOOP_CC` under **Send commands** and
+press **Send command**. Look for `SAMPLE: NOOP command` under **Telemetry events**.
+Then open `SAMPLE_APP_HkTlm_t` under **Received telemetry** and check that its
+`CommandCounter` has increased by one. The [Ground Station guide](ground_station/README.md)
+follows the command from the browser to the flight app and back.
 
 ### Native execution
 
@@ -130,9 +123,8 @@ to 127.0.0.1.
 ./start --no-ui stop
 ```
 
-A physical Raspberry Pi 4B uses Board instead of Emulator, and Connect board takes the
-place of Start QEMU + Linux. [Execution targets](hardware/README.md) describes the
-one-time authorization the board needs.
+For a physical Raspberry Pi 4B, select **Board** and press **Check connection**.
+[Execution targets](hardware/README.md) describes the one-time SSH authorization.
 
 ## How the parts connect
 
@@ -153,8 +145,9 @@ flowchart TB
         cli -->|"simulate"| synthetic["Synthetic data<br/>sensors/"]
         manager -->|"starts"| synthetic
     end
-    edit -->|"writes"| cfs[("cFS/ sources")]
-    manager -->|"compiles"| cfs
+    edit -->|"writes"| mission[("mission/")]
+    manager -->|"reads"| cfs[("cFS/ · NASA checkout")]
+    manager -->|"builds"| mission
     subgraph targets["Execution targets"]
         native["Native process"]
         qemu["QEMU Raspberry Pi 4B<br/>in Docker"]
@@ -170,7 +163,7 @@ flowchart TB
 - [Interface](interface/README.md) covers the views, mission editing, terminals and
   keyboard shortcuts.
 - [Project and mission](project/README.md) covers apps, libraries, devices, drivers and
-  the cFS files they change.
+  their mission configuration.
 - [App generator](project/appgen/README.md) covers generated code and which files are
   yours to edit.
 - [Execution targets](hardware/README.md) covers builds, QEMU, the physical board and
@@ -182,3 +175,12 @@ flowchart TB
 
 `./start --help` lists the commands, and `./start --no-ui COMMAND --help` shows the
 options of one command.
+
+
+## Comparing an I²C sensor
+
+In Hardware, choose **Add sensor** and select MPU6050. AD0 selects address 0x68 or 0x69. **Validate model** exercises the compiled QEMU device on a separate Pi 4 instance. It checks the identity, register defaults, burst data, range selection and software reset. The model implements the register interface for accelerometer, temperature and gyroscope sampling. FIFO, interrupts and DMP are outside its implementation.
+
+Add a flight reader to the mission app, build and run it to initialize the sensor, then select **Test sensor**. Repeat on the physical board with the same wiring and address. The inspector shows the two most recent measurements side by side, in g, °C and °/s. Stationary measurements depend on the board orientation and sensor bias.
+
+For a new device, choose **New I²C register model** in the same dialog. Enter its identity, startup writes, output registers, units and sensitivity from the device register map. This generator supports a contiguous burst of up to 32 bytes containing signed, big-endian, 16-bit measurements on the Pi 4 I²C bus. Install the updated emulator image in workspace setup and run **Validate model** before connecting a flight reader.

@@ -9,22 +9,28 @@
   <link rel="stylesheet" href="/vendor/xterm.css">
 </head>
 <body>
-  <header class="setup-header"><a href="/" class="brand">Flight <span>studio</span></a><span class="header-divider">/</span><span id="project-name">Infrastructure</span><span class="local-label">Local workspace</span></header>
-  <main>
-    <div class="page-heading"><div><span class="eyebrow">INFRASTRUCTURE</span><h1>Prepare your workspace</h1><p>Choose where cFS will run, configure access and check the tools.</p></div><button id="open-terminal" class="quiet" type="button">Open terminal</button></div>
+  <main><div class="setup-content">
     <p id="feedback" role="status" aria-live="polite">Loading configuration…</p>
     <form id="infrastructure-form">
+      <section class="source-setup" aria-labelledby="source-heading">
+        <div class="source-name"><span class="source-icon" aria-hidden="true" id="source-icon"></span><div><h2 id="source-heading">NASA cFS</h2><a href="https://github.com/nasa/cFS" target="_blank" rel="noopener">github.com/nasa/cFS</a></div></div>
+        <div class="source-action"><span id="source-state" role="status"></span><button id="clone-source" class="primary" type="button" hidden>Clone NASA cFS</button></div>
+      </section>
       <div class="setup-grid">
-        <section class="target-section" aria-labelledby="target-heading"><h2 id="target-heading"><span>01</span> Execution</h2><div id="targets" role="group" aria-label="Execution target"></div><div id="target-route" class="target-route"></div></section>
-        <section class="configuration-section" aria-labelledby="configuration-heading"><h2 id="configuration-heading"><span>02</span> Configuration</h2><div id="configuration"></div></section>
-        <section class="requirements-section" aria-labelledby="requirements-heading"><div class="section-heading"><h2 id="requirements-heading"><span>03</span> Requirements</h2><button id="check" type="button" class="quiet">Check</button></div><div id="checks"><p class="empty">Check the tools for the selected target.</p></div></section>
+        <section class="target-section" aria-labelledby="target-heading"><h2 id="target-heading">Execution</h2><div id="targets" role="group" aria-label="Execution target"></div></section>
+        <section class="configuration-section" aria-labelledby="configuration-heading"><h2 id="configuration-heading">Configuration</h2><div id="configuration"></div></section>
       </div>
-      <section id="preparation" class="preparation" aria-label="Preparation commands"></section>
-      <footer class="setup-footer"><span id="save-state">Connections and emulator settings stay local.</span><div><button type="button" id="save">Save configuration</button><button type="submit" class="primary" id="enter">Open workspace <span aria-hidden="true">↗</span></button></div></footer>
+      <details id="verification" hidden><summary><span id="check-status" role="status"></span><span id="check-count"></span></summary><div id="checks"></div></details>
+      <footer class="setup-footer">
+        <div id="preparation" aria-label="Preparation commands"></div>
+        <div class="primary-actions"><span id="save-state" role="status"></span><button id="check" type="button">Run all checks</button><button type="submit" class="primary" id="enter">Open workspace</button></div>
+      </footer>
     </form>
-    <section id="job-output" class="output-panel" hidden><header><strong id="job-title">Connection</strong><span id="job-state"></span></header><pre id="job-log" role="log"></pre><div id="board-report"></div></section>
-    <section id="setup-terminal" class="output-panel" hidden><header><strong>Local terminal</strong><span>Project directory</span><button type="button" id="close-terminal" aria-label="Close terminal">×</button></header><div id="shell-terminal" hidden></div></section>
-  </main>
+  </div></main>
+  <div class="output-dock">
+    <section id="job-output" class="output-panel" hidden><header><strong id="job-title">Connection</strong><span id="job-state"></span><button id="close-report" type="button" aria-label="Close report">×</button></header><pre id="job-log" role="log"></pre><div id="board-report"></div></section>
+    <section id="setup-terminal" class="output-panel" hidden><header><strong><span class="prompt" aria-hidden="true">›_</span>Local terminal</strong><span>Project directory</span><button type="button" id="close-terminal" aria-label="Close terminal">×</button></header><div id="shell-terminal" hidden></div></section>
+  </div>
   <script src="/vendor/xterm.js"></script>
   <script src="/vendor/addon-fit.js"></script>
   <script src="/infrastructure.js" type="module"></script>

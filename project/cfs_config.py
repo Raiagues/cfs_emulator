@@ -6,8 +6,8 @@ import subprocess
 import tempfile
 
 
-STARTUP = 'cFS/sample_defs/cpu1_cfe_es_startup.scr'
-GENERATED = 'cFS/sample_defs/generated/'
+STARTUP = 'mission/cpu1_cfe_es_startup.scr'
+GENERATED = 'mission/sample_defs/generated/'
 
 
 def build_profile(root, config=None):
@@ -36,13 +36,13 @@ def evaluate_mission(root, config=None):
         script = '\n'.join([
             'set(CFE_EDS_ENABLED OFF)', f'set(SIMULATION {architecture})',
             f'include({quote(safe_path(root, "cFS/cfe/cmake/mission_defaults.cmake"))})',
-            f'include({quote(safe_path(root, "cFS/sample_defs/targets.cmake"))})',
+            f'include({quote(safe_path(root, "mission/sample_defs/targets.cmake"))})',
             'list(APPEND cpu1_APPLIST ${MISSION_GLOBAL_APPLIST})',
             'list(REMOVE_DUPLICATES cpu1_APPLIST)',
             f'file(WRITE {quote(work / "compiled")} "${{cpu1_APPLIST}}")',
             f'file(WRITE {quote(work / "core")} "${{MISSION_CORE_MODULES}}")',
             f'file(WRITE {quote(work / "libraries")} "${{MISSION_LIBRARIES}}")',
-            f'include({quote(safe_path(root, "cFS/sample_defs/generate_startup.cmake"))})',
+            f'include({quote(safe_path(root, "mission/sample_defs/generate_startup.cmake"))})',
             'set(CFS_STARTUP_IGNORE_OVERRIDE TRUE)',
             f'set(CMAKE_INSTALL_PREFIX {quote(work)})',
             'generate_cfs_startup_script("cpu1/cf" ${cpu1_APPLIST})',
@@ -68,13 +68,15 @@ def native_startup(root, config=None):
 
 def configured(root, config):
     """An untouched native clone needs no generated mission files for sync/build."""
-    return bool(config['board'] or config['apps'] or (Path(root) / GENERATED / 'appgen.cmake').exists())
+    return bool(config['board'] or config['apps'] or any((Path(root) / path).exists() for path in
+                (STARTUP, 'mission/modules.cmake', 'mission/libraries.cmake', GENERATED + 'appgen.cmake')))
 
 
 def module_limits_plan(root, files):
-    """Size the native loader buffers for the final startup, including the NUL."""
+    """Size native loader and table filename buffers for the final mission."""
     from project.model import safe_path
     from project.appgen.native_startup import parse_startup
+    from project.flight_sources import module_directory
     if STARTUP not in files:
         return {}
     active, archived = parse_startup(files[STARTUP])
@@ -84,7 +86,18 @@ def module_limits_plan(root, files):
     # cFE's wire definitions require name buffers to be multiples of four.
     aligned = lambda size: (size + 3) // 4 * 4
     api = aligned(max([default('MAX_API_NAME')] + [len(value) + 1 for entry in records for value in entry.fields[2:4]]))
-    file = aligned(max([default('MAX_FILE_NAME')] + [len(Path(entry.fields[1]).name.removesuffix('.so') + '.so') + 1 for entry in records]))
+    filenames = [entry.name + '.so' for entry in records]
+    # cFE also uses MAX_FILE_LEN for the filename embedded in a table image.
+    # A generated <app>_tbl.tbl can be longer than the corresponding .so.
+    table_paths = {path.relative_to(root).as_posix() for entry in records if entry.kind == 'CFE_APP'
+                   for path in (module_directory(root, 'apps', entry.name) / 'fsw/tables').glob('*.c')}
+    table_paths.update(path.relative_to(root).as_posix() for path in safe_path(root, 'mission/sample_defs').rglob('*.c'))
+    table_paths.update(path for path in files if path.endswith('.c') and '/tables/' in path)
+    table = re.compile(r'^\s*CFE_TBL_FILEDEF\s*\([^,]+,[^,]+,[^,]+,\s*([\w./-]+)\s*\)', re.M)
+    for path in table_paths:
+        content = files[path] if path in files else safe_path(root, path).read_text()
+        filenames.extend(table.findall(content or ''))
+    file = aligned(max([default('MAX_FILE_NAME')] + [len(name) + 1 for name in filenames]))
     minimum = {'MAX_API_NAME': api, 'MAX_FILE_NAME': file, 'MAX_MODULES': max(default('MAX_MODULES'), len(active))}
     plan = {}
     marker = 'MISSION MODULE LIMITS'
@@ -92,7 +105,7 @@ def module_limits_plan(root, files):
         path = safe_path(root, relative)
         text = files.get(relative, path.read_text() if path.is_file() else '')
         return re.sub(r'\n(?:#|/\*) ' + marker + r' BEGIN.*?' + marker + r' END(?: \*/)?\n?', '', text, flags=re.S).rstrip()
-    osconfig = 'cFS/sample_defs/default_osconfig.cmake'
+    osconfig = 'mission/sample_defs/default_osconfig.cmake'
     text = original(osconfig)
     lines = [f'# {marker} BEGIN']
     for name, size in minimum.items():
@@ -107,7 +120,7 @@ def module_limits_plan(root, files):
     if len(lines) > 1:
         text += '\n\n' + '\n'.join([*lines, f'# {marker} END'])
     plan[osconfig] = text + '\n'
-    header = 'cFS/sample_defs/cfe_core_api_interface_cfg_values.h'
+    header = 'mission/sample_defs/cfe_core_api_interface_cfg_values.h'
     text = original(header)
     if api > default('MAX_API_NAME') or file > default('MAX_FILE_NAME'):
         if not text:
@@ -139,7 +152,7 @@ def _startup_override(text):
         raise ValueError('The upstream startup generator does not define generate_cfs_startup_script')
     return renamed.rstrip() + '''
 
-set(MISSION_CPU1_STARTUP "${CMAKE_CURRENT_LIST_DIR}/cpu1_cfe_es_startup.scr")
+set(MISSION_CPU1_STARTUP "${CMAKE_CURRENT_LIST_DIR}/../cpu1_cfe_es_startup.scr")
 set(MISSION_APPGEN_STARTUP "${CMAKE_CURRENT_LIST_DIR}/generated/appgen_startup.scr")
 function(generate_cfs_startup_script CFS_INSTALL_DIR)
     set(STARTUP_FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/${CFS_INSTALL_DIR}/cfe_es_startup.scr")
@@ -171,31 +184,37 @@ endfunction()
 '''
 
 
+def mission_targets(text):
+    """Extend the local target list; board-wide NASA defaults stay in effect."""
+    if 'generated/appgen.cmake' in text:
+        return text
+    return text.rstrip() + """
+
+include(${CMAKE_CURRENT_LIST_DIR}/generated/appgen.cmake OPTIONAL)
+include(${CMAKE_CURRENT_LIST_DIR}/../libraries.cmake OPTIONAL)
+list(APPEND cpu1_APPLIST ${APPGEN_LIBS} ${APPGEN_APPS} ${MISSION_LIBRARIES})
+include(${CMAKE_CURRENT_LIST_DIR}/../modules.cmake OPTIONAL)
+"""
+
+
 def bootstrap_plan(root, config=None):
     """Prepare ordinary CMake, startup and table edits for an explicit mutation."""
     from project.model import safe_path, load_config, appgen
     root = Path(root)
     config = load_config(root) if config is None else config
     plan = {}
-    targets = 'cFS/sample_defs/targets.cmake'
+    targets = 'mission/sample_defs/targets.cmake'
     text = safe_path(root, targets).read_text()
-    if 'generated/appgen.cmake' not in text:
-        text = text.rstrip() + '''
-
-include(${CMAKE_CURRENT_LIST_DIR}/generated/appgen.cmake OPTIONAL)
-include(${CMAKE_CURRENT_LIST_DIR}/libraries.cmake OPTIONAL)
-list(APPEND cpu1_APPLIST ${APPGEN_LIBS} ${APPGEN_APPS} ${MISSION_LIBRARIES})
-'''
-        plan[targets] = text
-    libraries = 'cFS/sample_defs/libraries.cmake'
-    if not safe_path(root, libraries).exists():
-        plan[libraries] = '# Libraries explicitly selected for CPU1.\nset(MISSION_LIBRARIES)\n'
+    updated = mission_targets(text)
+    if updated != text:
+        plan[targets] = updated
     for path, content in appgen(root).render_mission([], []).items():
-        relative = 'cFS/' + path
+        relative = 'mission/' + path
         if not safe_path(root, relative).exists():
             plan[relative] = content
     if not safe_path(root, STARTUP).exists():
-        plan[STARTUP] = native_startup(root, config)
+        if config['apps'] or config['devices']:
+            plan[STARTUP] = native_startup(root, config)
     elif any(config[key] != load_config(root)[key] for key in ('board', 'os')):
         from project.appgen.native_startup import parse_startup, render_startup
         active, archived = parse_startup(native_startup(root, config))
@@ -204,12 +223,12 @@ list(APPEND cpu1_APPLIST ${APPGEN_LIBS} ${APPGEN_APPS} ${MISSION_LIBRARIES})
         if unavailable:
             archive = {entry.name: entry for entry in archived + unavailable}
             plan[STARTUP] = render_startup([entry for entry in active if entry.name in compiled], list(archive.values()))
-    generator = 'cFS/sample_defs/generate_startup.cmake'
+    generator = 'mission/sample_defs/generate_startup.cmake'
     original = safe_path(root, generator).read_text()
     updated = _startup_override(original)
     if updated != original:
         plan[generator] = updated
-    install = 'cFS/sample_defs/cpu1/install_custom.cmake'
+    install = 'mission/sample_defs/cpu1/install_custom.cmake'
     original = safe_path(root, install).read_text()
     if 'APPGEN_ENABLED' not in original:
         block = '''list(APPEND APP_DEFINITION_TABLE_LIST APPGEN_ENABLED)
@@ -227,7 +246,7 @@ endforeach()
         plan[install] = original[:match.start()] + block + original[match.start():]
     for name, field, fragment in [('sch_lab_table.c', 'Config', 'appgen_schedule.inc'),
                                   ('to_lab_sub.c', 'Subs', 'appgen_telemetry.inc')]:
-        path = 'cFS/sample_defs/tables/' + name
+        path = 'mission/sample_defs/tables/' + name
         original = safe_path(root, path).read_text()
         updated = original
         if 'appgen_includes.h' not in updated:
@@ -244,7 +263,7 @@ endforeach()
             plan[path] = updated
     profile = build_profile(root, config)
     if profile['architecture'] != 'native':
-        path = 'cFS/sample_defs/toolchain-' + profile['architecture'] + '.cmake'
+        path = 'mission/sample_defs/toolchain-' + profile['architecture'] + '.cmake'
         if not safe_path(root, path).is_file():
             plan[path] = '# Selected board and operating-system toolchain.\n' + ''.join(
                 f'set({name} [=[{value}]=])\n' for name, value in profile['cmake'].items())
