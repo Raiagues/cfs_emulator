@@ -27,7 +27,6 @@ RUN BOOT_OFFSET=$(($(od -An -tu4 -j 454 -N 4 /opt/raspi-os/raspios.img) * 512)) 
     mcopy -i "/opt/raspi-os/raspios.img@@$BOOT_OFFSET" ::kernel8.img /opt/raspi-os/kernel8.img && \
     mcopy -i "/opt/raspi-os/raspios.img@@$BOOT_OFFSET" ::bcm2711-rpi-4-b.dtb /opt/raspi-os/bcm2711-rpi-4-b.dtb && \
     mcopy -i "/opt/raspi-os/raspios.img@@$BOOT_OFFSET" ::initramfs8 /opt/raspi-os/initramfs8 && \
-    fdtput -t s /opt/raspi-os/bcm2711-rpi-4-b.dtb /soc/i2c@7e804000 status okay && \
     fdtput -t s /opt/raspi-os/bcm2711-rpi-4-b.dtb /soc/serial@7e201000/bluetooth status disabled && \
     fdtput -t s /opt/raspi-os/bcm2711-rpi-4-b.dtb /soc/usb@7e980000 status okay && \
     fdtput -t s /opt/raspi-os/bcm2711-rpi-4-b.dtb /soc/usb@7e980000 compatible brcm,bcm2835-usb && \
@@ -85,8 +84,10 @@ RUN cd /tmp/qemu && patch -p1 < /tmp/qemu-signed.patch && \
     install -D -s -m755 qemu-system-aarch64 /output/qemu-system-aarch64
 
 # Reuse the base build when a student adds a register model.
-COPY project/qemu/ /tmp/studio-devices/
-RUN python3 /tmp/studio-devices/generate.py /tmp/qemu/hw/sensor && \
+COPY project/qemu/ /tmp/studio/project/qemu/
+COPY project/model.py project/sensor_models.py /tmp/studio/project/
+COPY project/drivers/models/ /tmp/studio/project/drivers/models/
+RUN python3 /tmp/studio/project/qemu/generate.py /tmp/qemu/hw/sensor && \
     ninja -C /tmp/qemu/build -j4 qemu-system-aarch64 && \
     install -D -s -m755 /tmp/qemu/build/qemu-system-aarch64 /output/qemu-system-aarch64
 

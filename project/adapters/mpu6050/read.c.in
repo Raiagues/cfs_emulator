@@ -1,7 +1,0 @@
-    if (!@PREFIX@_@ENTITY@_Configured)
-    {
-        int32 status = MPU6050_Configure(@PREFIX@_@ENTITY_UPPER@_DEVICE, @PREFIX@_@ENTITY_UPPER@_ADDRESS);
-        if (status != CFE_SUCCESS) { return status; }
-        @PREFIX@_@ENTITY@_Configured = true;
-    }
-    return MPU6050_Read(@PREFIX@_@ENTITY_UPPER@_DEVICE, @PREFIX@_@ENTITY_UPPER@_ADDRESS, Value);

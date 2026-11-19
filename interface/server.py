@@ -24,12 +24,9 @@ from ground_station.station import GroundStation
 from ground_station.catalog import apply_overrides, CATALOG_VERSION
 
 # Infrastructure opens at /; the editor and diagrams open at /studio.
-STATIC_FILES = {'app.js', 'style.css', 'prototype.css', 'panels.css', 'panels.js', 'board.js', 'board.css', 'ui.js',
-                'layout.js', 'terminal.js', 'selectors.js', 'terminal.css', 'shell.js', 'architecture.js',
-                'architecture.css', 'mission-diagram.js', 'mission-diagram.css', 'module-actions.js', 'app-diagram.js', 'app-diagram.css',
-                'communication.js', 'communication.css', 'simulation.js', 'simulation.css',
-                'vendor/xterm.js', 'vendor/xterm.css', 'vendor/addon-fit.js', 'infrastructure.js', 'infrastructure.css', 'emulator-guide.html', 'sensor-designer.js'}
-CONTENT_TYPES = {'html': 'text/html; charset=utf-8', 'js': 'text/javascript; charset=utf-8', 'css': 'text/css; charset=utf-8'}
+STATIC_ROOT = ROOT / 'interface/static'
+ASSET_TYPES = {'.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
+               '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.png': 'image/png'}
 CONTENT_SECURITY_POLICY = ("default-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; "
                            "img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'")
 
@@ -331,8 +328,9 @@ class Studio:
         if target not in ('native', 'qemu', 'physical'):
             raise ValueError('Invalid target')
         deployment = self.hardware._load('deployed.json', {}).get(target)
-        sensorless = bool(deployment and deployment.get('sensorless'))
-        state = deployment or self.hardware.build_state(target)
+        active = deployment if deployment and not deployment.get('stopped_at') else None
+        sensorless = bool(active and active.get('sensorless'))
+        state = active or self.hardware.build_state(target)
         if not state:
             return {'packets': [], 'commands': [], 'transport': {},
                     'errors': ['Build and run the flight software to prepare the catalog.']}
@@ -362,7 +360,7 @@ class Studio:
             prior = deployment.get('connection') or {}
             if not self.hardware.same_board(current, prior):
                 raise ValueError('Run cFS on the selected board to deploy this mission there.')
-        catalog = self.ground_catalog(target)
+        catalog = apply_overrides(self.freeze_catalog(deployment, bool(deployment.get('sensorless'))), self.workspace.root)
         if target == 'native':
             instance = deployment.get('instance') if deployment.get('pid') in hardware['native']['pids'] else None
         else:
@@ -403,13 +401,16 @@ class Studio:
         return location
 
     def ground_send(self, body):
-        if set(body) - {'command_id', 'values', 'target'}:
+        if set(body) - {'command_id', 'values', 'target', 'test_id'}:
             raise ValueError('Invalid command parameters')
         if body.get('target', self.ground_target) != self.ground_target:
             raise ValueError('Connect the ground station to the selected target before sending commands.')
         if not isinstance(body.get('values', {}), dict):
             raise ValueError('Command values must be an object')
-        return self.ground.send(body['command_id'], body.get('values', {}))
+        return self.ground.send(body['command_id'], body.get('values', {}), test_id=body.get('test_id'))
+
+    def ground_plan(self, body):
+        return self.ground.plans.save(body, self.ground_catalog(body.get('target')) if not body.get('delete') else {})
 
     def close(self):
         self.shells.close()
@@ -442,6 +443,33 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def stream_checks(self, hardware, target):
+        snapshots = infrastructure.check_progress(hardware, target)
+        first = next(snapshots)  # Validate the target and load its settings before committing HTTP 200.
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/x-ndjson; charset=utf-8')
+        self.send_header('Cache-Control', 'no-store')
+        self.send_header('X-Content-Type-Options', 'nosniff')
+        self.send_header('Connection', 'close')
+        self.end_headers()
+        self.close_connection = True
+
+        def publish(snapshot):
+            self.wfile.write((json.dumps(snapshot, ensure_ascii=False) + '\n').encode('utf-8'))
+            self.wfile.flush()
+
+        try:
+            publish(first)
+            for snapshot in snapshots:
+                publish(snapshot)
+        except (BrokenPipeError, ConnectionResetError, TimeoutError):
+            pass  # A tab can close or switch targets while a probe is running.
+        except Exception:
+            traceback.print_exc()
+            publish({'error': 'Setup verification was interrupted.'})
+        finally:
+            snapshots.close()
+
     def do_GET(self):
         try:
             if not self.valid_host():
@@ -456,27 +484,34 @@ class Handler(BaseHTTPRequestHandler):
                 '/api/files/search': lambda: app.workspace.search_files(query.get('root', 'cFS'), query.get('q', '')),
                 '/api/file': lambda: app.workspace.read_file(query['path']),
                 '/api/hardware': app.hardware.status,
-                '/api/infrastructure': lambda: infrastructure.snapshot(app.hardware),
+                '/api/infrastructure': lambda: infrastructure.snapshot(app.hardware, verify_source=query.get('verify_source') == '1'),
                 '/api/simulation': app.workspace.simulation_snapshot,
                 '/api/hardware/device': lambda: device_settings(app.workspace, query.get('id')),
                 '/api/jobs': app.jobs_snapshot,
                 '/api/ground/catalog': lambda: app.exclusive(app.ground_catalog, query.get('target')),
+                '/api/ground/tests': app.ground.plans.read,
                 '/api/ground': app.ground_snapshot,
                 '/api/ground/source': lambda: app.exclusive(app.ground_source, query),
             }
             if url.path in routes:
                 return self.reply(routes[url.path]())
-            if url.path in {'/', '/infrastructure'} or (url.path in {'/studio', '/studio/'} and not infrastructure.sources_ready(ROOT)):
+            if url.path in {'/', '/infrastructure'} or (url.path in {'/studio', '/studio/'} and not infrastructure.sources_ready(app.workspace.root)):
                 name = 'infrastructure.html'
             elif url.path in {'/studio', '/studio/'}:
                 name = 'index.html'
-            elif url.path[1:] in STATIC_FILES:
-                name = url.path[1:]
+            elif url.path == '/emulator-guide.html':
+                name = 'emulator-guide.html'
             else:
+                name = url.path.removeprefix('/')
+                if Path(name).suffix not in ASSET_TYPES:
+                    return self.reply({'error': 'Not found'}, 404)
+            asset = (STATIC_ROOT / name).resolve()
+            if not asset.is_relative_to(STATIC_ROOT) or not asset.is_file():
                 return self.reply({'error': 'Not found'}, 404)
-            data = (ROOT / 'interface/static' / name).read_bytes()
+            data = asset.read_bytes()
             self.send_response(200)
-            self.send_header('Content-Type', CONTENT_TYPES[name.split('.')[-1]])
+            self.send_header('Content-Type', ASSET_TYPES.get(asset.suffix, 'text/html; charset=utf-8'))
+            self.send_header('X-Content-Type-Options', 'nosniff')
             self.send_header('Content-Length', str(len(data)))
             self.send_header('Cache-Control', 'no-store')
             self.send_header('Content-Security-Policy', CONTENT_SECURITY_POLICY)
@@ -516,9 +551,13 @@ class Handler(BaseHTTPRequestHandler):
             elif path == '/api/infrastructure':
                 result = app.exclusive(infrastructure.save, app, body)
             elif path == '/api/infrastructure/check':
-                result = app.exclusive(infrastructure.check, app.hardware, body.get('target'))
+                if 'label' in body:
+                    return self.reply(infrastructure.check_one(app.hardware, body.get('target'), body['label']))
+                if 'application/x-ndjson' in self.headers.get('Accept', ''):
+                    return self.stream_checks(app.hardware, body.get('target'))
+                result = infrastructure.check(app.hardware, body.get('target'))
             elif path == '/api/mutate':
-                result = app.exclusive(app.workspace.mutate, body['action'], body.get('payload', {}))
+                result = app.exclusive(app.workspace.mutate, body['action'], body.get('payload', {}), body.get('expected_hash'))
             elif path == '/api/mission/app':
                 if body.get('action') == 'delete':
                     result = app.exclusive(app.workspace.delete_app, body.get('name'), body.get('expected_hash'))
@@ -536,7 +575,11 @@ class Handler(BaseHTTPRequestHandler):
                 draft = (body.get('kind'), body.get('name'), body.get('settings'), body.get('expected_hash'))
                 result = app.exclusive(app.workspace.save_mission_draft, *draft, body.get('plan_hash'), body.get('mode', 'create'))
             elif path == '/api/mission/profile':
-                result = app.exclusive(app.workspace.select_profile, body.get('board'), body.get('os'), body.get('expected_hash'))
+                result = app.exclusive(app.workspace.select_profile, body.get('board'), body.get('os'),
+                                       body.get('expected_hash'), app.hardware)
+            elif path == '/api/simulation/orbit':
+                from sensors.orbit import preview
+                result = preview(body)
             elif path == '/api/simulation':
                 if any(job['action'] in {'simulate', 'simulate-preview'} and job['status'] == 'running' for job in app.jobs_snapshot()):
                     raise ValueError('Stop synthetic data before changing its session settings')
@@ -544,9 +587,7 @@ class Handler(BaseHTTPRequestHandler):
             elif path == '/api/hardware/target':
                 result = app.exclusive(app.hardware.select_target, body.get('target'))
             elif path == '/api/hardware/model':
-                if not str(body.get("name", "")).startswith("lab_"):
-                    raise ValueError("Start a custom device name with lab_")
-                from project.qemu.catalog import register
+                from project.sensor_models import register
                 result = app.exclusive(register, app.workspace.root, body)
             elif path == '/api/hardware/device':
                 result = app.exclusive(update_device, app.workspace, body)
@@ -555,7 +596,8 @@ class Handler(BaseHTTPRequestHandler):
             elif path == '/api/job/cancel':
                 result = app.cancel(body['id'])
             elif path == '/api/terminal/create':
-                result = app.shells.create(body.get('rows', 24), body.get('cols', 80))
+                result = app.shells.create(body.get('rows', 24), body.get('cols', 80),
+                                           body.get('setup_action'), body.get('target'))
             elif path == '/api/terminal/read':
                 result = app.shells.get(body['id']).read(body.get('cursor', 0))
             elif path == '/api/terminal/input':
@@ -570,6 +612,12 @@ class Handler(BaseHTTPRequestHandler):
                 result = app.exclusive(app.ground.stop)
             elif path == '/api/ground/send':
                 result = app.exclusive(app.ground_send, body)
+            elif path == '/api/ground/tests':
+                result = app.exclusive(app.ground_plan, body)
+            elif path == '/api/ground/tests/cancel':
+                if body.get('target') != app.ground_target or body.get('session') != app.ground_snapshot()['communication']['since']:
+                    raise ValueError('The ground session has changed.')
+                result = app.ground.cancel_test(body.get('id'))
             else:
                 return self.reply({'error': 'Not found'}, 404)
             self.reply(result or {'ok': True})

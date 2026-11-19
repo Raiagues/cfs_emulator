@@ -4,9 +4,15 @@ import json
 from pathlib import Path
 import struct
 import subprocess
+import sys
+
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from project.sensor_models import validate
 
 
 def verify(binary, model):
+    model = validate(model)
     device = f"{model['name']},id=sensor,bus=i2c-bus.1,address={model['address']}"
     argv = [binary, '-M', 'raspi4b', '-S', '-display', 'none', '-serial', 'none',
             '-monitor', 'none', '-device', device, '-qtest', 'stdio', '-qtest-log', '/dev/null']

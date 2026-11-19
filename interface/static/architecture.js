@@ -1,5 +1,5 @@
 import {icon} from './ui.js';
-import {renderMissionDiagram} from './mission-diagram.js';
+import {renderMissionDiagram, mountMissionMap} from './mission-diagram.js';
 import {renderAppDiagram,layoutAppDiagram} from './app-diagram.js';
 
 function source(ref,label,esc){
@@ -42,8 +42,7 @@ export function renderArchitecture(state,{esc}){
  const library=state.workspace.libraries?.find(item=>item.name===state.archLibrary);
  const draft=state.missionDraft;
  const selected=draft?.draft.name||library?.name||app?.name;
- const mission=renderMissionDiagram(state,{esc,icon});
- if(!selected)return `<div class="architecture-surface"><div class="architecture-scroll">${mission}</div></div>`;
+ if(!selected)return `<div class="architecture-surface"><div class="architecture-scroll">${renderMissionDiagram(state,{esc,icon})}</div></div>`;
  let detail,actions;
  if(draft){
   detail=draftDiagram(state,esc);
@@ -55,6 +54,9 @@ export function renderArchitecture(state,{esc}){
  const panel=`<section class="architecture-pane architecture-detail"><header><span>${icon(library?'files':'code')}${esc(selected)}</span><div>${actions}</div></header><div class="architecture-pane-content">${detail}</div></section>`;
  const overview=!!state.archOverview&&!draft;
  const tabs=draft?'':`<nav class="arch-tabs" aria-label="Architecture views"><button data-arch-tab="overview" aria-pressed="${overview}">${icon('layers')}Mission architecture</button><button data-arch-tab="detail" aria-pressed="${!overview}">${icon(library?'files':'code')}${esc(selected)}</button></nav>`;
- return `<div class="architecture-surface">${tabs}<div class="architecture-scroll">${overview?mission:panel}</div></div>`;
+ return `<div class="architecture-surface">${tabs}<div class="architecture-scroll">${overview?renderMissionDiagram(state,{esc,icon}):panel}</div></div>`;
 }
-export const layoutArchitecture=layoutAppDiagram;
+export function layoutArchitecture(state) {
+  layoutAppDiagram(state);
+  mountMissionMap(state);
+}

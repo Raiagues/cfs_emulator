@@ -1,159 +1,91 @@
-# Project and mission
+# Projeto e missão
 
-Studio-created applications, libraries and configuration live in `mission/`. NASA supplies the framework and stock modules in the independent `cFS/` checkout.
-The web interface and `./start --no-ui app` use the same mission operations. Each
-operation prepares all of its files before replacing any, and an operation that fails
-partway restores the files it had already replaced.
+A NASA fornece o framework, as apps padrão e os exemplos em um checkout independente, `cFS/`. O Studio cria o software da missão em `mission/` e guarda as escolhas da pessoa em `project/`. Para baixar o upstream e abrir o primeiro workspace, siga o [guia inicial](../README.md).
 
-The diagram shows which native mission files a new app or library adds entries to.
+Ao preparar uma missão, o Studio usa os arquivos oficiais de `cFS/sample_defs/` para inicializar as definições locais. O build recebe `mission/sample_defs/` em `MISSION_DEFS` e procura módulos nos diretórios da NASA e da missão usando `CFS_APP_PATH`. O Git do Studio ignora o checkout da NASA, as definições locais materializadas e os diretórios de compilação. Apps próprias, bibliotecas, mapas de sensores e configurações da missão ficam disponíveis para versionamento.
 
 ```mermaid
 flowchart LR
-    App[Application C sources] --> CMake[CMake / APPLIST]
-    App --> Startup[CPU1 startup record]
-    App --> SCH[SCH wakeup and housekeeping rows]
-    App --> TO[TO telemetry subscriptions]
-    Library[Library source + public header] --> CMake
-    Library --> Startup
-    CMake --> Build[cFS build]
-    Startup --> Build
-    SCH --> Build
-    TO --> Build
+    A["App baseada em sample_app"] --> C["CMake e startup da CPU1"]
+    L["Biblioteca baseada em sample_lib"] --> C
+    A --> SCH["Agendamento SCH_LAB"]
+    A --> TO["Inscrições TO_LAB"]
+    C --> B["Build cFS"]
+    SCH --> B
+    TO --> B
 ```
 
-## Unmodified cFS checkout
+## Aplicações e bibliotecas
 
-The setup screen clones NASA cFS and initializes the mission definitions from its `sample_defs/` templates. Studio passes the local definitions to cFE through `MISSION_DEFS` and finds custom apps and libraries through `CFS_APP_PATH`. The editor opens the NASA source files read-only. Repeating the installation uses the existing revision and definitions.
-Project-owned startup and membership choices live directly in `mission/` alongside the app and library sources. The local working definitions and build directories are ignored by Git.
-The generator itself lives in [`appgen/`](appgen/README.md).
-
-```sh
-./start --no-ui profile --board raspi4b --os raspios
-./start --no-ui build --target qemu
-```
-
-Selecting a board and operating system writes a CMake toolchain file from the build
-profile in the board catalog.
-
-## Applications
+Na arquitetura 2D, **New** cria ou inclui um módulo no grupo selecionado. Para uma app própria, o rascunho mostra ponto de entrada, prioridade, pilha, frequência de wakeup e frequência de housekeeping. Salvar aplica as definições ao build e ao startup. Os quatro comandos padrão da cópia de `sample_app` continuam disponíveis. [Navegação e ações no workspace](../interface/README.md#editar-a-missão)
 
 ```sh
 ./start --no-ui app new attitude_app --priority 60 --stack-size 32768 --wakeup-hz 2 --hk-hz 0.25 --preview
 ./start --no-ui app new attitude_app --priority 60 --stack-size 32768 --wakeup-hz 2 --hk-hz 0.25
 ./start --no-ui app edit attitude_app --wakeup-hz 1
-./start --no-ui app disable attitude_app
-./start --no-ui app enable attitude_app
-./start --no-ui app remove attitude_app
-./start --no-ui app add attitude_app
-./start --no-ui app delete attitude_app
-```
-
-`--preview` prints the app's entry point, startup record, CMake statement, schedule
-and `_user.c` source without writing anything. `new` writes them and adds the app to
-the build and the startup script. `disable` keeps the app in the mission view and
-takes it out of startup. `remove` takes the app out of the CPU1 build, the startup
-script and the generated schedule while keeping its sources, and `add` brings an
-existing app back. `delete` also removes the sources of an app the project created.
-
-Initialization and periodic logic go in `mission/apps/<name>/fsw/src/<name>_user.c`.
-Regenerating an app rewrites its framework files and leaves `<name>_user.c` and
-`<name>_user.h` as they are. Libraries follow the layout of `cFS/libs/sample_lib`, with
-`fsw/src/`, `fsw/public_inc/` and `CMakeLists.txt`.
-
-```sh
 ./start --no-ui library new payload_lib --preview
 ./start --no-ui library new payload_lib
-./start --no-ui library list
-./start --no-ui library remove payload_lib
-./start --no-ui library add payload_lib
-./start --no-ui library delete payload_lib
 ```
 
-The same operations are available in Architecture under Edit, as described in
-[Interface](../interface/README.md#editing-the-mission).
+| Operação | Efeito |
+| --- | --- |
+| **Edit → Rename module** | Renomeia um módulo próprio e atualiza arquivos, símbolos, referências, CMake e startup. Os identificadores dos módulos oficiais permanecem os da NASA. |
+| `app disable` / `app enable` | Controla a inicialização da app incluída no build. |
+| `app remove` / `library remove` | Retira o módulo da missão e preserva os fontes para uma inclusão futura. |
+| `app add` / `library add` | Inclui um módulo existente e suas dependências. |
+| `app delete` / `library delete` | Exclui os fontes de um módulo próprio. Um módulo ainda usado por outro precisa ter essa dependência resolvida antes da exclusão. |
+| `app list` / `library list` | Mostra a seleção de apps ou as bibliotecas disponíveis. |
 
-## Driver selection
+Essas operações de CLI recebem o prefixo `./start --no-ui`. Por exemplo, `./start --no-ui app remove attitude_app` retira a app da missão e `./start --no-ui app add attitude_app` volta a incluí-la. A CLI e o navegador usam a mesma implementação. Uma falha de gravação restaura os arquivos da transação.
 
-Driver libraries are created from the templates in `project/drivers/` when a
-configured device or an app's CMake dependencies need them. Selecting Linux alone adds
-no I²C, UART or sensor library. An app can also request a driver with
-`add_cfe_app_dependency(app_name library_name)` in its `CMakeLists.txt`. Custom sources
-and dependencies go outside the `APPGEN BEGIN` and `APPGEN END` blocks, and
-regeneration keeps them.
+As apps de missão mantêm handlers, payloads e lógica periódica editáveis. O gerador usa marcadores nos trechos de integração do `sample_app` para preservar a implementação manual nas sincronizações seguintes. A biblioteca gerada a partir de `sample_lib` oferece as pastas `fsw/src/` e `fsw/public_inc/`. [Templates e pontos de edição](appgen/README.md)
 
-```mermaid
-flowchart LR
-    Profile[Board + OS] --> Device["Sensor model,<br/>bus, address"]
-    Device --> Sensor[Sensor library]
-    App["App CMake<br/>dependencies"] --> Sensor
-    Sensor --> Bus["I²C / UART<br/>library"]
-    Bus --> Native["CMake +<br/>CFE_LIB startup"]
-```
+## Vincular um sensor e enviar telemetria
 
-[`catalog.json`](drivers/catalog.json) names each driver's entry point and the systems
-it supports. Dependencies come from the native `CMakeLists.txt` files, and libraries
-are loaded before the apps that use them. A generated driver that no device or app
-uses anymore leaves the build and the source tree. If its sources were edited, they
-stay in `mission/libs/`. `project/generated/drivers.json` keeps the hash of each generated
-file for that check, so the generated driver directories hold only their sources.
-
-To support another sensor, add its capability to the board catalog, a native source
-template in `project/drivers/<library>/` and an adapter in `project/adapters/<driver>/`.
-Library dependencies are declared in the template's `CMakeLists.txt`, and driver
-sources follow the layout of `sample_lib`.
-
-## Components
+O perfil Raspberry Pi disponibiliza o barramento I²C. O exemplo abaixo utiliza `attitude_app`, criada acima, e um TMP105 no endereço 0x49. Em uma placa física, escolha o endereço de sete bits do seu dispositivo.
 
 ```sh
-./start --no-ui project devices
+./start --no-ui profile --board raspi4b --os raspios
+./start --no-ui project add-bus i2c-bus.1
 ./start --no-ui project add-device "Payload temperature" --id payload_temp --model tmp105 --bus i2c-bus.1 --address 0x49 --value temperature=27000
 ./start --no-ui project add-sensor attitude_app board_temp --device payload_temp
 ./start --no-ui project add-command attitude_app set_mode
 ./start --no-ui project add-telemetry attitude_app temperature --sensor board_temp
 ./start --no-ui project locate attitude_app
-./start --no-ui build
 ```
 
-`add-command` creates a typed payload and a handler stub. `add-telemetry` creates the
-payload and the routine that fills it, and `--sensor` starts it with the sensor's data,
-status and validity. `locate` lists the source files and lines of an app's components.
-Devices are removed in the Hardware view.
+Em **Hardware**, selecione **Add bus**, escolha o conector da placa e use **Add sensor** para definir modelo e endereço. Ao clicar no sensor, **Link HAL** permite escolher uma app de missão ou criar uma a partir de `sample_app`. O código C do leitor fica acessível no vínculo. Na CLI, `link-hal science temperature --device payload_temp --new-app` cria a app e o leitor na mesma operação. Para usar uma app existente, omita `--new-app`.
 
-## Native configuration
+`add-device` cria uma instância com ID, barramento e endereço. `add-sensor` vincula um leitor daquela app à instância. `add-command` cria a estrutura da mensagem e um handler para implementar. `add-telemetry --sensor` prepara o pacote com dados, status e validade do leitor. `locate` informa o caminho e a linha de cada ponto editável. A remoção de um leitor e a remoção do dispositivo físico são operações distintas.
 
-| File | Contents |
+A biblioteca do chip usa `hal_sensor`. O leitor associa o dispositivo ao transporte informado pela placa. Leitores vinculados e dependências CMake determinam quais bibliotecas entram no build e em que ordem o cFE as carrega. Para um chip novo, registre uma definição em **Hardware** ou use `./start --no-ui project register-model <arquivo>`. [Modelos, barramentos e HAL](drivers/README.md)
+
+## Mapa dos arquivos
+
+| Arquivo | Responsabilidade |
 | --- | --- |
-| `mission/sample_defs/targets.cmake` | CPU build lists |
-| `mission/modules.cmake` | CPU1 module additions and removals |
-| `mission/libraries.cmake` | Libraries created by the project, added to the CPU1 build |
-| `mission/cpu1_cfe_es_startup.scr` | Enabled applications and libraries |
-| `mission/sample_defs/generate_startup.cmake` | Installs the startup script above in place of the generated one |
-| `mission/sample_defs/cpu1/install_custom.cmake` | Lets the SCH_LAB and TO_LAB tables include the generated entries |
-| `mission/sample_defs/toolchain-<architecture>.cmake` | CMake toolchain of the selected board and OS |
-| `mission/sample_defs/default_osconfig.cmake` | OSAL loader capacity and name limits the mission needs |
-| `mission/sample_defs/cfe_core_api_interface_cfg_values.h` | Matching cFE command and telemetry name fields |
-| `mission/sample_defs/tables/sch_lab_table.c` | Periodic command schedule |
-| `mission/sample_defs/tables/to_lab_sub.c` | Telemetry forwarding subscriptions |
-| `mission/sample_defs/generated/` | Generated application integration fragments |
-| `project/config.json` | Selected board and OS, devices and app-to-device bindings |
-| `project/apps/<app>.json` | Flight Studio settings and components of each app |
-| `project/drivers/catalog.json` | Available driver templates and supported systems |
-| `project/adapters/<driver>/` | Sensor payload type and native read adapter templates |
-| `project/boards/<board>.json` | Supported OSs, buses, sensor models, defaults and driver capabilities |
+| `project/config.json` | Placa e SO selecionados, dispositivos e vínculos com módulos de missão |
+| `project/apps/<app>.json` | MIDs, desempenho, agendamento, comandos, leitores e telemetria da app |
+| `project/boards/<placa>.json` | Perfil de build, sistemas, barramentos e catálogo da placa |
+| `project/drivers/models/<id>/model.json` | Identidade, registradores, conversões, canais e ABI do sensor |
+| `project/drivers/catalog.json` | HAL e transportes compartilhados |
+| `project/generated/drivers.json` | Assinaturas dos arquivos materializados para preservar edições locais |
+| `mission/apps/`, `mission/libs/` | Fontes compilados dos módulos da missão |
+| `mission/modules.cmake`, `mission/libraries.cmake` | Seleção própria de módulos da CPU1 e bibliotecas da missão |
+| `mission/cpu1_cfe_es_startup.scr` | Módulos ativos e receitas arquivadas de inicialização |
+| `mission/sample_defs/targets.cmake` | Listas de módulos por CPU |
+| `mission/sample_defs/toolchain-<arquitetura>.cmake` | Toolchain para o perfil ativo |
+| `mission/sample_defs/default_osconfig.cmake`, `cfe_core_api_interface_cfg_values.h` na mesma pasta | Limites do carregador, nomes de módulos e campos correspondentes no cFE |
+| `mission/sample_defs/generate_startup.cmake`, `cpu1/install_custom.cmake` sob `sample_defs/` | Instalação do startup e das tabelas da missão |
+| `mission/sample_defs/tables/`, `mission/sample_defs/generated/` | Tabelas de SCH_LAB/TO_LAB e fragmentos de integração gerados |
 
-The board catalog describes the hardware a board supports, and `config.json` selects
-devices from it, each with its own ID, bus, address and initial values. An app binding
-associates one of the app's sensors with one device ID. Build lists and enabled apps
-stay in the native CMake and startup files.
+## Conferir e compilar
 
 ```sh
-./start --no-ui project sync
-./start --no-ui project check
 ./start --no-ui project list
+./start --no-ui project check
+./start --no-ui project sync
+./start --no-ui build --target qemu
 ```
 
-`sync` writes the generated files that differ from the project settings, `check`
-lists them without writing and exits with status 1 when there are any, and `list`
-prints the project configuration and the app settings. Build and Run apply source and
-mission changes. A change of devices, buses or addresses also needs Stop QEMU and a new
-boot, while changes to synthetic data need no build.
+`check` informa diferenças e retorna código 1 se houver alterações geradas pendentes. `sync` aplica essas alterações. Depois de modificar fontes ou membros da missão, compile e execute a nova versão no destino desejado. Para alterar dispositivos, endereços ou barramentos emulados, reinicie o QEMU para carregar a topologia. Os ajustes de sinal sintético podem ser aplicados na sessão de dados. [Execução por destino](../hardware/README.md)

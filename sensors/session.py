@@ -11,11 +11,13 @@ import pprint
 from types import SimpleNamespace
 
 from project.model import board_catalog, board_catalogs, load_config
+from sensors.orbit import Orbit, default_elements, validate as orbital_elements
 from sensors.runtime import ROOT
-from sensors.simulator import UNITS, configuration, load_waveform, sample_values, simulate, print_samples
+from project.sensor_models import display_units
+from sensors.simulator import configuration, load_waveform, sample_values, simulate, print_samples
 
 SOURCE = "sensors/signals.py"
-FUNCTIONS = ("script", "constant", "sine", "ramp")
+FUNCTIONS = ("script", "constant", "sine", "ramp", "orbit.sunlight")
 
 
 def _source(path):
@@ -84,7 +86,7 @@ def _number(value, label, positive=False):
 
 
 def _signal_settings(device, prop, limits, model, overrides=None):
-    scale, _ = UNITS[limits["unit"]]
+    scale, _ = display_units(limits["unit"])
     defaults = model["signals"].get(prop, {})
     instance = model["instances"].get(device["id"], {})
     if not isinstance(defaults, dict) or not isinstance(instance, dict) or not isinstance(instance.get(prop, {}), dict):
@@ -94,7 +96,7 @@ def _signal_settings(device, prop, limits, model, overrides=None):
         raw = overrides
     if not isinstance(raw, dict):
         raise ValueError(device["id"] + "." + prop + ": settings must be a dictionary")
-    if set(raw) - {"initial", "function", "amplitude", "period", "slope", "custom", "enabled", "noise", "noise_level"}:
+    if set(raw) - {"initial", "function", "amplitude", "period", "slope", "custom", "enabled", "noise", "noise_level", "response_time"}:
         raise ValueError(device["id"] + "." + prop + ": unknown waveform setting")
     kind = raw.get("function", "script")
     custom = raw.get("custom", "") if kind == "custom" else kind if kind not in FUNCTIONS else ""
@@ -113,6 +115,11 @@ def _signal_settings(device, prop, limits, model, overrides=None):
     if kind == "sine":
         settings.update(amplitude=_number(raw.get("amplitude", 1.0), prop + " amplitude"),
                         period=_number(raw.get("period", 30.0), prop + " period", True))
+    elif kind == "orbit.sunlight":
+        settings["amplitude"] = _number(raw.get("amplitude", 1.0), prop + " sunlit offset")
+        settings["response_time"] = _number(raw.get("response_time", 0), prop + " response time")
+        if not 0 <= settings["response_time"] <= 7200:
+            raise ValueError("Solar response time must be 0 to 7200 seconds")
     elif kind == "ramp":
         settings["slope"] = _number(raw.get("slope", 1.0), prop + " rate")
     elif kind == "custom":
@@ -122,6 +129,8 @@ def _signal_settings(device, prop, limits, model, overrides=None):
         raise ValueError(device["id"] + "." + prop + ": initial value is outside the sensor range")
     if kind == "sine" and not low <= initial - abs(settings["amplitude"]) <= initial + abs(settings["amplitude"]) <= high:
         raise ValueError(device["id"] + "." + prop + ": sine amplitude exceeds the sensor range")
+    if kind == "orbit.sunlight" and not low <= initial + settings["amplitude"] <= high:
+        raise ValueError(prop + ": illuminated value exceeds the sensor range")
     return settings
 
 
@@ -142,8 +151,8 @@ def load_session(root=ROOT):
     catalog = board_catalog(config["board"], root) if config["board"] else {"models": {}}
     text, tree = _source(root / SOURCE)
     saved = _literal(tree, "SESSION", {"interval": 1.0, "sensors": None})
-    if set(saved) != {"interval", "sensors"}:
-        raise ValueError("SESSION needs only interval and sensors")
+    if not {"interval", "sensors"} <= set(saved) <= {"interval", "sensors", "orbit"}:
+        raise ValueError("SESSION requires interval and sensors and accepts orbital elements")
     _number(saved["interval"], "Interval", True)
     if saved["sensors"] is not None and (not isinstance(saved["sensors"], dict)
             or not all(isinstance(name, str) and type(enabled) is bool for name, enabled in saved["sensors"].items())):
@@ -161,14 +170,14 @@ def load_session(root=ROOT):
         model = models[device["model"]]
         signals = _device_settings(device, catalog, model)
         entry = {"device": device["id"], "enabled": True, "signals": signals}
-        available.append({"id": device["id"], "model": device["model"], "bus": device["bus"],
+        available.append({"id": device["id"], "name": device["name"], "model": device["model"], "bus": device["bus"],
                           "address": device["address"], "qom_path": "/machine/peripheral/" + device["id"],
                           "script": script, "source_line": model["source_line"], "sample_line": model["sample_line"],
                           "functions": [{"name": name, "line": line} for name, line in model["functions"].items()],
                           "defaults": copy.deepcopy(entry),
-                          "properties": {name: {"unit": UNITS[prop["unit"]][1],
-                                                "min": prop["min"] / UNITS[prop["unit"]][0],
-                                                "max": prop["max"] / UNITS[prop["unit"]][0]}
+                          "properties": {name: {"unit": display_units(prop["unit"])[1],
+                                                "min": prop["min"] / display_units(prop["unit"])[0],
+                                                "max": prop["max"] / display_units(prop["unit"])[0]}
                                          for name, prop in definition["properties"].items()}})
         if saved["sensors"] is None or device["id"] in saved["sensors"]:
             entry["enabled"] = True if saved["sensors"] is None else saved["sensors"][device["id"]]
@@ -177,7 +186,8 @@ def load_session(root=ROOT):
     digest.update(json.dumps({key: config[key] for key in ("board", "devices")}, sort_keys=True).encode())
     for name, source in sorted(sources.items()):
         digest.update(name.encode()); digest.update(source.encode())
-    return {"settings": {"interval": saved["interval"], "sensors": selected}, "available": available,
+    return {"settings": {"interval": saved["interval"], "sensors": selected,
+                         "orbit": orbital_elements(saved.get("orbit", default_elements()))}, "available": available,
             "source": SOURCE, "sources": list(sources), "hash": digest.hexdigest()}
 
 
@@ -191,6 +201,10 @@ def _compact(settings):
         result["function"] = settings["custom"]
     elif settings["function"] == "sine":
         result.update(amplitude=settings["amplitude"], period=settings["period"])
+    elif settings["function"] == "orbit.sunlight":
+        result["amplitude"] = settings["amplitude"]
+        if settings["response_time"]:
+            result["response_time"] = settings["response_time"]
     elif settings["function"] == "ramp":
         result["slope"] = settings["slope"]
     return result
@@ -199,7 +213,7 @@ def _compact(settings):
 def planned_settings(root, settings):
     """Return edited session/model files for one atomic Widgets save."""
     root = Path(root)
-    if not isinstance(settings, dict) or set(settings) != {"interval", "sensors"}:
+    if not isinstance(settings, dict) or not {"interval", "sensors"} <= set(settings) <= {"interval", "sensors", "orbit"}:
         raise ValueError("Expected interval and sensors")
     _number(settings["interval"], "Interval", True)
     if not isinstance(settings["sensors"], list):
@@ -221,7 +235,11 @@ def planned_settings(root, settings):
     files = {}
     text, tree = _source(root / SOURCE)
     selection = None if set(selected) == set(devices) and all(selected.values()) else selected
-    files[SOURCE] = _replace(text, tree, "SESSION", {"interval": settings["interval"], "sensors": selection})
+    stored = {"interval": settings["interval"], "sensors": selection}
+    orbit = settings.get("orbit", _literal(tree, "SESSION", {}).get("orbit"))
+    if orbit is not None:
+        stored["orbit"] = orbital_elements(orbit)
+    files[SOURCE] = _replace(text, tree, "SESSION", stored)
     for model_name, entries in groups.items():
         model = _model_source(root, model_name)
         validated = {name: {prop: _compact(signal) for prop, signal in _device_settings(devices[name], catalog, model, values).items()}
@@ -249,11 +267,16 @@ def planned_settings(root, settings):
     return files
 
 
-def waveform_for(root, device, settings, catalog=None):
+def waveform_for(root, device, settings, catalog=None, orbit=None):
     original = load_waveform(root, device["model"])
     sensor = configuration(original, device, root=root, catalog=catalog)
     signals = [settings["signals"][signal.property] for signal in sensor.signals]
+    use_sunlight = any(signal["function"] == "orbit.sunlight" for signal in signals)
+    if use_sunlight and orbit is None:
+        orbit = Orbit(load_session(root)["settings"]["orbit"])
+
     def sample(seconds, initial):
+        illumination = {}
         base = None
         if any(signal["function"] == "script" for signal in signals):
             initial = tuple(signal["initial"] for signal in signals)
@@ -266,6 +289,11 @@ def waveform_for(root, device, settings, catalog=None):
             if kind == "script": value = base[index]
             elif kind == "sine": value += signal["amplitude"] * math.sin(2 * math.pi * seconds / signal["period"])
             elif kind == "ramp": value += signal["slope"] * seconds
+            elif kind == "orbit.sunlight":
+                tau = signal.get("response_time", 0)
+                if tau not in illumination:
+                    illumination[tau] = orbit.illumination(seconds, tau)
+                value += signal["amplitude"] * illumination[tau]
             elif kind == "custom": value = getattr(original, signal["custom"])(seconds, value)
             level = signal.get("noise_level", 0)
             if signal.get("noise") == "uniform": value += random.uniform(-level, level)
@@ -296,16 +324,17 @@ def run_session(root=ROOT, steps=None, events=False, dry_run=False, device_id=No
     catalog = board_catalog(config["board"], root)
     devices = {device["id"]: device for device in config["devices"]}
     waveforms = {}
+    orbit = Orbit(session["settings"]["orbit"])
     for sensor in selected:
         device = devices[sensor["device"]]
-        waveforms[device["id"]] = waveform_for(root, device, sensor, catalog)
+        waveforms[device["id"]] = waveform_for(root, device, sensor, catalog, orbit)
     def report(elapsed, samples):
         payload = []
         for device, values in samples:
             props = catalog["models"][device["model"]]["properties"]
             payload.append({"id": device["id"],
-                            "values": {name: value / UNITS[props[name]["unit"]][0] for name, value in values.items()},
-                            "units": {name: UNITS[props[name]["unit"]][1] for name in values}})
+                            "values": {name: value / display_units(props[name]["unit"])[0] for name, value in values.items()},
+                            "units": {name: display_units(props[name]["unit"])[1] for name in values}})
         print("@sensor " + json.dumps({"elapsed": elapsed, "devices": payload}), flush=True)
     simulate(root, list(waveforms), interval if interval is not None else session["settings"]["interval"],
              steps, waveforms, trace_qmp=trace_qmp, on_sample=report if events else None, dry_run=dry_run)

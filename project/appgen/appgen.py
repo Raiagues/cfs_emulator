@@ -44,14 +44,12 @@ def pascal(value):
     return "".join(part.capitalize() for part in value.split("_"))
 
 
-def sensor_adapter(driver):
+def sensor_adapter(driver, project_root=None):
     valid_name(driver)
     if driver == "custom":
         return {"device_pattern": r"/dev/[A-Za-z0-9/_-]+", "max_address": 65535}
-    path = ROOT_DEFAULT.parent / "project/adapters" / driver / "adapter.json"
-    if not path.is_file():
-        raise AppgenError(f"No sensor adapter configured for driver: {driver}")
-    return json.loads(path.read_text())
+    from project.sensor_driver import app_adapter
+    return app_adapter(project_root or ROOT_DEFAULT.parent, driver)
 
 
 def integer(value, label, minimum, maximum):
@@ -64,7 +62,7 @@ def keys(value, expected, label):
         raise AppgenError(f"{label} fields must be: {', '.join(sorted(expected))}")
 
 
-def validate_manifest(manifest):
+def validate_manifest(manifest, project_root=None):
     keys(manifest, APP_KEYS, "application configuration")
     valid_name(manifest["name"])
     integer(manifest["schema_version"], "schema_version", 1, 2)
@@ -92,7 +90,7 @@ def validate_manifest(manifest):
                 raise AppgenError(f"Duplicate entity name/symbol across commands, sensors or telemetry: {entity['name']}")
             symbols.add(symbol)
             if collection == "sensors":
-                adapter = sensor_adapter(entity["driver"])
+                adapter = sensor_adapter(entity["driver"], project_root)
                 if not isinstance(entity["device"], str) or not re.fullmatch(adapter["device_pattern"], entity["device"]):
                     raise AppgenError(f"Invalid device path for driver {entity['driver']}")
                 integer(entity["address"], "sensor address", 0, adapter["max_address"])
@@ -113,10 +111,10 @@ def mids(manifest):
     return result
 
 
-def validate_all(manifests):
+def validate_all(manifests, project_root=None):
     names, ids, perf_ids = set(), set(), set()
     for manifest in manifests:
-        validate_manifest(manifest)
+        validate_manifest(manifest, project_root)
         if manifest["name"] in names:
             raise AppgenError(f"Duplicate app: {manifest['name']}")
         names.add(manifest["name"])
@@ -154,7 +152,7 @@ def read_manifests(root):
         if not isinstance(manifest, dict) or manifest.get("name") != path.stem:
             raise AppgenError(f"Application name must match its configuration filename: {path}")
         result.append(manifest)
-    validate_all(result)
+    validate_all(result, root.parent)
     return result
 
 
@@ -265,6 +263,7 @@ def merged_app_cmake(root, manifest, generated=None):
 
 
 def planned_files(root, manifests, libraries=None, excluded=()):
+    from project.appgen.source_tags import update
     capacity_spec = importlib.util.spec_from_file_location("appgen_mission_capacity", TEMPLATE_DIR / "mission_capacity.py")
     capacity = importlib.util.module_from_spec(capacity_spec)
     capacity_spec.loader.exec_module(capacity)
@@ -286,14 +285,29 @@ def planned_files(root, manifests, libraries=None, excluded=()):
         for sensor in manifest["sensors"]:
             source = safe_path(root, entity_files(name, "sensor", sensor["name"])[0])
             if source.exists():
-                marker = re.search(r"APPGEN: DRIVER ([a-z0-9_]+)", source.read_text())
+                marker = re.search(r"/\* (?:@studio\.driver|APPGEN: DRIVER) ([a-z0-9_]+) \*/", source.read_text())
                 if marker and marker.group(1) != sensor["driver"]:
                     raise AppgenError(f"Sensor driver is immutable: {name}/{sensor['name']}; remove/add the sensor")
+        previous = None
+        def previous_source(relative):
+            nonlocal previous
+            if previous is None:
+                saved = safe_path(root.parent, f"project/apps/{name}.json")
+                previous = render_app(json.loads(saved.read_text()) if saved.is_file() else manifest, root)
+            if relative not in previous:
+                raise AppgenError(f"Cannot adopt existing source without its original settings: {relative}")
+            return previous[relative][0]
+
         for relative, (content, managed) in render_app(manifest, root).items():
             target = f"apps/{name}/{relative}"
             path = safe_path(root, target)
             if relative == "CMakeLists.txt":
                 content = merged_app_cmake(root, manifest, content)
+            elif managed and path.is_file() and "/* @studio.begin " in content:
+                try:
+                    content = update(path.read_text(), content, target, lambda: previous_source(relative))
+                except ValueError as exc:
+                    raise AppgenError(str(exc)) from exc
             if managed or not path.exists():
                 files[target] = content
     for relative in files:
@@ -344,7 +358,7 @@ def write_files(root, files, check=False):
 
 
 def sync(root, manifests, check=False):
-    validate_all(manifests)
+    validate_all(manifests, root.parent)
     if (root.parent / 'project/config.json').is_file():
         sys.path.insert(0, str(root.parent))
         from project.model import load_config, planned_project_files
@@ -427,7 +441,7 @@ def locations(root, manifest):
             continue
         path = safe_path(root, path.relative_to(root))
         for number, line in enumerate(path.read_text().splitlines(), 1):
-            marker = re.search(r"APPGEN: USER ([a-zA-Z0-9_.]+)", line)
+            marker = re.fullmatch(r"\s*/\* (?:@studio\.edit|APPGEN: USER) ([a-zA-Z0-9_.]+) \*/\s*", line)
             function = re.match(r"(?:void|CFE_Status_t|bool)\s+" + re.escape(prefix) + r"_(\w+)\(", line)
             if marker:
                 identifier, location = marker.group(1), number + 1

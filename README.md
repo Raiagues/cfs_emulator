@@ -1,186 +1,117 @@
 # Flight Studio
 
-Flight Studio is a local workspace for developing NASA cFS flight software. It edits
-the mission's C sources and draws each app's command and telemetry routes from those
-same sources. It builds cFS and runs it on this computer, in a Raspberry Pi 4B
-emulated by QEMU, or on a physical Raspberry Pi 4B. Its Ground Station uses the NASA
-cFS-GroundSystem modules to send commands to the running build and to decode its
-telemetry. In QEMU, Python functions can also set the readings of emulated I²C
-sensors, which the flight software reads through its Linux drivers.
+O Flight Studio é uma bancada local para desenvolver missões com o **NASA core Flight System (cFS)**. Você escolhe um alvo Linux, vê o hardware e a arquitetura da missão, edita C, compila e conversa com a aplicação pela Ground Station. O projeto inicial mantém as aplicações da distribuição da NASA e começa sem sensores conectados ou apps criadas no Studio.
 
-![Flight Studio with cFS running in QEMU. The editor shows the CPU1 startup script, the mission architecture lists the cFS apps next to a Raspberry Pi 4B with a TMP105 sensor, and the terminal shows cFS events, including the event of a SAMPLE_APP NOOP command.](docs/images/studio-qemu-overview.png)
+![Configuração dos alvos no Flight Studio](docs/images/studio-setup.png)
 
-## Requirements
+## Começar pelo computador
 
-Every target needs Linux, Git, Python 3.10 or later and the packages listed in
-[`ground_station/requirements.txt`](ground_station/requirements.txt), which the NASA
-Ground Station modules import. Native builds also need CMake, Make and a C compiler.
-The emulator and builds for the board need Docker 23 or later with Buildx and an
-OpenSSH client. [`scripts/setup.sh`](scripts/setup.sh) checks these and installs what
-is missing on Ubuntu 24.04 or later and Debian 13 or later, on AMD64. The emulated
-Raspberry Pi keeps its disk in `board/raspios.qcow2`, which takes about 3 GB.
-
-## Install
+Você precisa de Linux, Git e Python 3.10 ou superior para abrir a configuração. Execute como seu usuário normal.
 
 ```sh
 git clone https://github.com/Raiagues/cfs_emulator.git
 cd cfs_emulator
-python3 -m venv .venv
-. .venv/bin/activate
-python3 -m pip install -r ground_station/requirements.txt
-```
-
-Open Flight Studio and select **Clone NASA cFS** on the setup screen. It downloads the default branch and the submodule revisions specified by the [official NASA repository](https://github.com/nasa/cFS). The screen shows the installed commit. To perform the same step from a terminal, run `./scripts/install-cfs.sh`.
-
-The platform Git repository ignores the independent checkout in `cFS/`. Studio reads the NASA sources and builds with its own `mission/sample_defs/`, custom modules in `mission/apps/` and `mission/libs/`, and output under `mission/build-*/`. See [Project and mission](project/README.md).
-
-## First run
-
-The checked-in project selects a Raspberry Pi 4B with Raspberry Pi OS. Add devices from the hardware workbench to populate I²C bus 1. The four steps below start the
-interface, the emulator, cFS and the Ground Station separately. Each step ends with
-the sign to look for before going on. Native execution, which needs no Docker, is
-described after them.
-
-### 1. Interface
-
-```sh
 ./start
 ```
 
-Open http://127.0.0.1:8765. The server only accepts connections from this computer,
-and `./start --ui --port 8766` selects another port. **Infrastructure** opens first. Choose Native, Emulator or Physical board, configure access and press **Run all checks**.
-Preparation commands run in the page's terminal. **Open workspace** opens the 3D hardware workbench. The initial mission includes the NASA cFS apps, with no project-created apps or attached sensors. Select the Flight Studio name to return to Infrastructure.
+1. Abra **http://127.0.0.1:8765** e escolha **Native** para a primeira execução.
+2. Na primeira instalação, clique em **Clone NASA cFS**. O Studio baixa o repositório oficial e os submódulos. Em instalações existentes, clique em **Source** para ver a revisão local.
+3. Clique em **Run all checks** para verificar as ferramentas, uma por vez. Clique no ícone de uma ferramenta para consultar o comando e o resultado. Se faltar uma dependência, use **Install native tools**, acompanhe a instalação no terminal inferior e clique em **Run all checks** para conferir. **Open workspace** abre a missão.
+4. No workspace, clique em **Build cFS**, aguarde a conclusão e selecione **Run cFS**. O log de inicialização mostra `CFE_ES_Main entering OPERATIONAL state`.
+5. Em **Ground station**, clique em **Connect**, abra o grupo **sample_app**, selecione **NOOP** (`SAMPLE_APP_NOOP_CC`) e clique em **Send**. A mensagem `SAMPLE: NOOP command` na telemetria confirma a resposta.
+
+Para instalar pelo terminal, os mesmos passos de preparação são `./scripts/install-cfs.sh` e `./scripts/setup-native.sh`. O instalador nativo verifica os programas e módulos Python antes de solicitar pacotes. Tem rotas para APT, DNF, Pacman e Zypper. Em um Linux com outro gerenciador, instale Git, CMake, Make, compilador C/C++, Python, PyQt5 e pyzmq. Para usar Python em ambiente virtual, ative-o **antes** de executar o instalador e o Studio. Veja quais dependências faltam com `./scripts/setup-native.sh --check`.
+
+O modo Native dispensa Docker e placa. Se a porta já estiver ocupada, por exemplo, use `./start --ui --port 8766`. Encerre o servidor com Ctrl+C no terminal de onde ele foi iniciado. Use **Stop cFS** quando quiser encerrar a missão.
+
+## Onde cada ação acontece
+
+| Tela | O que você faz ali |
+| --- | --- |
+| Configuração inicial | Escolher **Native**, **Emulator** (QEMU) ou **Board** (placa física), preparar ferramentas e gravar a conexão. O nome Flight Studio no workspace leva de volta à configuração. |
+| Hardware | Inspecionar o CAD, alternar 3D/2D, consultar pinagem e conectar dispositivos. No modo Native o hardware de execução é o computador local. |
+| Arquitetura | Explorar apps, bibliotecas, Software Bus, serviços cFE, OSAL e PSP. Abrir um módulo leva às suas funções e ao código. Os controles da seção gerenciam a missão. |
+| Código | Navegar na árvore de arquivos e alterações Git, consultar declarações e saltar à linha de origem. Editar arquivos da missão e sincronizar o código que você controla. |
+| Ground Station | Montar um comando do catálogo compilado. Em **Round trip**, configurar os passos esperados e verificar os eventos e campos recebidos. Em **System overview**, alternar entre comandos e telemetria por componente. |
+| Dados sintéticos | Selecionar um sensor e configurar sinais em unidades físicas. A prévia local funciona com o emulador desligado. A execução no QEMU alimenta o dispositivo que o cFS lê. |
+
+## Como os arquivos se relacionam
 
 ```mermaid
-flowchart LR
-    Infrastructure --> Target[Native / Emulator / Board]
-    Target --> Access[Tools and connection]
-    Access --> Workspace[Code and architecture]
-    Workspace --> Build --> Run
+flowchart TD
+    NASA[github.com/nasa/cFS] -->|clone recursivo| UP[cFS/ · checkout da NASA]
+    UP -->|sample_app e sample_defs| M[mission/ · fontes da missão]
+    Models[project/drivers/models · protocolos dos sensores] --> HAL[HAL e transportes compartilhados]
+    HAL --> M
+    Config[project/config.json · instâncias e vínculos] --> M
+    M -->|CMake e toolchain do alvo| Image[Executável + apps + tabelas]
+    UP --> Image
+    Image --> Host[Linux local]
+    Image --> Pi[Pi físico ou emulado]
+    Host <-->|comandos e telemetria UDP| GS[Ground Station]
+    Pi <-->|comandos e telemetria UDP| GS
 ```
 
-### 2. QEMU
+- **`cFS/`** é um repositório independente, ignorado pelo Git da plataforma. O Studio consulta suas fontes e reserva os nomes oficiais da NASA. A configuração do Studio aparece fora desse checkout.
+- **`mission/apps/` e `mission/libs/`** contêm os módulos próprios do projeto. **`mission/sample_defs/`** é a cópia de trabalho das definições usadas pelo CMake. Os builds ficam em **`mission/build-native/`** e **`mission/build-flight/`**.
+- **`project/config.json`** descreve a placa, o sistema, os dispositivos e suas associações às apps. **`project/drivers/models/`** descreve os chips. **`sensors/`** implementa os sinais sintéticos.
+- **`hardware/.runtime/`** guarda a seleção local, conexão, estado de builds e execução. **`ground_station/`** lê o catálogo do build e usa os componentes oficiais do cFS-GroundSystem para o transporte.
 
-Run the setup script once. It checks Docker, Buildx and OpenSSH, creates the emulator's SSH key in `~/.ssh/cfs-emulator/` and downloads the
-emulator image. When the download fails, it builds the image locally. It asks for
-sudo when it has to install packages, start Docker or add your user to the `docker`
-group, and a group change takes effect after you sign in again.
+### Criar e renomear um módulo
+
+Na arquitetura, use **New** na seção desejada. O Studio prepara os arquivos antes de aplicar a criação. **Edit** permite renomear um módulo criado no projeto. O novo nome se propaga pelos símbolos e arquivos próprios, declarações, dependências e startup. Os nomes dos módulos da NASA pertencem ao checkout. Ao retirar uma app da missão, ela sai do startup. A exclusão do código próprio é uma operação separada.
+
+No terminal, a partir da raiz:
 
 ```sh
-./scripts/setup.sh
+./start --no-ui app new acquisition
+./start --no-ui library new filters
+./start --no-ui app list
+./start --no-ui library list
 ```
 
-Until setup has run, the toolbar shows Set up QEMU in place of Start emulator.
-In the toolbar, choose Emulator and press Start emulator. The first boot copies
-the Raspberry Pi OS disk to `board/` and adds this computer's SSH key to it. Linux is
-ready when the terminal prints `Sensor values applied.` and then
-`Raspberry Pi ready.`. Stop emulator powers Linux off and waits for the emulator to exit.
-From a terminal, the same steps are `./start --no-ui boot` and
-`./start --no-ui shutdown`.
+Uma **nova compilação** é necessária quando os insumos da missão mudam depois de um build. O primeiro build aparece como **Build cFS**. Preferências visuais e valores transitórios da simulação não alteram o executável.
 
-### 3. cFS
+### Ligar um sensor a uma app
 
-Press Build cFS and then Run cFS. Builds for the emulator use the `cfs-builder:local`
-Docker image with the ARM64 cross compiler, which the first build creates. Run uploads
-the build to the guest, starts `cfs.service` and shows its output in the terminal. A
-running service only means that the process started. cFE has finished its startup
-sequence when the output shows `CFE_ES_Main entering OPERATIONAL state`, and apps that
-fail to start report their errors in the same output.
+No alvo **Emulator**, abra **Hardware → Add bus** e selecione **I²C 1**. Clique em **Connect sensor**, escolha **TMP105** e dê à instância o nome `probe`. Use **Link HAL** para criar ou selecionar a app que lerá o sensor e dê ao leitor o nome `temperature`. A mesma operação pode ser repetida no terminal depois de criar `acquisition`:
 
 ```sh
-./start --no-ui build
-./start --no-ui run     # follows the output; Ctrl+C stops following, not cFS
-./start --no-ui stop
+./start --no-ui profile --board raspi4b --os raspios
+./start --no-ui project add-bus i2c-bus.1
+./start --no-ui project add-device tmp105 --id probe --model tmp105 --bus i2c-bus.1 --address 0x48
+./start --no-ui project add-sensor acquisition temperature --device probe
+./start --no-ui project check
 ```
 
-### 4. Ground Station
+Um **modelo** descreve o chip. Uma **instância** é o componente conectado a um endereço. Um **leitor** liga a app a essa instância. É possível usar o mesmo modelo em mais de um componente, respeitando os endereços do barramento.
 
-Open Ground station in the left rail and press Connect. Flight Studio reads the
-command and telemetry definitions of the running build, starts a UDP receiver and
-asks TO_LAB to send telemetry to this computer. The status reads `QEMU · Connected`
-once the receiver is listening, and telemetry is arriving when the packet counters
-grow.
+Para acrescentar um chip, comece pelo modelo declarativo ou pelo template de driver C em `project/drivers/templates/`. Preencha identidade, inicialização, registradores, unidades e escala em `models/<id>/model.json`. A HAL comum executa a aquisição. O transporte implementa a transação de barramento. Quando o protocolo exigir uma sequência peculiar, implemente a operação no driver daquele modelo. Os três exemplos são TMP105, LSM303DLHC magnetômetro e MPU6050. Consulte [o guia de sensores e exemplos de protocolo](project/drivers/README.md).
 
-To check the command path, select `SAMPLE_APP_NOOP_CC` under **Send commands** and
-press **Send command**. Look for `SAMPLE: NOOP command` under **Telemetry events**.
-Then open `SAMPLE_APP_HkTlm_t` under **Received telemetry** and check that its
-`CommandCounter` has increased by one. The [Ground Station guide](ground_station/README.md)
-follows the command from the browser to the flight app and back.
+As apps partem do `sample_app` do checkout instalado. Marcadores `@studio.begin` e `@studio.end` delimitam os trechos que o Studio redescobre quando você adiciona um leitor ou comando. Você pode mover esses trechos junto com seus marcadores. Alterações manuais fora deles são preservadas. Um conflito dentro de um trecho gerenciado interrompe o plano antes de sobrescrever o trabalho. Use `@brief`, `@unit`, `@range` e `@check` nos comentários C para navegar pela interface do módulo. Veja [o contrato das regiões, os arquivos de usuário e um exemplo comentado](project/appgen/README.md).
 
-### Native execution
+## Emulador e Raspberry Pi física
 
-Select **Native** to build with the host compiler and run `core-cpu1` on this
-computer. Board/OS selectors are hidden and the workbench shows the local computer.
-The board and sensor configuration stays saved for Emulator and Board mode.
-Build cFS, Run cFS and Ground Station use the native build; Ground Station connects
-to 127.0.0.1.
+| Alvo | Preparar | Executar |
+| --- | --- | --- |
+| Emulador QEMU | Docker Engine 23+, Buildx 0.10+, OpenSSH e espaço para a imagem e o disco do guest. **Install emulator image** ou `./scripts/setup.sh` prepara imagem e chave local. | **Start emulator**, **Build cFS**, **Run cFS**. Ao terminar, use **Stop cFS** e **Stop emulator** para desligar o guest. |
+| Placa física | Inicialize a Pi 4B com Raspberry Pi OS de 64 bits, SSH habilitado e acesso à rede. Informe host ou IP, usuário e identidade SSH na configuração. Use **Check connection** para verificar acesso e permissões do serviço. | **Build cFS** compila ARM64 no host. **Run cFS** envia a missão e inicia o serviço na placa selecionada. A Ground Station usa a rota IPv4 entre o computador e a placa. |
+
+A imagem tem seu próprio identificador para os modelos de registradores. Ao alterar um modelo emulado, prepare a imagem correspondente e reinicie o guest para aplicar a alteração. O disco persistente do guest está em `board/`. Interromper a visualização do log deixa a execução em andamento.
+
+Para diagnóstico, `./start --no-ui status` mostra o alvo e os estados locais. Se SSH por nome falhar, teste o IP da própria placa. Se o envio de comandos aparecer sem resposta, confira o log de startup e o estado da conexão de telemetria. [Detalhes do hardware, serviço e permissões](hardware/README.md) · [Catálogo e transporte da Ground Station](ground_station/README.md).
+
+## Testes e documentação
 
 ```sh
-./start --no-ui profile --native
-./start --no-ui build
-./start --no-ui run --no-follow
-./start --no-ui logs
-./start --no-ui stop
+python3 -m unittest discover -s interface/tests -v
+./scripts/setup-native.sh --check
 ```
 
-For a physical Raspberry Pi 4B, select **Board** and press **Check connection**.
-[Execution targets](hardware/README.md) describes the one-time SSH authorization.
+Com cFS em estado operacional e a app oficial `sample_app` carregada, o teste a seguir conecta a estação, envia um NOOP e espera o evento de resposta pelo downlink. Use `--target qemu` ou `--target physical` para exercitar um desses alvos.
 
-## How the parts connect
-
-The browser and `./start --no-ui` call the same Python code, so both work on the same
-project, builds and running targets. Only one build or runtime operation runs at a
-time in a checkout.
-
-```mermaid
-flowchart TB
-    subgraph studio["Flight Studio"]
-        ui["Browser UI<br/>interface/static/"] -->|"HTTP on 127.0.0.1"| server["interface/server.py"]
-        cli["./start --no-ui"]
-        server --> edit["Mission editing<br/>interface/backend/<br/>project/"]
-        server --> manager["Build and execution<br/>hardware/manager.py"]
-        server --> gs["Ground Station<br/>ground_station/"]
-        cli --> edit
-        cli --> manager
-        cli -->|"simulate"| synthetic["Synthetic data<br/>sensors/"]
-        manager -->|"starts"| synthetic
-    end
-    edit -->|"writes"| mission[("mission/")]
-    manager -->|"reads"| cfs[("cFS/ · NASA checkout")]
-    manager -->|"builds"| mission
-    subgraph targets["Execution targets"]
-        native["Native process"]
-        qemu["QEMU Raspberry Pi 4B<br/>in Docker"]
-        board["Raspberry Pi 4B<br/>over SSH"]
-    end
-    manager -->|"runs cFS"| targets
-    synthetic -->|"QMP"| qemu
-    gs <-->|"UDP commands<br/>and telemetry"| targets
+```sh
+python3 interface/tests/live_ground.py --target native --port 8765
 ```
 
-## Documentation
-
-- [Interface](interface/README.md) covers the views, mission editing, terminals and
-  keyboard shortcuts.
-- [Project and mission](project/README.md) covers apps, libraries, devices, drivers and
-  their mission configuration.
-- [App generator](project/appgen/README.md) covers generated code and which files are
-  yours to edit.
-- [Execution targets](hardware/README.md) covers builds, QEMU, the physical board and
-  deployment.
-- [Synthetic sensor data](sensors/README.md) covers the Python functions and the path
-  of a value from QMP to the flight software.
-- [Ground Station](ground_station/README.md) covers definitions, UDP transport and what
-  each status confirms.
-
-`./start --help` lists the commands, and `./start --no-ui COMMAND --help` shows the
-options of one command.
-
-
-## Comparing an I²C sensor
-
-In Hardware, choose **Add sensor** and select MPU6050. AD0 selects address 0x68 or 0x69. **Validate model** exercises the compiled QEMU device on a separate Pi 4 instance. It checks the identity, register defaults, burst data, range selection and software reset. The model implements the register interface for accelerometer, temperature and gyroscope sampling. FIFO, interrupts and DMP are outside its implementation.
-
-Add a flight reader to the mission app, build and run it to initialize the sensor, then select **Test sensor**. Repeat on the physical board with the same wiring and address. The inspector shows the two most recent measurements side by side, in g, °C and °/s. Stationary measurements depend on the board orientation and sensor bias.
-
-For a new device, choose **New I²C register model** in the same dialog. Enter its identity, startup writes, output registers, units and sensitivity from the device register map. This generator supports a contiguous burst of up to 32 bytes containing signed, big-endian, 16-bit measurements on the Pi 4 I²C bus. Install the updated emulator image in workspace setup and run **Validate model** before connecting a flight reader.
+[Resultados e capturas das telas](docs/validation.md) · [Regras de design](docs/design.md) · [Arquitetura do backend e contrato da API](docs/backend.md) · [Configuração da missão](project/README.md).

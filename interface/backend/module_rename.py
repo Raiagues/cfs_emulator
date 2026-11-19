@@ -191,26 +191,29 @@ def _startup(text, names):
     return updated
 
 
-def _check_consumers(root, protected, names):
-    # Native consumers outside Studio ownership must explicitly migrate their
-    # dependency before renaming. Never modify a NASA submodule.
-    headers = {name for name in names.files if name.endswith(('.h', '.hpp'))}
+def assert_no_module_references(root, modules, name, headers, functions):
+    """Reject a mutation that would leave another module with unresolved flight references."""
     include = re.compile(r'^\s*#\s*include\s*["<]([^">]+)[">]', re.M)
-    api_calls = {symbol for symbol in names.words if symbol.startswith(names.old.upper() + '_')}
-    public_call = re.compile(r'\b(' + '|'.join(map(re.escape, sorted(api_calls))) + r')\s*\(') if api_calls else None
-    for module in protected:
-        if names.old in dependencies(root, module.name):
-            raise ValueError(f'{module.name} depends on {names.old} in protected source')
+    public_call = re.compile(r'\b(?:' + '|'.join(map(re.escape, sorted(functions))) + r')\s*\(') if functions else None
+    for module in modules:
+        if name in dependencies(root, module.name):
+            raise ValueError(f'{module.name} depends on {name}')
         for path in _files(module):
             if path.suffix not in ('.c', '.h', '.cpp', '.hpp'):
                 continue
             content = _read_source(path)
-            if not content or names.old not in content.lower():
+            if not content:
                 continue
             code = blank_lexemes(content, literals=False)
             if (any(Path(header).name in headers for header in include.findall(code))
                     or public_call and public_call.search(blank_lexemes(content))):
-                raise ValueError(f'{path.relative_to(root)} references {names.old} in protected source')
+                raise ValueError(f'{path.relative_to(root)} references {name}')
+
+
+def _check_consumers(root, protected, names):
+    headers = {name for name in names.files if name.endswith(('.h', '.hpp')) and names.old in name}
+    functions = {symbol for symbol in names.words if symbol.startswith(names.old.upper() + '_')}
+    assert_no_module_references(root, protected, names.old, headers, functions)
 
 
 def rename_module(workspace, kind, old, new, revision):
@@ -241,6 +244,9 @@ def rename_module(workspace, kind, old, new, revision):
 
     def edit(path, before, after, target=None):
         if before != after:
+            if path.suffix in ('.c', '.h') and '/* @studio.begin ' in before:
+                from project.appgen.source_tags import renamed_source
+                after = renamed_source(before, after, path)
             inputs[relative(path)] = before.encode()
             plan[relative(target or path)] = after
 

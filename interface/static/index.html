@@ -15,9 +15,14 @@
   <link rel="stylesheet" href="/mission-diagram.css">
   <link rel="stylesheet" href="/app-diagram.css">
   <link rel="stylesheet" href="/communication.css">
+  <link rel="stylesheet" href="/design.css">
+  <link rel="stylesheet" href="/workspace.css">
   <link rel="stylesheet" href="/simulation.css">
+  <link rel="stylesheet" href="/editor-guide.css">
+  <link rel="stylesheet" href="/ground-workbench.css">
+  <script src="/theme.js" defer></script>
 </head>
-<body class="no-terminal no-tree no-editor" data-view="bench">
+<body class="no-terminal no-tree no-editor" data-view="architecture">
   <header class="topbar">
     <div class="workspace-identity">
       <a class="brand" href="/infrastructure" title="Workspace setup" aria-label="Workspace setup"><span>Flight<span class="brand-studio">studio</span></span></a>
@@ -25,9 +30,9 @@
     </div>
     <div class="execution-toolbar">
       <div class="target-switch" role="group" aria-label="Run cFS on">
-        <button data-target="native" aria-pressed="true" title="Run cFS on this computer">Native</button>
-        <button data-target="qemu" aria-pressed="false" title="Run in the QEMU emulator">Emulator</button>
-        <button data-target="physical" aria-pressed="false" title="Run on the physical board">Board</button>
+        <button data-target="native" aria-pressed="true" title="Run cFS on this computer"><span class="icon" data-icon="monitor"></span>Native</button>
+        <button data-target="qemu" aria-pressed="false" title="Run in the QEMU emulator"><span class="icon" data-icon="cube"></span>Emulator</button>
+        <button data-target="physical" aria-pressed="false" title="Run on the physical board"><span class="icon" data-icon="circuit"></span>Board</button>
       </div>
       <div class="profile-selectors" aria-label="Build configuration">
         <div class="toolbar-field board-field"><button id="board-select" class="profile-trigger" aria-label="Board" aria-haspopup="listbox" aria-expanded="false" aria-controls="board-select-options" disabled><span class="icon" data-icon="cpu"></span><span class="profile-value">Loading…</span><span class="icon profile-chevron" data-icon="chevron-down"></span></button><div id="board-select-options" class="profile-menu" role="listbox" aria-label="Board" hidden></div></div>
@@ -37,22 +42,23 @@
       <div class="top-actions actions" aria-label="Linux and flight software actions">
         <button class="toolbar-action boot-action" data-job="boot" title="Start the QEMU emulator and boot Linux"><span class="icon" data-icon="cpu"></span><span class="action-label">Start emulator</span></button>
         <button class="toolbar-action shutdown-action" data-job="shutdown" title="Stop the QEMU emulator and its Linux system"><span class="icon" data-icon="power"></span><span>Stop emulator</span></button>
+        <button class="toolbar-action synthetic-action" data-view="simulation" title="Open synthetic data" hidden><span class="icon" data-icon="wave"></span><span>Synthetic data</span></button>
         <button class="toolbar-action build-action" data-job="build" title="Compile cFS for the selected board and system"><span class="icon" data-icon="build"></span><span>Build cFS</span></button>
         <button class="toolbar-action run-action" data-job="run" title="Run cFS on the selected target"><span class="icon" data-icon="play"></span><span>Run cFS</span></button>
         <button class="toolbar-action stop-action" aria-label="Stop cFS" data-job="stop" title="Stop cFS on the selected target" disabled><span class="icon" data-icon="stop"></span><span>Stop cFS</span></button>
       </div>
     </div>
+    <button type="button" class="workspace-theme" data-theme-toggle aria-label="Switch theme"></button>
     <div id="operation-status" class="operation-status" role="status" hidden><i class="operation-spinner" aria-hidden="true"></i><span id="operation-label"></span><ol id="boot-stages" aria-label="Emulator startup"></ol><span id="operation-time"></span><button id="operation-output">Show output</button></div>
   </header>
   <div id="feedback" class="workspace-feedback" role="status" aria-live="polite"></div>
   <main class="studio" id="studio">
     <nav class="activity-rail rail" aria-label="Project areas">
       <div>
-        <button class="rail-button active" data-view="bench" title="Hardware" aria-label="Hardware"><span class="icon" data-icon="circuit"></span></button>
-        <button class="rail-button" data-view="architecture" title="Architecture" aria-label="Architecture"><span class="icon" data-icon="workflow"></span></button>
+        <button class="rail-button active" data-view="architecture" title="Architecture" aria-label="Architecture"><span class="icon" data-icon="workflow"></span></button>
+        <button class="rail-button" data-view="bench" title="Hardware" aria-label="Hardware"><span class="icon" data-icon="circuit"></span></button>
         <button class="rail-button" data-view="code" title="Code" aria-label="Code"><span class="icon" data-icon="code"></span></button>
         <button class="rail-button" data-view="ground" title="Ground station" aria-label="Ground station"><span class="icon" data-icon="antenna"></span></button>
-        <button class="rail-button" data-view="communication" title="Communication" aria-label="Communication"><span class="icon" data-icon="antenna"></span></button>
         <button class="rail-button" data-view="simulation" title="Synthetic data" aria-label="Synthetic data"><span class="icon" data-icon="wave"></span></button>
         <button class="rail-button" id="toggle-terminal" title="Terminal · Ctrl+`" aria-label="Terminal" aria-controls="terminal-panel" aria-expanded="false"><span class="icon" data-icon="terminal"></span></button>
       </div>
@@ -69,14 +75,17 @@
         <section class="editor editor-workspace">
           <div id="simulation-toolbar" hidden><button data-simulation-save>Save</button><button data-simulation-test>Start test</button><button data-simulation-start>Start simulation</button><button data-simulation-stop hidden>Stop simulation</button><span id="simulation-reason"></span></div>
           <div id="simulation-fields" hidden></div>
-          <div class="tabbar"><div id="tabs" class="tabs file-tabs"></div><div class="editor-actions"><button class="icon-button" id="find-toggle" title="Find in file · Ctrl+F" aria-label="Find in file"><span class="icon" data-icon="search"></span></button><button class="icon-button" id="editor-expand" title="Expand editor" aria-label="Expand editor"><span class="icon" data-icon="expand"></span></button></div></div>
+          <div id="command-trail" class="command-trail" hidden></div>
+          <div class="tabbar"><div id="tabs" class="tabs file-tabs"></div><div id="source-tools" class="guide-tabs" aria-label="Source tools" hidden></div><div class="editor-actions"><button class="icon-button" id="find-toggle" title="Find in file · Ctrl+F" aria-label="Find in file"><span class="icon" data-icon="search"></span></button><button class="icon-button" id="editor-expand" title="Expand editor" aria-label="Expand editor"><span class="icon" data-icon="expand"></span></button></div></div>
           <div id="find-bar" class="find-bar hidden"><input id="find-query" placeholder="Find in this file" aria-label="Find in this file"><button id="find-next" class="icon-button" title="Next result"><span class="icon" data-icon="arrow-down"></span></button><button id="find-close" class="icon-button" title="Close search"><span class="icon" data-icon="close"></span></button></div>
           <div id="source-location" class="source-location" hidden><span></span><small>Read only</small></div>
+          <section id="source-test-surface" aria-label="Ground test" hidden></section>
           <div class="code-wrap code-area">
             <pre id="line-numbers" class="line-numbers" aria-hidden="true">1</pre>
             <div class="code-stack"><div id="source-line" aria-hidden="true" hidden></div><pre id="highlight-layer" class="highlight-layer" aria-hidden="true"><code id="highlight-code"></code></pre><textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off" aria-label="Code editor" disabled></textarea></div>
           </div>
         </section>
+        <aside id="source-guide" aria-label="Source inspector" hidden></aside>
         <div id="editor-splitter" class="splitter" role="separator" aria-label="Editor and panel split" aria-orientation="vertical" tabindex="0" title="Drag to resize · double-click to reset"></div>
         <section class="visual">
           <header id="visual-heading" class="visual-tabbar"><span id="visual-title"></span><button id="toggle-editor" class="icon-button" title="Expand panel"><span class="icon" data-icon="expand"></span></button></header>
@@ -94,5 +103,6 @@
   <script src="/vendor/xterm.js"></script>
   <script src="/vendor/addon-fit.js"></script>
   <script src="/app.js" type="module"></script>
+  <dialog id="source-inspector-dialog" aria-labelledby="source-inspector-title"><header><h2 id="source-inspector-title"></h2><button type="button" data-close-inspector aria-label="Close source inspector">×</button></header><section class="guide-body"></section></dialog>
 </body>
 </html>

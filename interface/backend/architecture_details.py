@@ -10,6 +10,8 @@ from collections import defaultdict, deque
 from pathlib import Path
 import re
 
+from project.appgen.source_tags import annotations
+from project.c_source import comments
 from project.flight_sources import module_directories
 
 from ground_station.c_source import (arguments, blank_lexemes, calls, closing, entry_routes,
@@ -330,6 +332,88 @@ def _table_source(root, path):
     return None
 
 
+def _command_sources(commands, files, occurrences, constants):
+    """Attach indexed declarations, Doxygen comments and direct EVS emissions to each route."""
+    handlers = [row for route in commands for row in route['handlers']]
+    names = {row['handler']['symbol'] for row in handlers if row.get('handler')}
+    declarations = defaultdict(list)
+    for file in files.values():
+        if not file['path'].endswith('.h'):
+            continue
+        mask = file['mask']
+        # Prototypes can be wrapped in extern "C". Calls inside inline
+        # implementations, including those after a nested block, are excluded.
+        linkage = {m.end() - 1 for m in re.finditer(r'\bextern\s*"C"\s*\{', file['clean'])}
+        braces = iter(re.finditer(r'[{}]', mask))
+        brace = next(braces, None)
+        scopes = []
+        for symbol, pos, close, _ in _calls(file, names):
+            while brace is not None and brace.start() < pos:
+                if brace[0] == '{':
+                    scopes.append(brace.start() in linkage)
+                elif scopes:
+                    scopes.pop()
+                brace = next(braces, None)
+            if not all(scopes) or not re.match(r'\s*;', mask[close + 1:]):
+                continue
+            start = max(mask.rfind(delimiter, 0, pos) for delimiter in ';{}') + 1
+            if not re.fullmatch(r'[\w\s*]+', mask[start:pos]) or not mask[start:pos].strip():
+                continue
+            declarations[symbol].append(_ref(file, pos, symbol))
+
+    events = defaultdict(list)
+    for occurrence in occurrences:
+        api = occurrence['api']
+        if api not in {'CFE_EVS_SendEvent', 'CFE_EVS_SendEventWithAppID', 'CFE_EVS_SendTimedEvent'}:
+            continue
+        args = occurrence['args'][int(api == 'CFE_EVS_SendTimedEvent'):]
+        if len(args) < 2:
+            continue
+        event = constants.reference(args[0])
+        events[occurrence['function']['id']].append({
+            'id': event, 'severity': args[1], 'source': occurrence['source']
+        })
+
+    documents = {}
+    def tags(ref, body=False):
+        file = files.get((ref or {}).get('path'))
+        if not file:
+            return []
+        if file['path'] not in documents:
+            indexed = defaultdict(list)
+            text = file['raw']
+            # Index each annotated comment once, preserving its actual source line.
+            for token in comments(text):
+                if not re.search(r'[@\\](?:brief|unit|range|check)\b', token[0]):
+                    continue
+                line = text.count('\n', 0, token.start()) + 1
+                end = line + token[0].count('\n')
+                rows = [dict(a, path=file['path'], line=line+a['line']-1) for a in annotations(token[0])]
+                for a in rows:
+                    indexed[a['line']].append(a)
+                if not text[text.rfind('\n', 0, token.start()) + 1:token.start()].strip():
+                    following = re.match(r'\s*', text[token.end():])[0]
+                    declaration = end + following.count('\n')
+                    if declaration != line:
+                        indexed[declaration].extend(rows)
+            documents[file['path']] = indexed
+        table = documents[file['path']]
+        result = []
+        for line in range(ref['line'], ref.get('end_line',ref['line']) + 1 if body else ref['line'] + 1):
+            for item in table.get(line, []):
+                if item not in result:
+                    result.append(item)
+        return result
+
+    for row in handlers:
+        fn = row.get('handler') or {}
+        row['prototypes'] = declarations.get(fn.get('symbol'), [])
+        row['events'] = events.get(fn.get('id'), [])
+        row['annotations'] = tags((row.get('cc') or {}).get('source')) + tags(fn, body=True)
+        for field in row.get('fields', []):
+            field['annotations'] = tags(field.get('source'))
+
+
 def describe_application(app, *, root):
     root = Path(root).resolve()
     functions = app.get('functions', [])
@@ -494,6 +578,7 @@ def describe_application(app, *, root):
                 if not any(item['handler']['id'] == record['handler']['id'] for item in group['handlers']):
                     group['handlers'].append(record)
     commands = list(command_groups.values())
+    _command_sources(commands, files, occurrences, constants)
 
     # Register/load/use relationships refer to the same handle in C. Resolve
     # the CMake table basename using the mission's CPU1 override precedence.

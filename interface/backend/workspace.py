@@ -24,6 +24,13 @@ class Workspace:
     HIDDEN = {".git", ".ssh", ".aws", ".agents", ".codex", "__pycache__", "node_modules", ".state", ".runtime", ".prepare.lock"}
     EDIT_ROOTS = {"mission", "project", "sensors", "ground_station", "hardware", "interface"}
     MAX_TEXT = 2 * 1024 * 1024
+    FLIGHT_SOURCES = {
+        "mission": "Mission",
+        "project/drivers": "Sensor drivers",
+        "project/appgen/templates/hal_sensor": "HAL sensor templates",
+        "sensors": "Synthetic data",
+        "cFS": "NASA cFS",
+    }
 
     def __init__(self, root):
         self.root = Path(root).resolve()
@@ -69,7 +76,7 @@ class Workspace:
         if path == "flight":
             return {"path": path, "entries": [
                 {"type": "directory", "name": label, "path": directory}
-                for directory, label in (("mission", "Mission"), ("cFS", "NASA cFS"))
+                for directory, label in self.FLIGHT_SOURCES.items()
                 if (self.root / directory).is_dir()]}
         directory = self.path(path)
         if not directory.is_dir():
@@ -78,7 +85,7 @@ class Workspace:
         repo = directory
         while repo != self.root and not (repo / ".git").exists():
             repo = repo.parent
-        changes = _changes(repo, directory.relative_to(repo)) if (repo / ".git").exists() else []
+        changes = _changes(repo, directory.relative_to(repo)) if (repo / ".git").exists() else None
         entries = []
         for item in sorted(directory.iterdir(), key=lambda p: (not p.is_dir(), p.name.lower())):
             relative = item.relative_to(self.root).as_posix()
@@ -112,16 +119,19 @@ class Workspace:
                 raise UnicodeError()
         except UnicodeError:
             return dict(result, content=None, binary=True, editable=False)
+        if target.suffix.lower() in {".c", ".h"}:
+            from project.appgen.source_tags import annotations
+            result["annotations"] = annotations(content)
         return dict(result, content=content, binary=False, editable=self.editable(path))
 
     def search_files(self, root, query):
-        if root not in ('flight', 'cFS', 'mission', 'sensors') or not isinstance(query, str) or len(query) > 200:
+        if root not in ('flight', *self.FLIGHT_SOURCES) or not isinstance(query, str) or len(query) > 200:
             raise ValueError('Invalid file search')
         query = query.strip().lower()
         results = []
         if not query:
             return {'files': results, 'limited': False}
-        roots = ('mission', 'cFS') if root == 'flight' else (root,)
+        roots = self.FLIGHT_SOURCES if root == 'flight' else (root,)
         for directory, dirs, files in (entry for base in roots for entry in os.walk(self.path(base), followlinks=False)):
             dirs[:] = sorted(d for d in dirs if d not in self.HIDDEN and not d.startswith(('build', '.venv')))
             for name in sorted(files):
@@ -147,7 +157,14 @@ class Workspace:
                 raise ValueError("File is not editable")
             if not expected_hash or expected_hash != current["hash"]:
                 raise ValueError("File changed on disk; reopen it before saving")
-            if current.get('virtual') or path == self.mission.STARTUP:
+            if target.match("project/drivers/models/*/model.json"):
+                from project.sensor_models import validate
+                from project.manage import commit
+                spec = validate(json.loads(content))
+                if spec["name"] != target.parent.name:
+                    raise ValueError("The model ID must match its directory")
+                commit(self.root, {path: content}, validate=lambda: self.model.load_config(self.root))
+            elif current.get('virtual') or path == self.mission.STARTUP:
                 from project.cfs_config import bootstrap_plan
                 from project.manage import commit
                 plan = bootstrap_plan(self.root)
@@ -171,12 +188,20 @@ class Workspace:
             temporary.unlink(missing_ok=True)
 
     def _device_catalog(self, config):
+        from project.qemu.generate import register_models
+        from project.sensor_models import model_paths
         catalog = copy.deepcopy(self.model.board_catalog(config["board"], self.root))
+        catalog["available_buses"] = catalog["buses"]
+        catalog["buses"] = {key: catalog["available_buses"][key] for key in config["buses"]}
+        emulated = register_models(self.root)
+        definitions = model_paths(self.root)
         for model, details in catalog["models"].items():
             existing = next((d for d in config["devices"] if d["model"] == model), None)
             if details.get("default_address") is None and existing:
                 details["default_address"] = existing["address"]
-            details["register_model"] = (self.root / "project/qemu/models" / (model + ".json")).is_file()
+            details["register_model"] = model in emulated
+            if model in definitions:
+                details["definition"] = definitions[model].relative_to(self.root).as_posix()
             details["can_add"] = details.get("default_address") is not None
         return catalog
 
@@ -218,7 +243,7 @@ class Workspace:
             for module in sorted((self.root / "cFS/cfe/modules").glob("*")):
                 if (module / "CMakeLists.txt").is_file() and (module / "fsw/src").is_dir():
                     core_modules.append({"name": module.name, "path": module.relative_to(self.root).as_posix(), "type": "directory"})
-            bindings = {device["id"]: binding(device) for device in config["devices"]}
+            bindings = {device["id"]: binding(device, root=self.root, catalog=catalog) for device in config["devices"]}
             simulation = {"root": "sensors", "scripts": simulation_scripts(self.root), "bindings": bindings}
             return {"name": self.root.name, "core_modules": core_modules, "project": config, "catalog": catalog, "apps": apps,
                     "mission": mission, "libraries": libraries, "changes": hardware_changes(self.root, config),
@@ -238,7 +263,9 @@ class Workspace:
             return rename_module(self, kind, name, new_name, revision)
 
     def delete_app(self, name, expected_hash):
-        return self.mission_app("remove", name, expected_hash)
+        from interface.backend.module_delete import delete_app
+        with self.lock, self.mission.transaction(expected_hash) as revision:
+            return delete_app(self, name, revision)
 
     def simulation_snapshot(self):
         from sensors.session import load_session
@@ -436,7 +463,7 @@ class Workspace:
             deleted = [path for path, content in plan.items() if content is None]
             return {"mission": self.mission.snapshot(), "changed": changed, "deleted": deleted, kind: module}
 
-    def select_profile(self, board, os_name, expected_hash=None):
+    def select_profile(self, board, os_name, expected_hash=None, hardware=None):
         """Persist a supported hardware profile and its native library inputs."""
         from project.manage import commit
         with self.lock, self.mission.transaction(expected_hash or self.mission._revision()) as revision:
@@ -445,6 +472,10 @@ class Workspace:
             config = copy.deepcopy(self.model.load_config(self.root))
             if (board, os_name) == (config["board"], config["os"]):
                 return {"mission": self.mission.snapshot(), "changed": [], "deleted": []}
+            if hardware is None:
+                from hardware.manager import HardwareManager
+                hardware = HardwareManager(self.root)
+            hardware.require_stopped_emulator_for_configuration()
             config["board"], config["os"] = board, os_name
             for app in config["apps"]:
                 manifest = f"project/apps/{app['name']}.json"
@@ -463,53 +494,82 @@ class Workspace:
             deleted = [path for path, content in plan.items() if content is None]
             return {"mission": self.mission.snapshot(), "changed": changed, "deleted": deleted}
 
-    def mutate(self, action, payload):
-        """Run one scripts/project.sh operation with validated arguments."""
+    def mutate(self, action, payload, expected_hash=None):
+        """Apply component changes to the mission revision shown by the client."""
         if not isinstance(payload, dict):
             raise ValueError("Invalid parameters")
         with self.lock:
-            config = self.model.load_config(self.root)
-            self.model.validate_config(self.root, config)
+            if expected_hash is None:
+                expected_hash = payload.get("expected_hash")
+            if expected_hash is None:
+                expected_hash = self.mission._revision()
             if action == "remove-app":
                 name = payload.get("app", payload.get("name"))
-                return self.mission.change_app("remove", name, payload.get("expected_hash") or self.mission._revision())
-            if action.startswith("remove-"):
-                return self._remove(action, payload, config)
-            args = [action]
-            if action == "add-app":
-                args.append(self.model.identifier(payload.get("name", "")))
-            elif action == "add-device":
-                model = payload.get("model")
-                catalog = self._device_catalog(config)
-                details = catalog["models"].get(model)
-                if not details or not details["can_add"]:
-                    raise ValueError("This model has no default address validated by the platform")
-                name = payload.get("id") or model
-                self.model.identifier(name)
-                bus = payload.get("bus") or next(iter(catalog["buses"]))
-                address = payload.get("address", details["default_address"])
-                if isinstance(address, str):
-                    address = int(address, 16 if address.lower().startswith('0x') else 10)
-                if any(d["id"] == name for d in config["devices"]):
-                    raise ValueError("Choose a unique sensor ID")
-                if any(d["bus"] == bus and d["address"] == address for d in config["devices"]):
-                    raise ValueError("This bus/address is already occupied")
-                args += [model, "--id", name, "--model", model, "--bus", bus, "--address", str(address)]
-                for prop, value in details.get("default_values", {}).items():
-                    args += ["--value", f"{prop}={value}"]
-            elif action in ("add-sensor", "add-command", "add-telemetry"):
-                args += [self.model.identifier(payload.get("app", "")), self.model.identifier(payload.get("name", ""))]
-                if action == "add-sensor":
-                    args += ["--device", self.model.identifier(payload.get("device", ""))]
-                if action == "add-telemetry" and payload.get("sensor"):
-                    args += ["--sensor", self.model.identifier(payload["sensor"])]
-            else:
-                raise ValueError("Unknown operation")
-            command = ["bash", str(self.root / "scripts/project.sh"), *args]
-            result = subprocess.run(command, cwd=self.root, text=True, capture_output=True, timeout=60)
-            if result.returncode:
-                raise ValueError(result.stderr.strip() or result.stdout.strip())
-            return json.loads(result.stdout)
+                return self.mission.change_app("remove", name, expected_hash)
+            with self.mission.transaction(expected_hash):
+                return self._mutate_components(action, payload)
+
+    def _mutate_components(self, action, payload):
+        config = self.model.load_config(self.root)
+        self.model.validate_config(self.root, config)
+        if action.startswith("remove-") and action not in ("remove-bus", "remove-device"):
+            return self._remove(action, payload, config)
+        args = [action]
+        if action == "add-app":
+            args.append(self.model.identifier(payload.get("name", "")))
+        elif action in ("add-bus", "remove-bus"):
+            bus = payload.get("bus")
+            if not isinstance(bus, str) or bus not in self.model.board_catalog(config["board"], self.root)["buses"]:
+                raise ValueError("Select an available bus on this board")
+            args.append(bus)
+        elif action == "link-hal":
+            args += [self.model.identifier(payload.get(key, "")) for key in ("app", "name")]
+            args += ["--device", self.model.identifier(payload.get("device", ""))]
+            if payload.get("new_app") is True:
+                args.append("--new-app")
+        elif action == "remove-device":
+            args.append(self.model.identifier(payload.get("id", "")))
+        elif action == "add-device":
+            model = payload.get("model")
+            catalog = self._device_catalog(config)
+            details = catalog["models"].get(model)
+            if not details or not details["can_add"]:
+                raise ValueError("This model has no default address validated by the platform")
+            name = payload.get("id") or model
+            self.model.identifier(name)
+            if not catalog["buses"]:
+                raise ValueError("Add a bus to the project before connecting a sensor")
+            bus = payload.get("bus")
+            if bus is None and len(catalog["buses"]) == 1:
+                bus = next(iter(catalog["buses"]))
+            if not isinstance(bus, str) or bus not in catalog["buses"]:
+                raise ValueError("Select a configured bus for this sensor")
+            address = payload.get("address", details["default_address"])
+            if isinstance(address, str):
+                address = int(address, 16 if address.lower().startswith('0x') else 10)
+            if any(d["id"] == name for d in config["devices"]):
+                raise ValueError("Choose a unique sensor ID")
+            if any(d["bus"] == bus and d["address"] == address for d in config["devices"]):
+                raise ValueError("This bus/address is already occupied")
+            label = payload.get("name", name)
+            if not isinstance(label, str) or not label.strip():
+                raise ValueError("Enter a sensor name")
+            args += [label, "--id", name, "--model", model, "--bus", bus, "--address", str(address)]
+            for prop, value in details.get("default_values", {}).items():
+                args += ["--value", f"{prop}={value}"]
+        elif action in ("add-sensor", "add-command", "add-telemetry"):
+            args += [self.model.identifier(payload.get("app", "")), self.model.identifier(payload.get("name", ""))]
+            if action == "add-sensor":
+                args += ["--device", self.model.identifier(payload.get("device", ""))]
+            if action == "add-telemetry" and payload.get("sensor"):
+                args += ["--sensor", self.model.identifier(payload["sensor"])]
+        else:
+            raise ValueError("Unknown operation")
+        command = ["bash", str(self.root / "scripts/project.sh"), *args]
+        result = subprocess.run(command, cwd=self.root, text=True, capture_output=True, timeout=60)
+        if result.returncode:
+            raise ValueError(result.stderr.strip() or result.stdout.strip())
+        return json.loads(result.stdout)
 
     def _remove(self, action, payload, config):
         """Compose appgen's planned files with the project registry in one transaction."""
@@ -517,14 +577,7 @@ class Workspace:
         generator = self.model.appgen(self.root)
         manifests = self.model.read_manifests(self.root, config)
         deleted = []
-        if action == "remove-device":
-            device_id = self.model.identifier(payload.get("id", ""))
-            if any(device_id in app["sensors"].values() for app in config["apps"]):
-                raise ValueError("Remove the sensor readers from the apps first")
-            if not any(d["id"] == device_id for d in config["devices"]):
-                raise ValueError("Device not found")
-            config["devices"] = [d for d in config["devices"] if d["id"] != device_id]
-        elif action in ("remove-sensor", "remove-command", "remove-telemetry"):
+        if action in ("remove-sensor", "remove-command", "remove-telemetry"):
             name = self.model.identifier(payload.get("app", payload.get("name", "")))
             registry = next((app for app in config["apps"] if app["name"] == name), None)
             if registry is None:

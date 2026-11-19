@@ -15,3 +15,9 @@
 !project/qemu/generate.py
 !project/qemu/models/
 !project/qemu/models/*.json
+!project/model.py
+!project/sensor_models.py
+!project/drivers/
+!project/drivers/models/
+!project/drivers/models/*/
+!project/drivers/models/*/model.json

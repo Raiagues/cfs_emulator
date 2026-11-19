@@ -9,13 +9,19 @@ from project.flight_sources import module_directories
 
 
 def _git(root, *args):
-    result = subprocess.run(['git', '-C', str(root), *args], capture_output=True, timeout=10)
-    return result.stdout if result.returncode == 0 else b''
+    try:
+        result = subprocess.run(['git', '-C', str(root), *args], capture_output=True, timeout=5)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return result.stdout if result.returncode == 0 else None
 
 
 def _changes(root, directory=None):
     scope = ['--', ':(literal)' + directory.as_posix()] if directory and directory.parts else []
-    records = _git(root, '--no-optional-locks', 'status', '--porcelain=v1', '-z', '--untracked-files=all', *scope).decode(errors='surrogateescape').split('\0')
+    status = _git(root, '--no-optional-locks', 'status', '--porcelain=v1', '-z', '--untracked-files=all', *scope)
+    if status is None:
+        return None
+    records = status.decode(errors='surrogateescape').split('\0')
     changed = []
     skip = False
     for record in records:
@@ -31,6 +37,8 @@ def _changes(root, directory=None):
 
 
 def _module_change(path, changes):
+    if changes is None:
+        return 'unknown'
     matches = [status for entry, status in changes if entry == path or entry.startswith(path + '/')
                or path.startswith(entry + '/')]
     return 'modified' if 'modified' in matches else 'new' if matches else 'clean'
@@ -114,7 +122,7 @@ def hardware_changes(root, config):
     """Compare device instances to this repository's committed configuration."""
     try:
         previous = json.loads(_git(root, 'show', 'HEAD:project/config.json'))
-    except (ValueError, OSError):
+    except (TypeError, ValueError, OSError):
         return {'board': 'unknown', 'devices': {item['id']: 'unknown' for item in config['devices']}}
     devices = {item['id']: item for item in previous.get('devices', [])}
     return {'board': 'clean' if all(config.get(key) == previous.get(key) for key in ('board', 'os')) else 'modified',

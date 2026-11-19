@@ -5,6 +5,8 @@
 #ifndef DEFAULT_@PREFIX@_PERFIDS_H
 #define DEFAULT_@PREFIX@_PERFIDS_H
 
+/* @studio.slot performance.id */
 #define @PREFIX@_PERF_ID @PERF_ID@
+/* @studio.endslot */
 
 #endif /* DEFAULT_@PREFIX@_PERFIDS_H */

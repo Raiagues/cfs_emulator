@@ -1,0 +1,14 @@
+/**
+ * @file
+ *   @NAME@ sensor configuration.
+ */
+#ifndef @PREFIX@_@ENTITY_UPPER@_SENSOR_CFG_H
+#define @PREFIX@_@ENTITY_UPPER@_SENSOR_CFG_H
+
+/* @studio.slot sensor.endpoint */
+#define @PREFIX@_@ENTITY_UPPER@_DEVICE  "@DEVICE@"
+#define @PREFIX@_@ENTITY_UPPER@_ADDRESS @ADDRESS@
+#define @PREFIX@_@ENTITY_UPPER@_TLM_MID @SENSOR_TLM_MID@
+/* @studio.endslot */
+
+#endif /* @PREFIX@_@ENTITY_UPPER@_SENSOR_CFG_H */

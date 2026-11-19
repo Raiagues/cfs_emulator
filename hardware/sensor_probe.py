@@ -3,7 +3,8 @@ import json
 import shlex
 from project.model import board_catalog, load_config, validate_hardware
 from hardware.manager import HardwareError
-from sensors.simulator import UNITS
+from project.sensor_models import display_units, burst, identity_bytes, load, model_paths
+from project.qemu.generate import register_models
 
 
 # Linux I2C_RDWR is present on both the minimal guest and Raspberry Pi OS.
@@ -58,44 +59,59 @@ def probe(manager, target, device_id, connection, emit):
         values[name] = {"value": value, "unit": unit}
         emit(f"{name}: {value:.3f} {unit}")
 
-    if device["model"] == "tmp105":
-        data, = read([(0, 2)])
-        sample("temperature", int.from_bytes(data, "big", signed=True) / 256, "°C")
-    elif device["model"] == "lsm303dlhc_mag":
-        identity, data = read([(10, 3), (3, 6)])
-        if identity != b"H43":
-            raise HardwareError("Magnetometer identity mismatch")
-        for index, axis in enumerate(("x", "z", "y")):
-            sample("mag-" + axis, int.from_bytes(data[2*index:2*index+2], "big", signed=True), "counts")
+    name = device["model"]
+    definitions = model_paths(manager.root)
+    if name in definitions:
+        spec = load(definitions[name])
     else:
-        spec = json.loads((manager.root / "project/qemu/models" / (device["model"] + ".json")).read_text())
-        first = min(out["register"] for out in spec["outputs"])
-        size = max(out["register"] for out in spec["outputs"]) - first + 2
-        blocks = [(spec["id_register"], 1)] + [(c["register"], 1) for c in spec["controls"]] + [(first, size)]
-        id_bytes, *controls, data = read(blocks)
-        identity = id_bytes[0]
-        if identity != spec["id_value"]:
-            raise HardwareError(f"Unexpected device identity {identity:#04x}")
-        emit(f"I²C {addr} · WHO_AM_I = {identity:#04x}")
-        result["identity"] = identity
-        control_values = {}
-        for control, raw_value in zip(spec["controls"], controls):
-            register = control["register"]
-            control_values[register] = raw_value[0]
-            if control_values[register] & control.get("sleep_mask", 0):
-                result["asleep"] = True
-                emit("Identity verified. Start the flight reader to wake the sensor and read its outputs.")
-                return result
-        for out in spec["outputs"]:
-            index = out["register"] - first
-            raw = int.from_bytes(data[index:index+2], "big", signed=True)
-            counts = out["counts"]
-            if "range_register" in out:
-                step = (control_values[out["range_register"]] >> out["range_shift"]) & 3
-                counts /= 1 << step
-            value = raw * out["divisor"] / counts + out["offset"]
-            scale, unit = UNITS[out["unit"]]
-            sample(out["name"], value / scale, unit)
+        legacy = register_models(manager.root).get(name)
+        if legacy is None:
+            raise HardwareError(f"{name} has no register map for the hardware probe")
+        spec = json.loads(legacy.read_text())
+    if spec.get("protocol") == "custom":
+        raise HardwareError("This sensor uses its flight driver to read the device")
+    first, size = burst(spec)
+    identity = bytes(identity_bytes(spec))
+    registers = [c["register"] for c in spec["controls"]]
+    ready = spec.get("ready")
+    if ready:
+        registers.append(ready["register"])
+    blocks = ([(spec["id_register"], len(identity))] if identity else [])
+    blocks += [(reg, 1) for reg in registers] + [(first, size)]
+    captured = read(blocks)
+    if identity:
+        found = captured.pop(0)
+        if found != identity:
+            raise HardwareError(f"Unexpected device identity {found.hex()}")
+        result["identity"] = int.from_bytes(found, "big")
+        emit(f"I²C {addr} · identity 0x{found.hex()}")
+    data = captured.pop()
+    control_values = {reg: raw[0] for reg, raw in zip(registers, captured)}
+    if any(control_values[c["register"]] & c.get("sleep_mask", 0) for c in spec["controls"]):
+        result["asleep"] = True
+        emit("Identity verified. Start the flight reader to wake the sensor and read its outputs.")
+        return result
+    if ready and control_values[ready["register"]] & ready["mask"] != ready["mask"]:
+        raise HardwareError("The sensor has no new sample ready")
+    for output in spec["outputs"]:
+        offset = output["register"] - first
+        raw = int.from_bytes(data[offset:offset + 2], "big", signed=True)
+        if raw == output.get("invalid_raw") or raw & output.get("reserved_mask", 0):
+            raise HardwareError(f"Invalid raw sample for {output['name']}")
+        counts = output.get("counts")
+        numerator = raw * output["divisor"]
+        if "range_register" in output:
+            gains = output.get("gain_counts")
+            mask = len(gains) - 1 if gains else 3
+            index = (control_values[output["range_register"]] >> output["range_shift"]) & mask
+            if gains:
+                counts = gains[index]
+            else:
+                numerator *= 1 << index
+        if not counts:
+            raise HardwareError(f"Invalid sensitivity for {output['name']}")
+        scale, unit = display_units(output["unit"])
+        sample(output["name"], (numerator / counts + output["offset"]) / scale, unit)
     return result
 
 
@@ -104,11 +120,12 @@ def validate_model(manager, device_id, emit, cancel):
     config = load_config(manager.root)
     validate_hardware(config, manager.root)
     device = next((item for item in config["devices"] if item["id"] == device_id), None)
-    directory = manager.root / "project/qemu"
-    if not device or not (directory / "models" / (device["model"] + ".json")).is_file():
+    definition = register_models(manager.root).get(device["model"]) if device else None
+    if definition is None:
         raise HardwareError("Choose a registered I²C model on the workbench.")
     emit("Checking the register map on a separate emulated Pi 4.")
+    project = manager.root / "project"
     manager._stream(["docker", "run", "--rm", "--network", "none", "--read-only", "--entrypoint", "python3",
-                     "-v", f"{directory}:/models:ro", emulator_config(manager.root)["image"],
-                     "/models/check_device.py", "/models/models/" + device["model"] + ".json"], emit, cancel, timeout=60)
+                     "-v", f"{project}:/work/project:ro", "-w", "/work", emulator_config(manager.root)["image"],
+                     "-m", "project.qemu.check_device", str(definition.relative_to(manager.root))], emit, cancel, timeout=60)
     emit("Identity, reset values and the sample burst passed.")

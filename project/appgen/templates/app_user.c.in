@@ -10,7 +10,7 @@
 *************************************************************************/
 CFE_Status_t @PREFIX@_UserInit(void)
 {
-    /* APPGEN: USER app.init */
+    /* @studio.edit app.init */
     return CFE_SUCCESS;
 }
 
@@ -19,5 +19,5 @@ CFE_Status_t @PREFIX@_UserInit(void)
 *************************************************************************/
 void @PREFIX@_UserWakeup(void)
 {
-    /* APPGEN: USER app.wakeup */
+    /* @studio.edit app.wakeup */
 }

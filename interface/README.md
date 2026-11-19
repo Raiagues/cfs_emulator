@@ -1,106 +1,50 @@
-# Flight Studio interface
+# Interface do Flight Studio
 
-```sh
-./start
-./start --ui --port 8766
-```
+A página inicial em `/` configura o destino e o checkout do cFS. **Open workspace** salva a configuração e abre `/studio` na arquitetura 3D da missão. Para preparar o projeto em um computador novo, siga o [guia de instalação](../README.md).
 
-`./start` serves the interface at http://127.0.0.1:8765 through
-[`server.py`](server.py). The server listens only on 127.0.0.1 and accepts only that
-host name. Every request that changes something must carry the session token that
-the page receives from `/api/session`. The frontend is plain JavaScript in `static/`
-with no build step, and the xterm.js files it uses are kept in `static/vendor/`.
+## Navegação
 
-## Views
-
-| Page / area | Contents |
+| Área | O que fazer |
 | --- | --- |
-| Code | File explorer and editor for the flight sources |
-| Architecture | Mission blocks and app diagrams, next to the editor |
-| Infrastructure (`/`) | Execution target, SSH, emulator image/port, requirements and preparation terminal |
-| Hardware | Local computer in Native; board, sensors, buses and addresses in Emulator/Board |
-| Synthetic data | Sensor signals and live values, described in [Synthetic sensor data](../sensors/README.md) |
-| Ground station | Commands, decoded telemetry and activity, described in [Ground Station](../ground_station/README.md) |
-| Terminal | Operation output and local shells |
+| **Architecture** | Alternar entre a pilha 3D e o mapa 2D. Abrir apps, bibliotecas, serviços cFE, OSAL e PSP. |
+| **Hardware** | Examinar o computador no modo Native ou a placa nos modos Emulator e Board. Em **2D → Pinout**, consultar a numeração física do conector e os nomes GPIO. |
+| **Code** | Navegar na árvore, abrir declarações e editar os arquivos da missão. As marcas **A** e **M** indicam arquivos adicionados e modificados no Git. |
+| **Ground station** | Montar um comando do catálogo, enviar ao cFS e observar a telemetria e os eventos. [Operação da estação](../ground_station/README.md) |
+| **Ground station → System overview** | Escolher Commands ou Telemetry e abrir os registros da app durante a conexão atual. |
+| **Synthetic data** | Selecionar um dispositivo, configurar seus sinais no painel lateral, testar localmente e acompanhar a sessão. [Dados sintéticos](../sensors/README.md) |
+| **Terminal** | Acompanhar builds, jobs e shells locais no painel inferior. |
 
-## Architecture
+![Arquitetura 3D da missão no Flight Studio](../docs/images/studio-mission.png)
 
-**Open workspace** opens the 3D hardware workbench. Select Architecture to see the mission apps, libraries, cFE services and platform. The file explorer marks new files with A and modified files with M. Folder badges include changes in their contents.
+## Editar a missão
 
-Selecting an app opens its diagram, grouped into initialization, message handling,
-commands and telemetry, and support routines. Under each message ID the app receives,
-the diagram lists the command codes that reach it, the handler function of each code
-and the tables and libraries that handler uses. Clicking a function, route, payload
-field or table opens its source at the matching line alongside the diagram and file explorer. App and library details open full width. Use the Mission architecture tab to return to the overview.
+Na arquitetura 3D, arraste para girar e use a roda do mouse para aproximar. Selecione um módulo para destacar suas dependências e abrir o código ou seus comandos pela barra inferior. Ao selecionar um sensor, aparecem as conexões configuradas no hardware. Os nomes das camadas levam aos respectivos grupos no mapa 2D. Os controles **New**, **Edit** e a lixeira ficam no cabeçalho de cada grupo. A opção de bibliotecas mostra ou oculta esse grupo. **Build cFS** fica na barra superior. O aviso de recompilação aparece quando um build anterior ficou desatualizado.
 
-![The SAMPLE_APP diagram with Commands and telemetry expanded. SAMPLE_APP_CMD_MID leads to four command codes and their handlers, SAMPLE_APP_SEND_HK_MID leads to SendHkCmd, and SAMPLE_APP_HK_TLM_MID is the published telemetry. The editor shows SAMPLE_APP_NoopCmd in sample_app_cmds.c, opened from the NoopCmd card.](../docs/images/sample-app-command-routes.png)
+- Em **Your apps → New**, escolha o nome e confira o ponto de entrada, a prioridade, a pilha e as frequências de wakeup e housekeeping antes de salvar. Em **Libraries → New**, a biblioteca de missão parte de `sample_lib`.
+- No grupo de apps NASA, **New** permite incluir um módulo disponível no checkout. Os módulos necessários ao agendamento ou à comunicação têm restrições de remoção.
+- **Edit** abre as operações permitidas para o módulo selecionado. A renomeação de um módulo próprio atualiza os nomes usados no build, no startup e nas referências da missão. Apps próprias também permitem alterar a configuração de execução.
+- **Remove** retira o módulo da compilação e do startup da CPU1. Os fontes continuam disponíveis para uma futura inclusão. As dependências que ainda utilizam uma biblioteca aparecem antes da remoção.
 
-Communication, next to Structure, shows the traffic the Ground Station observed for
-each app. Selecting a counter lists the recent packets with their decoded fields and
-bytes.
+Clique em um bloco para abrir seus detalhes em uma aba. A aba da arquitetura retorna ao mapa completo. Em uma app, a navegação percorre inicialização, despacho por MID e código de comando, handlers, tabelas e telemetria. Nas bibliotecas, **Used by** mostra os consumidores e **Public API** lista os símbolos. Um clique numa função ou chamada abre o editor na linha correspondente, com a árvore de arquivos ao lado.
 
-## Editing the mission
+## Ler e editar código
 
-Edit, at the top of the architecture panel, shows the editing controls and opens the
-startup script.
+O checkout `cFS/` fica disponível para consulta. Os arquivos editáveis da missão ficam em `mission/`. O painel do editor apresenta **Tags**, **Packet** e **Dispatch**. As anotações `@brief`, `@unit`, `@range` e `@check` levam ao comentário correspondente. Para acrescentar um leitor ou implementar seu comando, consulte o [guia dos templates de app](../project/appgen/README.md).
 
-- New app opens a draft with priority, stack size, wakeup frequency and housekeeping
-  frequency. The draft previews the startup entry, the generated functions and the
-  native build and startup lines, and Save writes them.
-- New library previews a library with the layout of `sample_lib` before saving it.
-- Add app and Add library include an app or library that already exists in the
-  checkout, and Add library also lists the drivers that can be added.
-- The power button enables or disables an app's startup entry, and a disabled app
-  stays in the diagram.
-- The minus button offers Remove from mission, which excludes the module from the
-  build and the startup script while keeping its files. For modules created by the
-  project, it also offers Delete source files.
+![Árvore de fontes, editor e painel de navegação](../docs/images/studio-code.png)
 
-A library that included apps or devices still need cannot be removed until those
-dependencies are removed. Every change takes effect after Build cFS and Run cFS. The
-same operations from a terminal are listed in [Project and mission](../project/README.md).
-
-## Terminal
-
-The terminal panel keeps one terminal per operation, such as a build, the Linux boot,
-cFS output or a synthetic data session. Switching between the flight software and
-Synthetic data selects the matching terminal, and the list on the right selects any
-other. Closing a terminal that follows logs leaves the service it follows running.
-Terminal → + → New terminal opens a shell in the repository root.
-
-## Shortcuts
-
-| Shortcut | Action |
+| Atalho | Ação |
 | --- | --- |
-| Ctrl+S | Save the file |
-| Ctrl+F | Find in the editor |
-| Ctrl+P | Find a file |
-| Ctrl+B | Show or hide the explorer |
-| Ctrl+` | Show or hide the terminal |
+| Ctrl+S | Salvar o arquivo ativo |
+| Ctrl+F | Buscar no editor |
+| Ctrl+P | Buscar arquivo |
+| Ctrl+B | Alternar o explorador |
+| Ctrl+` | Alternar o terminal |
 
-Dragging a divider resizes the panels, and double-clicking it restores the default
-size. The browser keeps the panel sizes between sessions.
+Arraste os divisores para redimensionar os painéis. O terminal mantém o histórico de cada operação. Fechar uma aba de acompanhamento encerra a visualização de logs e permite continuar usando o serviço que os produz.
 
-## Modules
+## Implementação
 
-- `server.py` serves the API and the static files.
-- `backend/` holds the source workspace, mission operations, app diagrams and terminal
-  sessions.
-- `static/app.js` keeps the workspace state and calls the API.
-- `static/mission-diagram.js` and `static/app-diagram.js` draw the architecture.
-- `static/communication.js` shows the traffic observed by the Ground Station.
-- `static/simulation.js` controls synthetic data sessions.
-- `static/board.js` and `static/terminal.js` draw the workbench and the terminals.
+O servidor escuta no loopback e entrega o JavaScript e as fontes do próprio repositório. O navegador usa o token de `/api/session` ao gravar. Salvamentos usam hashes do arquivo, da missão ou do rascunho para detectar edições concorrentes. [API e regras de extensão](../docs/backend.md) · [Sistema visual](../docs/design.md)
 
-## Design note
-
-### Diagrams are read from the C sources
-
-A diagram kept by hand drifts away from the code it describes. The backend
-([`architecture_details.py`](backend/architecture_details.py), with
-[`c_source.py`](../ground_station/c_source.py)) therefore reads each app's C sources
-to find its subscriptions, the comparisons that route each message ID, the handler of
-each command code, its packets and the tables it uses. A command code appears under a
-message ID only when the dispatch code compares against that ID. The analysis reads
-text rather than a syntax tree, so dispatch written in other forms is not drawn. The
-API lists those cases as unresolved instead of guessing a route.
+O índice de fontes analisa assinaturas, inscrições no Software Bus e comparações que associam um MID a um handler. A interface apresenta os casos que a análise consegue resolver e a API registra as rotas pendentes. [Índice de código](backend/source_index.py) · [Análise da arquitetura](backend/architecture_details.py)

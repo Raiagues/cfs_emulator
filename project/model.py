@@ -54,6 +54,15 @@ def board_catalog(board=None, root=None):
     catalog = json.loads(path.read_text())
     if catalog.get("board") != board:
         raise ProjectError(f"Board catalog identifier differs from its filename: {board}")
+    models = catalog.setdefault("models", {})
+    for bus in catalog["buses"].values():
+        if re.fullmatch(r"/dev/i2c-[0-9]+", bus.get("device", "")):
+            bus.setdefault("transport", "linux_i2c")
+            bus.setdefault("library", "linux_i2c_lib")
+    if any(bus.get("transport") == "linux_i2c" for bus in catalog["buses"].values()):
+        from project.sensor_models import board_model, load, model_paths
+        for name, definition in model_paths(directory.parent).items():
+            models[name] = board_model(load(definition))
     catalog.setdefault("protected_paths", PROTECTED_PATHS)
     catalog.setdefault("protected_apps", [])
     return catalog
@@ -113,23 +122,37 @@ def validate_values(device, values, catalog=None):
             raise ProjectError(f"Unsupported value for {device['id']}.{key}; run ./scripts/project.sh devices")
 
 
+def configured_buses(config):
+    """Before explicit bus selection, only attached devices evidenced an active bus."""
+    if "buses" in config:
+        return config["buses"]
+    return list(dict.fromkeys(device["bus"] for device in config["devices"]))
+
+
 def validate_hardware(config, root=None):
     """Validate configuration without needing a cFS checkout (guest runtime)."""
-    fields(config, {"schema_version", "board", "os", "devices", "apps"}, "project config")
+    keys = {"schema_version", "board", "os", "devices", "apps"}
+    fields(config, keys | ({"buses"} if "buses" in config else set()), "project config")
     catalog = board_catalog(config["board"], root)
     if type(config["schema_version"]) is not int or config["schema_version"] != 1:
         raise ProjectError("Unsupported project schema_version; expected 1")
     if not isinstance(config["devices"], list) or not isinstance(config["apps"], list):
         raise ProjectError("devices and apps must be lists")
+    buses = config.get("buses", [])
+    if not isinstance(buses, list) or any(not isinstance(bus, str) or bus not in catalog["buses"] for bus in buses):
+        raise ProjectError("Select buses supported by this board")
+    if len(buses) != len(set(buses)):
+        raise ProjectError("A bus may be added only once")
     if config["board"] is None:
-        if config["os"] is not None or config["devices"]:
+        if config["os"] is not None or config["devices"] or buses:
             raise ProjectError("Select a board and operating system before adding hardware")
         return
     if config["board"] != catalog["board"] or config["os"] not in catalog["os"]:
         raise ProjectError(f"Unsupported OS for {catalog['board']}; supported: {', '.join(catalog['os'])}")
     ids, addresses = set(), set()
     for device in config["devices"]:
-        fields(device, {"name", "id", "model", "bus", "address", "values"}, "device")
+        keys = {"name", "id", "model", "bus", "address", "values"}
+        fields(device, keys | ({"pins"} if "pins" in device else set()), "device")
         identifier(device["id"])
         if not isinstance(device["name"], str) or not device["name"].strip():
             raise ProjectError("Device name must be a nonempty display name")
@@ -137,10 +160,21 @@ def validate_hardware(config, root=None):
             raise ProjectError("Unsupported device model; run ./scripts/project.sh devices")
         if not isinstance(device["bus"], str) or device["bus"] not in catalog["buses"]:
             raise ProjectError("Unsupported bus; run ./scripts/project.sh devices")
+        if "buses" in config and device["bus"] not in buses:
+            raise ProjectError("Add the bus to the project before connecting a sensor")
+        if "pins" in device:
+            supported = catalog["buses"][device["bus"]].get("sensor_pins", {})
+            fields(device["pins"], supported, "sensor pins")
+            if any(type(pin) is not int or pin not in supported[signal] for signal, pin in device["pins"].items()):
+                raise ProjectError("Select a compatible header pin for each sensor wire")
         if type(device["address"]) is not int or not 0x08 <= device["address"] <= 0x77:
             raise ProjectError("I2C address must be an integer in 0x08..0x77")
-        if device["model"] == "mpu6050" and device["address"] not in (0x68, 0x69):
-            raise ProjectError("MPU6050 AD0 selects I²C address 0x68 or 0x69")
+        model = catalog["models"][device["model"]]
+        if model.get("transport") and model["transport"] != catalog["buses"][device["bus"]].get("transport"):
+            raise ProjectError(f"Unsupported bus for {device['model']}")
+        if model.get("addresses") and device["address"] not in model["addresses"]:
+            choices = ", ".join(hex(address) for address in model["addresses"])
+            raise ProjectError(f"{device['model']} supports I²C addresses {choices}")
         address = (device["bus"], device["address"])
         if device["id"] in ids or address in addresses:
             raise ProjectError(f"Duplicate device ID or I2C bus/address: {device['id']}")
@@ -154,6 +188,7 @@ def load_config(root):
     config = (json.loads(path.read_text()) if path.is_file() else
               {"schema_version": 1, "board": None, "os": None, "devices": [], "apps": []})
     validate_hardware(config, root)
+    config.setdefault("buses", configured_buses(config))
     return config
 
 
@@ -212,7 +247,7 @@ def validate_config(root, config, manifests=None, new_apps=()):
     if manifests is None:
         manifests = read_manifests(root, config)
     generator = appgen(root)
-    generator.validate_all(manifests)
+    generator.validate_all(manifests, root)
     if {app["name"] for app in manifests} != names:
         raise ProjectError("Project app registry and cFS app manifests differ")
     for app in config["apps"]:

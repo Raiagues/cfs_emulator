@@ -3,7 +3,7 @@ export function mountLayout() {
   const $ = selector => document.querySelector(selector);
   const explorer = $('.explorer'), editor = $('.editor'), terminal = $('.terminal');
   const panes = $('.panes'), work = $('.workarea');
-  const defaults = {explorer:220, editor:.48, terminal:240};
+  const defaults = {explorer:268, editor:.48, terminal:240};
   let sizes = {...defaults};
   try { const saved=JSON.parse(localStorage.getItem('flight-studio-layout')||'{}');for(const key of Object.keys(defaults))if(Number.isFinite(saved[key]))sizes[key]=saved[key]; } catch {}
   const clamp = (value,min,max) => Math.max(min,Math.min(value,Math.max(min,max)));

@@ -1,0 +1,24 @@
+{
+  "name": "tmp105",
+  "emulator": "builtin",
+  "address": 72,
+  "controls": [],
+  "outputs": [
+    {
+      "name": "temperature",
+      "register": 0,
+      "unit": "millidegrees Celsius",
+      "initial": 23500,
+      "offset": 0,
+      "counts": 256,
+      "divisor": 1000,
+      "reserved_mask": 15,
+      "min": -128000,
+      "max": 127937
+    }
+  ],
+  "abi": {
+    "sample": "int32",
+    "read": "TMP105_LIB_ReadTemperature"
+  }
+}

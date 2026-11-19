@@ -1,0 +1,105 @@
+{
+  "name": "mpu6050",
+  "address": 104,
+  "id_register": 117,
+  "id_value": 104,
+  "controls": [
+    {
+      "register": 107,
+      "reset": 64,
+      "setup": 1,
+      "reset_mask": 128,
+      "sleep_mask": 64
+    },
+    {
+      "register": 108,
+      "reset": 0,
+      "setup": 0
+    },
+    {
+      "register": 27,
+      "reset": 0,
+      "setup": 0
+    },
+    {
+      "register": 28,
+      "reset": 0,
+      "setup": 0
+    }
+  ],
+  "scales": {
+    "accel": {
+      "unit": "millig",
+      "offset": 0,
+      "counts": 16384,
+      "divisor": 1000,
+      "range_register": 28,
+      "range_shift": 3
+    },
+    "temperature": {
+      "unit": "millidegrees Celsius",
+      "offset": 36530,
+      "counts": 340,
+      "divisor": 1000
+    },
+    "gyro": {
+      "unit": "millidegrees per second",
+      "offset": 0,
+      "counts": 131,
+      "divisor": 1000,
+      "range_register": 27,
+      "range_shift": 3
+    }
+  },
+  "outputs": [
+    {
+      "name": "accel-x",
+      "register": 59,
+      "initial": 1044,
+      "scale": "accel"
+    },
+    {
+      "name": "accel-y",
+      "register": 61,
+      "initial": -5,
+      "scale": "accel"
+    },
+    {
+      "name": "accel-z",
+      "register": 63,
+      "initial": 178,
+      "scale": "accel"
+    },
+    {
+      "name": "temperature",
+      "register": 65,
+      "initial": 28480,
+      "scale": "temperature"
+    },
+    {
+      "name": "gyro-x",
+      "register": 67,
+      "initial": -2060,
+      "scale": "gyro"
+    },
+    {
+      "name": "gyro-y",
+      "register": 69,
+      "initial": 690,
+      "scale": "gyro"
+    },
+    {
+      "name": "gyro-z",
+      "register": 71,
+      "initial": -540,
+      "scale": "gyro"
+    }
+  ],
+  "addresses": [
+    104,
+    105
+  ],
+  "abi": {
+    "read": "MPU6050_Read"
+  }
+}

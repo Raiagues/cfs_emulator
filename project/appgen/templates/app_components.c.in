@@ -4,14 +4,18 @@
  */
 
 #include "@APP@_components.h"
+/* @studio.slot component.includes */
 @COMPONENT_INCLUDES@
+/* @studio.endslot */
 
 /************************************************************************
 ** Initialize registered components, then invoke user initialization.
 *************************************************************************/
 CFE_Status_t @PREFIX@_ComponentsInit(void)
 {
+/* @studio.slot component.init */
 @COMPONENT_INIT@
+/* @studio.endslot */
     return @PREFIX@_UserInit();
 }
 
@@ -20,5 +24,7 @@ CFE_Status_t @PREFIX@_ComponentsInit(void)
 *************************************************************************/
 void @PREFIX@_ComponentsWakeup(void)
 {
+/* @studio.slot component.wakeup */
 @COMPONENT_WAKEUP@
+/* @studio.endslot */
 }

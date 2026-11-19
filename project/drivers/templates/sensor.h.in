@@ -1,0 +1,17 @@
+#ifndef @PREFIX@_LIB_H
+#define @PREFIX@_LIB_H
+
+#include "cfe.h"
+#include "hal_sensor.h"
+
+@SAMPLE_DECLARATION@
+@STATE_DECLARATION@
+int32 @PREFIX@_LIB_Init(void);
+
+/* Bind once per physical device. Storage belongs to the caller. Binding does no I/O. */
+HAL_SENSOR_Device_t @PREFIX@_Bind(HAL_SENSOR_Bus_t bus, @PREFIX@_State_t *state);
+int32 @PREFIX@_Acquire(HAL_SENSOR_Device_t *device, @VALUE_TYPE@ *sample);
+
+@LEGACY_DECLARATIONS@
+@EXTRA_API@
+#endif

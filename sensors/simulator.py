@@ -21,10 +21,7 @@ except ImportError:
 
 from project.model import board_catalog, board_catalogs, validate_values
 from sensors.schema import Sensor, Signal
-
-# These are the units of the official QEMU QOM properties, not I2C wire fields.
-# TMP105: 1000 = 1 °C; LSM303DLHC: 1000 = 1 µT. QEMU builds the register bytes.
-UNITS = {"counts": (1, "counts"), "millig": (1000, "g"), "millidegrees per second": (1000, "°/s"), "millidegrees Celsius": (1000, "°C"), "milli-microtesla": (1000, "µT")}
+from project.sensor_models import UNITS, display_units  # UNITS is also used by external waveform scripts.
 
 
 def simulation_scripts(root=ROOT):
@@ -67,7 +64,7 @@ def configuration(waveform, device, root=ROOT, catalog=None):
     if len(names) != len(set(names)) or set(names) != set(properties):
         raise ValueError("Declare each supported QEMU signal exactly once in configure(device)")
     for signal in config.signals:
-        if (signal.scale, signal.unit) != UNITS[properties[signal.property]["unit"]]:
+        if (signal.scale, signal.unit) != display_units(properties[signal.property]["unit"]):
             raise ValueError(f"Incorrect QEMU units for {signal.property}")
     return config
 
@@ -198,7 +195,7 @@ def simulate(root, sensor_ids=(), interval=1.0, steps=None, waveforms=None, trac
                         result = set_property(qmp, path, name, value)
                         if trace_qmp:
                             print("QMP < " + json.dumps({"return": result}), flush=True)
-                        scale, unit = UNITS[models[device["model"]]["properties"][name]["unit"]]
+                        scale, unit = display_units(models[device["model"]]["properties"][name]["unit"])
                         reply = "OK" if result == {} else json.dumps(result)
                         print(f"{tick - started:7.2f}s  {device['id']}  {name}={value / scale:.3f} {unit}"
                               f"  |  qom-set {name}={value}  |  {reply}", flush=True)
@@ -212,7 +209,7 @@ def simulate(root, sensor_ids=(), interval=1.0, steps=None, waveforms=None, trac
 def print_samples(samples, elapsed, catalog):
     for device, values in samples:
         props = catalog["models"][device["model"]]["properties"]
-        line = ", ".join(f"{name}={value / UNITS[props[name]['unit']][0]:.3f} {UNITS[props[name]['unit']][1]}"
+        line = ", ".join(f"{name}={value / display_units(props[name]['unit'])[0]:.3f} {display_units(props[name]['unit'])[1]}"
                          for name, value in values.items())
         print(f"{elapsed:7.2f}s  {device['id']}  {line}", flush=True)
 

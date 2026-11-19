@@ -1,0 +1,9 @@
+{
+  "name": "lab_byte",
+  "protocol": "custom",
+  "emulator": "external",
+  "address": 72,
+  "outputs": [
+    {"name": "level", "unit": "counts", "initial": 0, "min": 0, "max": 255}
+  ]
+}

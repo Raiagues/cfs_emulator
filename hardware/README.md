@@ -1,165 +1,97 @@
-# Execution targets
+# Execução e hardware
 
-Flight Studio runs cFS on this computer, in a QEMU-emulated Raspberry Pi 4B or on a
-physical Raspberry Pi 4B. The browser and `./start --no-ui` both go through
-`HardwareManager` in [`manager.py`](manager.py). Before cFS starts on one target,
-Flight Studio checks that it is stopped on every target this checkout may have
-started, so one checkout runs at most one cFS instance.
+O Flight Studio executa o cFS no computador Linux, em um Raspberry Pi 4B emulado com QEMU ou em uma placa física com Raspberry Pi OS ARM64. A interface e a CLI usam o mesmo gerenciador. Antes de iniciar uma instância, ele verifica os destinos em que esse projeto pode ter deixado o cFS em execução. [Gerenciador](manager.py)
 
-The diagram shows where cFS runs for each target and how Flight Studio reaches it.
+Na configuração inicial, selecione o destino e abra o workspace. Na bancada **Hardware**, Native representa o computador local. Emulator e Board mostram a placa e os dispositivos configurados. Em **2D → Pinout**, consulte os 40 números físicos do conector e os sinais correspondentes. Na placa vazia, comece por **Add bus**. Em seguida, **Connect sensor** mostra os modelos compatíveis. Selecione **Link HAL** para ligar o sensor a um leitor de uma app de voo. [Instalação e primeiro acesso](../README.md)
+
+![Vista de pinagem da Raspberry Pi](../docs/images/studio-pinout.png)
+
+| Destino | Como compila | Onde executa |
+| --- | --- | --- |
+| Native | Compilador do Linux local | Processo `core-cpu1` no computador |
+| Emulator | Cross-compiler ARM64 do contêiner `cfs-builder:local` | Serviço `cfs.service` no Raspberry Pi OS emulado |
+| Board | O mesmo perfil de voo ARM64 | Serviço `cfs-studio.service` na placa ligada por SSH |
+
+Os três perfis usam o checkout independente da NASA em `cFS/` e as definições da missão em `mission/`. Os campos de conexão e os registros de execução são locais, em `hardware/.runtime/`. A escolha de placa e sistema operacional da missão fica em `project/config.json`. As chaves são gerenciadas pelo OpenSSH.
 
 ```mermaid
 flowchart LR
-    subgraph computer["This computer"]
-        manager["Flight Studio<br/>hardware/manager.py"]
-        native["Native cFS process<br/>mission/build-native/exe/cpu1"]
-        builder["Container cfs-builder:local<br/>ARM64 cross compiler"]
-        subgraph emulator["Container pi4-cfs"]
-            qemu["qemu-system-aarch64 -M raspi4b"]
-            subgraph guest["Raspberry Pi OS guest"]
-                guestcfs["cfs.service<br/>/opt/cFS/build-rpi_linux/<br/>exe/cpu1"]
-            end
-        end
-    end
-    subgraph pi["Raspberry Pi 4B"]
-        boardcfs["cfs-studio.service<br/>~/cfs-arm64/studio/current"]
-    end
-    manager -->|"starts the process"| native
-    manager -->|"builds mission/build-flight"| builder
-    manager -->|"QMP board/qmp.sock"| qemu
-    manager -->|"SSH · configured local port"| guestcfs
-    manager -->|"SSH"| boardcfs
+    Studio["Workspace ou CLI"] --> M["HardwareManager"]
+    M -->|processo local| N["core-cpu1 no host"]
+    M -->|"ARM64"| B["mission/build-flight/exe/cpu1"]
+    B -->|"SSH na porta do guest"| L["cfs.service no guest"]
+    B -->|"SSH da placa"| P["cfs-studio.service na Raspberry Pi"]
+    M -->|"QMP"| E["Máquina Raspberry Pi 4B em QEMU"]
+    E --> L
 ```
 
-## Infrastructure
-
-Infrastructure at `/` configures the execution target before opening `/studio`.
-Native uses host tools. Emulator exposes its image and local SSH port. Physical
-board exposes the SSH host, user, port, key path and installation folder relative
-to the remote user's home. **Check** verifies local requirements; **Test SSH**
-checks the board; **Prepare cFS service** sets up its existing on-demand service.
-Commands that need a password run in the page's interactive terminal.
-
-Connection settings are local to `hardware/.runtime/`, which Git ignores. Board/OS
-selection continues to use `project/config.json` and the generated cFS toolchain.
-Private SSH keys remain in the local SSH configuration.
-
 ## Native
-
-Native builds with this computer's compiler and runs `core-cpu1` as a local process.
-The installed mission is in `mission/build-native/exe/cpu1/`; output also goes to
-`hardware/.runtime/native.log`. Selecting Native preserves the saved board and
-sensors for the other targets. Driver code uses the devices available on the host.
 
 ```sh
 ./start --no-ui profile --native
 ./start --no-ui build
-./start --no-ui run
+./start --no-ui run --no-follow
 ./start --no-ui logs
 ./start --no-ui stop
 ```
 
-`run` and `logs` follow the output, and Ctrl+C stops following without stopping cFS.
-`run --no-follow` returns as soon as cFS has started.
+O build instala o executável e os módulos em `mission/build-native/exe/cpu1/`. A saída do processo também é gravada em `hardware/.runtime/native.log`. Selecionar Native preserva o perfil de placa e os sensores configurados para os outros destinos. Uma app que acessa hardware usa os dispositivos disponíveis neste host.
 
-## QEMU
+Por padrão, `run` acompanha os logs após iniciar. Com `--no-follow`, retorna depois da partida. Durante o acompanhamento, Ctrl+C encerra a leitura dos logs. Use `stop` para parar o cFS.
+
+## Emulator
+
+Na configuração do emulador, escolha a imagem e a porta SSH local. Depois que o setup instalar o ambiente, a seguinte sequência usa o perfil Raspberry Pi 4B.
 
 ```sh
 ./start --no-ui profile --board raspi4b --os raspios
-./start --no-ui setup
-./start --no-ui build
-./start --no-ui boot
-./start --no-ui run
-./start --no-ui stop
-./start --no-ui shutdown
+./start --no-ui build --target qemu
+./start --no-ui boot --target qemu
+./start --no-ui run --target qemu --no-follow
+./start --no-ui stop --target qemu
+./start --no-ui shutdown --target qemu
 ```
 
-Selecting a board profile sets the default to `--target qemu`. The toolbar and
-CLI share the selected execution target; `--target` overrides it for one command. Setup runs
-[`scripts/setup.sh`](../scripts/setup.sh), which prepares Docker, the emulator's SSH key
-in `~/.ssh/cfs-emulator/` and the emulator image named in `config/image`.
+**Start emulator** inicia o contêiner `pi4-cfs`. O QEMU usa a máquina `raspi4b` e o disco persistente `board/raspios.qcow2`. A porta SSH configurada fica publicada no loopback do host e chega à porta 22 do guest por meio da porta 2222 do contêiner. O setup configura a identidade do emulador em `~/.ssh/cfs-emulator/`.
 
-Boot starts the `pi4-cfs` container, which runs QEMU's `raspi4b` machine with the
-Raspberry Pi OS disk from `board/raspios.qcow2`. QEMU's user network forwards the
-container's port 2222 to the guest's SSH port, and Docker publishes the selected host port only on
-127.0.0.1. The emulated sensors come from `project/config.json` when QEMU starts, so a
-change of devices, buses or addresses needs Stop QEMU and a new boot. When QEMU is
-already running but Flight Studio lost track of it, Retry QEMU connection checks SSH
-again without starting a new boot. `logs --kind boot` shows
-the Linux console, which is also saved in `logs/latest.log`, and `logs --kind flight`
-shows the cFS output.
+O projeto começa com a lista `buses` vazia. No boot do QEMU, o Studio gera `board/mission.dtb` a partir do device tree do kernel e habilita os barramentos selecionados em `project/config.json`. Na placa física, os nós disponíveis dependem do Linux instalado. Após trocar dispositivos, barramentos ou endereços, desligue o emulador e inicie novamente. Uma alteração de placa, sistema ou infraestrutura do emulador requer que o QEMU esteja parado. Se o guest já iniciou, a opção de tentar a conexão novamente repete o teste SSH. Os logs do boot ficam em `logs/latest.log` e podem ser acompanhados com `./start --no-ui logs --target qemu --kind boot`. Um contêiner encerrado conserva a saída para inspeção até o próximo boot.
 
-Builds for the emulator and the board run the ARM64 cross compiler inside the
-`cfs-builder:local` image and install the mission in `mission/build-flight/exe/cpu1/`. Run
-then loads `i2c-dev` in the guest when the project has sensors, copies the build to a
-staging directory over SSH, swaps it with the installed one and starts `cfs.service`.
-Flight Studio confirms that the service is active two seconds later, which shows that
-the process is running. The cFS output shows whether cFE reached its operational state.
+O payload de voo fica em `mission/build-flight/exe/cpu1/`. **Run cFS** envia o build por SSH para uma pasta temporária no guest, troca a instalação em uma operação, inicia o serviço e consulta seu estado. Para confirmar que o cFE chegou à operação, consulte os logs de voo e a telemetria. [Conferir pela estação de solo](../ground_station/README.md#enviar-um-comando-e-confirmar-a-resposta)
 
-`./run.sh` runs the selected profile from a shell, with the same checks and lock as
-Flight Studio. `./boot.sh`, `./stop.sh` and `./logs.sh` start, power off and follow the
-emulator directly.
+`./run.sh` delega à CLI do Studio. Os atalhos `./boot.sh`, `./stop.sh` e `./logs.sh` iniciam o guest, solicitam seu desligamento e acompanham o console do emulador, respectivamente.
 
-## Physical board
+## Board
+
+No setup de **Physical board**, configure o nome ou alias SSH, usuário, porta e diretório da missão. O diretório é relativo à pasta pessoal do usuário remoto. Um arquivo de identidade específico é opcional. **Test SSH** consulta modelo, arquitetura, sistema, nós de dispositivo e estado do serviço. **Prepare cFS service** instala a autorização para administrar o serviço do Studio.
 
 ```sh
 ./start --no-ui profile --board raspi4b --os raspios
 ./start --no-ui connect --target physical --host raspberrypi.local --user pi
 ./start --no-ui build --target physical
-./start --no-ui run --target physical
+./start --no-ui run --target physical --no-follow
 ./start --no-ui stop --target physical
 ```
 
-Flight Studio uses your OpenSSH configuration for keys, aliases and known hosts, and
-`--host` also accepts an SSH alias. Connect checks the board's Linux system, I²C device
-nodes and service authorization. The first connection installs a service on the board
-with [`setup_board.py`](setup_board.py), which Flight Studio copies to
-the selected installation folder (`~/cfs-arm64/studio/` by default).
-`--ssh-port`, `--identity-file` and `--directory` set the same options from the CLI.
-With passwordless sudo, Flight Studio runs the script itself.
-Otherwise it shows the command to run once in a terminal, which looks like this.
+Os valores de host e usuário acima são exemplos. A CLI também aceita `--ssh-port`, `--identity-file` e `--directory`. Com sudo sem senha, o Studio prepara o serviço e confere sua prontidão. Quando a autorização exige interação, o setup fornece o comando específico para executar no terminal. O script instala `cfs-studio.service`, que roda `core-cpu1` como root em `studio/current/cpu1` dentro da pasta da missão. A regra sudo permite administrar esse serviço, consultar seu journal, carregar `i2c-dev` e solicitar o desligamento do Linux. [Preparação da placa](setup_board.py)
 
-```sh
-ssh -t raspberrypi.local sudo python3 ~/cfs-arm64/studio/setup_board.py
-```
+Cada upload vai para uma pasta nova em `releases/`. A ativação troca o link `studio/current`, inicia o serviço e verifica seu estado. Uma falha restaura o link anterior e preserva o upload para inspeção. Depois da partida saudável, o Studio guarda a versão ativa e a anterior. A limpeza alcança apenas versões antigas com nome e marcador de ativação válidos. [Ativação e rollback](activate_release.py)
 
-The script accepts only a Raspberry Pi 4B running ARM64 Linux. It installs
-`cfs-studio.service`, which runs `core-cpu1` as root from the installation folder's `studio/current/cpu1`,
-and a sudo rule for your user. That rule allows starting, stopping and checking this
-service, reading its journal, loading `i2c-dev` and powering Linux off. Every other
-sudo command still asks for a password.
+Com leitores na missão, o Studio carrega `i2c-dev` e os drivers usam os dispositivos físicos da placa. Uma leitura falha atualiza a telemetria do sensor com `Valid = 0` e o erro em `Status`. Por exemplo, `-2` (`ENOENT`) indica que o nó de dispositivo procurado está ausente. Verifique a configuração do I²C, o barramento e o endereço do sensor.
 
-Run loads `i2c-dev` when the project has apps that read sensors, uploads the build
-and starts the service. The driver then reads the physical devices, since the emulated
-QEMU devices do not exist on the board. A failed I²C read appears in the cFS output
-and in the app's sensor telemetry, where `Status` holds the negative Linux error code
-and `Valid` is 0. For example, status -2 (`ENOENT`) means that the device node is
-missing, as happens when the I²C interface is disabled in the board's configuration.
-
-For a board without the configured sensors, `--sensorless` builds and runs the
-mission without the apps that read sensors.
+O perfil isolado permite verificar o restante da missão em uma placa sem os sensores configurados.
 
 ```sh
 ./start --no-ui build --target physical --sensorless
-./start --no-ui run --target physical --sensorless
+./start --no-ui run --target physical --sensorless --no-follow
 ```
 
-`stop` stops cFS. Linux on the board powers off only through an explicit
-`./start --no-ui shutdown --target physical`.
+O Studio prepara `hardware/.runtime/sensorless/` com uma cópia do upstream, das fontes e das definições locais. Retira dessa cópia as apps com leitores e os dispositivos, recompila a missão e usa um catálogo de solo correspondente. O projeto principal conserva suas associações. A execução com `--sensorless` exercita os módulos incluídos nessa cópia.
 
-## Drivers
+`stop` para o cFS. Para desligar o sistema operacional da placa, a ação explícita é `./start --no-ui shutdown --target physical`.
 
-The board catalog in `project/boards/` lists the buses, addresses and sensor models
-the board supports. Adding a device includes its sensor library and the libraries it
-depends on, taken from `project/drivers/`. Selecting a Linux profile alone adds no I²C
-or UART library.
+## Barramentos e integração em Python
 
-- [Linux I²C](../project/drivers/linux_i2c_lib/README.md)
-- [Linux UART](../project/drivers/linux_uart_lib/README.md)
-- [TMP105](../project/drivers/tmp105_lib/README.md)
-- [LSM303DLHC](../project/drivers/lsm303dlhc_mag_lib/README.md)
-
-## Python
+A placa declara seus barramentos. O modelo do chip declara registradores e canais. Vincular uma instância a uma app seleciona as bibliotecas necessárias. [HAL e modelos de sensores](../project/drivers/README.md) · [Transporte Linux I²C](../project/drivers/buses/linux_i2c/README.md) · [Transporte Linux UART](../project/drivers/buses/linux_uart/README.md)
 
 ```python
 from pathlib import Path
@@ -171,31 +103,4 @@ manager.execute("run", target="native", emit=print)
 manager.execute("stop", target="native", emit=print)
 ```
 
-Runtime records, build fingerprints and locks live in `hardware/.runtime/`.
-
-## Design notes
-
-### Uploads replace the installed build in one step
-
-A transfer that fails halfway must not leave a mix of two builds where the service
-starts. On the board, each upload goes to a new directory under
-the installation folder's `releases/`, and the `current` link moves to it with a single rename after
-the transfer finishes. In QEMU, the build goes to a staging directory that replaces
-the installed one, and the previous copy is kept until the next run. Releases on the
-board are not deleted automatically.
-
-### Sensorless builds use a separate copy
-
-Testing on a board without sensors should not change the mission configuration. With
-`--sensorless`, Flight Studio copies `cFS/`, `mission/`, `project/`, `scripts/`, `sensors/` and
-`config/` to `hardware/.runtime/sensorless/`, removes the apps that read sensors and
-their drivers from that copy, and builds it there. The project stays as it is, and the
-Ground Station uses a separate catalog for that build. The apps that read sensors are
-not exercised in this mode.
-
-### One lock per checkout
-
-The browser and a terminal can act on the same checkout at the same time. Build,
-boot, run, stop and shutdown take an exclusive lock on
-`hardware/.runtime/execution.lock`, shared by every Flight Studio process that uses
-the checkout. A second operation fails at once with an error instead of waiting.
+A interface e a CLI compartilham `hardware/.runtime/execution.lock` para serializar build, boot, execução, parada e desligamento do mesmo checkout. Uma tentativa concorrente recebe o estado ocupado e pode ser repetida depois da operação em andamento.

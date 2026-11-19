@@ -25,6 +25,8 @@ export function mountBoard(container, options = {}) {
   let modelHeight = 397;
   let pointerStart = null;
   let modelDirty = true;
+  let centeredGroups = [];
+  let fitScale=1, fitX=0, fitY=0;
   const abort = new AbortController();
   const signal = abort.signal;
   const storageKey = () => 'flight-studio:board-layout:' + (settings.context || 'bench') + ':' + settings.board;
@@ -83,12 +85,13 @@ function boardText(text, x, y, z, size, color = '#c3dbc8', group = 'board') {
 
 function offset(group) {
   const move = positions[group] || [0, 0];
-  if (group === 'board') return [-1.25 + move[0], 0, move[1]];
+  if (group === 'board') return [(visibleDevices().length ? -1.25 : 0) + move[0], 0, move[1]];
   const index = Math.max(0, visibleDevices().findIndex(sensor => sensor.id === group));
   return [5.5 + Math.floor(index/2)*2.6 + move[0], .3, (index % 2 ? 2.2 : -3) + move[1]];
 }
 
 function syncModelDevices() {
+  captureLayoutBounds();
   for (const collection of [modelParts,modelLines,modelTexts]) {
     for (let i=collection.length-1;i>=0;i--) {
       if (collection[i].group !== 'board') collection.splice(i,1)
@@ -129,9 +132,28 @@ function point(x, y, z, group) {
   return rotate(x, y, z, group).map((value, axis) => value + shift[axis]);
 }
 
-function scale() {
-  return Math.min(modelWidth / 15.2, Math.max(130, modelHeight - 96) / 9.2) * cameraZoom;
+// Fit the board and every attached sensor in screen coordinates, including the
+// tallest labels. Freeze the layout's reference center while the user drags.
+function captureLayoutBounds() {
+  centeredGroups = ['board', ...visibleDevices().map(device=>device.id)].flatMap(group=>{
+    const [cx,,cz]=offset(group), board=group==='board';
+    const width=board?4.6:1.04, depth=board?3.1:1.0, height=board?2:1;
+    return [-width,width].flatMap(x=>[-depth,depth].flatMap(z=>[0,height].map(y=>[cx+x,y,cz+z])));
+  });
 }
+function fitLayout() {
+  const [angle,tilt]=viewAngles();
+  const points=centeredGroups.map(([x,y,z])=>[x*Math.cos(angle)-z*Math.sin(angle),
+    (x*Math.sin(angle)+z*Math.cos(angle))*Math.sin(tilt)-y*Math.cos(tilt)]);
+  if(!points.length)return;
+  const xs=points.map(point=>point[0]), ys=points.map(point=>point[1]);
+  const left=Math.min(...xs), right=Math.max(...xs), top=Math.min(...ys), bottom=Math.max(...ys);
+  fitX=(left+right)/2;fitY=(top+bottom)/2;
+  const margin=Math.min(110,modelWidth*.2);
+  fitScale=Math.max(1,Math.min(modelWidth/15.2,Math.max(1,modelHeight-96)/9.2,
+     (modelWidth-margin)/Math.max(1,right-left),(modelHeight-128)/Math.max(1,bottom-top)));
+}
+function scale() { return fitScale*cameraZoom; }
 function viewAngles() {
   return mode === '2d' ? [0, Math.PI / 2] : [cameraAngle, cameraTilt];
 }
@@ -140,8 +162,8 @@ function project(vertex) {
   const [angle, tilt] = viewAngles();
   const along = x * Math.sin(angle) + z * Math.cos(angle);
   const across = x * Math.cos(angle) - z * Math.sin(angle);
-  return [modelWidth * .47 + across * scale() + pan[0],
-    modelHeight * .49 + (along * Math.sin(tilt) - y * Math.cos(tilt)) * scale() + pan[1],
+  return [modelWidth * .5 + (across-fitX) * scale() + pan[0],
+    modelHeight * .49 + (along * Math.sin(tilt) - y * Math.cos(tilt)-fitY) * scale() + pan[1],
     along * Math.cos(tilt) + y * Math.sin(tilt)];
 }
 function planeDelta(dx, dy) {
@@ -358,6 +380,7 @@ function renderModel() {
   const ratio = Math.min(window.devicePixelRatio || 1, 2)
   modelWidth = boardCanvas.clientWidth
   modelHeight = boardCanvas.clientHeight
+  fitLayout();
   if (boardCanvas.width !== Math.round(modelWidth * ratio) || boardCanvas.height !== Math.round(modelHeight * ratio)) {
     boardCanvas.width = Math.round(modelWidth * ratio)
     boardCanvas.height = Math.round(modelHeight * ratio)
@@ -450,6 +473,7 @@ function resetCamera() {
   cameraTilt = .64;
   cameraZoom = 1;
   positions = {};
+  captureLayoutBounds();
   pan = [0, 0];
   saveLayout();
   updateModel();
@@ -509,13 +533,14 @@ function renderPinout() {
     pin.style.gridRow = number % 2 ? 2 : 1;
     pin.textContent = number;
     const role = pinRoles.find(role => sensorHeaderPins[role].includes(number));
-    if (role) {
-      const label = document.createElement('small');
-      label.textContent = role === 'VCC' ? '3V3' : role;
+    const name=settings.headerPins?.[number-1] || (role==='VCC'?'3V3':role);
+    if (name) {
+      const label=document.createElement('small');
+      label.textContent=name;
       pin.append(label);
     }
     pin.classList.toggle('wired', connections.has(number));
-    pin.title = ['Pin ' + number, ...(connections.get(number) || [])].join(' · ');
+    pin.title = ['Pin '+number, name, ...(connections.get(number)||[])].filter(Boolean).join(' · ');
     grid.append(pin);
   }
   pinPanel.replaceChildren(heading, grid);

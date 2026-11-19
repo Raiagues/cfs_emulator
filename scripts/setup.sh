@@ -12,30 +12,19 @@ if ((EUID == 0)); then
     exit 1
 fi
 
-# Use the supported distribution's packages without replacing working tools.
-. /etc/os-release
-case "$ID" in
-    ubuntu) MIN_RELEASE=24.04 ;;
-    debian) MIN_RELEASE=13 ;;
-    *) echo "Setup supports Ubuntu 24.04+ and Debian 13+." >&2; exit 1 ;;
-esac
-if ! dpkg --compare-versions "$VERSION_ID" ge "$MIN_RELEASE" || \
-    [[ "$(dpkg --print-architecture)" != amd64 ]]; then
-    echo "Setup requires Ubuntu 24.04+ or Debian 13+, on AMD64." >&2
-    exit 1
-fi
-
-# Docker 23 uses Buildx by default. SSH must support automatic host-key enrollment.
+./scripts/setup-native.sh
 SUDO=()
+version_at_least() {
+    python3 -c 'import re,sys
+m = re.search(r"(\d+)\.(\d+)", sys.argv[1])
+sys.exit(0 if m and tuple(map(int, m.groups())) >= tuple(map(int, sys.argv[2:])) else 1)' "$@"
+}
+
 docker_current() {
-    local version
-    version="$(docker version --format '{{.Client.Version}}' 2>/dev/null || true)"
-    [[ -n "$version" ]] && dpkg --compare-versions "$version" ge 23.0
+    version_at_least "$(docker --version 2>/dev/null)" 23 0
 }
 buildx_current() {
-    local version
-    version="$("${SUDO[@]}" docker buildx version 2>/dev/null | awk '{sub(/^v/, "", $2); print $2}' || true)"
-    [[ -n "$version" ]] && dpkg --compare-versions "$version" ge 0.10
+    version_at_least "$("${SUDO[@]}" docker buildx version 2>/dev/null)" 0 10
 }
 ssh_current() {
     command -v scp >/dev/null && command -v ssh-keygen >/dev/null && \
@@ -43,63 +32,60 @@ ssh_current() {
 }
 
 echo "Checking Docker, Buildx and OpenSSH..."
-DOCKER_PACKAGES=(docker.io)
-BUILDX_PACKAGE=docker-buildx
-if [[ "$(dpkg-query -W -f='${Status}' docker-ce-cli 2>/dev/null)" == 'install ok installed' ]]; then
-    DOCKER_PACKAGES=(docker-ce docker-ce-cli)
-    BUILDX_PACKAGE=docker-buildx-plugin
-elif [[ "$(dpkg-query -W -f='${Status}' docker-buildx-plugin 2>/dev/null)" == 'install ok installed' ]]; then
-    BUILDX_PACKAGE=docker-buildx-plugin
-fi
-PACKAGES=()
-for package in build-essential cmake python3-pyqt5 python3-zmq; do
-    dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q 'install ok installed' || PACKAGES+=("$package")
-done
-docker_current || PACKAGES+=("${DOCKER_PACKAGES[@]}")
-buildx_current || PACKAGES+=("$BUILDX_PACKAGE")
-ssh_current || PACKAGES+=(openssh-client)
-command -v git >/dev/null || PACKAGES+=(git)
-command -v python3 >/dev/null || PACKAGES+=(python3)
-if ((${#PACKAGES[@]})); then
-    sudo apt-get update
-    sudo apt-get install -y "${PACKAGES[@]}"
-fi
 if ! docker_current || ! buildx_current || ! ssh_current; then
-    echo "Dependency check failed after installation: Docker >=23, Buildx >=0.10 and OpenSSH with accept-new are required." >&2
-    exit 1
+    packages=()
+    if command -v apt-get >/dev/null; then
+        sudo apt-get update
+        install=(sudo apt-get install -y)
+        engine=docker.io
+        plugin=docker-buildx
+        client=openssh-client
+        if dpkg-query -W -f='${Status}' docker-ce-cli 2>/dev/null | grep -q 'install ok installed'; then
+            engine=docker-ce
+            plugin=docker-buildx-plugin
+        elif ! apt-cache show docker-buildx >/dev/null 2>&1; then
+            plugin=docker-buildx-plugin
+        fi
+    elif command -v dnf >/dev/null; then
+        install=(sudo dnf install -y)
+        engine=moby-engine
+        plugin=docker-buildx
+        client=openssh-clients
+    elif command -v pacman >/dev/null; then
+        install=(sudo pacman -S --needed --noconfirm)
+        engine=docker
+        plugin=docker-buildx
+        client=openssh
+    elif command -v zypper >/dev/null; then
+        install=(sudo zypper --non-interactive install)
+        engine=docker
+        plugin=docker-buildx
+        client=openssh
+    else
+        echo "Install Docker Engine 23+, Buildx 0.10+ and OpenSSH, then rerun setup." >&2
+        exit 1
+    fi
+    docker_current || packages+=("$engine")
+    buildx_current || packages+=("$plugin")
+    ssh_current || packages+=("$client")
+    "${install[@]}" "${packages[@]}"
 fi
 
-# A newly added Docker group takes effect after signing in again.
+echo "Connecting to Docker Engine..."
 if ! docker info >/dev/null 2>&1; then
     if ! sudo docker info >/dev/null 2>&1; then
-        if ! command -v dockerd >/dev/null; then
-            sudo apt-get update
-            sudo apt-get install -y "${DOCKER_PACKAGES[@]}"
-        fi
         sudo systemctl enable --now docker
     fi
     sudo groupadd -f docker
     sudo usermod -aG docker "$(id -un)"
     SUDO=(sudo)
 fi
-if ! dpkg --compare-versions "$("${SUDO[@]}" docker version --format '{{.Server.Version}}')" ge 23.0; then
-    sudo apt-get update
-    sudo apt-get install -y "${DOCKER_PACKAGES[@]}"
-fi
-if ! dpkg --compare-versions "$("${SUDO[@]}" docker version --format '{{.Server.Version}}')" ge 23.0; then
-    echo "The installed Docker engine is still older than version 23." >&2
-    exit 1
-fi
-# sudo uses its own Docker plugins, which may differ from the user's plugins.
-if ! buildx_current; then
-    sudo apt-get update
-    sudo apt-get install -y "$BUILDX_PACKAGE"
-fi
-if ! buildx_current; then
-    echo "Buildx >=0.10 is required for the selected Docker user." >&2
+if ! version_at_least "$("${SUDO[@]}" docker version --format '{{.Server.Version}}')" 23 0 || ! buildx_current || ! ssh_current; then
+    echo "Docker Engine 23+, Buildx 0.10+ and OpenSSH are required for board builds." >&2
     exit 1
 fi
 "${SUDO[@]}" docker version --format 'Docker client {{.Client.Version}}, engine {{.Server.Version}}'
+echo "Verifying the build worker..."
 "${SUDO[@]}" docker buildx inspect --bootstrap >/dev/null
 "${SUDO[@]}" docker buildx version
 ssh -V

@@ -1,0 +1,14 @@
+/* Companion to custom-model.json. Replace the register and conversion with
+ * the ones specified by the sensor. Use the uppercase model ID for the Ops symbol. */
+#include "hal_sensor.h"
+
+static int32_t Read(const HAL_SENSOR_Device_t *device, int32_t *values)
+{
+    uint8_t level;
+    int32_t status = HAL_SENSOR_ReadRegister(&device->Bus, 0x10, &level, 1);
+    if (status == 0)
+        values[0] = level;
+    return status;
+}
+
+const HAL_SENSOR_Ops_t LAB_BYTE_Ops = {.Read = Read};

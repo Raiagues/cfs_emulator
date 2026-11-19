@@ -6,32 +6,11 @@ which message reaches it. Callers report everything else as unresolved.
 """
 import re
 
+from project.c_source import blank_lexemes, closing
 
-_LEXEME = re.compile(r'/\*[\s\S]*?\*/|//[^\n]*|"(?:\\[\s\S]|[^"\\\n])*"|\'(?:\\[\s\S]|[^\'\\\n])*\'')
+
 _CALL = re.compile(r'\b([A-Za-z_]\w*)\s*\(')
 _MID_VALUE = r'(?:CFE_SB_ValueToMsgId|CFE_SB_MSGID_WRAP_VALUE)'
-
-
-def blank_lexemes(text, literals=True):
-    """Blank comments, and literals unless kept, without moving offsets or lines."""
-    def blank(match):
-        if not literals and match[0][0] in '"\'':
-            return match[0]
-        return re.sub(r'[^\n]', ' ', match[0])
-    return _LEXEME.sub(blank, text)
-
-
-def closing(text, opening, left='(', right=')'):
-    """Offset of the delimiter that closes text[opening], or None when unbalanced."""
-    depth = 1
-    for position in range(opening + 1, len(text)):
-        if text[position] == left:
-            depth += 1
-        elif text[position] == right:
-            depth -= 1
-            if not depth:
-                return position
-    return None
 
 
 def arguments(text):

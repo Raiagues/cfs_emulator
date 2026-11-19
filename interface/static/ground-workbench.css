@@ -1,0 +1,63 @@
+body[data-view="ground"] .visual,body[data-view="ground"] #view {min-width:0;min-height:0;overflow:hidden;padding:0}
+.flight-ground {height:100%;min-height:0;min-width:0;display:grid;grid-template-columns:clamp(160px,14vw,228px) minmax(0,1fr) clamp(220px,20vw,316px);color:var(--fs-text);background:var(--fs-bg);font:var(--fs-body)/1.45 var(--fs-sans);container:ground / inline-size}
+.flight-ground *{box-sizing:border-box}
+.flight-ground button,.flight-ground select,.flight-ground input,.trip-editor button {font:inherit;color:inherit}
+.flight-ground button,.flight-ground select,.flight-ground input{border:1px solid var(--fs-line);background:var(--fs-panel);border-radius:4px;min-width:0}
+.flight-ground button {cursor:pointer;padding:5px 9px;display:inline-flex;align-items:center;gap:6px}
+.flight-ground button:disabled {cursor:default;opacity:.55}
+.flight-ground button:hover:not(:disabled),.flight-ground button:focus-visible{border-color:var(--fs-accent)}
+.flight-ground button[aria-pressed=true],.flight-ground button[aria-expanded=true].comm-app-block{color:var(--fs-accent);border-color:var(--fs-accent);background:var(--fs-accent-bg)}
+.flight-ground button svg,.flight-ground label>svg,#dialog:has(#test-steps) button svg{width:14px;height:14px}
+.flight-library,#ground-live{background:var(--fs-surface);min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.flight-library{border-right:1px solid var(--fs-line)}
+.flight-library>header,.flight-ground .gs-desk>h2,.trip-journal>header,.system-title,.ground-link {display:flex;align-items:center;justify-content:space-between;gap:8px}
+.flight-library>header,.flight-ground .gs-desk>h2,.trip-journal>header {text-transform:uppercase;font:500 11px/1.45 var(--fs-mono);letter-spacing:.07em;color:var(--fs-muted);border-bottom:1px solid var(--fs-line);padding:12px}
+.flight-library>header button{font:11px var(--fs-sans);color:var(--fs-success);border:0;background:transparent}
+.ground-search,.ground-app-filter{display:flex;align-items:center;gap:5px;margin:8px 10px 0;color:var(--fs-muted)}
+.ground-search input,.ground-app-filter select {width:100%;padding:5px;font-size:12px}
+.flight-library .gs-definition-list{flex:1;min-height:0;overflow:auto;padding:6px 8px}
+.flight-library .gs-command-group{border:0}.flight-library .gs-command-group summary{font:12px var(--fs-mono);padding:9px 3px;cursor:pointer}.flight-library .gs-command-group summary small{float:right;color:var(--fs-muted)}
+.flight-library .gs-definition{display:flex;justify-content:space-between;width:100%;background:transparent;border:1px solid transparent;text-align:left;margin:2px 0;font:11px var(--fs-mono)}
+.flight-library .gs-definition strong{overflow:hidden;text-overflow:ellipsis}.flight-library .gs-definition small{flex:none;color:var(--fs-muted)}
+.ground-link{border-top:1px solid var(--fs-line);padding:9px;color:var(--fs-muted);font-size:12px}.ground-link [data-live=true]{color:var(--fs-success)}
+.flight-command-column{min-width:0;min-height:0;display:flex;flex-direction:column;gap:10px;padding:clamp(8px,1.3vw,20px);overflow:hidden}
+.flight-selection,.trip-card,.trip-journal,.system-group,.system-detail{border:1px solid var(--fs-line);border-radius:6px;background:var(--fs-panel)}
+.flight-selection{display:flex;align-items:center;gap:12px;padding:10px 12px;flex:none;min-width:0}
+.selected-command{min-width:0;flex:0 1 auto}.selected-command small,.packet-wire summary,.node-meta,.trip-observations{font:11px var(--fs-mono);color:var(--fs-muted)}
+.selected-command h2{font:600 clamp(14px,1.4vw,20px)/1.4 var(--fs-mono);margin:0;overflow-wrap:anywhere}
+.flight-ground #gs-command-form{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:1;min-width:0}
+.ground-parameters{max-height:clamp(70px,14vh,135px);overflow:auto;display:flex;align-items:center;flex-wrap:wrap;gap:8px;flex:1}
+.ground-parameters label{display:flex;flex:1 1 150px;gap:8px;align-items:center;font:12px var(--fs-mono)}.ground-parameters label span{overflow-wrap:anywhere}.ground-parameters small{display:block;color:var(--fs-muted)}
+.ground-parameters input,.ground-parameters select{width:65px;flex:1;padding:5px}
+.flight-ground button.gs-send{background:var(--fs-accent);border-color:var(--fs-accent);color:var(--fs-on-accent);font-weight:600;padding:9px 14px;white-space:nowrap}
+.flight-ground .packet-wire{position:relative;margin:0}.flight-ground .packet-wire>summary{cursor:pointer;padding:6px;white-space:nowrap}.flight-ground .packet-wire>div{position:absolute;z-index:3;top:100%;right:0;padding:10px;width:min(315px,55vw);box-shadow:0 6px 20px #0004;border:1px solid var(--fs-line);background:var(--fs-surface)}
+#ground-route{display:flex;flex-direction:column;gap:10px;min-height:0;min-width:0;flex:1}
+.trip-card{flex:1 1 60%;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.trip-modes,.trip-test-picker,.system-title{padding:8px 12px;display:flex;align-items:center;gap:6px}.trip-modes{border-bottom:1px solid var(--fs-line)}.trip-modes>div,.system-title>div,.trip-test-picker label{display:inline-flex;align-items:center;gap:5px}.trip-test-picker label{font-size:12px;color:var(--fs-muted)}.trip-test-picker select{max-width:185px;padding:4px}
+.trip-canvas{min-height:48px;flex:1;padding:4px 12px}.trip-drawing{width:100%;height:100%;display:block}
+.trip-frame{stroke:var(--fs-line);fill:transparent;stroke-dasharray:4 5}.trip-caption{fill:var(--fs-muted);font:11px var(--fs-mono)}.trip-node rect{fill:var(--fs-surface);stroke:var(--fs-line)}.trip-node text{text-anchor:middle;fill:var(--fs-text);font:12px var(--fs-mono)}.trip-node .node-meta{font:10px var(--fs-sans);fill:var(--fs-muted)}.trip-node circle{fill:var(--fs-muted)}.trip-node.seen circle{fill:var(--fs-success)}.trip-node.seen rect{stroke:var(--fs-success)}
+.trip-proof-line,.trip-send-line{fill:none;stroke-width:2.3;stroke:var(--fs-success);stroke-linejoin:round;stroke-linecap:round;animation:trip-arrive 360ms ease-out}.trip-send-line{stroke:var(--fs-accent)}.uplink-end{fill:var(--fs-accent)}
+@keyframes trip-arrive{from{opacity:.2;stroke-dasharray:3 12}to{opacity:1;stroke-dasharray:12 0}}
+@media(prefers-reduced-motion:reduce){.trip-proof-line,.trip-send-line{animation:none}}
+.trip-observations{display:flex;align-items:center;gap:8px;min-height:36px;max-height:25%;overflow:auto;background:var(--fs-bg);margin:4px 10px 10px;padding:8px}.trip-observations ol{margin:0;display:flex;gap:24px;flex-wrap:wrap;padding-left:20px}.matched,.trip-result[data-status=passed],.trip-observations [data-status=passed]{color:var(--fs-success)}.trip-result[data-status=timed_out]{color:var(--fs-danger)}
+.trip-journal{flex:0 1 24%;min-height:50px;display:flex;flex-direction:column}.trip-journal>header{padding:6px 12px}.trip-journal>div{overflow:auto;min-height:0;padding:0 10px}.trip-journal details{padding:6px 0}.trip-journal summary{display:flex;align-items:center;gap:9px;cursor:pointer}.trip-journal time{margin-left:auto;color:var(--fs-muted)}.trip-journal code{font:11px var(--fs-mono);display:block;overflow-wrap:anywhere}.trip-result{font-size:12px}
+.flight-ground #ground-live{border-left:1px solid var(--fs-line);gap:0}
+.flight-ground #ground-live>.gs-desk{flex:1;overflow:hidden;border:0;background:transparent}.flight-ground .gs-desk>h2 small{font:10px var(--fs-sans);letter-spacing:0;text-transform:none}.flight-ground .gs-telemetry-inspector{min-height:0;display:flex;flex:1;flex-direction:column;padding:10px;gap:8px}.gs-telemetry-inspector label select{display:block;width:100%;padding:5px}.flight-ground .gs-telemetry-inspector>.gs-detail{flex:1;overflow:auto;padding:3px}.flight-ground #ground-live>.gs-event-log{flex:0 1 26%;min-height:36px;border-radius:0;background:transparent}.flight-ground .gs-event-log h2{font-size:12px;padding:7px}.gs-event-log .gs-journal article{flex-wrap:wrap}
+.system-traffic{flex:1;min-height:0;overflow:auto;padding:8px 10px}.system-title{padding:2px 0 8px}.system-group,.system-detail{padding:8px;margin:0 0 8px}.system-group h3{font-size:12px;margin:0 0 6px}.system-nodes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,105px),1fr));gap:5px}.system-nodes .comm-app-block{display:block;text-align:left;min-height:38px;padding:5px}.system-nodes .comm-app-block strong,.system-nodes .comm-app-block small{display:block}.system-nodes .comm-app-block[data-live=true]{border-color:var(--fs-success)}.system-nodes .comm-bus{grid-column:1/-1;order:-1}.system-detail header{display:flex;justify-content:space-between}.system-detail p,.system-detail ol{font-size:12px}
+#dialog:has(#test-steps){width:min(740px,94vw);max-height:92dvh}#dialog:has(#test-steps) #dialog-form{display:flex;max-height:88dvh;flex-direction:column}#dialog:has(#test-steps) #dialog-body{overflow:auto;min-height:0}
+.test-fields,.test-step-fields,.test-step-heading,.test-actions{display:flex;align-items:center;gap:9px}.test-fields label:first-child{flex:1}.test-fields label:last-child{width:100px}#test-steps fieldset{min-width:0;margin:10px 0;padding:10px;border:1px solid var(--fs-line)}.test-step-fields{flex-wrap:wrap;align-items:start}.test-step-fields label{flex:1 1 130px;min-width:0}.test-step-fields select,.test-step-fields input{width:100%}.test-step-heading select{margin-right:auto}.test-step-heading{margin-bottom:8px}.test-step-heading button,.test-actions button{display:flex;align-items:center;gap:4px}.test-actions{justify-content:space-between}
+.ground-mobile-tabs{display:none}
+@media(max-width:980px){.flight-ground{grid-template-columns:150px minmax(0,1fr) 200px}.flight-selection{flex-wrap:wrap;gap:4px}.flight-ground #gs-command-form{width:100%}}
+@media(max-width:760px){.flight-ground{grid-template:36px minmax(0,1fr) / minmax(0,1fr)}.ground-mobile-tabs{display:flex;align-items:center;gap:4px;padding:4px 8px;background:var(--fs-surface)}.ground-mobile-tabs button{text-transform:capitalize}.flight-ground[data-pane]>.flight-library,.flight-ground[data-pane]>.flight-command-column,.flight-ground[data-pane]>#ground-live{display:none}.flight-ground[data-pane=commands]>.flight-library,.flight-ground[data-pane=route]>.flight-command-column,.flight-ground[data-pane=telemetry]>#ground-live{display:flex}.trip-test-picker{flex-wrap:wrap}.trip-canvas{padding:0}.flight-command-column{padding:6px}.trip-test-picker select{max-width:125px}}
+.flight-ground .trip-drawing,.flight-ground .trip-drawing text,.flight-ground .trip-drawing circle{stroke:none}
+.trip-bus rect{fill:var(--fs-raised);stroke:var(--fs-line)}.trip-bus text{fill:var(--fs-muted);font:10px var(--fs-mono)}
+.trip-node.configured .node-meta,.trip-node.configured text{fill:var(--fs-muted)}
+.flight-ground .gs-envelope,.flight-ground .gs-envelope span{display:flex;align-items:center;gap:7px}
+.flight-ground .gs-envelope{justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--fs-line);color:var(--fs-muted)}
+.flight-ground .gs-envelope svg,.flight-ground .gs-packet-fields summary svg{width:13px;height:13px;flex:none}
+.flight-ground .gs-values>div{margin:5px 0;padding:9px 8px;background:var(--fs-panel);border:1px solid var(--fs-line);border-radius:4px;gap:9px}
+.flight-ground .gs-values code{overflow-wrap:anywhere;color:var(--fs-text)}
+.flight-ground .gs-values>div>span{color:var(--fs-success);font:13px var(--fs-mono)}
+.flight-ground .gs-desk h2 small{color:var(--fs-muted)}.flight-ground .gs-source-actions button{margin-bottom:5px}
+.flight-ground .trip-journal summary::before{display:none}
+.flight-library .ground-new-command{margin:6px 9px;flex:none;align-self:start;font-size:12px;color:var(--fs-muted)}

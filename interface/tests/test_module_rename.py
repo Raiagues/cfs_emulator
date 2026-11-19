@@ -71,6 +71,31 @@ class ModuleRenameTest(unittest.TestCase):
             self.assertIn('set(OSAL_CONFIG_MAX_FILE_NAME 32)', plan['mission/sample_defs/default_osconfig.cmake'])
             self.assertIn('MAX_FILE_LEN) : 32)', plan[header])
 
+    def test_loader_sizes_osal_and_cfe_for_app_command_pipe(self):
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch)
+            defaults = root / 'cFS/osal/default_config.cmake'
+            defaults.parent.mkdir(parents=True)
+            defaults.write_text('set(OSAL_CONFIG_MAX_API_NAME 20)\nset(OSAL_CONFIG_MAX_FILE_NAME 20)\n'
+                                'set(OSAL_CONFIG_MAX_MODULES 32)\nset(OSAL_CONFIG_PRINTF_BUFFER_SIZE 172)\n')
+            api = root / 'cFS/cfe/modules/core_api/fsw/inc/cfe_core_api_interface_cfg.h'
+            api.parent.mkdir(parents=True)
+            api.write_text('#define CFE_MISSION_MAX_API_LEN CFE_MISSION_CORE_API_CFGVAL(MAX_API_LEN)\n')
+            header = 'mission/sample_defs/cfe_core_api_interface_cfg_values.h'
+            app_cfg = 'mission/apps/thermal_demo/fsw/inc/thermal_demo_internal_cfg.h'
+            files = {
+                header: '#define CFE_MISSION_CORE_API_CFGVAL(x) DEFAULT_##x\n',
+                'mission/cpu1_cfe_es_startup.scr': 'CFE_APP, thermal_demo, THERMAL_DEMO_Main, THERMAL_DEMO, 50, 32768, 0, 0;\n',
+                app_cfg: '#define DEFAULT_THERMAL_DEMO_PLATFORM_PIPE_NAME "THERMAL_DEMO_CMD_PIPE"\n'
+            }
+            plan = module_limits_plan(root, files)
+            self.assertIn('set(OSAL_CONFIG_MAX_API_NAME 24)', plan['mission/sample_defs/default_osconfig.cmake'])
+            self.assertIn('MAX_API_LEN) : 24)', plan[header])
+            config = root / app_cfg
+            config.parent.mkdir(parents=True)
+            config.write_text(files.pop(app_cfg))
+            self.assertEqual(module_limits_plan(root, files), plan)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -187,8 +187,15 @@ class HardwareManager:
             data = path.read_bytes()
             if path == self.root / "project/config.json":
                 config = json.loads(data)
+                # Bus activation and header wiring configure the board. Only mapped readers
+                # and their generated sources change the compiled software.
+                config.pop("buses", None)
+                bound = {device for app in config["apps"] for device in app["sensors"].values()}
+                config["devices"] = [device for device in config["devices"] if device["id"] in bound]
                 for device in config.get("devices", []):
                     device.pop("values", None)
+                    device.pop("pins", None)
+                    device.pop("name", None)
                 data = json.dumps(config, sort_keys=True).encode()
             digest.update(data)
         result = digest.hexdigest()
@@ -441,6 +448,10 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
             return False
         return None
 
+    def require_stopped_emulator_for_configuration(self):
+        if self._qemu_running() is True:
+            raise HardwareError("Stop QEMU before changing its infrastructure.")
+
     def assert_can_boot(self, retry=False):
         """True when QEMU runs and boot only retries its SSH connection; raise when boot is not possible."""
         running = self._qemu_running()
@@ -662,8 +673,9 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
         emit(f"SSH connected: {result['model']} · {result['arch']} · cFS {result['service']}")
         return result
 
-    def prepare_board(self, connection=None, emit=print, cancel=None, authorize=None):
-        board = self.probe(connection, emit, cancel)
+    def prepare_board(self, connection=None, emit=print, cancel=None, authorize=None, board=None):
+        if board is None:
+            board = self.probe(connection, emit, cancel)
         remote = self.board_directory(board, connection) + "/studio/setup_board.py"
         command = "mkdir -p " + shlex.quote(str(Path(remote).parent)) + " && cat > " + shlex.quote(remote)
         with (self.root / "hardware/setup_board.py").open("rb") as source:
@@ -674,10 +686,11 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
         interactive = self.ssh_argv("physical", connection, interactive=True) + ["sudo " + install]
         if authorize is None:
             authorize = board["sudo"]
-        result = {"setup_command": shlex.join(interactive), "script": remote, "setup_required": not authorize}
+        result = {"setup_command": shlex.join(interactive), "script": remote}
         if authorize:
             self._stream(argv + ["sudo -n " + install], emit, cancel, timeout=30)
             board = self.probe(connection, emit, cancel)
+        result["setup_required"] = not board["ready"]
         board["admin_setup_command"] = result["setup_command"] if not board["ready"] or not board.get("shutdown_authorized") else None
         self._last_probe = board
         self._save("probe.json", board)
@@ -741,17 +754,13 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
         self._save("deployed.json", records)
         return records[target]
 
-    def _run_physical(self, emit, cancel, connection, sensorless):
+    def _run_physical(self, emit, cancel, connection, sensorless, board):
         root, payload, state = self._require_build(sensorless, target="physical")
-        board = self.probe(connection, emit, cancel)
         if not board["systemd"]:
             raise HardwareError("The board requires systemd.")
         if not board["ready"]:
-            if board["sudo"]:
-                self.prepare_board(connection, emit, cancel, authorize=True)
-                board = self.probe(connection, emit, cancel)
-            else:
-                prepared = self.prepare_board(connection, emit, cancel)
+            prepared = self.prepare_board(connection, emit, cancel, board=board)
+            if prepared["setup_required"]:
                 raise HardwareError("Authorize the service once in your terminal: " + prepared["setup_command"])
         argv = self.ssh_argv("physical", connection)
         if not sensorless:
@@ -760,24 +769,21 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
                 self._stream(argv + ["sudo -n modprobe i2c-dev"], emit, cancel, timeout=20)
                 emit("The driver will read physical sensors. QEMU devices are not provisioned on the board. I2C failures appear in logs and telemetry.")
         release = state["fingerprint"][:16] + ("-sensorless" if sensorless else "") + "-" + str(time.time_ns())
-        remote = self.board_directory(board, connection) + "/releases/" + release
+        directory = self.board_directory(board, connection)
+        releases = directory + "/releases"
+        remote = releases + "/" + release
         # Each upload is a new release directory; the running service keeps its own.
-        unpack = "mkdir -p " + shlex.quote(remote) + " && tar -xmf - -C " + shlex.quote(remote)
+        unpack = ("mkdir -p " + shlex.quote(releases) + " && mkdir " + shlex.quote(remote)
+                  + " && tar -xmf - -C " + shlex.quote(remote))
         with tempfile.TemporaryFile() as archive:
             with tarfile.open(fileobj=archive, mode="w") as tar:
                 tar.add(payload, arcname="cpu1")
             archive.seek(0)
             self._stream(argv + [unpack], emit, cancel, stdin=archive, timeout=180)
-        current = self.board_directory(board, connection) + "/studio/current"
         self.assert_can_start('physical', connection)
-        command = ("set -e; "
-                   "if pgrep -x core-cpu1 >/dev/null; then echo 'Another cFS instance is running. Stop it before starting this one.'; exit 1; fi; "
-                   "test ! -e " + shlex.quote(current) + " || test -L " + shlex.quote(current) + "; "
-                   "ln -sfn " + shlex.quote(remote) + " " + shlex.quote(current + ".new") +
-                   " && mv -Tf " + shlex.quote(current + ".new") + " " + shlex.quote(current) +
-                   " && sudo -n systemctl start cfs-studio.service" +
-                   " && sleep 2 && sudo -n systemctl is-active --quiet cfs-studio.service")
-        self._stream(argv + [command], emit, cancel, timeout=30)
+        command = shlex.join(["python3", "-", directory, release])
+        with (self.root / "hardware/activate_release.py").open("rb") as script:
+            self._stream(argv + [command], emit, cancel, stdin=script, timeout=60)
         self.probe(connection, emit, cancel)
         return self._deploy_record("physical", state, sensorless=sensorless, connection=self.connection(connection), release=remote)
 
@@ -979,14 +985,15 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
         self._require_build(sensorless, target=target)
         if on_start:
             on_start()
+        board = None
         if target == "physical":
             connection = self.connection(connection)
-            self.probe(connection, emit, cancel)
+            board = self.probe(connection, emit, cancel)
         self._save_active(target, connection, "starting")
         if target == "native":
             result = self._run_native(emit, cancel)
         elif target == "physical":
-            result = self._run_physical(emit, cancel, connection, sensorless)
+            result = self._run_physical(emit, cancel, connection, sensorless, board)
         else:
             result = self._run_qemu(emit, cancel)
         self._save_active(target, connection, "running")

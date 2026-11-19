@@ -1,34 +1,34 @@
 body[data-view=communication] #view{overflow:auto;padding:clamp(10px,1.6vw,24px)}
-.communication-view{max-width:1320px;margin:0 auto;color:#c1ccd4;font:13px/1.5 system-ui,sans-serif}
+.communication-view{max-width:1320px;margin:0 auto;color:var(--fs-muted);font:13px/1.5 system-ui,sans-serif}
 .communication-view svg{width:14px;height:14px;flex:none}
 .communication-link,.communication-link>div,.communication-link>div>span{display:flex;align-items:center;gap:9px}
-.communication-link{justify-content:space-between;border:1px solid #37424a;border-radius:6px;background:#232b32;padding:10px 14px}
+.communication-link{justify-content:space-between;border:1px solid var(--fs-line);border-radius:6px;background:var(--fs-raised);padding:10px 14px}
 .communication-link>div{flex-wrap:wrap}.communication-link strong{font-weight:500}
-.communication-link>div>span{color:#a5b0b9;font-size:12px}.communication-link i{width:6px;height:6px;background:#78848e;border-radius:50%}
-.communication-link .is-connected{color:#a0d3bd}.communication-link .is-connected i{background:#9bcfb8}
+.communication-link>div>span{color:var(--fs-muted);font-size:12px}.communication-link i{width:6px;height:6px;background:var(--fs-line);border-radius:50%}
+.communication-link .is-connected{color:var(--fs-success)}.communication-link .is-connected i{background:var(--fs-success)}
 .comm-source-links,.communication-app header{display:flex;flex-wrap:wrap;gap:6px}
 .communication-view>.comm-source-links{padding:11px 0}
-.comm-source-links button,.communication-app header button{display:inline-flex;align-items:center;gap:6px;background:#232c34;border:1px solid transparent;border-radius:4px;padding:5px 7px;color:#b8cad6;text-align:left;font:12px var(--mono);overflow-wrap:anywhere}
-.comm-source-links button:hover,.communication-app header button:hover{background:#303c45}
-.comm-source-links button[aria-current=true]{color:#ccede4;background:#2c423e;box-shadow:inset 2px 0 #a0d6c7}
+.comm-source-links button,.communication-app header button{display:inline-flex;align-items:center;gap:6px;background:var(--fs-raised);border:1px solid transparent;border-radius:4px;padding:5px 7px;color:var(--fs-muted);text-align:left;font:12px var(--mono);overflow-wrap:anywhere}
+.comm-source-links button:hover,.communication-app header button:hover{background:var(--fs-raised)}
+.comm-source-links button[aria-current=true]{color:var(--fs-success);background:var(--fs-success-bg);box-shadow:inset 2px 0 var(--fs-success)}
 .communication-app-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,208px),1fr));gap:10px;align-items:start}
-.communication-app{min-width:0;padding:10px 12px;border:1px solid #343e47;border-radius:6px;background:#232b32}
-.communication-app header button{padding:3px 0;color:#d1dce3}.comm-status{display:block;color:#92a0ab;font-size:11px;padding:1px 0 9px}.comm-status.live{color:#9fdcc3}.comm-status.live:before{content:"● ";color:#93d6b7}
-.communication-app:has([aria-current=true]){border-color:#698c84}
-.communication-app details{border-top:1px solid #37414a;padding:5px 0}.communication-app summary{cursor:pointer;color:#b1c0ca}.communication-app summary b{float:right;font:12px var(--mono);padding-top:3px}
+.communication-app{min-width:0;padding:10px 12px;border:1px solid var(--fs-line);border-radius:6px;background:var(--fs-raised)}
+.communication-app header button{padding:3px 0;color:var(--fs-text)}.comm-status{display:block;color:var(--fs-muted);font-size:11px;padding:1px 0 9px}.comm-status.live{color:var(--fs-success)}.comm-status.live:before{content:"● ";color:var(--fs-success)}
+.communication-app:has([aria-current=true]){border-color:var(--fs-success)}
+.communication-app details{border-top:1px solid var(--fs-line);padding:5px 0}.communication-app summary{cursor:pointer;color:var(--fs-muted)}.communication-app summary b{float:right;font:12px var(--mono);padding-top:3px}
 .communication-app details .comm-source-links{flex-direction:column;align-items:stretch;margin-top:6px}.communication-app .comm-source-links button{font-size:11px}
-.communication-error{color:#e3b4a5;background:#422e2b66;padding:9px 12px}
-.comm-stack{background:#202839;border:1px solid #404d62;border-radius:8px;padding:14px}
-.comm-stack>section{padding:14px;border:1px solid #39465a;border-radius:6px}
-.comm-stack>section+section{margin-top:12px}.comm-stack h2,.comm-stack h3{font-size:14px;color:#dae3ef;margin:0 0 12px}
+.communication-error{color:var(--fs-danger);background:color-mix(in srgb, var(--fs-danger-bg) 40%, transparent);padding:9px 12px}
+.comm-stack{background:var(--fs-raised);border:1px solid var(--fs-line);border-radius:8px;padding:14px}
+.comm-stack>section{padding:14px;border:1px solid var(--fs-line);border-radius:6px}
+.comm-stack>section+section{margin-top:12px}.comm-stack h2,.comm-stack h3{font-size:14px;color:var(--fs-text);margin:0 0 12px}
 .comm-stack h2,.comm-stack>section:last-child h3{text-align:center}
 .comm-stack .communication-app-grid{grid-template-columns:repeat(auto-fill,minmax(min(135px,100%),1fr));gap:8px}
-.comm-app-block,.comm-service{min-width:0;padding:10px 12px;border:1px solid #4a566c;border-radius:5px;background:#303b50;color:#d9e3ee;text-align:left}
+.comm-app-block,.comm-service{min-width:0;padding:10px 12px;border:1px solid var(--fs-line);border-radius:5px;background:var(--fs-line);color:var(--fs-text);text-align:left}
 .comm-app-block strong,.comm-service strong,.comm-service b{display:block;font-size:12px}
-.comm-app-block small,.comm-service small{font-size:11px;color:#b0bfd0}
-.comm-app-block[aria-expanded=true],.comm-app-block:hover{border-color:#c6d6e5;background:#3c4a62}
-.comm-app-block[data-live=true]{border-left:3px solid #77d8ed}
+.comm-app-block small,.comm-service small{font-size:11px;color:var(--fs-muted)}
+.comm-app-block[aria-expanded=true],.comm-app-block:hover{border-color:var(--fs-line);background:var(--fs-line)}
+.comm-app-block[data-live=true]{border-left:3px solid var(--fs-line)}
 .comm-stack .communication-app{margin-top:10px}.comm-stack .communication-app header{align-items:center;justify-content:space-between}
 .comm-services{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(140px,100%),1fr));gap:8px}
-.comm-bus{grid-column:1/-1;text-align:center;background:#8650a8;border-color:#b884d3;color:white}
-.comm-bus small{color:#f4e6fc}
+.comm-bus{grid-column:1/-1;text-align:center;background:var(--fs-code-bg);border-color:var(--fs-code);color:white}
+.comm-bus small{color:var(--fs-code)}

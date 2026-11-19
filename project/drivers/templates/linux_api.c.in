@@ -1,0 +1,11 @@
+int32 @PREFIX@_Configure(const char *path, uint16 address)
+{
+    HAL_SENSOR_Device_t device = @PREFIX@_Bind(LINUX_I2C_SensorBus(path, address), NULL);
+    return HAL_SENSOR_Configure(&device);
+}
+
+int32 @READ_NAME@(const char *path, uint16 address, @VALUE_TYPE@ *sample)
+{
+    HAL_SENSOR_Device_t device = @PREFIX@_Bind(LINUX_I2C_SensorBus(path, address), NULL);
+    return CopySample(&device, sample, false);
+}

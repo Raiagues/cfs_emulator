@@ -72,8 +72,24 @@ def configured(root, config):
                 (STARTUP, 'mission/modules.cmake', 'mission/libraries.cmake', GENERATED + 'appgen.cmake')))
 
 
+def _configured_pipe_names(root, app_dirs, files):
+    """Read literal OSAL queue names from the mission's final configuration headers."""
+    directories = [root / 'mission/sample_defs']
+    for app_dir in app_dirs:
+        directories.extend((app_dir / 'fsw/inc', app_dir / 'config'))
+    headers = {path.relative_to(root).as_posix() for directory in directories for path in directory.glob('*.h')}
+    for path in files:
+        if path.endswith('.h') and (root / path).parent in directories:
+            headers.add(path)
+    literal = re.compile(r'^\s*#\s*define\s+[A-Za-z_0-9]*PIPE_NAME\s+\(?\s*((?:"[^"\n]*"[ \t]*)+)', re.M)
+    for path in headers:
+        content = files[path] if path in files else (root / path).read_text(errors='replace')
+        for value in literal.findall((content or '').replace('\\\n', '')):
+            yield ''.join(re.findall(r'"([^"]*)"', value))
+
+
 def module_limits_plan(root, files):
-    """Size native loader and table filename buffers for the final mission."""
+    """Size OSAL names, loader limits and table filename buffers for the final mission."""
     from project.model import safe_path
     from project.appgen.native_startup import parse_startup
     from project.flight_sources import module_directory
@@ -85,12 +101,15 @@ def module_limits_plan(root, files):
     default = lambda name: int(re.search(r'\bset\s*\(\s*OSAL_CONFIG_' + name + r'\s+(\d+)\b', defaults, re.I)[1])
     # cFE's wire definitions require name buffers to be multiples of four.
     aligned = lambda size: (size + 3) // 4 * 4
-    api = aligned(max([default('MAX_API_NAME')] + [len(value) + 1 for entry in records for value in entry.fields[2:4]]))
+    app_dirs = [module_directory(root, 'apps', entry.name) for entry in records if entry.kind == 'CFE_APP']
+    names = [value for entry in records for value in entry.fields[2:4]]
+    names.extend(_configured_pipe_names(root, app_dirs, files))
+    api = aligned(max([default('MAX_API_NAME')] + [len(name.encode()) + 1 for name in names]))
     filenames = [entry.name + '.so' for entry in records]
     # cFE also uses MAX_FILE_LEN for the filename embedded in a table image.
     # A generated <app>_tbl.tbl can be longer than the corresponding .so.
-    table_paths = {path.relative_to(root).as_posix() for entry in records if entry.kind == 'CFE_APP'
-                   for path in (module_directory(root, 'apps', entry.name) / 'fsw/tables').glob('*.c')}
+    table_paths = {path.relative_to(root).as_posix() for directory in app_dirs
+                   for path in (directory / 'fsw/tables').glob('*.c')}
     table_paths.update(path.relative_to(root).as_posix() for path in safe_path(root, 'mission/sample_defs').rglob('*.c'))
     table_paths.update(path for path in files if path.endswith('.c') and '/tables/' in path)
     table = re.compile(r'^\s*CFE_TBL_FILEDEF\s*\([^,]+,[^,]+,[^,]+,\s*([\w./-]+)\s*\)', re.M)

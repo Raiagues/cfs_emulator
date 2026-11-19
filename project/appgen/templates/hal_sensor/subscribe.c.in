@@ -1,0 +1,10 @@
+
+    /* Attach the mission readers after the sample has initialized its tables. */
+    if (status == CFE_SUCCESS)
+    {
+        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(@PREFIX@_WAKEUP_MID), @PREFIX@_Data.CommandPipe);
+    }
+    if (status == CFE_SUCCESS)
+    {
+        status = @PREFIX@_ComponentsInit();
+    }

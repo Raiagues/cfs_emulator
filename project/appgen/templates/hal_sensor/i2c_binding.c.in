@@ -1,0 +1,11 @@
+/* @studio.fragment DRIVER_INCLUDE */
+#include "linux_i2c_sensor.h"
+/* @studio.fragment DRIVER_STATE */
+static HAL_SENSOR_Device_t @PREFIX@_@ENTITY@_Device;
+static @MODEL_PREFIX@_State_t @PREFIX@_@ENTITY@_State;
+/* @studio.fragment DRIVER_INIT */
+    @PREFIX@_@ENTITY@_Device = @MODEL_PREFIX@_Bind(
+        LINUX_I2C_SensorBus(@PREFIX@_@ENTITY_UPPER@_DEVICE, @PREFIX@_@ENTITY_UPPER@_ADDRESS),
+        &@PREFIX@_@ENTITY@_State);
+/* @studio.fragment READ_VALUE */
+    return @MODEL_PREFIX@_Acquire(&@PREFIX@_@ENTITY@_Device, Value);

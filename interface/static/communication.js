@@ -1,45 +1,26 @@
-/* Traffic and packet definitions for the selected target. */
-const serviceLabels = {
-  SB: ['Software Bus', 'Routes messages between applications.'],
-  ES: ['Executive Services', 'Starts and manages flight applications.'],
-  EVS: ['Event Services', 'Reports events from the flight software.'],
-  TBL: ['Table Services', 'Loads and manages application tables.'],
-  TIME: ['Time Services', 'Maintains spacecraft time.'],
-  FS: ['File Services', 'Provides common flight file operations.'],
-};
-
+// Traffic totals are recorded by the UDP sender and decoder in this session.
+const services={SB:'Software Bus',ES:'Executive Services',EVS:'Event Services',TBL:'Table Services',TIME:'Time Services',FS:'File Services'};
 export function renderCommunication(state,{esc,icon}){
- const ground=state.ground?.target===state.target?state.ground:{};
- const catalog=state.catalogTarget===state.target?state.catalog||{}:{};
- const observed=new Map((ground.communication?.apps||[]).map(item=>[item.app,item]));
- const mission=state.workspace.mission;
- const names=[...(mission.included||mission.enabled||[])].sort();
- const target={native:'Native',physical:'Physical board',qemu:'Emulator'}[state.target];
- const appName=names.includes(state.commApp)?state.commApp:null;
- const blocks=names.map(name=>{
-   const latest=(ground.packets||[]).filter(packet=>packet.app===name).reduce((time,p)=>Math.max(time,p.received_at||0),0);
-   const live=ground.connected&&latest&&Date.now()/1000-latest<10;
-   const received=observed.get(name)?.telemetry_received||0;
-   const status=live?'Live telemetry':received?received+' received':ground.connected?'Awaiting telemetry':'Offline';
-   const commands=(catalog.commands||[]).filter(command=>command.app===name).length;
-   return `<button class="comm-app-block" data-comm-app="${esc(name)}" aria-expanded="${name===appName}" data-live="${!!live}"><strong>${esc(name.replaceAll('_',' ').toUpperCase())}</strong><small>${catalog.commands?commands+' commands · ':''}${status}</small></button>`;
- }).join('');
- const services=(mission.core_services||[]).map(item=>item.name);
- const core=Object.entries(serviceLabels).filter(([key])=>services.includes(key)).map(([key,[title,description]])=>
-   `<div class="comm-service ${key==='SB'?'comm-bus':''}"><strong>${key}</strong><b>${title}</b><small>${description}</small></div>`).join('');
-
- function appDetails(name){
-   const counts=observed.get(name)||{};
-   const app=state.workspace.apps.find(item=>item.name===name);
-   const entry=app?.entry||[...(catalog.commands||[]),...(catalog.packets||[])].find(item=>item.app===name&&item.source)?.source;
-   const definitions=(items,kind,count)=>`<details data-detail-key="${esc(name)}-${kind}"><summary>${kind==='command'?'Commands sent':'Telemetry received'} <b>${count}</b></summary><div class="comm-source-links">${items.filter(item=>item.app===name).map(item=>`<button data-gs-source="${esc(item.id)}" data-source-kind="${kind}" aria-current="${state.sourcePreview?.definitionId===item.id&&state.sourcePreview?.definitionKind===kind}" data-source-section="${kind==='command'&&item.locations?.dispatch?'dispatch':'packet'}">${icon('code')}${esc(item.id||item.name)}</button>`).join('')||'<small>No definitions in this catalog</small>'}</div></details>`;
-   return `<article class="communication-app"><header><strong>${esc(name)}</strong>${entry?`<button data-file="${esc(entry)}">${icon('code')}Open source</button>`:''}</header>${definitions(catalog.packets||[],'telemetry',counts.telemetry_received||0)}${definitions(catalog.commands||[],'command',counts.commands_sent||0)}</article>`;
- }
-
- return `<section class="communication-view"><header class="communication-link"><div>${icon('antenna')}<strong>Ground Station ⇄ ${esc(target)}</strong><span class="${ground.connected?'is-connected':''}"><i></i>${ground.connected?'Connected':'Disconnected'}</span></div>
- <button data-ground="${ground.connected?'stop':'start'}" ${state.groundBusy?'disabled':''}>${state.groundBusy?'Connecting…':ground.connected?'Disconnect':'Connect'}</button></header>
- ${state.groundError||ground.error?`<p class="communication-error" role="alert">${esc(state.groundError||ground.error)}</p>`:''}
- <div class="comm-source-links"><button data-file="ground_station/station.py">${icon('code')} Ground receiver</button><button data-file="ground_station/catalog.py">${icon('code')} Packet catalog</button></div>
- <section class="comm-stack"><h2>NASA cFS</h2><section><h3>cFS Apps</h3><div class="communication-app-grid">${blocks}</div>${appName?appDetails(appName):''}</section>
- <section><h3>Core Flight Executive (cFE)</h3><div class="comm-services">${core}</div></section></section></section>`;
+  const ground=state.ground?.target===state.target?state.ground:{};
+  const catalog=state.catalog||{}, mission=state.workspace.mission;
+  const traffic=new Map((ground.communication?.apps||[]).map(row=>[row.app,row]));
+  const apps=[...(mission.included||mission.enabled||[])].sort();
+  const commands=state.systemTraffic==='commands';
+  const unit=commands?'sent':'received', key=commands?'commands_sent':'telemetry_received';
+  function block(app,title=app,desc=''){
+    const total=traffic.get(app)?.[key]||0;
+    return '<button class="comm-app-block '+(app==='cfe_sb'?'comm-bus':'')+'" data-comm-app="'+esc(app)+'" aria-expanded="'+(state.commApp===app)+'" data-live="'+Boolean(total)+'"><strong>'+esc(title)+'</strong><small>'+esc(desc?desc+' · ':'')+total+' '+unit+'</small></button>';
+  }
+  const selected=state.commApp;
+  const source=commands?ground.commands||[]:ground.history||[];
+  const recent=source.filter(record=>record.app===selected).slice(-12).reverse();
+  const defs=(commands?catalog.commands:catalog.packets)||[];
+  const relevant=defs.filter(d=>d.app===selected);
+  const browser=selected?'<article class="system-detail"><header><strong>'+esc(selected)+'</strong><button data-comm-app="'+esc(selected)+'" aria-label="Close application">×</button></header>'+
+    (recent.length?'<ol>'+recent.map(r=>'<li><time>'+new Date((r.received_at||r.sent_at)*1000).toLocaleTimeString()+'</time> '+esc(r.name||r.id)+' · '+r.bytes+' B</li>').join('')+'</ol>':'<p>No observations in this session.</p>')+
+    '<div class="comm-source-links">'+relevant.map(d=>commands?'<button data-open-trip-command="'+esc(d.id)+'">'+icon('antenna')+esc(d.id)+'</button>':'<button data-system-packet="'+d.mid+'">'+icon('wave')+esc(d.id)+'</button>').join('')+'</div></article>':'';
+  return '<section class="system-traffic"><header class="system-title"><strong>NASA cFS</strong><div role="group" aria-label="Traffic direction">'+
+    ['commands','telemetry'].map(v=>'<button data-system-traffic="'+v+'" aria-pressed="'+((commands?'commands':'telemetry')===v)+'">'+(v==='commands'?'Commands':'Telemetry')+'</button>').join('')+'</div></header>'+
+    '<section class="system-group"><h3>cFS apps</h3><div class="system-nodes">'+apps.map(app=>block(app)).join('')+'</div></section>'+
+    '<section class="system-group"><h3>Core Flight Executive</h3><div class="system-nodes">'+(mission.core_services||[]).map(({name})=>block('cfe_'+name.toLowerCase(),name,services[name]||'')).join('')+'</div></section>'+browser+'</section>';
 }

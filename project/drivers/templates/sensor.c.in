@@ -1,0 +1,40 @@
+#include "@LIBRARY@.h"
+@TRANSPORT_INCLUDE@
+#include <errno.h>
+#include <string.h>
+
+/* Derived from project/drivers/models/@MODEL@/model.json. */
+@REGISTER_PROFILE@
+
+@OPS_DECLARATION@
+HAL_SENSOR_Device_t @PREFIX@_Bind(HAL_SENSOR_Bus_t bus, @PREFIX@_State_t *state)
+{
+@CHECK_STATE@    if (state)
+        memset(state, 0, sizeof(*state));
+    return (HAL_SENSOR_Device_t){.Bus = bus, .Profile = &Profile, .Ops = @OPS@, .DriverContext = state};
+}
+
+int32 @PREFIX@_LIB_Init(void)
+{
+    return CFE_SUCCESS;
+}
+
+static int32 CopySample(HAL_SENSOR_Device_t *device, @VALUE_TYPE@ *sample, bool configure)
+{
+    int32_t values[@COUNT@];
+    if (!sample || !device || device->Profile != &Profile)
+        return -EINVAL;
+    int32 status = configure ? HAL_SENSOR_Acquire(device, values, @COUNT@) : HAL_SENSOR_Read(device, values, @COUNT@);
+    if (status == CFE_SUCCESS)
+    {
+@COPY_VALUES@
+    }
+    return status;
+}
+
+int32 @PREFIX@_Acquire(HAL_SENSOR_Device_t *device, @VALUE_TYPE@ *sample)
+{
+    return CopySample(device, sample, true);
+}
+
+@LEGACY_SOURCE@

@@ -1,7 +1,7 @@
 """Magnetic field in µT. Configuration and waveform for the shared runner."""
 
 import math
-from sensors.schema import Sensor, Signal
+from sensors.schema import Sensor
 
 AMPLITUDE_UT = 20.0
 PERIOD_SECONDS = 30.0
@@ -13,11 +13,7 @@ SIGNALS = {'mag-x': {'initial': 0, 'function': 'hold'},
 
 
 def configure(device):
-    return Sensor.from_device(device, (
-        Signal("mag-x", "µT", 1000),
-        Signal("mag-y", "µT", 1000),
-        Signal("mag-z", "µT", 1000),
-    ))
+    return Sensor.from_model(device, __file__)
 
 
 def sample(seconds, initial_xyz):

@@ -18,8 +18,32 @@ def _safe(root, relative):
 
 
 def load_catalog(root):
+    from project.sensor_models import load, model_paths
     path = _safe(root, "project/drivers/catalog.json")
-    return json.loads(path.read_text()) if path.is_file() else {}
+    catalog = json.loads(path.read_text()) if path.is_file() else {}
+    for name, path in model_paths(root).items():
+        catalog[name + "_lib"] = {"entry_point": name.upper() + "_LIB_Init",
+                                  "systems": ["linux"] if "abi" in load(path) else ["*"]}
+    return catalog
+
+
+def retains_legacy_sources(root, name):
+    """A locally customized pre-HAL module keeps its original source set and ABI."""
+    directory = _safe(root, f"mission/libs/{name}")
+    cmake = directory / "CMakeLists.txt"
+    if not cmake.is_file() or "hal_sensor" in cmake.read_text():
+        return False
+    header = directory / "fsw/public_inc" / (name + ".h")
+    if header.is_file() and "HAL_SENSOR_Device_t" in header.read_text():
+        return False
+    state = _safe(root, STATE)
+    recorded = json.loads(state.read_text()).get("modules", {}).get(name, {}) if state.is_file() else {}
+    for path in directory.rglob("*"):
+        if path.is_file() and (path.suffix in {".c", ".h", ".cmake"} or path.name == "CMakeLists.txt"):
+            relative = path.relative_to(directory).as_posix()
+            if path.is_symlink() or hashlib.sha256(path.read_bytes()).hexdigest() != recorded.get(relative):
+                return True
+    return False
 
 
 def _native_set(path, variable):
@@ -133,6 +157,20 @@ def dependencies(root, name, sources=None):
         if path.is_file():
             text = path.read_text()
             break
+    if name.endswith("_lib"):
+        from project.sensor_models import MODELS
+        from project.sensor_driver import cmake
+        model_id = name[:-4]
+        if _safe(root, MODELS / model_id / "model.json").is_file():
+            # A pristine materialized CMakeLists from the previous generator
+            # must use the new dependencies on the very first migration build.
+            new_cmake = cmake(root, model_id)
+            state_path = _safe(root, STATE)
+            state = json.loads(state_path.read_text()) if state_path.is_file() else {}
+            recorded = state.get("modules", {}).get(name, {}).get("CMakeLists.txt")
+            if text is None or relative.startswith("project/drivers/") or (
+                    hashlib.sha256(text.encode()).hexdigest() == recorded and not retains_legacy_sources(root, name)):
+                text = new_cmake
     if text is None:
         return []
     text = re.sub(r"#\[(=*)\[.*?\]\1\]", "", text, flags=re.S)
@@ -171,21 +209,32 @@ def requirements(root, config, manifests=None, excluded=None, selected=None, sou
     explicit = (_native_set(_safe(root, "mission/libraries.cmake"), "MISSION_LIBRARIES") | selected) - excluded
     reasons, ordered, visiting = {}, [], set()
 
+    @lru_cache(maxsize=None)
+    def module_dependencies(name):
+        return dependencies(root, name, sources)
+
     def visit(name, reason):
         if name in visiting:
             raise ValueError("Library dependency cycle: " + " -> ".join([*sorted(visiting), name]))
         if name in catalog:
-            if family not in catalog[name].get("systems", []):
+            systems = catalog[name].get("systems", [])
+            if "*" not in systems and family not in systems:
                 raise ValueError(f"{name} has no driver implementation for {config['board']}/{config['os']}")
             reasons.setdefault(name, set()).add(reason)
         visiting.add(name)
-        for dependency in dependencies(root, name, sources):
+        for dependency in module_dependencies(name):
             visit(dependency, reason)
         visiting.remove(name)
         if name in catalog and name not in ordered:
             ordered.append(name)
 
+    bound_devices = {device_id for app in config["apps"] for device_id in app["sensors"].values()}
     for device in config["devices"]:
+        if device["id"] not in bound_devices:
+            continue
+        transport = board["buses"][device["bus"]].get("library")
+        if transport:
+            visit(transport, "sensor " + device["id"])
         library = board["models"][device["model"]].get("library")
         if library:
             visit(library, "sensor " + device["id"])
@@ -198,7 +247,7 @@ def requirements(root, config, manifests=None, excluded=None, selected=None, sou
         apps.update(record.name for record in [*enabled, *disabled] if record.fields[0] == "CFE_APP"
                     and (record.name in apps or not _safe(root, f"project/apps/{record.name}.json").exists()))
     for name in sorted(apps - excluded):
-        for dependency in dependencies(root, name, sources):
+        for dependency in module_dependencies(name):
             visit(dependency, "app " + name)
     for name in sorted(explicit):
         visit(name, "library " + name)
@@ -220,11 +269,28 @@ def plan_drivers(root, libraries):
     wanted = {item["name"] for item in libraries if item["name"] in catalog}
     files, managed, retained = {}, {}, dict(previous.get("retained", {}))
     digest = lambda data: hashlib.sha256(data).hexdigest()
+    from project.sensor_models import model_paths
+    from project.sensor_driver import library_cmake, source_files
+    models = {name + "_lib": path for name, path in model_paths(root).items()}
     for name in sorted(set(catalog) | set(old)):
-        template = _safe(root, f"project/drivers/{name}")
         destination = _safe(root, f"mission/libs/{name}")
-        templates = {path.relative_to(template).as_posix(): path.read_bytes()
-                     for path in sorted(template.rglob("*")) if path.is_file() and not path.is_symlink()}
+        if name in models:
+            templates = source_files(root, models[name]) if name in wanted else {}
+        elif catalog.get(name, {}).get("source"):
+            directory = Path("project/drivers") / catalog[name]["source"]
+            templates = {}
+            for local, flight in (("include", "fsw/public_inc"), ("src", "fsw/src")):
+                for file in sorted(_safe(root, directory / local).glob("*")):
+                    if file.is_file():
+                        templates[f"{flight}/{file.name}"] = _safe(root, file.relative_to(root)).read_bytes()
+            sources = [path for path in templates if path.startswith("fsw/src/") and path.endswith(".c")]
+            if not sources:
+                raise ValueError(f"No implementation under {directory}/src for {name}")
+            templates["CMakeLists.txt"] = library_cmake(name, sources).encode()
+        else:
+            template = _safe(root, f"project/drivers/{name}")
+            templates = {path.relative_to(template).as_posix(): path.read_bytes()
+                         for path in sorted(template.rglob("*")) if path.is_file() and not path.is_symlink()}
         recorded = old.get(name, {})
         if not recorded and destination.is_dir():
             # The first migration can adopt exact copies, never user-edited files.
@@ -245,8 +311,16 @@ def plan_drivers(root, libraries):
             continue
         if not templates:
             raise ValueError(f"Missing source template for driver {name}")
+        if name in models and retains_legacy_sources(root, name):
+            managed[name] = old.get(name, {})
+            retained[name] = "Using locally edited pre-HAL driver and its original C API"
+            continue
         managed[name] = {}
         retained.pop(name, None)
+        for relative in recorded.keys() - templates.keys():
+            path = actual.get(relative)
+            if path and not path.is_symlink() and digest(path.read_bytes()) == recorded[relative]:
+                files[f"mission/libs/{name}/{relative}"] = None
         for relative, content in templates.items():
             path = _safe(root, f"mission/libs/{name}/{relative}")
             current = path.read_bytes() if path.is_file() else None

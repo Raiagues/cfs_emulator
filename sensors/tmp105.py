@@ -1,7 +1,7 @@
 """Temperature in °C. Configuration and waveform for the shared runner."""
 
 import math
-from sensors.schema import Sensor, Signal
+from sensors.schema import Sensor
 
 AMPLITUDE_C = 5.0
 PERIOD_SECONDS = 30.0
@@ -11,7 +11,7 @@ SIGNALS = {'temperature': {'initial': 23.5, 'function': 'sine', 'amplitude': 5.0
 
 
 def configure(device):
-    return Sensor.from_device(device, (Signal("temperature", "°C", 1000),))
+    return Sensor.from_model(device, __file__)
 
 
 def sample(seconds, initial_c):

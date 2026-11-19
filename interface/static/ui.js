@@ -27,6 +27,13 @@ const icons = {
   'arrow-down':'M12 3v18 m-6-6 6 6 6-6',
   'close':'M5 5l14 14 M19 5 5 19',
   'cpu':'M6 6h12v12H6z M9 9h6v6H9z M9 3v3 M15 3v3 M9 18v3 M15 18v3 M3 9h3 M3 15h3 M18 9h3 M18 15h3',
+  'git-branch':'M6 7v10 M7 15c7 0 11-3 11-8 M8 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0 M8 19a2 2 0 1 1-4 0 2 2 0 0 1 4 0 M20 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0',
+  'cmake':'M3 20 12 3l9 17z M12 3l2 12 7 5 M14 15 3 20',
+  'container':'M2 12h18c-.7 5-4.5 8-10 8-4 0-7-2-8-8z M4 12V8h4v4 M8 8V4h4v8 M12 12V8h4v4 M19 12c-.4-2 .4-4 2-5 .5 2 1 3 2 3-.8 1.2-2 2-4 2',
+  'network-port':'M3 5h18v12h-4v3H7v-3H3z M7 6v5 M10 6v5 M14 6v5 M17 6v5',
+  'transfer':'M4 8h15 m-4-4 4 4-4 4 M20 16H5 m4-4-4 4 4 4',
+  'key':'M14 4a6 6 0 1 1-3 11L5 21H2v-4l7-7a6 6 0 0 1 5-6z M16 8h.01',
+  'packages':'m12 2 6 3-6 3-6-3z M6 5v5l6 3 6-3V5 M12 8v5 M6 10 1 13l6 3 5-3 6 3 5-3-5-3 M1 13v5l6 4 5-3 6 3 5-4v-5 M7 16v6 M12 13v6 M18 16v6',
   'expand':'M14 3h7v7 M21 3l-8 8 M10 21H3v-7 M3 21l8-8',
   'rotate':'M3 11a9 9 0 1 1 3 8 M3 5v6h6',
   'layers':'m12 3 10 5-10 5L2 8z M2 12l10 5 10-5 M2 16l10 5 10-5',
@@ -42,6 +49,8 @@ export function icon(name) {
 
 icons.monitor='M3 3h18v13H3z M12 16v5 M7 21h10';
 icons.refresh=icons.rotate;
+icons.send='m3 10 18-7-7 18-3-8z M11 13l10-10';
+icons.edit='m4 16 11-11 4 4L8 20l-5 1z M13 7l4 4';
 icons.trash='M3 6h18 M9 6V3h6v3 M5 6l1 15h12l1-15 M10 10v7 M14 10v7';
 function html(text){return String(text).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 export function highlight(text,path='') {
@@ -60,7 +69,8 @@ export function highlight(text,path='') {
     else if (/^(static|const|let|function|new|throw|return|if|else|while|for|typedef|struct|true|false|null|NULL|sizeof|switch|case|break|continue)$/.test(token)) type = 'keyword'
     else if (/^\d/.test(token)) type = 'number'
     else if (/^[A-Z][A-Z_0-9]+$/.test(token)) type = 'constant'
-    output += `<span class="token-${type}">${html(token)}</span>`
+    const formatted = type === 'comment' ? html(token).replace(/(?:@|\\)(?:brief|unit|range|check)\b/g, tag => '<span class="token-doc-tag">'+tag+'</span>') : html(token);
+    output += `<span class="token-${type}">${formatted}</span>`
     cursor = match.index + token.length
   }
   return output + html(text.slice(cursor)) + '\n'

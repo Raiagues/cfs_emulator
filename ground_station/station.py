@@ -11,6 +11,7 @@ from collections import deque
 from pathlib import Path
 
 from .catalog import build_catalog, apply_overrides
+from .round_trip import RoundTrips, TestPlans
 
 
 class GroundStation:
@@ -34,6 +35,8 @@ class GroundStation:
         self._history = deque(maxlen=256)
         self._events = deque(maxlen=256)
         self._commands = deque(maxlen=100)
+        self.plans = TestPlans(self.root)
+        self.trips = RoundTrips()
         self._communication = {}
         self._session_started = None
         self._event_sequence = 0
@@ -95,6 +98,7 @@ class GroundStation:
                 self._history.clear()
                 self._events.clear()
                 self._commands.clear()
+                self.trips = RoundTrips()
                 self._communication.clear()
                 self._session_started = time.time()
                 self._event_sequence = 0
@@ -115,12 +119,25 @@ class GroundStation:
                     raise ValueError(self._failure or 'The official telemetry receiver did not become ready.')
             if not self._connected():
                 raise ValueError(self._failure or 'The telemetry receiver stopped.')
-            self.send(enable['id'], {'dest_IP': return_host or listen_host}, automatic=True)
+            self._enable_downlink(enable['id'], return_host or listen_host)
             self._subscribe_catalog([target_ip, ports['command_port']], service_instance)
         except Exception:
             self.stop()
             raise
         return self.snapshot()
+
+    def _enable_downlink(self, command, destination):
+        """CI_LAB can start after the OS process. The output destination is safe to reapply."""
+        with self._updates:
+            for _ in range(5):
+                self.send(command, {'dest_IP': destination}, automatic=True)
+                self._updates.wait_for(lambda: self._received or not self._connected(), timeout=2)
+                if not self._connected():
+                    raise ValueError(self._failure or 'Telemetry link closed during setup.')
+                if self._received:
+                    return
+        # A quiet mission may first need a subscription. Its EVS reply is checked
+        # by _subscribe_catalog before the subscription is considered active.
 
     def _subscribe_catalog(self, connection, service_instance):
         """Complete the compiled TO table, recording only flight-confirmed additions."""
@@ -187,6 +204,7 @@ class GroundStation:
     def _transport_failed(self, message):
         with self._updates:
             self._error = self._failure = str(message)
+            self.trips.finish('disconnected')
             self._updates.notify_all()
 
     def _record_communication(self, app, kind, size, timestamp):
@@ -228,12 +246,15 @@ class GroundStation:
             packet['count'] = (previous['count'] if previous else 0) + 1
             packet['event_id'] = self._record_communication(packet['app'], 'telemetry', len(data), packet['received_at'])
             self._latest[mid] = packet
+            if self.trips.active and not any(p['mid'] == mid and p['sequence'] == packet['sequence'] and
+                                             p['hex'] == packet['hex'] for p in reversed(self._history)):
+                self.trips.observe(packet)
             self._history.append(packet)
             if "Message" in values and "PacketID.AppName" in values:
                 self._events.append(packet)
             self._updates.notify_all()
 
-    def send(self, command_id, values=None, *, automatic=False):
+    def send(self, command_id, values=None, *, automatic=False, test_id=None):
         with self._lock:
             if not self._connected():
                 detail = self._failure
@@ -241,6 +262,15 @@ class GroundStation:
             command = next((c for c in self._active_catalog['commands'] if c['id'] == command_id), None)
             if not command:
                 raise ValueError('Command does not exist in the connected catalog')
+            self.trips.expire()
+            if self.trips.active and not automatic:
+                raise ValueError('Wait for the active test or stop it before sending another command.')
+            prepared = None
+            if test_id is not None:
+                plan = next((p for p in self.plans.read()['plans'] if p['id'] == test_id), None)
+                if not plan or plan['command'] != command_id:
+                    raise ValueError('Choose a saved test for this command.')
+                prepared = self.trips.prepare(plan, self._active_catalog, self._latest)
             try:
                 sender = self._definitions_files.sender(command_id, values or {}, self._socket)
                 size = sender.send()
@@ -253,11 +283,21 @@ class GroundStation:
                      'automatic': automatic}
             event['event_id'] = self._record_communication(event['app'], 'command', size, event['sent_at'])
             self._commands.append(event)
+            if prepared:
+                self.trips.start(prepared, event, test_id)
             return event
+
+    def cancel_test(self, ident):
+        with self._lock:
+            self.trips.expire()
+            if self.trips.active and self.trips.active['id'] == ident:
+                self.trips.finish('cancelled')
+            return self.snapshot()
 
     def stop(self):
         self._stop.set()
         with self._updates:
+            self.trips.finish('disconnected')
             self._updates.notify_all()
         if self._receiver:
             self._receiver.stop()
@@ -269,8 +309,10 @@ class GroundStation:
 
     def snapshot(self):
         with self._lock:
+            self.trips.expire()
             connected = bool(self._connected())
             return copy.deepcopy({'connected': connected,
+                                  'build_fingerprint': (self._active_catalog or {}).get('build_fingerprint'),
                                   'receiving': connected and self._last_received is not None and time.time() - self._last_received < 10,
                                   'transport': self._transport, 'backend': 'cFS-GroundSystem', 'error': self._error,
                                   'subscription_errors': list(self._subscription_errors),
@@ -279,4 +321,4 @@ class GroundStation:
                                   'communication': {'since': self._session_started,
                                                     'apps': list(self._communication.values())},
                                   'events': list(self._events), 'packets': list(self._latest.values()), 'history': list(self._history),
-                                  'commands': list(self._commands)})
+                                  'commands': list(self._commands), 'runs': list(self.trips.runs)})

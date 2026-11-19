@@ -1,0 +1,12 @@
+"""Synthetic signal functions. Edit sample() to change the physical waveform."""
+from sensors.schema import Sensor
+
+SIGNALS = {}
+
+
+def configure(device):
+    return Sensor.from_model(device, __file__)
+
+
+def sample(seconds, initial):
+    return initial

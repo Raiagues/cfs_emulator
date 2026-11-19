@@ -1,5 +1,6 @@
 """Install and identify the independently versioned NASA cFS checkout."""
 import fcntl
+import json
 from pathlib import Path
 import subprocess
 import sys
@@ -66,6 +67,12 @@ def install(root):
 
 if __name__ == "__main__":
     try:
+        if len(sys.argv) == 3 and sys.argv[1] == "--status":
+            source = source_status(Path(sys.argv[2]))
+            print(json.dumps(source))
+            sys.exit(0 if source["state"] == "ready" else 1)
+        if len(sys.argv) != 1:
+            sys.exit("Usage: python3 -m project.nasa_source [--status PROJECT]")
         install(Path.cwd())
     except (OSError, ValueError, subprocess.CalledProcessError) as error:
         sys.exit(str(error))

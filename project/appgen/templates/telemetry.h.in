@@ -9,7 +9,7 @@
 
 typedef struct
 {
-    /* APPGEN: USER telemetry.@NAME@.payload */
+    /* @studio.edit telemetry.@NAME@.payload */
     uint32 Value;
 } @PREFIX@_@ENTITY@_Payload_t;
 

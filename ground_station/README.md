@@ -1,153 +1,72 @@
 # Ground Station
 
-The Ground Station sends commands to the running cFS and decodes the telemetry that
-comes back. It uses the official NASA cFS-GroundSystem modules bundled in
-`cFS/tools/cFS-GroundSystem`. MiniCmdUtil builds and sends each command,
-RoutingService receives the telemetry over UDP and GenericTelemetry decodes it.
-Flight Studio gives these modules definitions read from the build that is running.
+A estação envia comandos ao cFS em execução e decodifica a telemetria recebida. Os módulos oficiais em `cFS/tools/cFS-GroundSystem/` vêm com o checkout da NASA feito no setup. O Studio usa o MiniCmdUtil para enviar comandos, o RoutingService para receber datagramas UDP e o GenericTelemetry para decodificar os pacotes. Para preparar o checkout e o ambiente Python, consulte o [guia inicial](../README.md).
 
-```mermaid
-flowchart TB
-    build["Running build<br/>headers, compiler, tables"] --> catalog["Catalog<br/>catalog.py, discovery.py"]
-    catalog --> defs["GroundSystem definitions<br/>.runtime/definitions/"]
-    ui["Ground station view"] --> sender["MiniCmdUtil"]
-    defs --> sender
-    sender -->|"UDP commands"| ci["CI_LAB"]
-    to["TO_LAB"] -->|"UDP telemetry"| router["RoutingService"]
-    router --> decoder["GenericTelemetry"]
-    defs --> decoder
-    decoder --> ui
-```
+![Tela de comandos e telemetria da Ground Station](../docs/images/studio-ground.png)
 
-![The Communication view connected to QEMU. Each cFS app shows how many telemetry packets were received and how many commands were sent during this connection, and sample_app shows one command. Below, the latest SAMPLE_APP_HkTlm_t packet is decoded with CommandCounter 1, and the editor shows the C definition of that packet.](../docs/images/ground-station-sample-app-telemetry.png)
+## Enviar um comando e confirmar a resposta
 
-## Connecting
+1. No workspace, selecione o destino, compile a missão e execute **Run cFS**. Para **Emulator**, inicie o emulador antes de executar o cFS.
+2. Abra **Ground station** e clique em **Connect**. A estação carrega o catálogo do build instalado, abre o receptor UDP e habilita o downlink via TO_LAB.
+3. Selecione `sample_app` e o comando `SAMPLE_APP_NOOP_CC`. Confira MID, código e tamanho do pacote e envie o comando. A seção **Sent** mostra os bytes transmitidos.
+4. Em **Telemetry events**, procure o evento `SAMPLE: NOOP command`. O housekeeping seguinte de `SAMPLE_APP` informa o novo `CommandCounter`. Esses dois registros permitem verificar que a app processou o NOOP.
 
-Connect needs cFS running on the selected target, started by Flight Studio. Flight
-Studio then loads that build's catalog, starts the UDP receiver
-and sends `TO_LAB_OUTPUT_ENABLE_CC` with the address where telemetry should go. The
-compiled TO_LAB table may lack some packets of the catalog, such as those of apps added
-to the mission. For each of them, Flight Studio sends `TO_LAB_ADD_PKT_CC` and waits up
-to 8 seconds for the TO_LAB event that confirms the subscription. Failures appear in
-the view as Partial reception.
+A transmissão UDP, a chegada de telemetria e o processamento pela app são observações distintas. **Sent** registra a transmissão local. O primeiro pacote recebido confirma o caminho de retorno. Um evento com a origem e a assinatura esperadas constitui evidência de processamento. Em **System overview**, os contadores por app mostram o tráfego da conexão atual, incluindo os comandos automáticos enviados a TO_LAB.
 
 ```mermaid
 sequenceDiagram
-    participant UI as Browser
-    participant GS as Ground Station
+    participant UI as Ground Station
     participant CI as CI_LAB
+    participant App as SAMPLE_APP
     participant TO as TO_LAB
-    UI->>GS: Connect
-    GS->>GS: Load the catalog of the running build
-    GS->>GS: Start the UDP receiver
-    GS-)CI: TO_LAB_OUTPUT_ENABLE_CC<br/>with this computer's address
-    CI-)TO: Command on the Software Bus
-    opt For each packet missing from the compiled TO_LAB table
-        GS-)CI: TO_LAB_ADD_PKT_CC
-        CI-)TO: Command on the Software Bus
-        TO--)GS: TO_LAB event confirming the subscription
-    end
-    GS-->>UI: Connected
-    Note over UI,GS: Connected means the receiver is listening.<br/>Packet counters show whether telemetry arrives.
+    UI-)CI: Comando CCSDS sobre UDP
+    CI-)App: Mensagem no Software Bus
+    App-)TO: Evento de NOOP e housekeeping
+    TO-)UI: Pacotes UDP para o receptor
 ```
 
-## Sending a command
+Na conexão, o Studio envia `TO_LAB_OUTPUT_ENABLE_CC` com o endereço de retorno. Para um pacote ausente da tabela compilada, envia `TO_LAB_ADD_PKT_CC` e aguarda até oito segundos pelo evento de confirmação. **Partial reception** identifica uma sessão com inscrições pendentes. Pacotes restritos ao Software Bus ficam fora dos contadores do receptor.
 
-A command passes through several programs before anything confirms it. The `Sent`
-status only means that the datagram left this computer, because UDP has no delivery
-acknowledgement and CI_LAB sends no reply. The app's own reports show that it
-processed the command. For `SAMPLE_APP_NOOP_CC`, these are the `SAMPLE: NOOP command`
-event and the `CommandCounter` field of the next housekeeping packet.
+## Montar um teste de ida e volta
 
-```mermaid
-sequenceDiagram
-    participant UI as Browser
-    participant GS as Ground Station
-    participant CI as CI_LAB
-    participant APP as SAMPLE_APP
-    participant TO as TO_LAB
-    UI->>GS: Send SAMPLE_APP_NOOP_CC
-    GS-)CI: Command over UDP
-    GS-->>UI: Sent
-    Note over UI,GS: Sent means the datagram<br/>left this computer.
-    CI-)APP: Command on the<br/>Software Bus
-    APP->>APP: CommandCounter + 1
-    APP-)TO: Event "SAMPLE: NOOP command"<br/>through cFE EVS
-    TO--)GS: Event packet over UDP
-    Note over APP,TO: Next housekeeping request<br/>from SCH_LAB
-    APP-)TO: SAMPLE_APP_HkTlm_t
-    TO--)GS: SAMPLE_APP_HkTlm_t over UDP
-    UI->>GS: Poll every 1.5 s
-    GS-->>UI: Event and new CommandCounter
-```
+Em **Ground Station → Round trip**, selecione um comando da árvore e clique em **New test**. Escolha o tempo limite e acrescente as observações na ordem esperada. O formulário de envio usa os campos do comando compilado.
 
-Architecture → Communication counts, per app, the telemetry packets received and the
-commands sent during the current connection. The commands that Connect sends to
-TO_LAB are counted too. Messages that stay on the Software Bus never reach the Ground
-Station and are not counted.
+Por exemplo, para testar `SAMPLE_APP_NOOP_CC`:
 
-## Definitions
+1. Em **Flight event**, configure **EVS app name** como `SAMPLE_APP` e **Message contains** como `NOOP`. Também é possível exigir um ID numérico exato.
+2. Adicione **Telemetry packet**, escolha `SAMPLE_APP_HK_TLM_MID`, **Field increases** e `CommandCounter`. Aguarde uma amostra desse housekeeping para estabelecer o valor inicial.
+3. Salve e clique em **Run test**. No histórico **Sent**, abra a execução para ler o evento, o MID, a sequência CCSDS e o valor recebido. **Edit** permite alterar, reordenar ou excluir as etapas.
 
-The catalog asks the build's own compiler for message IDs, command codes, payload
-sizes and field offsets, including padding. Fields whose C declaration is not supported
-are shown as raw bytes. Only apps in the installed startup script can receive
-commands. Flight builds are inspected in a temporary `cfs-builder:local` container
-without network access, so this computer needs no cross compiler.
+O teste compara somente pacotes decodificados depois do envio naquela sessão. Cada etapa consome uma observação distinta. A linha de envio registra o datagrama local. As linhas de retorno aparecem quando o receptor identifica os critérios escolhidos. Eventos EVS e housekeeping normalmente não carregam um identificador que os relacione de maneira exclusiva ao comando. Em uma missão com outros emissores, inclua no teste um campo de correlação que a própria aplicação publique.
 
-A command code is associated with a message ID only by the code that dispatches it.
-That can be a `CFE_SB_MsgId_Equal` branch, a negated test that returns for every other
-ID, or an entry in a handler table. A code without such evidence stays in the catalog
-as unresolved, with the reason, and it cannot be sent. Message IDs are never derived
-from app or command names.
+**System overview** mostra apps e serviços da missão. Alterne entre **Commands** e **Telemetry** e selecione um componente para examinar seus registros. O contador de comandos mede envios locais. O de telemetria mede recebimentos na estação.
 
-[`overrides.json`](overrides.json) adds packets and commands, or replaces them by ID,
-with an explicit MID, size, command code and field layout. Flight Studio rejects an
-entry whose MID does not match its packet type, or whose size, code or fields are
-inconsistent.
+Os testes são armazenados em `ground_station/test-plans.json`. O Studio confere os identificadores e campos contra o catálogo do alvo antes de transmitir. Mudar um teste dispensa recompilação da missão.
 
-| Files | Contents |
+## Como o catálogo acompanha a compilação
+
+O compilador do build resolve MIDs, códigos, tamanhos de estrutura e deslocamentos de campos, inclusive o alinhamento. A estação exibe como bytes os campos cujo tipo C o decodificador ainda não suporta. O startup instalado determina as apps elegíveis para receber comandos. A análise do build ARM64 usa o contêiner local `cfs-builder:local` com a rede desativada.
+
+A associação de um código de comando ao seu MID vem do despacho em C, por comparação, retorno antecipado ou tabela de handlers. Uma rota sem evidência suficiente fica pendente, acompanhada do motivo. O arquivo de overrides permite declarar explicitamente o tipo, MID, código, tamanho e campos de uma definição. O validador confere a consistência do pacote. [Overrides do catálogo](overrides.json)
+
+| Dados locais | Função |
 | --- | --- |
-| `hardware/.runtime/catalog-<native\|flight>-<fingerprint>.json` | Catalog of one build |
-| `ground_station/.runtime/definitions/<fingerprint>/` | Definition files read by the GroundSystem modules |
-| `ground_station/.runtime/subscriptions.json` | TO_LAB subscriptions confirmed per connection, build and service run |
+| `hardware/.runtime/catalog-<perfil>-<fingerprint>.json` | Catálogo do build nativo ou de voo |
+| `ground_station/.runtime/definitions/<fingerprint>/` | Definições consumidas pelos módulos da NASA |
+| `ground_station/.runtime/subscriptions.json` | Inscrições confirmadas por conexão, compilação e execução do serviço |
 
-`catalog.py`, `discovery.py`, `c_source.py`, `tables.py` and `subscriptions.py` build the
-catalog. `official.py` connects the GroundSystem sender, receiver and decoder, and
-`station.py` keeps the connection state shown in the browser.
+Editar um header altera o código da missão. Depois de compilar e executar a nova versão, **Connect** seleciona seu catálogo pelo fingerprint. A primeira abertura de um catálogo demanda consultas ao compilador.
 
-## Transport
+## Caminho de rede
 
-The UDP ports come from the compiled CI_LAB and TO_LAB configuration. In the current
-upstream configuration, commands use port 1234 and telemetry uses port 2234.
+As portas são lidas da configuração compilada de CI_LAB e TO_LAB. No perfil padrão do checkout usado neste projeto, os comandos usam UDP 1234 e a telemetria usa UDP 2234.
 
-| Target | Commands go to | Telemetry goes to |
+| Destino | Caminho do comando | Caminho de retorno |
 | --- | --- | --- |
-| Native | 127.0.0.1 | 127.0.0.1 |
-| QEMU | The container's address, forwarded by QEMU to the guest | The Docker bridge gateway, which is this computer |
-| Board | The board's address in the SSH connection | This computer's address in the SSH connection |
+| Native | Loopback do computador | Loopback do computador |
+| Emulator | Endereço do contêiner e redirecionamento UDP para o guest | Gateway da bridge do Docker |
+| Board | Endereço da placa observado pelo SSH | Endereço local observado pela placa na conexão SSH |
 
-For a board, both addresses come from `SSH_CONNECTION` on the board, and Flight Studio
-checks that this computer has a UDP route to the board from that address. The check
-fails when the board sees another address for this computer, as happens behind NAT or
-through an SSH jump host.
+Em **Emulator**, a conexão cria um `hostfwd_add` por QMP para a porta compilada. A implementação espera uma bridge Docker alcançável a partir do host e o redirecionamento dura até o fim do processo QEMU. Em **Board**, o Studio lê `SSH_CONNECTION` e verifica a rota UDP do host usando os endereços observados. Um NAT ou salto SSH que altere o endereço de retorno pode impedir essa verificação.
 
-## Design notes
-
-### Definitions belong to a build
-
-The running binary decodes and dispatches messages with the layouts it was compiled
-with, so definitions taken from sources edited after the build could decode its
-packets wrongly. Each catalog is therefore saved under the fingerprint of the build it
-came from, and Connect uses the catalog of the build that is deployed on the target.
-Source changes reach the Ground Station after Build and Run, and the first catalog of
-a new build takes longer to load while the compiler is queried.
-
-### Commands reach QEMU through a forward added on Connect
-
-QEMU's user network accepts incoming traffic only on forwarded ports, and the command
-port is known only from the build. On Connect, Flight Studio adds a UDP forward with
-the QMP `hostfwd_add` command, from the container's address to the guest's command
-port. Telemetry needs no forward, because the guest sends it out through QEMU's
-address translation to the Docker bridge gateway. This requires the container to have
-exactly one Docker bridge network reachable from this computer, as with the default
-bridge of Docker Engine on Linux. The forward lasts until QEMU stops.
+A descoberta, o uso dos módulos oficiais e o estado da sessão ficam nos módulos abaixo. [Catálogo](catalog.py) · [Descoberta em C](discovery.py) · [Integração NASA](official.py) · [Sessão](station.py)

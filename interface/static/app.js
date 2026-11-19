@@ -1,3 +1,5 @@
+import {drawOrbit,mountOrbit} from './orbit-preview.js';
+import {renderSourceGuide, renderCommandTrail, renderCommandTest, renderSourceTools, renderInspectorDialog, commandContext, syncCommandToFile, attachTagPicker} from './source-guide.js';
 import {openModuleAction} from './module-actions.js';
 import {mountSelector} from './selectors.js';
 import {designSensor} from './sensor-designer.js';
@@ -5,13 +7,15 @@ import {mountLayout} from './layout.js';
 import {mountTerminal,actionLabel} from './terminal.js';
 import {icon,highlight} from './ui.js';
 import {mountBoard,sensorHeaderPins} from './board.js';
-import {renderArchitecture,renderGround,renderTelemetry} from './panels.js';
-import {renderCommunication} from './communication.js';
+import {assemblyProgress, busDialog, busInventory, halDialog, halDetails} from './hardware-links.js';
+import {renderArchitecture,renderGround,renderTelemetry,renderGroundRoute} from './panels.js';
+import {editTrip} from './trip-editor.js';
+import {planFor} from './round-trip-view.js';
 import {layoutArchitecture} from './architecture.js';
-import {renderSimulationBoard,renderSimulationSettings,changePattern,updateSignalValues} from './simulation.js';
+import {renderSimulationBoard,renderSimulationSettings,changePattern,updateSignalValues,selectSeries} from './simulation.js';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const state = {showLibraries:localStorage.getItem('mission.showLibraries')!=='false',token:'', workspace:null, hardware:null, ground:null, catalog:null, catalogTarget:null, catalogLoading:false, groundBusy:false, groundError:'', groundApp:'', view:'bench', files:new Map(), path:null, target:'native', sensorless:false, jobs:[], selectedJob:null, selectedDevice:null, inspected:null, archApp:'', simulation:null,simulationDirty:false, groundTab:'commands', groundSelection:null, groundPacket:null, terminalStream:null, history:new Map()};
+const state = {showLibraries:localStorage.getItem('mission.showLibraries')!=='false',token:'', workspace:null, hardware:null, ground:null, catalog:null, catalogTarget:null, catalogLoading:false, groundBusy:false, groundError:'', groundApp:'', mapMode:'3d', view:'architecture', files:new Map(), path:null, target:'native', sensorless:false, jobs:[], selectedJob:null, selectedDevice:null, inspected:null, archApp:'', simulation:null,simulationDirty:false, groundTab:'commands', groundSelection:null, groundPacket:null, terminalStream:null, history:new Map()};
 let boardRenderer=null;
 const treeStates=new Map(), lastFiles=new Map();
 let treeRequest=0;
@@ -19,7 +23,6 @@ const isWorkbench=()=>['bench','simulation'].includes(state.view);
 const fileRoot=()=>state.view==='simulation'?state.workspace?.simulation?.root||'sensors':'flight';
 const scriptFor=device=>state.workspace?.simulation?.scripts[device?.model];
 const simulationJob=()=>state.jobs.find(job=>job.action==='simulate'&&job.status==='running');
-const communicationVisible=()=>state.view==='communication';
 const button = (label, attrs='') => `<button type="button" ${attrs}>${label}</button>`;
 const hex = n => Number.isInteger(n) ? '0x'+n.toString(16).toUpperCase().padStart(4,'0') : '—';
 function paintIcons(root=document){root.querySelectorAll('[data-icon]').forEach(node=>{node.innerHTML=icon(node.dataset.icon);});}
@@ -94,35 +97,43 @@ async function loadTree(path, parent) {
   }
   markFiles();
 }
+let fileOpenRequest=0;
 async function openFile(path, line, reveal=true, inspection=null) {
+  const request=++fileOpenRequest;
   if(state.view==='simulation'&&state.simulationDirty)await saveSimulation();
    if(!state.files.has(path)) {
     const data=await api('file?path='+encodeURIComponent(path));
     if(data.binary) throw Error(data.reason || 'Binary file; open the artifacts on disk.');
     state.files.set(path,{...data,saved:data.content});
   }
+  if(request!==fileOpenRequest)return;
   state.sourcePreview=inspection;
+  state.jumpLine=Number.isInteger(line) && line>0;
   state.path=path;lastFiles.set(path.startsWith((state.workspace.simulation?.root||'sensors')+'/')?'simulation':'flight',path);
   const sourceDevice=state.workspace.project.devices.find(device=>scriptFor(device)===path);
   if(sourceDevice)state.selectedDevice=sourceDevice.id;
-  state.activeLine=line||1; const selectedApp=state.workspace?.apps.find(a=>path.startsWith(a.path+'/'));if(selectedApp&&!inspection)state.groundApp=selectedApp.name; const file=state.files.get(path);
-  $('#code').value=file.content; $('#code').disabled=false;$('#code').readOnly=!file.editable||!!inspection;
-  $('#source-location').hidden=!inspection;$('#source-location span').textContent=inspection?inspection.symbol+' · '+path.split('/').at(-1)+':'+line:'';
+  state.activeLine=line||1;
+  syncCommandToFile(state,line);
+  const selectedApp=state.workspace?.apps.find(a=>path.startsWith(a.path+'/'));if(selectedApp&&!inspection)state.groundApp=selectedApp.name; const file=state.files.get(path);
+  $('#code').value=file.content; $('#code').disabled=false;$('#code').readOnly=!file.editable;
+  $('#source-location').hidden=!inspection && file.editable;
+  $('#source-location span').textContent=inspection ? inspection.symbol+' · '+path.split('/').at(-1)+':'+line : path;
+  $('#source-location small').hidden=file.editable;
   if(reveal||document.body.classList.contains('code-only'))document.body.classList.remove('no-editor');
  renderTabs(); lineNumbers(); markFiles(); renderView();renderToolbar();
   if(line){const offset=file.content.split('\n').slice(0,line-1).join('\n').length+(line>1?1:0);$('#code').setSelectionRange(offset,offset);$('#code').scrollTop=Math.max(0,(line-4)*parseFloat(getComputedStyle($('#code')).lineHeight));syncScroll();}
- if(reveal)await revealFile(path);document.body.classList.remove('mobile-tree');
+ if(reveal && request===fileOpenRequest)await revealFile(path);document.body.classList.remove('mobile-tree');
 }
 function renderTabs() {
- $('#tabs').innerHTML=[...state.files].map(([p,f])=>`<div class="file-tab ${state.path===p?'active':''}"><button data-file="${esc(p)}" title="${esc(p)}"><span class="file-type">${fileType(p)}</span><span class="tab-label">${esc(p.split('/').pop())}</span>${f.content!==f.saved?'<i class="tab-dirty"></i>':''}</button><button data-close-file="${esc(p)}" title="Close file">${icon('close')}</button></div>`).join('');
+ $('#tabs').innerHTML=[...state.files].map(([p,f])=>`<div class="file-tab ${state.path===p?'active':''}"><button data-file="${esc(p)}" title="${esc(p)}"><span class="file-type">${fileType(p)}</span><span class="tab-label">${esc(p.split('/').pop())}</span>${f.content!==f.saved?'<i class="tab-dirty"></i>':''}</button><button data-close-file="${esc(p)}" title="Close file" aria-label="Close ${esc(p.split('/').pop())}">${icon('close')}</button></div>`).join('');
 }
-async function revealFile(path){const parts=path.split('/');for(let i=1;i<parts.length;i++){const folder=[...document.querySelectorAll('#tree details')].find(d=>d.dataset.path===parts.slice(0,i).join('/'));if(folder){folder.open=true;await folder._load();}}markFiles();[...document.querySelectorAll('.file')].find(b=>b.dataset.file===path)?.scrollIntoView({block:'nearest'});}
+async function revealFile(path){const parts=path.split('/');for(let i=1;i<parts.length;i++){if(state.path!==path)return;const folder=[...document.querySelectorAll('#tree details')].find(d=>d.dataset.path===parts.slice(0,i).join('/'));if(folder){folder.open=true;await folder._load();}}markFiles();[...document.querySelectorAll('.file')].find(b=>b.dataset.file===path)?.scrollIntoView({block:'nearest'});}
 function markFiles(){document.querySelectorAll('.file').forEach(b=>b.classList.toggle('selected',b.dataset.file===state.path));}
 function syncScroll(){
  const code=$('#code'),layer=$('#highlight-layer'),marker=$('#source-line');
  layer.scrollTop=code.scrollTop;layer.scrollLeft=code.scrollLeft;
  $('#line-numbers').scrollTop=layer.scrollTop;
- marker.hidden=!state.sourcePreview;
+ marker.hidden=!state.sourcePreview && !state.jumpLine;
  if(!marker.hidden){
   const height=parseFloat(getComputedStyle(code).lineHeight);
   marker.style.height=height+'px';
@@ -137,7 +148,7 @@ async function saveFile(path) {
  if(file.content===file.saved)return;
  const content=file.content;
  file.saving=api('file',{path,content,expected_hash:file.hash});
- try{const saved=await file.saving;Object.assign(file,{hash:saved.hash,saved:content});renderTabs();}
+ try{const saved=await file.saving;Object.assign(file,{hash:saved.hash,saved:content,annotations:saved.annotations});renderTabs();}
  finally{delete file.saving;}
 }
 async function save(){if(state.path){await saveFile(state.path);feedback('File saved');await refresh();}}
@@ -160,13 +171,20 @@ function renderSimulationPanel(force=false){
  $('[data-simulation-start]').hidden=!!job;$('[data-simulation-stop]').hidden=!job;
  $('#simulation-reason').textContent=state.target==='physical'?'Physical sensors supply their own data.':state.target==='native'?'Select Emulator to send samples.':!state.hardware?.qemu?.running?'Start the emulator to send samples.':'';
  $('[data-simulation-start]').disabled=previewBusy||state.target!=='qemu'||!state.hardware?.qemu?.running||!!operation();
+ const orbitSave=$('#simulation-form [data-simulation-save]');
+ if(orbitSave)orbitSave.disabled=!state.simulationDirty||state.simulationSaving||Boolean(job)||previewBusy;
  const fields=$('#simulation-fields'),viewKey=[state.target,state.simulation?.available.map(d=>d.id).join(','),state.selectedDevice,state.signalOutput,!!job,previewBusy,state.simulationSaving].join('/');
  if(visible&&(force||fields.dataset.viewKey!==viewKey)){
   fields.innerHTML=renderSimulationSettings(state,{esc});
   fields.dataset.viewKey=viewKey;
  }
 }
-async function saveSimulation(){
+let pendingSimulationSave=null;
+function saveSimulation(){
+ if(!pendingSimulationSave)pendingSimulationSave=commitSimulationSettings().finally(()=>{pendingSimulationSave=null;});
+ return pendingSimulationSave;
+}
+async function commitSimulationSettings(){
  if(simulationJob())throw Error('Stop synthetic data before changing its session settings');
  if($('#simulation-form')&&!$('#simulation-form').reportValidity())throw Error('Complete the signal settings before saving');
  state.simulationSaving=true;renderSimulationPanel();
@@ -184,7 +202,6 @@ async function selectSimulationDevice(id){
  state.signalSidebar=true;
  if(id!==state.selectedDevice)state.signalOutput=null;
  state.selectedDevice=id;
- if(!state.simulation?.settings.sensors.some(s=>s.device===id))addSimulationSensor(id);
  renderView();
 }
 function addSimulationSensor(id){
@@ -204,8 +221,8 @@ async function testSimulation(){
  const active=state.jobs.find(j=>j.action==='simulate-preview'&&j.status==='running');
  if(active)return stopSimulation('simulate-preview');
  if(state.simulationDirty)await saveSimulation();
- if(!state.selectedDevice)throw Error('Select a sensor to test.');
- await startJob('simulate-preview',{device:state.selectedDevice});terminal.selectContext('simulation',{reveal:false});
+ const options=state.selectedDevice?{device:state.selectedDevice}:{};
+ await startJob('simulate-preview',options);terminal.selectContext('simulation',{reveal:false});
 }
 async function stopSimulation(action='simulate'){
  for(const job of state.jobs.filter(job=>job.action===action&&job.status==='running'))await api('job/cancel',{id:job.id});
@@ -231,7 +248,12 @@ document.addEventListener('input',event=>{
 document.addEventListener('change',event=>{
  const field=event.target;
  if(field.id==='simulation-add')addSimulationSensor(field.value);
- else if(field.dataset.simulationEnable){const sensor=state.simulation?.settings.sensors.find(sensor=>sensor.device===field.dataset.simulationEnable);if(sensor){sensor.enabled=field.checked;state.simulationDirty=true;renderView();}}
+ else if(field.dataset.simulationEnable && !simulationJob()){
+  const id=field.dataset.simulationEnable;
+  let sensor=state.simulation?.settings.sensors.find(item=>item.device===id);
+  if(!sensor){const item=state.simulation?.available.find(item=>item.id===id);if(!item)return;sensor=structuredClone(item.defaults);state.simulation.settings.sensors.push(sensor);}
+  sensor.enabled=field.checked;state.simulationDirty=true;renderView();renderSimulationPanel(true);
+ }
  else if(field.closest('#simulation-form')&&['variation','enabled'].includes(field.name))renderSimulationPanel(true);
 });
 document.addEventListener('submit',event=>{if(event.target.id==='simulation-form'){event.preventDefault();guarded(saveSimulation)();}});
@@ -260,6 +282,10 @@ function renderToolbar(){
  const catalog=state.workspace?.catalog,project=state.workspace?.project;
  const profiles=state.hardware?.profiles||(catalog?.os||[]).map(os=>({board:catalog.board,board_label:catalog.name,os,os_label:catalog.os_labels?.[os]||os,targets:catalog.targets||[]}));
  if(!project)return;
+ const synthetic=$('.synthetic-action');
+ synthetic.hidden=state.target!=='qemu';
+ synthetic.setAttribute('aria-current',state.view==='simulation'?'page':'false');
+ synthetic.classList.toggle('streaming',Boolean(simulationJob()));
  const boards=[{value:'',label:'Select board'},...[...new Map(profiles.filter(profile=>profile.board).map(profile=>[profile.board,{value:profile.board,label:profile.board_label||profile.board}])).values()]];
  if(state.board===undefined)state.board=project.board;
  if(state.os===undefined)state.os=project.os;
@@ -300,6 +326,7 @@ function renderToolbar(){
  $('.run-action').disabled=!build?.exists||!build.current||busy||!targets.includes(state.target)||state.hardware?.execution?.can_start!==true;
  $('.run-action').title=!build?.exists||!build.current?'Build cFS for this target first':state.hardware?.execution?.block_reason||(native?'Run cFS on this computer':'Run cFS on the selected target');
  buildButton.title=stale?'Mission sources have changed since the last build for this target':native?'Compile cFS for this computer':'Compile cFS for the configured board and OS';
+ syncBenchActions();
  renderProgress();
  renderSimulationPanel();
 }
@@ -315,8 +342,10 @@ function bench() {
  const available=physical?probe?.connected:h?.qemu?.running;
  const status=physical&&!connection?'Not connected':active?'cFS running':available===false?'Powered off':active===false&&available?'Linux ready':h?'Status unavailable':'Checking…';
  const boardName=h?.profiles?.find(profile=>profile.board===w.project.board)?.board_label||w.project.board;
+ const actions=button(icon('link')+' Connections','data-inspect="board"');
  return `<div class="bench-shell">
-   <div class="board-title"><div class="board-identity">${icon('cpu')}<div><h1><button data-inspect="board" title="Board details">${esc(boardName)}</button></h1>${physical?`<button class="board-status" data-connect title="Connect or change physical board"><i class="${active?'active':''}"></i>${esc(connection?.host||'Connect board')}${icon('chevron-down')}</button>`:`<span class="board-status"><i class="${active?'active':''}"></i>${status}</span>`}</div></div><div class="bench-title-actions">${button(icon('plus')+' Add sensor','data-create="device" class="add-sensor"')}</div></div>
+   <div class="board-title"><div class="board-identity">${icon('cpu')}<div><h1><button data-inspect="board" title="Board details">${esc(boardName)}</button></h1>${physical?`<button class="board-status" data-connect title="Connect or change physical board"><i class="${active?'active':''}"></i>${esc(connection?.host||'Connect board')}${icon('chevron-down')}</button>`:`<span class="board-status"><i class="${active?'active':''}"></i>${status}</span>`}</div></div><div class="bench-title-actions">${actions}</div></div>
+   ${assemblyProgress(state,esc)}
    <div class="bench-canvas"><div id="board-stage" class="board-stage"></div>${hardwareDetails()}</div>
  </div>`;
 }
@@ -328,9 +357,9 @@ function hardwareDetails(){
  const model=device&&w.catalog.models[device.model],binding=device&&w.simulation.bindings?.[id];
  const profile=state.hardware?.profiles?.find(profile=>profile.board===w.project.board&&profile.os===w.project.os);
  const title=board?profile?.board_label||w.project.board:device.name;
- const fields=board?[['QEMU machine',w.project.board],['System',profile?.os_label||w.project.os],['I²C buses',Object.keys(w.catalog.buses).join(', ')]]:
-  [['Bus',device.bus],['I²C address',hex(device.address).replace('0x00','0x')],['Linux device',binding?.linux_device||'—'],['Flight driver',model.cfs_driver||'Not available']];
- return `<section class="cad-details" aria-label="${board?'Board':'Sensor'} details"><header><div><strong>${esc(title)}</strong>${device?`<span>${esc(device.model)}</span>`:''}</div>${!board?button(icon('pencil'),`class="icon-button" data-hardware-settings="${esc(device.id)}" title="Configure bus and address" aria-label="Configure bus and address"`)+button(icon('more'),'class="icon-button" data-sensor-menu title="Sensor options" aria-label="Sensor options"'):''}${button(icon('close'),'class="icon-button" data-close-inspection title="Close details" aria-label="Close details"')}</header><dl>${fields.map(([label,value])=>`<div><dt>${label}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl>${device?`<div class="sensor-test-actions">${button('Test sensor',`data-test-device="${esc(device.id)}" ${state.target==='native'?'disabled title="Select a board or emulator to read I²C."':''}`)}${model.register_model?button('Validate model',`data-test-model="${esc(device.id)}" title="Check the compiled QEMU model on a separate emulated board"`):''}</div>${sensorReadings(device)}`:''}</section>`;
+ const fields=board?[['Board',w.project.board],['System',profile?.os_label||w.project.os]]:
+  [['Bus',device.bus],['I²C address',hex(device.address).replace('0x00','0x')],['Linux device',binding?.linux_device||'—'],['Model driver',model.cfs_driver||'Not available']];
+ return `<section class="cad-details" aria-label="${board?'Board':'Sensor'} details"><header><div><strong>${esc(title)}</strong>${device?`<span>${esc(device.model)}</span>`:''}</div>${!board?button(icon('pencil'),`class="icon-button" data-hardware-settings="${esc(device.id)}" title="Configure bus and address" aria-label="Configure bus and address"`)+button(icon('more'),'class="icon-button" data-sensor-menu title="Sensor options" aria-label="Sensor options"'):''}${button(icon('close'),'class="icon-button" data-close-inspection title="Close details" aria-label="Close details"')}</header><dl>${fields.map(([label,value])=>`<div><dt>${label}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl>${board?busInventory(w,esc):halDetails(w,device,esc)}${device?`<div class="sensor-test-actions">${model.definition?button('Model definition',`data-model-definition="${esc(model.definition)}" title="Edit the register map and output units"`):''}${button('Test sensor',`data-test-device="${esc(device.id)}" ${model.register_probe===false?'disabled title="Read this protocol through the flight app."':state.target==='native'?'disabled title="Select a board or emulator to read I²C."':''}`)}${model.register_model?button('Validate model',`data-test-model="${esc(device.id)}" title="Check the compiled QEMU model on a separate emulated board"`):''}</div>${sensorReadings(device)}`:''}</section>`;
 }
 function sensorReadings(device){
  const readings={};
@@ -346,28 +375,70 @@ function sensorReadings(device){
  const stamp=job=>job?`<small>${esc(new Date(job.ended*1000).toLocaleTimeString())}</small>`:'';
  return sleepNotice+`<table class="sensor-comparison"><caption>Last measured samples</caption><thead><tr><th>Output</th><th>Emulator${stamp(readings.qemu)}</th><th title="${esc(readings.physical?.connection?.host||'')}">Board${stamp(readings.physical)}</th></tr></thead><tbody>${names.map(name=>`<tr><th>${esc(name)}</th><td>${value(readings.qemu,name)}</td><td>${value(readings.physical,name)}</td></tr>`).join('')}</tbody></table>`;
 }
+function syncBenchActions(){
+ for(const item of document.querySelectorAll('[data-workbench-job]')){
+  const control=document.querySelector('.top-actions .'+item.dataset.workbenchJob+'-action');
+  item.disabled=!control||control.disabled;
+  if(control)item.title=control.title;
+ }
+}
+function hardwareActions(){
+ const revision=state.workspace.mission.source.hash;
+ return {dialog,esc,save:async(action,payload)=>{
+   requireSavedMission();
+   const submit=$('#dialog-form button[type=submit]'),label=submit.textContent;
+   const linking=action==='link-hal';
+   submit.setAttribute('aria-busy','true');
+   submit.textContent=linking?'Generating reader…':action==='add-bus'?'Adding bus…':'Removing bus…';
+   try{
+    const result=await api('mutate',{action,payload,expected_hash:revision});
+    state.inspected=linking?payload.device:'board';
+    if(linking)state.selectedDevice=payload.device;
+    await reloadMissionFiles(result.changed,result.deleted);
+    requestAnimationFrame(()=>{
+     const next=$(linking?'.assembly-source':'.assembly-primary');
+     next?.focus({preventScroll:true});
+     if(linking && !matchMedia('(prefers-reduced-motion: reduce)').matches)
+       next?.animate([{opacity:.35,transform:'translateY(4px)'},{opacity:1,transform:'none'}],{duration:260});
+    });
+   }finally{submit.removeAttribute('aria-busy');submit.textContent=label;}
+ }};
+}
+function diagramWiring(){
+ const records=JSON.parse(localStorage.getItem(wireStorageKey())||'{}');
+ for(const device of state.workspace.project.devices){
+   if(device.pins)records[device.id]={...records[device.id],...device.pins};
+ }
+ return records;
+}
 function wireStorageKey(){return "studio-wires:"+location.host+":"+state.workspace.project.board;}
 async function hardwareSettings(id){
  const settings=await api('hardware/device?id='+encodeURIComponent(id)),device=settings.device;
- const wiring=JSON.parse(localStorage.getItem(wireStorageKey())||'{}');
- const options=sensorHeaderPins;
- const pins=Object.entries(options).map(([signal,list])=>`<label>${signal}<select name="${signal}">${list.map(pin=>`<option value="${pin}" ${wiring[id]?.[signal]===pin?'selected':''}>Pin ${pin} · ${signal==='VCC'?'3.3 V':signal}</option>`).join('')}</select></label>`).join('');
- dialog(device.model,`<label>Bus<select name="bus">${Object.entries(settings.buses).map(([name,bus])=>`<option value="${esc(name)}" ${name===device.bus?'selected':''}>${esc(name)} · ${esc(bus.device)}</option>`).join('')}</select></label><label>I²C address<input name="address" value="${hex(device.address)}" required pattern="(0[xX][0-9a-fA-F]+|[0-9]+)"></label><fieldset><legend>Pi header wiring</legend>${pins}<label>2D bend offset (px)<input type="number" min="-400" max="400" name="bend" value="${wiring[id]?.bend||0}"></label></fieldset>`,async values=>{
-  requireSavedMission();const result=await api('hardware/device',{id,bus:values.bus,address:values.address,expected_hash:settings.source.hash});
-  wiring[id]=Object.fromEntries(Object.keys(options).map(key=>[key,Number(values[key])]));wiring[id].bend=Number(values.bend);localStorage.setItem(wireStorageKey(),JSON.stringify(wiring));
-  await reloadMissionFiles(result.changed,result.deleted);feedback('Sensor configuration saved · restart QEMU to apply');
+ const wiring=diagramWiring();
+ const optionsFor=bus=>settings.buses[bus].sensor_pins || sensorHeaderPins;
+ const pinInputs=(bus,selected)=>Object.entries(optionsFor(bus)).map(([signal,list])=>`<label>${esc(signal)}<select name="${esc(signal)}">${list.map(pin=>`<option value="${pin}" ${Number(selected?.[signal])===pin?'selected':''}>Pin ${pin} · ${signal==='VCC'?'3.3 V':esc(signal)}</option>`).join('')}</select></label>`).join('');
+ dialog(device.model,`<label>Bus<select name="bus">${Object.entries(settings.buses).map(([name,bus])=>`<option value="${esc(name)}" ${name===device.bus?'selected':''}>${esc(name)} · ${esc(bus.device)}</option>`).join('')}</select></label><label>I²C address<input name="address" value="${hex(device.address)}" required pattern="(0[xX][0-9a-fA-F]+|[0-9]+)"></label><fieldset><legend>Pi header wiring</legend><div data-pin-inputs>${pinInputs(device.bus,wiring[id])}</div><label>2D bend offset (px)<input type="number" min="-400" max="400" name="bend" value="${wiring[id]?.bend||0}"></label></fieldset>`,async values=>{
+  requireSavedMission();const pins=Object.fromEntries(Object.keys(optionsFor(values.bus)).map(key=>[key,Number(values[key])]));
+  const result=await api('hardware/device',{id,bus:values.bus,address:values.address,pins,expected_hash:settings.source.hash});
+  wiring[id]={bend:Number(values.bend)};localStorage.setItem(wireStorageKey(),JSON.stringify(wiring));
+  await reloadMissionFiles(result.changed,result.deleted);
+  const restart=state.target==='qemu'&&state.hardware?.qemu?.running&&(device.bus!==values.bus||device.address!==Number(values.address));
+  feedback(restart?'Sensor connection saved · restart the emulator to apply':'Sensor connection saved');
  });
+ const form=$('#dialog-form');
+ form.elements.bus.onchange=()=>{form.querySelector('[data-pin-inputs]').innerHTML=pinInputs(form.elements.bus.value,Object.fromEntries(new FormData(form)));};
 }
 function sensorMenu(){
  const d=state.workspace.project.devices.find(d=>d.id===state.selectedDevice);if(!d)return;
  const readers=state.workspace.project.apps.flatMap(app=>Object.entries(app.sensors).filter(([,device])=>device===d.id).map(([name])=>({app:app.name,name,telemetry:Object.entries(app.telemetry_bindings).filter(([,sensor])=>sensor===name).map(([name])=>name)})));
- dialog(d.name,`<p>${esc(d.model)} · ${esc(d.bus)} · ${hex(d.address)}</p>${readers.length?`<p>Detach app readers before removing this device.</p>${readers.map(reader=>`<div class="settings-actions"><code>${esc(reader.app)} / ${esc(reader.name)}</code>${reader.telemetry.map(name=>button('Remove '+esc(name)+' telemetry',`data-remove="telemetry" data-app="${esc(reader.app)}" data-name="${esc(name)}"`)).join('')}${button('Remove reader',`data-remove="sensor" data-app="${esc(reader.app)}" data-name="${esc(reader.name)}" ${reader.telemetry.length?'disabled':''}`)}</div>`).join('')}`:''}<div class="settings-actions">${button('Open settings','data-file="project/config.json"')}${state.target==='qemu'?button('Reset all signals',`data-job="values" ${!state.hardware?.qemu?.running||state.jobs.some(job=>job.action==='simulate'&&job.status==='running')?'disabled title="Stop Python signals before resetting"':''}`):''}${button('Remove sensor',`data-remove="device" data-name="${esc(d.id)}" ${readers.length?'disabled':''}`)}</div>`);
+ dialog(d.name,`<p>${esc(d.model)} · ${esc(d.bus)} · ${hex(d.address)}</p>${readers.length?`<p>Detach app readers before removing this device.</p>${readers.map(reader=>`<div class="settings-actions"><code>${esc(reader.app)} / ${esc(reader.name)}</code>${reader.telemetry.map(name=>button(icon('trash')+' Remove '+esc(name)+' telemetry',`data-remove="telemetry" data-app="${esc(reader.app)}" data-name="${esc(name)}"`)).join('')}${button(icon('trash')+' Remove reader',`data-remove="sensor" data-app="${esc(reader.app)}" data-name="${esc(reader.name)}" ${reader.telemetry.length?'disabled':''}`)}</div>`).join('')}`:''}<div class="settings-actions">${button('Open settings','data-file="project/config.json"')}${state.target==='qemu'?button('Reset all signals',`data-job="values" ${!state.hardware?.qemu?.running||state.jobs.some(job=>job.action==='simulate'&&job.status==='running')?'disabled title="Stop Python signals before resetting"':''}`):''}${button(icon('trash')+' Remove sensor',`data-remove="device" data-name="${esc(d.id)}" ${readers.length?'disabled':''}`)}</div>`);
 }
 function ground(){return renderGround(state,{esc,hex,icon});}
 function renderView(){
  if(!state.workspace)return;
  const detailState=new Map([...(state.view==='architecture'?Object.entries(state.archDetails||{}):[]),...(document.body.dataset.view===state.view?[...$('#view').querySelectorAll('details[data-detail-key]')].map(d=>[d.dataset.detailKey,d.open]):[])]);
  const groundScroll=$('.gs-definition-list')?.scrollTop||0;
+ const previousCommand=$('#gs-command-form')?.dataset.commandId;
  const architectureScroll=$('.architecture-scroll')?.scrollTop||0;
  const paneScroll=[...document.querySelectorAll('.architecture-pane-content,.communication-browser>nav,.communication-message')].map(node=>({className:node.className,top:node.scrollTop}));
  const oldBoard=isWorkbench()&&document.body.dataset.view===state.view?$('#board-stage'):null;
@@ -375,31 +446,54 @@ function renderView(){
  document.body.dataset.view=state.view;
  document.body.classList.toggle('simulation-mode',state.view==='simulation');
  document.body.classList.toggle('simulation-widgets',state.view==='simulation');
- const html=({architecture,bench,communication:()=>renderCommunication(state,{esc,icon}),simulation:()=>renderSimulationBoard(state,{esc}),ground}[state.view])();
+ const html=({architecture,bench,simulation:()=>renderSimulationBoard(state,{esc}),ground}[state.view])();
  if(oldBoard && html.includes('id="board-stage"')){
   // Keep the canvas connected while hardware status and sensor settings refresh.
   const next=document.createElement('template');next.innerHTML=html;
   const shell=$('#view').firstElementChild,nextShell=next.content.firstElementChild;
   shell.className=nextShell.className;
-  shell.firstElementChild.replaceWith(nextShell.firstElementChild);
-  const nextStage=next.content.querySelector('#board-stage');
+  const canvas=oldBoard.parentElement,nextStage=next.content.querySelector('#board-stage');
+  for(const child of Array.from(shell.children))if(child!==canvas)child.remove();
+  canvas.before(...Array.from(nextShell.children).filter(el=>el!==nextStage.parentElement));
   while(oldBoard.nextElementSibling)oldBoard.nextElementSibling.remove();
   oldBoard.after(...Array.from(nextStage.parentElement.children).filter(el=>el!==nextStage));
  }else $('#view').innerHTML=html;
- $('#visual-heading').hidden=isWorkbench();
+ if(state.view==='bench')syncBenchActions();
+ $('#visual-heading').hidden=isWorkbench()||state.view==='ground';
  $('#visual-title').innerHTML=isWorkbench()?'':icon({architecture:'layers',ground:'antenna',communication:'link'}[state.view])+({architecture:'Architecture',ground:'Ground Station',communication:'Communication'}[state.view]);
  syncNavigation();
+ const guide=$('#source-guide');
+ guide.hidden=!document.body.classList.contains('code-only');
+ if(!guide.hidden)guide.innerHTML=renderSourceGuide(state,esc);
+ const tools = $('#source-tools');
+ tools.hidden = guide.hidden;
+ tools.innerHTML = guide.hidden ? '' : renderSourceTools(state,esc);
+ const trail = $('#command-trail');
+ const navigation = guide.hidden ? '' : renderCommandTrail(state,esc);
+ const testSurface=$('#source-test-surface');
+ const testContent=guide.hidden?'':renderCommandTest(state,esc);
+ testSurface.hidden=!testContent;testSurface.innerHTML=testContent;
+ trail.hidden = !navigation;
+ trail.innerHTML = navigation;
  if($('#board-stage')&&isWorkbench()&&(state.workspace.project.board||state.target==='native')){
   const native=state.target==='native';
-  const options={hostOS:state.hardware?.native?.os,board:native?'native':state.workspace.project.board,context:state.view,devices:native?[]:state.workspace.project.devices,pinAssignments:JSON.parse(localStorage.getItem(wireStorageKey())||"{}"),selected:state.inspected==='board'?'board':state.selectedDevice,onInspect:id=>{if(state.view!=='simulation'){state.inspected=id;renderView();}},onSelect:id=>guarded(async()=>{if(state.view==='simulation')await selectSimulationDevice(id);else{state.selectedDevice=id;state.inspected=id;renderView();}})()};
+  const options={hostOS:state.hardware?.native?.os,board:native?'native':state.workspace.project.board,headerPins:state.workspace.catalog.header_pins,context:state.view,devices:native?[]:state.workspace.project.devices,pinAssignments:diagramWiring(),selected:state.inspected==='board'?'board':state.selectedDevice,onInspect:id=>{if(state.view!=='simulation'){state.inspected=id;renderView();}},onSelect:id=>guarded(async()=>{if(state.view==='simulation')await selectSimulationDevice(id);else{state.selectedDevice=id;state.inspected=id;renderView();}})()};
   if(oldBoard&&boardRenderer)boardRenderer.update(options);
   else boardRenderer=mountBoard($('#board-stage'),options);
  }
  if(!$('#board-stage')&&boardRenderer){boardRenderer.destroy();boardRenderer=null;}
  if(state.view==='ground'){updateTelemetry();if($('.gs-definition-list'))$('.gs-definition-list').scrollTop=groundScroll;}
  if(!state.archQuery&&!state.archCategory)[...$('#view').querySelectorAll('details[data-detail-key]')].forEach(d=>{if(detailState.has(d.dataset.detailKey))d.open=detailState.get(d.dataset.detailKey);});
+ if(state.view==='ground' && previousCommand!==$('#gs-command-form')?.dataset.commandId){
+  const selected=$('.gs-definition[aria-pressed=true]');
+  if(selected){
+   selected.closest('details').open=true;
+   selected.scrollIntoView({block:'nearest',inline:'nearest'});
+  }
+ }
  paintIcons();
  renderSimulationPanel();
+ if(state.view==='simulation'){drawOrbit();updateSignalValues(state);}
  if($('.architecture-scroll'))$('.architecture-scroll').scrollTop=architectureScroll;
  document.querySelectorAll('.architecture-pane-content,.communication-browser>nav,.communication-message').forEach((node,index)=>{if(paneScroll[index]?.className===node.className)node.scrollTop=paneScroll[index].top;});
  layoutArchitecture(state);
@@ -412,7 +506,26 @@ function updateTelemetry(){
  const active=parent.contains(document.activeElement)?document.activeElement:null;
  const focusAttribute=['data-gs-activity','data-gs-packet'].find(key=>active?.hasAttribute(key));
  const focusSelector=focusAttribute?`[${focusAttribute}="${CSS.escape(active.getAttribute(focusAttribute))}"]`:active?.tagName==='SUMMARY'?`[data-detail-key="${CSS.escape(active.parentElement.dataset.detailKey||'')}"] > summary`:null;
- parent.innerHTML=renderTelemetry(state,{esc,hex,icon});
+ const route=$('#ground-route');
+ if(route){
+  const routeHTML=renderGroundRoute(state,{esc,hex,icon});
+  if(route._markup!==routeHTML && !route.querySelector('select:focus')){
+   const expanded=new Set(Array.from(route.querySelectorAll('details[open]'),d=>d.dataset.detailKey));
+   const position=route.querySelector('.system-traffic')?.scrollTop||0;
+   const journal=route.querySelector('.trip-journal>div')?.scrollTop||0;
+   route.innerHTML=routeHTML;route._markup=routeHTML;
+   for(const d of route.querySelectorAll('details'))d.open=expanded.has(d.dataset.detailKey);
+   if(route.querySelector('.system-traffic'))route.querySelector('.system-traffic').scrollTop=position;
+   if(route.querySelector('.trip-journal>div'))route.querySelector('.trip-journal>div').scrollTop=journal;
+  }
+  const send=$('#gs-command-form .gs-send');
+  if(send)send.disabled=!!(state.groundBusy||state.groundSending||state.catalogLoading||state.ground?.runs?.some(r=>r.status==='waiting'&&state.ground.target===state.target));
+ }
+ const markup=renderTelemetry(state,{esc,hex,icon});
+ if(parent._markup===markup)return;
+ const packetFocused=document.activeElement?.id==='ground-packet';
+ parent.innerHTML=markup;parent._markup=markup;
+ if(packetFocused)$('#ground-packet')?.focus({preventScroll:true});
  parent.querySelectorAll('details[data-detail-key]').forEach(d=>{if(opened.has(d.dataset.detailKey))d.open=opened.get(d.dataset.detailKey);});
  if(focusSelector)parent.querySelector(focusSelector)?.focus({preventScroll:true});
  parent.querySelectorAll('.gs-journal,.gs-telemetry-list,.gs-detail').forEach(node=>{const previous=scroll.get(node.className);if(previous){node.scrollTop=previous.top;node.scrollLeft=previous.left;}});
@@ -424,9 +537,44 @@ function dialog(title,body,submit,submitLabel='Apply') {
  $('#dialog-form').onsubmit=async e=>{e.preventDefault();if(!submit)return;const b=$('#dialog-form button[type=submit]');b.disabled=true;try{await submit(Object.fromEntries(new FormData(e.currentTarget)));$('#dialog').close();}catch(error){$('#dialog-error').textContent=error.message;}finally{b.disabled=false;}};
  $('#dialog').showModal();
 }
-function create(kind,app) {
+async function chooseSourceCommand(command) {
+ state.sourceCommand=command;
+ const ctx=commandContext(state);if(!ctx)return;
+ state.sourceStep={app:ctx.app.name,command,index:0};
+ const ref=ctx.refs[0][0];
+ if(ref)await openFile(ref.path,ref.line);
+ else renderView();
+}
+
+function newCodeCommand(preferred) {
+ const revision=state.workspace.mission.source.hash;
+ const apps = state.workspace.apps.filter(app => app.managed);
+ if (!apps.length) return;
+ const choices = apps.map(app => `<option value="${esc(app.name)}" ${app.name===preferred?'selected':''}>${esc(app.name)}</option>`).join('');
+ const body = '<label>Mission app<select name="app" required>'+choices+'</select></label>'+field('name','Command name');
+ dialog('New command', body, async ({app,name}) => {
+  requireSavedMission();
+  const result = await api('mutate',{expected_hash:revision,action:'add-command',payload:{app,name}});
+  await reloadMissionFiles(result.changed,result.deleted);
+  const current = state.workspace.apps.find(item => item.name===app);
+  const id = app.toUpperCase()+'_'+name.toUpperCase()+'_CC';
+  const route = current?.behavior?.details?.commands.find(item => item.handlers.some(entry => entry.cc?.symbol===id));
+  const handler = route?.handlers.find(item => item.cc?.symbol===id)?.handler;
+  const path = handler?.path || result.changed.find(path => path.endsWith('/'+app+'_'+name+'_cmd.c'));
+  state.sourceCommand=id+'/'+(route?.mid?.value ?? '');
+  state.commandTask={app,id};
+  state.catalogTarget=null;
+  await selectView('code',path,handler?.line || 1);
+ }, 'Create command');
+}
+function create(kind,app,preferredBus) {
+ const revision=state.workspace.mission.source.hash;
  const w=state.workspace,m=w.apps.find(a=>a.name===app)?.manifest;
- const labels={app:'app',device:'QEMU device',sensor:'sensor reader',command:'command',telemetry:'telemetry'};
+ if(kind==='device'&&!Object.keys(w.catalog.buses).length){
+  if(state.target==='native')return;
+  busDialog(w,hardwareActions());return;
+ }
+ const labels={app:'app',device:'sensor',sensor:'sensor reader',command:'command',telemetry:'telemetry'};
  let body=kind==='device'?field('model','Model',Object.entries(w.catalog.models).map(([id,d])=>({value:id,label:id+(d.cfs_driver?'':' · no cFS driver')+(!d.can_add?' · configuration not validated':''),disabled:!d.can_add})))+field('id','Device ID')+field('bus','Bus',Object.entries(w.catalog.buses).map(([value,bus])=>({value,label:value+' · '+bus.device})))+'<label>I²C address<input name="address" required pattern="(0[xX][0-9a-fA-F]+|[0-9]+)"></label>':kind==='sensor'?'':field('name','Name');
  if(kind==='sensor'){
   const attached=w.project.apps.find(item=>item.name===app)?.sensors||{};
@@ -442,7 +590,13 @@ function create(kind,app) {
   return;
  }
  if(kind==='device')body+='<button type="button" data-design-sensor>Create a new I²C model</button>';
- dialog(kind==='sensor'?'Add sensor to '+app:'Add '+labels[kind],body,async values=>{requireSavedMission();const result=await api('mutate',{action:'add-'+kind,payload:{...values,...(app?{app}:{})}});await reloadMissionFiles(result.changed,result.deleted);feedback('Files created · build to apply');});
+ dialog(kind==='sensor'?'Add sensor to '+app:'Add '+labels[kind],body,async values=>{requireSavedMission();const result=await api('mutate',{expected_hash:revision,action:'add-'+kind,payload:{...values,...(app?{app}:{})}});if(kind==='device'){state.selectedDevice=values.id;state.inspected=values.id;}
+ await reloadMissionFiles(result.changed,result.deleted);
+ if(kind==='app' && document.body.classList.contains('code-only')){
+  const module=state.workspace.apps.find(item=>item.name===values.name && item.managed);
+  if(module?.entry)await openFile(module.entry);
+ }
+ if(kind!=='device')feedback('Files created · build to apply');});
  if(kind==='sensor'){
   const select=$('#dialog-body [name=device]'),reader=$('#dialog-body [name=name]');
   const setReaderName=()=>{reader.value=select.value;};
@@ -452,6 +606,7 @@ function create(kind,app) {
   const model=$('#dialog-body [name=model]');
   const defaults=()=>{let id=model.value,index=2;while(w.project.devices.some(d=>d.id===id))id=model.value+'_'+index++;$('#dialog-body [name=id]').value=id;$('#dialog-body [name=address]').value=hex(w.catalog.models[model.value].default_address);};
   const bus=$('#dialog-body [name=bus]'),address=$('#dialog-body [name=address]');
+  if(preferredBus && Object.hasOwn(w.catalog.buses,preferredBus))bus.value=preferredBus;
   const occupied=value=>w.project.devices.some(device=>device.bus===bus.value && device.address===Number(value));
   const checkAddress=()=>address.setCustomValidity(occupied(address.value)?'This address is in use on the selected bus. Choose the address configured on your sensor.':'');
   const unused=Object.entries(w.catalog.models).find(([,details])=>details.can_add&&!occupied(details.default_address));
@@ -461,7 +616,8 @@ function create(kind,app) {
  }
 }
 function remove(kind,app,name) {
- dialog('Remove '+(name||app),`<p>Remove ${kind==='device'?'the device and its unused generated drivers':'the source files for'} <strong>${esc(name||app)}</strong>? Build and run to apply.</p>`,async()=>{requireSavedMission();const result=await api('mutate',{action:'remove-'+kind,payload:kind==='device'?{id:name}:{app,name}});await reloadMissionFiles(result.changed,result.deleted);feedback('Removed from project');});
+ const revision=state.workspace.mission.source.hash;
+ dialog('Remove '+(name||app),`<p>Remove ${kind==='device'?'the device and its unused generated drivers':'the source files for'} <strong>${esc(name||app)}</strong>? Build and run to apply.</p>`,async()=>{requireSavedMission();const result=await api('mutate',{expected_hash:revision,action:'remove-'+kind,payload:kind==='device'?{id:name}:{app,name}});await reloadMissionFiles(result.changed,result.deleted);feedback('Removed from project');});
 }
 function connect() {
  const current=state.hardware?.physical?.connection||{};
@@ -531,7 +687,6 @@ function updateGround(snapshot){
  const previous=state.ground;
  state.ground=snapshot;
  if(snapshot.connected&&snapshot.target===state.target)state.groundError='';
- if(communicationVisible()){if(!previous||JSON.stringify(previous.communication)!==JSON.stringify(snapshot.communication)||previous.connected!==snapshot.connected||previous.receiving!==snapshot.receiving||previous.error!==snapshot.error)renderView();return;}
  if(state.view!=='ground')return;
  if(!previous||['connected','target','error'].some(key=>previous[key]!==snapshot[key])||JSON.stringify(previous.subscription_errors)!==JSON.stringify(snapshot.subscription_errors))renderView();else updateTelemetry();
 }
@@ -540,15 +695,17 @@ async function groundRefresh(){
  const target=state.target;
  state.catalogLoading=true;state.groundError='';if(state.view==='ground')renderView();
  try{
-  const [catalog,ground]=await Promise.all([api('ground/catalog?target='+target),api('ground')]);
+  const [catalog,ground,plans]=await Promise.all([api('ground/catalog?target='+target),api('ground'),api('ground/tests')]);
   if(target!==state.target)return;
-  state.catalog=catalog;state.catalogTarget=target;state.ground=ground;
+  state.catalog=catalog;state.catalogTarget=target;state.ground=ground;state.testPlans=plans;
+  const running=ground.target===target && ground.runs?.find(run=>run.status==='waiting');
+  if(running && !state.groundSelection && !state.groundApp)state.groundSelection=running.command;
   const apps=new Set([...(catalog.apps||[]).map(app=>app.name),...[...catalog.commands,...catalog.packets].map(item=>item.app)]);
   if(state.groundApp&&!apps.has(state.groundApp))state.groundApp='';
  }catch(error){state.groundError=error.message;throw error;}
  finally{
   state.catalogLoading=false;
-  if(state.view==='ground'||communicationVisible()){renderView();if(target!==state.target)groundRefresh().catch(e=>feedback(e.message,true));}
+  if(state.view==='ground'){renderView();if(target!==state.target)groundRefresh().catch(e=>feedback(e.message,true));}
  }
 }
 async function groundConnection(connect){
@@ -559,9 +716,12 @@ async function groundConnection(connect){
   updateGround(connect?snapshot:{...snapshot,target:state.ground?.target});
   feedback(connect?'Ground Station connected':'Ground Station disconnected');
  }catch(error){state.groundError=error.message;throw error;}
- finally{state.groundBusy=false;if(state.view==='ground'||communicationVisible())renderView();}
+ finally{state.groundBusy=false;if(state.view==='ground')renderView();}
 }
 let groundPolling=false;
+document.addEventListener('visibilitychange',()=>{
+ if(!document.hidden && state.view==='ground' && state.workspace)pollGround().catch(error=>feedback(error.message,true));
+});
 async function pollGround(){
  if(groundPolling)return;groundPolling=true;
  try{updateGround(await api('ground'));}finally{groundPolling=false;}
@@ -585,8 +745,10 @@ async function sendGroundCommand(id,values){
  try{
   if(!state.ground?.connected||state.ground.target!==target)await groundConnection(true);
   if(target!==state.target)throw Error('Target changed before sending. Select the command again.');
-  await api('ground/send',{command_id:cmd.id,values,target});
-  await pollGround();feedback('Command sent · check telemetry for the response');
+  const test=planFor(state,cmd);
+  state.inspectedSend=null;
+  await api('ground/send',{command_id:cmd.id,values,target,test_id:test?.id});
+  await pollGround();
  }finally{state.groundSending=false;renderView();}
 }
 document.addEventListener('input',event=>{
@@ -599,7 +761,9 @@ document.addEventListener('submit',async event=>{
  catch(error){state.groundError=error.message;renderView();}
 });
 
-async function selectView(view){
+async function selectView(view,sourceFile,sourceLine,inspection=null){
+ if(view==='communication'){view='ground';state.groundMode='system';}
+ if(view!==state.view && state.groundError){state.groundError='';feedback('');}
  const codeOnly=view==='code',next=codeOnly?'architecture':view,previous=state.view;
  const changedRoot=(previous==='simulation')!==(next==='simulation');
  document.body.classList.toggle('code-only',codeOnly);state.view=next;state.inspected=null;
@@ -607,25 +771,77 @@ async function selectView(view){
  document.body.classList.toggle('no-editor',!codeOnly);
  document.body.classList.toggle('no-tree',!codeOnly);
  if(next==='simulation'){
+  if(state.signalSidebar==null)state.signalSidebar=window.innerWidth>760;
   state.selectedDevice=null;
   if(!state.simulation||!state.simulationDirty)await refreshSimulation();
  }else if(codeOnly){
   await renderTree();
-  await openFile(lastFiles.get('flight')||state.workspace.mission.source.path,undefined,false);
+  const first = state.workspace.apps.find(app => app.managed) || state.workspace.apps.find(app => app.name === 'sample_app');
+  await openFile(sourceFile || lastFiles.get('flight') || first?.entry || state.workspace.mission.source.path,sourceLine,true,inspection);
  }
  if(next==='simulation'){
   terminal.selectContext('simulation',{reveal:false});
   if(previous!==next)terminal.show(false);
  }else terminal.selectContext('flight',{reveal:previous==='simulation'});
  renderView();renderToolbar();
- if(isWorkbench())await hardwareRefresh();if(next==='ground'||communicationVisible())await groundRefresh();if(communicationVisible())await pollGround();
+ if(isWorkbench())await hardwareRefresh();if(next==='ground')await groundRefresh();
 }
-$('#code').addEventListener('input',()=>{if(state.path){state.files.get(state.path).content=$('#code').value;lineNumbers();renderTabs();}});
+function openGroundRoute(app,command=null){
+ Object.assign(state,{groundApp:app,groundSelection:command,groundQuery:'',groundTab:'commands',
+                      groundMode:'trip',groundPane:'route',groundPacket:null,inspectedSend:null});
+ return selectView('ground');
+}
+attachTagPicker($('#code'), () => state.path || '');
+let guideTimer;
+$('#code').addEventListener('input', () => {
+ if (!state.path) return;
+ state.jumpLine=false;
+ state.files.get(state.path).content = $('#code').value;
+ lineNumbers();
+ renderTabs();
+ clearTimeout(guideTimer);
+ guideTimer = setTimeout(() => {
+   const guide = $('#source-guide');
+   if (!guide.hidden) guide.innerHTML = renderSourceGuide(state,esc);
+ }, 180);
+});
+function positionSourceTags(){
+ const dialog=$('#source-inspector-dialog'),button=$('[data-source-tab="source"]');
+ if(!button || !dialog.open || dialog.dataset.kind!=='source')return;
+ const rect=button.getBoundingClientRect();
+ dialog.style.setProperty('--tag-left',Math.max(8,Math.min(innerWidth-dialog.offsetWidth-8,rect.right-dialog.offsetWidth))+'px');
+ dialog.style.setProperty('--tag-top',Math.min(rect.bottom+4,Math.max(8,innerHeight-152))+'px');
+}
+window.addEventListener('resize',positionSourceTags);
+$('#source-inspector-dialog').addEventListener('click',e=>{
+ if(e.target!==e.currentTarget)return;
+ const r=e.currentTarget.getBoundingClientRect();
+ if(e.clientX<r.left || e.clientX>r.right || e.clientY<r.top || e.clientY>r.bottom)e.currentTarget.close();
+});
+function inspectCursorCommand() {
+ const editor=$('#code'),file=state.files.get(state.path);
+ if(!document.body.classList.contains('code-only') || !file || file.content!==file.saved || editor.selectionStart!==editor.selectionEnd)return;
+ const line=editor.value.slice(0,editor.selectionStart).split('\n').length;
+ if(!syncCommandToFile(state,line))return;
+ state.activeLine=line;state.jumpLine=true;
+ syncScroll();
+ $('#source-guide').innerHTML=renderSourceGuide(state,esc);
+ $('#command-trail').innerHTML=renderCommandTrail(state,esc);
+}
+$('#code').addEventListener('click',inspectCursorCommand);
+$('#code').addEventListener('keyup',e=>{if(['ArrowUp','ArrowDown','Home','End','PageUp','PageDown'].includes(e.key))inspectCursorCommand();});
 $('#code').addEventListener('scroll',syncScroll);
+$('#code').addEventListener('pointerdown',() => {state.jumpLine=false;syncScroll();});
 $('#code').addEventListener('keydown',e=>{if(e.key==='Tab'&&!e.target.readOnly){e.preventDefault();const t=e.target,s=t.selectionStart;t.setRangeText('    ',s,t.selectionEnd,'end');t.dispatchEvent(new Event('input'));}});
 document.addEventListener('input',e=>{if(e.target.id==='architecture-search'){state.archQuery=e.target.value;const caret=e.target.selectionStart;renderView();$('#architecture-search')?.focus();try{$('#architecture-search')?.setSelectionRange(caret,caret);}catch{}}if(e.target.id==='gs-search'){state.groundQuery=e.target.value;renderView();$('#gs-search')?.focus();}});
 document.addEventListener('toggle',e=>{if(e.target.matches('details[data-detail-key]')&&e.target.closest('.architecture-surface')){state.archDetails||={};state.archDetails[e.target.dataset.detailKey]=e.target.open;}},true);
 document.addEventListener('change',e=>{
+ if(e.target.matches('[data-guide-command]'))guarded(()=>chooseSourceCommand(e.target.value))();
+ if(e.target.id==='trip-test'){
+  const cmd=$('#gs-command-form')?.dataset.commandId;
+  if(cmd){state.selectedTests??={};state.selectedTests[cmd]=e.target.value;state.inspectedSend=null;renderView();}
+ }
+ if(e.target.id==='ground-packet'){state.groundPacket=Number(e.target.value);updateTelemetry();}
  if(e.target.id==='ground-app'){state.groundApp=e.target.value;state.groundSelection=null;state.groundPacket=null;state.groundQuery='';renderView();}
  });
 document.addEventListener('submit',event=>{
@@ -741,7 +957,7 @@ async function configureProfile(){
 async function selectTarget(target){
  await api('hardware/target',{target});
  state.target=target;state.catalog=null;state.catalogTarget=null;state.groundError='';state.groundSelection=null;state.groundPacket=null;
- renderToolbar();selectTargetTerminal();await hardwareRefresh();renderView();if(state.view==='ground'||communicationVisible())await groundRefresh();
+ renderToolbar();selectTargetTerminal();await hardwareRefresh();renderView();if(state.view==='ground')await groundRefresh();
 }
 $('#toggle-editor').onclick=()=>{document.body.classList.toggle('no-editor');renderView();};
 $('#close-dialog').onclick=$('#cancel-dialog').onclick=()=>$('#dialog').close();
@@ -752,13 +968,23 @@ function findNext(){const query=$('#find-query').value;if(!query)return;const ed
 $('#find-toggle').onclick=openFind;$('#find-close').onclick=()=>$('#find-bar').classList.add('hidden');$('#find-next').onclick=findNext;$('#find-query').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();findNext();}if(e.key==='Escape')$('#find-bar').classList.add('hidden');};
 $('#editor-expand').onclick=()=>{document.body.classList.toggle('code-only');document.body.classList.remove('no-editor');renderView();};
 paintIcons();
+document.addEventListener('keydown',event=>{
+ if(event.target.matches('.stack-pick')&&['Enter',' '].includes(event.key)){
+  event.preventDefault();event.target.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+ }
+});
+mountOrbit({state,api,error:message=>feedback(message,true),refresh:()=>renderSimulationPanel(true),changed:refresh=>{
+ state.simulationDirty=true;
+ if(refresh)renderSimulationPanel(true);
+ const save=document.querySelector('#simulation-form [data-simulation-save]');if(save)save.disabled=false;
+}});
 const layout=mountLayout();
 mountSidebar();
 const terminal=mountTerminal({state,esc,layout,api,onStream:openLiveLogs,onCloseJob:job=>api('job/cancel',{id:job.id}),onError:e=>feedback(e.message,true)});
 $('#operation-output').onclick=()=>{const job=operation();if(job?.id)terminal.open(job.id);terminal.show();};
 setInterval(renderProgress,1000);
 document.addEventListener('click',guarded(async e=>{
- const b=e.target.closest('button');if(!b||b.disabled)return;
+ const b=e.target.closest('button,.stack-pick[role=button]');if(!b||b.disabled)return;
  const d=b.dataset;
  if('archFollow' in d){
   state.archFollowSource=!state.archFollowSource;
@@ -781,6 +1007,7 @@ document.addEventListener('click',guarded(async e=>{
   await openFile(source.path,source.line,true,source);
  }
  else if('chooseBoard' in d){$('#board-select').click();}
+ else if(d.modelDefinition){await selectView('code',d.modelDefinition);}
  else if(d.file){state.inspected=null;$('#dialog').close();await openFile(d.file,Number(d.line)||undefined);}
  else if(d.view){if($('#dialog').open)$('#dialog').close();await selectView(d.view);if(d.device)state.selectedDevice=d.device;if(d.inspect){state.inspected=d.inspect;renderView();}}
  else if(d.closeFile){await saveFile(d.closeFile);state.files.delete(d.closeFile);if(state.path===d.closeFile){const next=[...state.files.keys()].at(-1);state.path=null;if(next)await openFile(next);else{$('#code').value='';$('#code').disabled=true;lineNumbers();}}renderTabs();}
@@ -795,12 +1022,21 @@ document.addEventListener('click',guarded(async e=>{
   $('.architecture-scroll')?.scrollTo(0,0);
  }
  else if('archClear' in d){state.archApp='';state.archLibrary='';state.archFollowSource=false;document.body.classList.add('no-editor','no-tree');renderView();}
+ else if(d.signalPreviewDevice){if(state.simulationDirty)await saveSimulation();await startJob('simulate-preview',{device:d.signalPreviewDevice});terminal.selectContext('simulation',{reveal:false});}
+ else if('signalBegin' in d)await startSimulation();
+ else if('signalPage' in d){state.signalPage=Math.max(0,Number(d.signalPage));renderView();}
+ else if('seriesChannel' in d){selectSeries(d.seriesId,d.seriesChannel);renderView();}
+ else if(d.signalView){state.signalView=d.signalView;renderView();}
+ else if('signalOrbit' in d){state.signalView='signals';state.selectedDevice=null;state.signalSidebar=true;renderView();}
+ else if(d.signalSource){await selectView('code',d.signalSource);}
+ else if('runSignalTest' in d){await testSimulation();}
  else if(d.signalTab){state.signalOutput=d.signalTab;renderSimulationPanel(true);updateSignalValues(state);}
  else if('signalSidebar' in d){state.signalSidebar=state.signalSidebar===false;renderView();}
  else if(d.signalDevice){await selectSimulationDevice(d.signalDevice);}
  else if('signalHardware' in d){
   await selectView('bench');
-  if(state.workspace.project.board)create('device');
+  if(state.target==='native')return;
+  if(state.workspace.project.board){if(Object.keys(state.workspace.catalog.buses||{}).length)create('device');else document.querySelector('[data-add-bus]')?.click();}
   else location.href='/infrastructure?target=qemu';
  }
  else if('backSensors' in d){state.selectedDevice=null;renderView();}
@@ -812,6 +1048,65 @@ document.addEventListener('click',guarded(async e=>{
  else if(d.simulationDevice)await selectSimulationDevice(d.simulationDevice);
  else if(d.simulationAdd)addSimulationSensor(d.simulationAdd);
  else if(d.simulationRemove){if(!simulationJob()){state.simulation.settings.sensors=state.simulation.settings.sensors.filter(sensor=>sensor.device!==d.simulationRemove);state.simulationDirty=true;renderView();}}
+ else if ('dismissCommand' in d) {state.commandTask=null;renderView();}
+ else if ('commandTest' in d) {
+  const ctx=commandContext(state);if(!ctx)return;
+  const app=ctx.app.name,id=ctx.selected.id;
+  const target=state.target;
+  if (!state.workspace.builds?.[target]?.current) {
+   feedback('Build cFS to load '+id+' in Ground Station.');
+   return;
+  }
+  await groundRefresh();
+  if (state.target!==target) return;
+  if (state.catalogTarget!==target || !state.catalog?.commands?.some(command=>command.app===app&&command.id===id)) {
+   feedback(id+' is missing from the compiled command catalog.',true);
+   return;
+  }
+  await openGroundRoute(app,id);
+ }
+ else if ('codeCommand' in d) newCodeCommand(d.codeCommand);
+ else if(d.selectSourceCommand){await chooseSourceCommand(d.selectSourceCommand);}
+ else if('guideStep' in d || 'stepMove' in d){
+  const ctx=commandContext(state);if(!ctx)return;
+  const index=Number(d.guideStep??d.stepMove),command=ctx.selected.id+'/'+(ctx.selected.route?.mid?.value??ctx.selected.packet?.mid??'');
+  state.sourceCommand=command;
+  state.sourceStep={app:ctx.app.name,command,index};
+  const ref=ctx.refs[index]?.[0];
+  if(ref)await openFile(ref.path,ref.line);
+  if(index===6){
+   const snapshot=await api('ground');
+   if(state.sourceStep?.command!==command || state.sourceStep?.index!==index)return;
+   state.ground=snapshot;
+  }
+  state.sourceStep={app:ctx.app.name,command,index};
+  renderView();
+  document.querySelector('[data-guide-step="'+index+'"]')?.focus({preventScroll:true});
+ }
+ else if('closeInspector' in d){$('#source-inspector-dialog').close();}
+ else if(d.sourceTab){
+  const kind=d.sourceTab;
+  const content=()=>{const dialog=renderInspectorDialog(state,kind,esc);$('#source-inspector-dialog').dataset.kind=kind;$('#source-inspector-title').textContent=dialog.title;$('#source-inspector-dialog .guide-body').innerHTML=dialog.body;};
+  content();
+  if(!$('#source-inspector-dialog').open)$('#source-inspector-dialog').showModal();
+  positionSourceTags();
+  const build=state.workspace.builds?.[state.target];
+  if(kind==='packet' && build?.current && (state.catalogTarget!==state.target || state.catalog?.build_fingerprint!==build.fingerprint)){
+   try{await groundRefresh();if($('#source-inspector-dialog').open)content();}catch(error){feedback(error.message,true);}
+  }
+ }
+ else if(d.sourceJump){
+  if($('#source-inspector-dialog').open)$('#source-inspector-dialog').close();
+  await openFile(d.sourceJump,Number(d.line)||1);
+ }
+ else if(d.mapCode){await selectView('code',d.mapCode);}
+ else if(d.mapGround||d.workbenchGround)await openGroundRoute(d.mapGround||d.workbenchGround);
+ else if(d.mapSection){
+  state.mapSection=d.mapSection;state.mapMode='2d';renderView();
+  const group=$('.map-group-'+d.mapSection)||$('.map-'+d.mapSection);
+  (group?.querySelector('.cad-flat-selected button') || group?.querySelector('button:not(:disabled)'))?.focus({preventScroll:true});
+ }
+ else if(d.mapMode){state.mapMode=d.mapMode;renderView();}
  else if('toggleLibraries' in d){
   state.showLibraries=!state.showLibraries;
   localStorage.setItem('mission.showLibraries',String(state.showLibraries));
@@ -825,6 +1120,14 @@ document.addEventListener('click',guarded(async e=>{
  else if('missionDraftCancel' in d){state.missionDraft=null;state.missionError='';renderView();}
  else if('missionErrorClose' in d){state.missionError='';renderView();}
  else if('expandPanel' in d){document.body.classList.toggle('no-editor');renderView();}
+ else if(d.inspectSend){state.inspectedSend=Number(d.inspectSend);updateTelemetry();}
+ else if(d.groundMode){state.groundMode=d.groundMode;renderView();}
+ else if(d.groundPane){state.groundPane=d.groundPane;renderView();}
+ else if(d.systemTraffic){state.systemTraffic=d.systemTraffic;renderView();}
+ else if(d.openTripCommand){state.groundSelection=d.openTripCommand;state.groundMode='trip';state.groundApp='';state.groundQuery='';renderView();}
+ else if(d.systemPacket){state.groundApp='';state.groundPacket=Number(d.systemPacket);state.groundPane='telemetry';renderView();}
+ else if(d.editTrip){if(!state.testPlans)await groundRefresh();editTrip(state,d.editTrip,d.testId,{api,dialog,esc,icon,refresh:renderView});}
+ else if(d.stopTrip){await api('ground/tests/cancel',{id:Number(d.stopTrip),session:state.ground.communication.since,target:state.target});await pollGround();}
  else if(d.commApp){
   state.commApp=state.commApp===d.commApp?null:d.commApp;
   renderView();
@@ -833,11 +1136,24 @@ document.addEventListener('click',guarded(async e=>{
  else if(d.gsSource){await inspectGroundSource(d.sourceKind,d.gsSource,d.sourceSection);}
  else if(d.gsTab){state.groundTab=d.gsTab;state.groundQuery='';renderView();}
  else if(d.gsActivity){state.groundActivity=d.gsActivity;renderView();}
- else if(d.gsSelect){state.groundSelection=d.gsSelect;renderView();}
+ else if(d.gsSelect){state.groundSelection=d.gsSelect;state.groundMode='trip';state.groundPane='route';state.groundPacket=null;renderView();}
  else if(d.gsPacket){state.groundPacket=Number(d.gsPacket);updateTelemetry();}
  else if(d.device){state.selectedDevice=d.device;renderView();}
  else if(d.simulationFile){await selectView('simulation');await openFile(d.simulationFile);}
  else if('sensorMenu' in d)sensorMenu();
+ else if('addBus' in d || d.linkHal){
+  if(state.target==='native')return;
+  if(state.view!=='bench')await selectView('bench');
+  if(d.linkHal){state.selectedDevice=d.linkHal;state.inspected=d.linkHal;renderView();halDialog(state.workspace,d.linkHal,hardwareActions());}
+  else busDialog(state.workspace,hardwareActions());
+ }
+ else if(d.removeBus){
+  const actions=hardwareActions();
+  dialog('Remove bus',`<code>${esc(d.removeBus)}</code>`,()=>actions.save('remove-bus',{bus:d.removeBus}),'Remove bus');
+ }
+ else if(d.hardwareSource){
+  await selectView('code',d.hardwareSource,Number(d.line)||1);
+ }
  else if(d.hardwareSettings)await hardwareSettings(d.hardwareSettings);
  else if(d.inspect){state.inspected=d.inspect;renderView();}
  else if('closeInspection' in d){state.inspected=null;renderView();}
@@ -846,7 +1162,10 @@ document.addEventListener('click',guarded(async e=>{
  else if('designSensor' in d){$('#dialog').close();designSensor({dialog,api,refresh,feedback});}
  else if(d.testModel)await startJob('model-test',{device:d.testModel});
  else if(d.testDevice)await startJob('sensor-test',{device:d.testDevice});
- else if(d.create)create(d.create,d.app);
+ else if(d.workbenchJob){
+  document.querySelector('.top-actions .'+d.workbenchJob+'-action')?.click();
+ }
+ else if(d.create)create(d.create,d.app,d.preferredBus);
  else if(d.remove)remove(d.remove,d.app,d.name);
  else if('connect' in d)connect();
  else if('copySetup' in d){await navigator.clipboard.writeText(state.hardware.physical.last_probe.admin_setup_command);feedback('Command copied');}
@@ -864,12 +1183,12 @@ document.addEventListener('click',guarded(async e=>{
  await refresh(true);
  selectTargetTerminal();
 }catch(e){feedback(e.message,true);}})();
-setInterval(()=>{if(document.hidden||!state.workspace)return;pollJobs().catch(e=>feedback(e.message,true));if(state.view==='ground'||communicationVisible())pollGround().catch(e=>feedback(e.message,true));},1500);
+setInterval(()=>{if(document.hidden||!state.workspace)return;pollJobs().catch(e=>feedback(e.message,true));if(state.view==='ground')pollGround().catch(e=>feedback(e.message,true));},1500);
 setInterval(()=>{if(!document.hidden){if(state.workspace&&!state.missionBusy&&!state.profileBusy)refresh().catch(e=>feedback(e.message,true));if(isWorkbench())hardwareRefresh().catch(e=>feedback(e.message,true));}},15000);
 
 function syncNavigation(){
  const onlyCode=document.body.classList.contains('code-only');
- const active={communication:!onlyCode&&communicationVisible(),code:onlyCode,bench:!onlyCode&&state.view==='bench',simulation:!onlyCode&&state.view==='simulation',architecture:!onlyCode&&state.view==='architecture',ground:!onlyCode&&state.view==='ground'};
+ const active={code:onlyCode,bench:!onlyCode&&state.view==='bench',simulation:!onlyCode&&state.view==='simulation',architecture:!onlyCode&&state.view==='architecture',ground:!onlyCode&&state.view==='ground'};
  document.querySelectorAll('.rail-button[data-view]').forEach(button=>{const visible=!!active[button.dataset.view];button.classList.toggle('active',visible);button.setAttribute('aria-pressed',String(visible));});
 }
 new MutationObserver(syncNavigation).observe(document.body,{attributes:true,attributeFilter:['class']});
@@ -899,9 +1218,8 @@ let sourceRequest=0;
 async function inspectGroundSource(kind,id,section=''){
  const request=++sourceRequest,target=state.target;
  const source=await api('ground/source?'+new URLSearchParams({kind,id,section,target}));
- if(request!==sourceRequest||target!==state.target||state.view!=='ground'&&!communicationVisible())return;
- if(state.view==='ground')await selectView('code');
- await openFile(source.path,source.line,true,{...source,definitionId:id,definitionKind:kind});
+ if(request!==sourceRequest||target!==state.target||state.view!=='ground')return;
+ await selectView('code',source.path,source.line,{...source,definitionId:id,definitionKind:kind});
 }
 
 setInterval(()=>{if(!document.hidden && state.view==='simulation')updateSignalValues(state);},180);

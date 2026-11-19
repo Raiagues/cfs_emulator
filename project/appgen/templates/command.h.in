@@ -9,7 +9,7 @@
 
 typedef struct
 {
-    /* APPGEN: USER command.@NAME@.payload */
+    /* @studio.edit command.@NAME@.payload */
     uint32 Value;
 } @PREFIX@_@ENTITY@_Payload_t;
 

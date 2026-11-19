@@ -1,12 +1,13 @@
 """Render the sample_app-style C files in memory."""
 
 from pathlib import Path
-import json
+from project.sensor_driver import app_adapter
+from project.appgen.source_tags import region
 import re
 
 
 TEMPLATES = Path(__file__).with_name("templates")
-ADAPTERS = Path(__file__).resolve().parents[1] / "adapters"
+SLOT = re.compile(r"^/\* @studio\.slot ([a-z][a-z0-9_.-]*) \*/\n(.*?)^/\* @studio\.endslot \*/\n", re.M | re.S)
 
 
 def entity_name(name):
@@ -42,6 +43,9 @@ def render_app(manifest, root=None):
         tokens.update(extra or {})
         for key, value in tokens.items():
             text = text.replace(f"@{key}@", str(value))
+        text = SLOT.sub(lambda m: region(m[1], m[2]) if manifest["schema_version"] == 2 else m[2], text)
+        if "@studio.slot" in text or "@studio.endslot" in text:
+            raise ValueError(f"Unmatched region in {template}")
         unresolved = re.findall(r"@[A-Z][A-Z0-9_]*@", text)
         if unresolved:
             raise ValueError(f"Unresolved template tokens in {template}: {', '.join(unresolved)}")
@@ -101,19 +105,17 @@ def render_app(manifest, root=None):
             "VALUE_EVENT": "",
         }
         stem = f"fsw/src/sensors/{app}_{name}_sensor"
-        emit("sensor_cfg.h.in", stem + "_cfg.h", True, extra)
+        emit("hal_sensor/sensor_cfg.h.in", stem + "_cfg.h", True, extra)
         if sensor["driver"] != "custom":
-            adapter_path = ADAPTERS / sensor["driver"]
-            adapter = json.loads((adapter_path / "adapter.json").read_text())
-            dependencies.add(adapter["library"])
-            tokens = {**adapter["tokens"], "READ_VALUE": (adapter_path / "read.c.in").read_text(),
-                      "VALUE_EVENT": (adapter_path / "event.c.in").read_text()}
-            for key, content in tokens.items():
+            project_root = Path(root).parent if root else TEMPLATES.parents[2]
+            adapter = app_adapter(project_root, sensor["driver"])
+            dependencies.update(adapter.get("dependencies", [adapter["library"]]))
+            for key, content in adapter["tokens"].items():
                 for token, value in {**values, **extra}.items():
                     content = content.replace(f"@{token}@", str(value))
                 extra[key] = content
-        emit("sensor.h.in", stem + ".h", False, extra)
-        emit("sensor.c.in", stem + ".c", False, extra)
+        emit("hal_sensor/sensor.h.in", stem + ".h", False, extra)
+        emit("hal_sensor/sensor.c.in", stem + ".c", False, extra)
         sources.append(stem + ".c")
         component_includes.append(f'#include "sensors/{app}_{name}_sensor.h"')
         component_init.append(f"    {prefix}_{entity}_Init();")
@@ -145,18 +147,22 @@ def render_app(manifest, root=None):
         "DEPENDENCIES": "\n".join(f"add_cfe_app_dependency({app} {dependency})" for dependency in sorted(dependencies)),
     })
 
-    for suffix in ("", "_cmds", "_dispatch", "_components"):
+    from_sample = manifest["schema_version"] == 2
+    for suffix in (("_components",) if from_sample else ("", "_cmds", "_dispatch", "_components")):
         for extension in ("c", "h"):
             emit(f"app{suffix}.{extension}.in", f"fsw/src/{app}{suffix}.{extension}")
     for extension in ("c", "h"):
         emit(f"app_user.{extension}.in", f"fsw/src/{app}_user.{extension}", False)
-    for suffix in ("msg", "msgdefs", "msgstruct", "mission_cfg", "platform_cfg", "msgids", "perfids", "fcncode_values"):
+    for suffix in ("msgids", "perfids"):
+        emit(f"app_{suffix}.h.in", f"config/default_{app}_{suffix}.h")
+    if from_sample:
+        from project.appgen.sample import extend_app
+        return extend_app(root or TEMPLATES.parents[2] / "mission", manifest, result, values)
+    # Older manifests used a standalone app skeleton with two standard command codes.
+    for suffix in ("msg", "msgdefs", "msgstruct", "mission_cfg", "platform_cfg", "fcncode_values"):
         emit(f"app_{suffix}.h.in", f"config/default_{app}_{suffix}.h")
     for suffix in ("eventids", "fcncodes", "version"):
         emit(f"app_{suffix}.h.in", f"fsw/inc/{app}_{suffix}.h")
     for filename in ("CMakeLists.txt", "mission_build.cmake", "arch_build.cmake"):
         emit(filename + ".in", filename)
-    if manifest["schema_version"] == 2:
-        from project.appgen.sample import extend_app
-        return extend_app(root or TEMPLATES.parents[2] / "mission", manifest, result, values)
     return result

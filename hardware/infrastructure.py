@@ -1,15 +1,24 @@
 """Local infrastructure settings and preflight checks, separate from mission sources."""
 from project.qemu.generate import fingerprint
-from project.nasa_source import source_status
-import importlib.util
+from project.nasa_source import OFFICIAL_URL, source_status
+from hardware.host_tools import package_manager
+from collections.abc import Callable
+from dataclasses import dataclass
+from functools import partial
 import json
 import platform
 from pathlib import Path
 import re
 import shlex
-import shutil
+import subprocess
+import tempfile
 import socket
 import sys
+import threading
+import time
+
+CODE_ROOT = Path(__file__).resolve().parents[1]
+_port_probe_lock = threading.Lock()
 
 
 def sources_ready(root):
@@ -34,12 +43,26 @@ def validate_emulator(value):
     return {"ssh_port": port, "image": image}
 
 
-def snapshot(hardware):
+def _source_inventory(root):
+    """Inspect installation files without launching Git before the user asks for a check."""
+    checkout = root / "cFS"
+    if not checkout.is_symlink() and (not checkout.exists() or checkout.is_dir() and not any(checkout.iterdir())):
+        state = "missing"
+    elif checkout.is_symlink() or not (checkout / ".git").exists():
+        state = "occupied"
+    elif (checkout / "sample_defs/targets.cmake").is_file() and (checkout / "cfe/CMakeLists.txt").is_file():
+        state = "installed"
+    else:
+        state = "incomplete"
+    return {"state": state, "url": OFFICIAL_URL, "revision": None}
+
+
+def snapshot(hardware, verify_source=False):
     config = json.loads((hardware.root / "project/config.json").read_text())
     keys = sorted(str(p.with_suffix("")) for p in (Path.home() / ".ssh").glob("*.pub")
                   if p.with_suffix("").is_file())
     connection = hardware._load("connection.json")
-    commands = {}
+    commands = {"install_native": "./scripts/setup-native.sh"}
     if connection:
         connection = hardware.connection(connection)
         argv = hardware.ssh_argv("physical", connection, interactive=True)
@@ -55,11 +78,13 @@ def snapshot(hardware):
         probe = hardware._load("probe.json", {})
         if probe.get("admin_setup_command"):
             commands["authorize_service"] = probe["admin_setup_command"]
-    source = source_status(hardware.root)
-    return {"source": source, "build_jobs": hardware._load("native-build-settings.json", {}).get("jobs", 4), "sources_ready": source["state"] == "ready", "project": hardware.root.name, "target": hardware.default_target(),
+    source = source_status(hardware.root) if verify_source else _source_inventory(hardware.root)
+    plans = {mode: [probe.describe() for probe in _check_plan(hardware, mode)]
+             for mode in ("native", "qemu", "physical")}
+    return {"source": source, "check_plan": plans, "build_jobs": hardware._load("native-build-settings.json", {}).get("jobs", 4), "sources_ready": source["state"] in {"installed", "ready"}, "project": hardware.root.name, "target": hardware.default_target(),
             "board": config["board"], "os": config["os"], "profiles": hardware.profiles(),
             "host": {"os": platform.system(), "architecture": platform.machine(),
-                     "package_manager": "apt" if shutil.which("apt-get") else None},
+                     "package_manager": package_manager()},
             "connection": connection, "ssh_hosts": hardware.ssh_candidates(), "ssh_keys": keys,
             "emulator": emulator_config(hardware.root), "commands": commands}
 
@@ -91,10 +116,10 @@ def save(studio, body):
             hardware._mark_stopped("physical", prior_board)
     profile_changed = target != "native" and (board, system) != (config["board"], config["os"])
     emulator_changed = emulator is not None and emulator != emulator_config(hardware.root)
-    if (profile_changed or emulator_changed) and hardware._qemu_running() is True:
-        raise ValueError("Stop QEMU before changing its infrastructure.")
+    if emulator_changed and not profile_changed:
+        hardware.require_stopped_emulator_for_configuration()
     if profile_changed:
-        studio.workspace.select_profile(board, system)
+        studio.workspace.select_profile(board, system, hardware=hardware)
     if emulator is not None:
         hardware._save("emulator.json", emulator)
     if target == "physical" and connection != previous:
@@ -111,62 +136,196 @@ def save(studio, body):
     return snapshot(hardware)
 
 
-def check(hardware, target):
+@dataclass(frozen=True)
+class Probe:
+    label: str
+    argv: tuple[str, ...]
+    interpret: Callable[[dict, str], None] | None = None
+    repair: str | None = None
+
+    def describe(self):
+        return {"label": self.label, "probe": shlex.join(self.argv)}
+
+    def run(self):
+        started = time.monotonic_ns()
+        row = dict(self.describe(), command=self.repair, exit_code=None)
+        try:
+            process = subprocess.run(self.argv, cwd=CODE_ROOT, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                                     stderr=subprocess.STDOUT, text=True, errors="replace", timeout=30)
+            output = process.stdout.strip()
+            row.update(ready=process.returncode == 0, exit_code=process.returncode)
+            if self.interpret:
+                self.interpret(row, output)
+            if "detail" not in row:
+                lines = output.splitlines()
+                row["detail"] = (lines[0] if row["ready"] else lines[-1])[:500] if lines else ""
+        except (OSError, ValueError, subprocess.TimeoutExpired) as error:
+            row.update(ready=False, detail=str(error))
+        if row["ready"]:
+            row["command"] = None
+        return dict(row, status="passed" if row["ready"] else "failed",
+                    duration_ms=(time.monotonic_ns() - started) // 1_000_000)
+
+
+def _source_result(row, output):
+    if output.startswith("{"):
+        source = json.loads(output)
+        row["source"] = source
+        messages = {"missing": "Clone the official NASA repository",
+                    "incomplete": "Complete the NASA submodule download",
+                    "occupied": "The cFS directory contains a different checkout"}
+        row["detail"] = source["revision"] if row["ready"] else messages[source["state"]]
+
+
+def _tool_version(row, output):
+    if row["ready"] and not re.search(r"\d+\.\d+", output):
+        row.update(ready=False, detail="Version could not be read")
+
+
+def _version_at_least(minimum, row, output):
+    if row["ready"]:
+        version = re.search(r"(?<![A-Za-z0-9])v?(\d+)\.(\d+)(?:\.\d+)?", output)
+        row["ready"] = bool(version and tuple(map(int, version.groups())) >= minimum)
+        if version:
+            row["detail"] = version[0]
+
+
+def _image_result(image, row, output):
+    if row["ready"]:
+        row["ready"] = output == fingerprint()
+        row["detail"] = image if row["ready"] else image + " · Register models differ"
+
+
+def _scp_check():
+    # OpenSSH scp has no version option. Exercise its local copy path using two
+    # disposable files, so a successful status also verifies the copied bytes.
+    with tempfile.TemporaryDirectory() as directory:
+        source, dest = Path(directory) / "source", Path(directory) / "copy"
+        source.write_bytes(b"Flight Studio SCP verification")
+        result = subprocess.run(["scp", str(source), str(dest)], stdin=subprocess.DEVNULL)
+        if result.returncode:
+            return result.returncode
+        if not dest.is_file() or dest.read_bytes() != source.read_bytes():
+            print("Local copy did not match the source")
+            return 1
+        print("Local file transfer verified")
+        return 0
+
+
+def _check_plan(hardware, target):
     if target not in ("native", "qemu", "physical"):
         raise ValueError("Select an execution target.")
-    checks = []
-    def add(label, ready, detail, command=None):
-        checks.append({"label": label, "ready": bool(ready), "detail": detail, "command": command})
-    tools = ["git", "cmake", "make", "cc"]
+    local = (sys.executable, "-m", "hardware.infrastructure")
+    for tool in ("git", "cmake", "make", "cc"):
+        yield Probe(tool, (tool, "--version"), _tool_version)
     if target != "native":
-        tools.extend(["docker", "ssh", "scp"])
-    for tool in tools:
-        path = shutil.which(tool)
-        add(tool, path, path or "Not installed")
-    source = source_status(hardware.root)
-    ready = source["state"] == "ready"
-    add("NASA cFS source", ready, source["revision"] if ready else {
-        "missing": "Clone the official NASA repository",
-        "incomplete": "Complete the NASA submodule download",
-        "occupied": "The cFS directory contains a different checkout",
-    }[source["state"]], None if ready else "./scripts/install-cfs.sh")
-    modules = [name for name in ("PyQt5", "zmq") if importlib.util.find_spec(name) is None]
-    add("Ground Station Python packages", not modules, ", ".join(modules) if modules else "PyQt5 · pyzmq",
-        shlex.join([sys.executable, "-m", "pip", "install", "-r", "ground_station/requirements.txt"]) if modules else None)
+        yield Probe("docker", ("docker", "--version"), _tool_version)
+        yield Probe("ssh", ("ssh", "-V"), _tool_version)
+        yield Probe("scp", (*local, "check-scp"))
+    python_check = ("from PyQt5.QtCore import PYQT_VERSION_STR, QThread; import zmq; "
+                    "print('PyQt5', PYQT_VERSION_STR, '· pyzmq', zmq.pyzmq_version())")
+    yield Probe("Ground Station Python packages", (sys.executable, "-c", python_check), repair="./scripts/setup-native.sh")
     if target != "native":
-        code, output = hardware._capture(["docker", "version", "--format", "{{.Server.Version}}"], 30)
-        version = re.match(r"(\d+)\.", output)
-        add("Docker engine ≥ 23", not code and version and int(version[1]) >= 23,
-            output if not code else "Start Docker and grant your user access")
-        code, output = hardware._capture(["docker", "buildx", "version"], 15)
-        version = re.search(r"v?(\d+)\.(\d+)\.", output)
-        add("Docker Buildx ≥ 0.10", not code and version and tuple(map(int, version.groups())) >= (0, 10), output)
-        if target == "physical":
-            connection = hardware._load("connection.json", {})
-            if connection.get("identity_file"):
-                key = Path(connection["identity_file"])
-                add("Board SSH identity", key.is_file(), str(key))
-        if target == "qemu":
-            running = hardware._qemu_running()
-            emulator = emulator_config(hardware.root)
-            code, label = hardware._capture(["docker", "image", "inspect", "--format",
-                                            '{{index .Config.Labels "org.flight-studio.register-models"}}', emulator["image"]], 30)
-            add("Emulator image", not code and label == fingerprint(), emulator["image"])
-            ssh_dir = Path.home() / ".ssh/cfs-emulator"
-            add("Emulator SSH identity", all((ssh_dir / name).is_file() for name in ("config", "id_ed25519", "id_ed25519.pub")), str(ssh_dir))
-            available = True
-            if not running:
-                try:
-                    with socket.socket() as sock:
-                        sock.bind(("127.0.0.1", emulator["ssh_port"]))
-                except OSError:
-                    available = False
-            add("Local SSH port", available, f"127.0.0.1:{emulator['ssh_port']}" + (" · QEMU running" if running else ""))
-    return {"target": target, "checks": checks, "ready": all(c["ready"] for c in checks)}
+        yield Probe("Docker engine ≥ 23", ("docker", "version", "--format", "{{.Server.Version}}"),
+                    partial(_version_at_least, (23, 0)))
+        yield Probe("Docker Buildx ≥ 0.10", ("docker", "buildx", "version"), partial(_version_at_least, (0, 10)))
+    if target == "physical":
+        key = hardware._load("connection.json", {}).get("identity_file")
+        if key:
+            yield Probe("Board SSH identity", ("ssh-keygen", "-lf", key))
+    if target == "qemu":
+        emulator = emulator_config(hardware.root)
+        image = emulator["image"]
+        yield Probe("Emulator image", ("docker", "image", "inspect", "--format",
+                    '{{index .Config.Labels "org.flight-studio.register-models"}}', image), partial(_image_result, image))
+        yield Probe("Emulator SSH identity", (*local, "check-emulator-key"))
+        yield Probe("Local SSH port", (*local, "check-port", str(emulator["ssh_port"])))
+    yield Probe("NASA cFS source", (sys.executable, "-m", "project.nasa_source", "--status", str(hardware.root)),
+                _source_result, "./scripts/install-cfs.sh")
+
+
+def _run(probe):
+    if probe.label == "Local SSH port":
+        # Concurrent setup pages must not trip over each other's temporary bind.
+        with _port_probe_lock:
+            return probe.run()
+    return probe.run()
+
+
+def check_one(hardware, target, label):
+    for probe in _check_plan(hardware, target):
+        if probe.label == label:
+            return _run(probe)
+    raise ValueError("Select a check for this target.")
+
+
+def check_progress(hardware, target):
+    """Capture settings once, then publish each actual start and finish."""
+    plan = list(_check_plan(hardware, target))
+    checks = [dict(probe.describe(), status="pending", ready=None, detail="", command=None,
+                   exit_code=None, duration_ms=None) for probe in plan]
+    started = time.monotonic_ns()
+
+    def snapshot(done=False):
+        return {"target": target, "status": "complete" if done else "running",
+                "ready": all(item["ready"] for item in checks) if done else None,
+                "checks": checks.copy(), "duration_ms": (time.monotonic_ns() - started) // 1_000_000}
+
+    yield snapshot()
+    for index, probe in enumerate(plan):
+        checks[index] = dict(checks[index], status="running")
+        yield snapshot()
+        checks[index] = _run(probe)
+        yield snapshot(done=index == len(plan) - 1)
+
+
+def check(hardware, target):
+    """Compatibility response for single JSON requests."""
+    for report in check_progress(hardware, target):
+        if report["status"] == "complete":
+            checks = [{key: item[key] for key in ("label", "ready", "detail", "command")}
+                      for item in report["checks"]]
+            return {"target": target, "checks": checks, "ready": report["ready"]}
+
+
+def _cli(args):
+    if args == ["check-scp"]:
+        return _scp_check()
+    if args == ["check-emulator-key"]:
+        directory = Path.home() / ".ssh/cfs-emulator"
+        for filename in ("config", "id_ed25519", "id_ed25519.pub"):
+            if not (directory / filename).is_file():
+                print(f"Missing {directory / filename}")
+                return 1
+        return subprocess.call(["ssh-keygen", "-lf", str(directory / "id_ed25519")], stdin=subprocess.DEVNULL)
+    if len(args) == 2 and args[0] == "check-port":
+        port = int(args[1])
+        address = f"127.0.0.1:{port}"
+        try:
+            with socket.socket() as sock:
+                sock.bind(("127.0.0.1", port))
+            print(address)
+            return 0
+        except OSError as error:
+            # A busy port is also valid when the selected emulator owns the mapping.
+            try:
+                result = subprocess.run(["docker", "port", "pi4-cfs", "2222/tcp"],
+                                        capture_output=True, text=True, timeout=5)
+                if result.returncode == 0 and address in result.stdout.splitlines():
+                    print(address + " · QEMU running")
+                    return 0
+            except (OSError, subprocess.TimeoutExpired):
+                pass
+            print(f"{address} · {error.strerror}")
+            return 1
+    if len(args) == 1 and args[0] in {"ssh_port", "image"}:
+        print(emulator_config(CODE_ROOT)[args[0]])
+        return 0
+    raise SystemExit("Usage: python3 -m hardware.infrastructure ssh_port|image|check-scp|check-emulator-key|check-port PORT")
 
 
 if __name__ == "__main__":
-    settings = emulator_config(Path(__file__).resolve().parents[1])
-    if len(sys.argv) != 2 or sys.argv[1] not in settings:
-        raise SystemExit("Usage: python3 -m hardware.infrastructure ssh_port|image")
-    print(settings[sys.argv[1]])
+    try:
+        sys.exit(_cli(sys.argv[1:]))
+    except (OSError, ValueError, subprocess.TimeoutExpired) as error:
+        sys.exit(str(error))

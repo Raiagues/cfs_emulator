@@ -1,5 +1,5 @@
 // Each shell keeps its own ANSI screen and output cursor when switching tabs.
-export function mountShells({api,onError}) {
+export function mountShells({api,onError,onExit}) {
  const host=document.querySelector('#shell-terminal'), shells=new Map();
  let active=null;
  function fit(shell){
@@ -32,7 +32,12 @@ export function mountShells({api,onError}) {
     if(result.truncated)shell.term.writeln('\r\n[Older output exceeded the terminal buffer]\r\n');
     if(result.data)await new Promise(resolve=>shell.term.write(Uint8Array.from(atob(result.data),c=>c.charCodeAt(0)),resolve));
     shell.cursor=result.cursor;
-    if(result.exited&&!result.data){shell.ended=true;shell.term.writeln('\r\n[Shell exited]');}
+    if(result.exited&&!result.data){
+     shell.ended=true;
+     shell.term.options.disableStdin=true;
+     shell.term.options.cursorBlink=false;
+     if(!onExit?.(id,result.exit_code))shell.term.writeln('\r\n[Shell exited]');
+    }
    }catch(error){onError(error);await new Promise(resolve=>setTimeout(resolve,2000));}
   }
   setTimeout(poll,120);

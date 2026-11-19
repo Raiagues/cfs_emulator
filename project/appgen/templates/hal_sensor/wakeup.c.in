@@ -1,0 +1,7 @@
+    else if (CFE_SB_MsgId_Equal(MsgId, CFE_SB_ValueToMsgId(@PREFIX@_WAKEUP_MID)))
+    {
+        if (@PREFIX@_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_MSG_CommandHeader_t)))
+        {
+            @PREFIX@_ComponentsWakeup();
+        }
+    }

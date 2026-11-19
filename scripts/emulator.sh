@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Validate devices before opening the guest disk.
 mkdir -p board
-python3 sensors/runtime.py args > board/qemu-devices.args
-mapfile -d '' -t SENSOR_ARGS < board/qemu-devices.args
 
 # Initialize a persistent disk and its SSH key only on the first run.
 if [[ ! -e board/raspios.qcow2 ]]; then
@@ -25,11 +22,12 @@ if [[ ! -e board/raspios.qcow2 ]]; then
 fi
 
 # Retain guest changes. The inactive watchdog driver provides clean power-off.
-python3 sensors/runtime.py record
+python3 sensors/runtime.py boot > board/qemu-devices.args
+mapfile -d '' -t SENSOR_ARGS < board/qemu-devices.args
 echo "[emulator] Disk ready. Starting the guest kernel."
 exec qemu-system-aarch64 -M raspi4b \
     -kernel board/kernel8.img \
-    -dtb board/bcm2711-rpi-4-b.dtb \
+    -dtb board/mission.dtb \
     -initrd board/initramfs8 \
     -drive file=board/raspios.qcow2,if=sd,format=qcow2 \
     -append "console=ttyAMA1 root=/dev/mmcblk1p2 rw rootwait watchdog_disarm=0" \

@@ -3,33 +3,115 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#191b20">
-  <title>Infrastructure · Flight Studio</title>
+  <meta name="theme-color" content="#13171c">
+  <title>Choose target · Flight Studio</title>
+  <link rel="stylesheet" href="/design.css">
   <link rel="stylesheet" href="/infrastructure.css">
+  <link rel="stylesheet" href="/setup-progress.css">
   <link rel="stylesheet" href="/vendor/xterm.css">
+  <script src="/theme.js"></script>
 </head>
 <body>
-  <main><div class="setup-content">
-    <p id="feedback" role="status" aria-live="polite">Loading configuration…</p>
-    <form id="infrastructure-form">
-      <section class="source-setup" aria-labelledby="source-heading">
-        <div class="source-name"><span class="source-icon" aria-hidden="true" id="source-icon"></span><div><h2 id="source-heading">NASA cFS</h2><a href="https://github.com/nasa/cFS" target="_blank" rel="noopener">github.com/nasa/cFS</a></div></div>
-        <div class="source-action"><span id="source-state" role="status"></span><button id="clone-source" class="primary" type="button" hidden>Clone NASA cFS</button></div>
-      </section>
-      <div class="setup-grid">
-        <section class="target-section" aria-labelledby="target-heading"><h2 id="target-heading">Execution</h2><div id="targets" role="group" aria-label="Execution target"></div></section>
-        <section class="configuration-section" aria-labelledby="configuration-heading"><h2 id="configuration-heading">Configuration</h2><div id="configuration"></div></section>
+  <header class="setup-header">
+    <span class="brand"><strong>Flight</strong> studio <span class="brand-divider">/</span><span id="project-name"></span></span>
+    <div class="header-actions"><span id="save-state" role="status"></span><button type="button" data-theme-toggle aria-label="Switch theme"></button></div>
+  </header>
+  <main><form id="infrastructure-form">
+    <h1>Choose target</h1>
+    <div id="targets" role="group" aria-label="Execution target">
+        <button type="button" class="target-option" data-target="native" aria-pressed="false" disabled>
+          <span class="target-illustration"><svg width="240" height="170" viewBox="0 0 240 170" fill="none" aria-hidden="true">
+          <rect x="30" y="12" width="180" height="116" rx="6" stroke-width="2" fill="#0d1115" stroke="#7d8590"></rect>
+          <rect x="40" y="22" width="160" height="96" rx="2" fill="#11171c"></rect>
+          <circle cx="48" cy="30" r="2" fill="#3a424c"></circle><circle cx="55" cy="30" r="2" fill="#3a424c"></circle><circle cx="62" cy="30" r="2" fill="#3a424c"></circle>
+          <rect x="48" y="42" width="44" height="5" rx="1" fill="#c3a6ff"></rect><rect x="96" y="42" width="60" height="5" rx="1" fill="#7cb4f0"></rect>
+          <rect x="56" y="54" width="30" height="5" rx="1" fill="#3a424c"></rect><rect x="90" y="54" width="70" height="5" rx="1" fill="#5fc9a3"></rect>
+          <rect x="56" y="66" width="52" height="5" rx="1" fill="#d4b48a"></rect><rect x="112" y="66" width="34" height="5" rx="1" fill="#3a424c"></rect>
+          <rect x="56" y="78" width="80" height="5" rx="1" fill="#3a424c"></rect>
+          <rect x="48" y="90" width="20" height="5" rx="1" fill="#c3a6ff"></rect><rect x="72" y="90" width="40" height="5" rx="1" fill="#7cb4f0"></rect>
+          <rect x="48" y="104" width="6" height="8" fill="#d4b48a"></rect>
+          <path d="M106 128h28l6 22h-40z" fill="#2b313a"></path>
+          <rect x="84" y="148" width="72" height="7" rx="3.5" fill="#3a414b"></rect>
+        </svg></span>
+          <span class="target-caption"><strong>Native</strong><small>This computer</small></span>
+        </button>
+        <svg class="target-connector" viewBox="0 0 48 12" aria-hidden="true"><path d="M2 6h36" stroke-dasharray="3 4"/><path d="m38 1 6 5-6 5"/></svg>
+        <button type="button" class="target-option" data-target="qemu" aria-pressed="false" disabled>
+          <span class="target-illustration"><svg width="240" height="170" viewBox="0 0 240 170" fill="none" aria-hidden="true">
+          <path d="M12 26V12h14M214 12h14v14M228 144v14h-14M26 158H12v-14" stroke-width="1.5" stroke="#d4b48a"></path>
+          <g stroke-width="1.2" stroke="#5fc9a3">
+            <rect x="26" y="26" width="180" height="118" rx="8" stroke-dasharray="5 4" fill="rgba(95,201,163,.06)"></rect>
+            <circle cx="38" cy="38" r="4"></circle><circle cx="38" cy="132" r="4"></circle><circle cx="146" cy="38" r="4"></circle><circle cx="146" cy="132" r="4"></circle>
+            <rect x="48" y="31" width="104" height="13"></rect>
+            <rect x="94" y="72" width="40" height="40" rx="2"></rect>
+            <rect x="142" y="80" width="20" height="24"></rect>
+            <rect x="182" y="38" width="32" height="24"></rect>
+            <rect x="182" y="70" width="32" height="24"></rect>
+            <rect x="182" y="102" width="32" height="30"></rect>
+            <rect x="44" y="136" width="16" height="12"></rect><rect x="68" y="138" width="12" height="10"></rect><rect x="88" y="138" width="12" height="10"></rect>
+            <rect x="58" y="62" width="16" height="16"></rect>
+          </g>
+          <path d="M52 37.5H148" stroke-width="4" stroke-dasharray="2 2.6" opacity="0.7" stroke="#5fc9a3"></path>
+          <path d="M100 92h28M100 84h28M100 100h18" stroke-width="1" opacity="0.5" stroke="#5fc9a3"></path>
+        </svg></span>
+          <span class="target-caption"><strong>Emulator</strong><small>QEMU</small></span>
+        </button>
+        <svg class="target-connector" viewBox="0 0 48 12" aria-hidden="true"><path d="M2 6h36" stroke-dasharray="3 4"/><path d="m38 1 6 5-6 5"/></svg>
+        <button type="button" class="target-option" data-target="physical" aria-pressed="false" disabled>
+          <span class="target-illustration"><svg width="240" height="170" viewBox="0 0 240 170" fill="none" aria-hidden="true">
+          <path d="M196 14a18 18 0 0124 0M201 20a10 10 0 0114 0" stroke-width="1.8" stroke-linecap="round" stroke="#d4b48a"></path><circle cx="208" cy="26" r="2" fill="#d4b48a"></circle>
+          <rect x="22" y="30" width="180" height="118" rx="8" fill="#1f7a5b" stroke="#2e9a74"></rect>
+          <circle cx="34" cy="42" r="4" fill="#13171c" stroke="#d4b48a"></circle><circle cx="34" cy="136" r="4" fill="#13171c" stroke="#d4b48a"></circle><circle cx="142" cy="42" r="4" fill="#13171c" stroke="#d4b48a"></circle><circle cx="142" cy="136" r="4" fill="#13171c" stroke="#d4b48a"></circle>
+          <rect x="44" y="35" width="104" height="13" fill="#163b30"></rect>
+          <path d="M48 39H146M48 44.5H146" stroke-width="3" stroke-dasharray="2 2.6" stroke="#d4b48a"></path>
+          <rect x="90" y="76" width="40" height="40" rx="2" fill="#c9d0d4"></rect>
+          <rect x="94" y="80" width="32" height="32" rx="1" fill="#b7bfc4"></rect>
+          <rect x="138" y="84" width="20" height="24" fill="#163b30"></rect>
+          <rect x="54" y="66" width="16" height="16" fill="#163b30"></rect>
+          <rect x="46" y="94" width="6" height="4" fill="#d4b48a"></rect><rect x="58" y="94" width="6" height="4" fill="#d4b48a"></rect><rect x="46" y="104" width="6" height="4" fill="#d4b48a"></rect><rect x="160" y="60" width="6" height="4" fill="#d4b48a"></rect><rect x="160" y="120" width="6" height="4" fill="#d4b48a"></rect>
+          <rect x="178" y="42" width="34" height="24" fill="#d7dee0"></rect><rect x="178" y="42" width="34" height="5" fill="#5b8fb0"></rect>
+          <rect x="178" y="74" width="34" height="24" fill="#d7dee0"></rect><rect x="178" y="74" width="34" height="5" fill="#5b8fb0"></rect>
+          <rect x="178" y="106" width="34" height="30" fill="#c9d0d4"></rect>
+          <rect x="40" y="140" width="16" height="12" rx="2" fill="#d7dee0"></rect><rect x="64" y="142" width="12" height="10" fill="#d7dee0"></rect><rect x="84" y="142" width="12" height="10" fill="#d7dee0"></rect><rect x="108" y="142" width="10" height="10" rx="5" fill="#1c1f24"></rect>
+          <circle cx="36" cy="120" r="2.5" fill="#ff7a59"></circle><circle cx="36" cy="128" r="2.5" fill="#5fc9a3"></circle>
+        </svg></span>
+          <span class="target-caption"><strong>Board</strong><small>SSH</small></span>
+        </button>
+    </div>
+    <section class="setup-panel" aria-label="Target configuration">
+      <div class="configuration-row">
+        <div id="configuration"></div>
+        <div id="requirements" role="group" aria-label="Setup checks"></div>
       </div>
-      <details id="verification" hidden><summary><span id="check-status" role="status"></span><span id="check-count"></span></summary><div id="checks"></div></details>
-      <footer class="setup-footer">
-        <div id="preparation" aria-label="Preparation commands"></div>
-        <div class="primary-actions"><span id="save-state" role="status"></span><button id="check" type="button">Run all checks</button><button type="submit" class="primary" id="enter">Open workspace</button></div>
-      </footer>
-    </form>
-  </div></main>
+      <div class="setup-details">
+        <div id="advanced" hidden></div>
+        <div id="verification" hidden>
+          <div class="check-heading">
+            <h2 id="check-status"></h2>
+            <progress id="check-progress" hidden aria-label="Verification progress"></progress>
+            <div id="preparation" aria-label="Preparation commands"></div>
+            <button type="button" id="close-checks" aria-label="Close checks">×</button>
+          </div>
+          <div id="checks" role="group" aria-label="Verification pipeline"></div>
+          <output id="pipeline-detail" hidden></output>
+        </div>
+        <div class="source-setup" hidden>
+          <div><h2>NASA cFS</h2><a href="https://github.com/nasa/cFS" target="_blank" rel="noopener">github.com/nasa/cFS</a></div>
+          <span id="source-state"></span>
+          <button id="clone-source" type="button" hidden>Clone NASA cFS</button>
+        </div>
+      </div>
+    </section>
+    <p id="feedback" role="status" aria-live="polite"></p>
+    <footer class="setup-footer">
+      <button type="button" id="show-terminal" hidden>Terminal</button>
+      <button id="check" type="button" disabled>Run all checks</button>
+      <button type="submit" class="primary" id="enter" disabled>Open workspace</button>
+    </footer>
+  </form></main>
   <div class="output-dock">
     <section id="job-output" class="output-panel" hidden><header><strong id="job-title">Connection</strong><span id="job-state"></span><button id="close-report" type="button" aria-label="Close report">×</button></header><pre id="job-log" role="log"></pre><div id="board-report"></div></section>
-    <section id="setup-terminal" class="output-panel" hidden><header><strong><span class="prompt" aria-hidden="true">›_</span>Local terminal</strong><span>Project directory</span><button type="button" id="close-terminal" aria-label="Close terminal">×</button></header><div id="shell-terminal" hidden></div></section>
+    <section id="setup-terminal" class="output-panel" hidden><header><strong id="terminal-title">Local terminal</strong><span id="terminal-state" role="status">Project directory</span><button type="button" id="close-terminal" aria-label="Close terminal">×</button></header><div id="shell-terminal" hidden></div></section>
   </div>
   <script src="/vendor/xterm.js"></script>
   <script src="/vendor/addon-fit.js"></script>

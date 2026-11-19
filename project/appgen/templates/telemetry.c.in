@@ -15,7 +15,7 @@ static @PREFIX@_@ENTITY@_Tlm_t @PREFIX@_@ENTITY@_Tlm;
 *************************************************************************/
 static void @PREFIX@_@ENTITY@_Fill(@PREFIX@_@ENTITY@_Payload_t *Payload)
 {
-    /* APPGEN: USER telemetry.@NAME@.fill */
+    /* @studio.edit telemetry.@NAME@.fill */
     (void)Payload;
 }
 

@@ -1,0 +1,24 @@
+{
+  "name": "lab_sensor",
+  "address": 72,
+  "id_register": 0,
+  "id_value": 66,
+  "controls": [
+    {
+      "register": 1,
+      "reset": 0,
+      "setup": 1
+    }
+  ],
+  "outputs": [
+    {
+      "name": "temperature",
+      "register": 16,
+      "unit": "millidegrees Celsius",
+      "initial": 23000,
+      "offset": 0,
+      "counts": 256,
+      "divisor": 1000
+    }
+  ]
+}

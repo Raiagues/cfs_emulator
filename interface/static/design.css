@@ -1,0 +1,72 @@
+@font-face {
+  font-family: Inter;
+  src: url("/fonts/inter-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/jetbrains-mono-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+}
+:root {
+  color-scheme: dark;
+  --fs-bg: #13171c;
+  --fs-surface: #161a20;
+  --fs-panel: #1a1f25;
+  --fs-raised: #222830;
+  --fs-line: #343c46;
+  --fs-text: #eef0f2;
+  --fs-muted: #a4acb6;
+  --fs-accent: #d4b48a;
+  --fs-accent-bg: #352f27;
+  --fs-on-accent: #20180f;
+  --fs-success: #72cfae;
+  --fs-danger: #f79784;
+  --fs-code: #c3a6ff;
+  --fs-sans: Inter, system-ui, sans-serif;
+  --fs-mono: "JetBrains Mono", ui-monospace, monospace;
+  --fs-caption: 11px;
+  --fs-label: 12px;
+  --fs-body: 13px;
+  --fs-heading: 15px;
+  --fs-radius: 5px;
+  --fs-motion: 150ms;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --fs-bg: #f1eadc;
+  --fs-surface: #eae2d3;
+  --fs-panel: #faf5e9;
+  --fs-raised: #e5dbc9;
+  --fs-line: #c4baa7;
+  --fs-text: #282720;
+  --fs-muted: #655e53;
+  --fs-accent: #78552c;
+  --fs-accent-bg: #e9dac0;
+  --fs-on-accent: #fffcf3;
+  --fs-success: #296a52;
+  --fs-danger: #a03f2c;
+  --fs-code: #694b93;
+}
+[data-theme-toggle] {
+  width: 32px; height: 32px; padding: 0; display: inline-grid;
+  place-items: center; background: transparent; border: 1px solid var(--fs-line);
+  border-radius: var(--fs-radius); color: var(--fs-muted); cursor: pointer;
+}
+[data-theme-toggle]:hover { background: var(--fs-raised); color: var(--fs-text); }
+[data-theme-toggle] svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+:focus-visible { outline: 2px solid var(--fs-accent); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important; scroll-behavior: auto !important;
+  }
+}
+:root[data-theme="light"] button:disabled:not(.is-running) {
+  opacity: 1; color: #686154; background-color: var(--fs-surface);
+  border-color: var(--fs-line); cursor: default;
+}

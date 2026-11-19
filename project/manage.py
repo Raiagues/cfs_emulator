@@ -151,19 +151,31 @@ def parser():
     commands = cli.add_subparsers(dest="action", required=True)
     for action in ("sync", "check", "devices", "list"):
         commands.add_parser(action)
+    command = commands.add_parser("register-model", help="Register a sensor from its model.json")
+    command.add_argument("definition", type=Path)
+    command.add_argument("--driver", type=Path, help="C implementation of the model operations")
+    command.add_argument("--state-header", type=Path, help="Header defining per-device state")
     for action in ("stamp", "check-build"):
         command = commands.add_parser(action)
         command.add_argument("--target", choices=("native", "qemu", "physical"))
     for action in ("add-app", "locate"):
         command = commands.add_parser(action)
         command.add_argument("app")
+    for action in ("add-bus", "remove-bus"):
+        commands.add_parser(action).add_argument("bus")
+    command = commands.add_parser("link-hal", help="Generate a HAL reader in an existing or new mission app")
+    command.add_argument("app")
+    command.add_argument("name", help="Reader identifier")
+    command.add_argument("--device", required=True)
+    command.add_argument("--new-app", action="store_true", help="Create the app and its reader together")
     command = commands.add_parser("add-device")
     command.add_argument("name")
     command.add_argument("--id", required=True)
     command.add_argument("--model", required=True)
-    command.add_argument("--bus", default="i2c-bus.1")
+    command.add_argument("--bus", help="Configured bus (optional when exactly one is selected)")
     command.add_argument("--address", type=lambda value: int(value, 0), required=True)
     command.add_argument("--value", action="append", default=[], metavar="PROPERTY=INTEGER")
+    commands.add_parser("remove-device").add_argument("id")
     for kind in ("sensor", "command", "telemetry"):
         command = commands.add_parser(f"add-{kind}")
         command.add_argument("app")
@@ -188,6 +200,11 @@ def parser():
 
 def run(args):
     root = args.root.resolve()
+    if args.action == "register-model":
+        from project.sensor_models import register
+        return register(root, json.loads(args.definition.read_text()),
+                        driver=args.driver.read_text() if args.driver else None,
+                        state_header=args.state_header.read_text() if args.state_header else None), 0
     if args.action == "devices":
         return board_catalog(load_config(root)["board"], root), 0
     from project.flight_sources import prepare_mission
@@ -226,7 +243,22 @@ def run(args):
         registry_app(config, args.app)
         return generator.locations(root / "mission", generator.app_by_name(manifests, args.app)), 0
     new_apps, extra = [], {}
-    if args.action == "add-app":
+    if args.action in ("add-bus", "remove-bus"):
+        if args.bus not in board_catalog(config["board"], root)["buses"]:
+            raise ProjectError("Select a supported bus on this board")
+        if args.action == "add-bus":
+            if args.bus in config["buses"]:
+                raise ProjectError("This bus is already configured")
+            config["buses"].append(args.bus)
+        else:
+            if args.bus not in config["buses"]:
+                raise ProjectError("This bus is not configured")
+            if any(device["bus"] == args.bus for device in config["devices"]):
+                raise ProjectError("Disconnect the devices on this bus before removing it")
+            config["buses"].remove(args.bus)
+        changed = commit(root, {"project/config.json": json.dumps(config, indent=2) + "\n"})
+        return {"changed": changed, "deleted": []}, 0
+    if args.action == "add-app" or (args.action == "link-hal" and args.new_app):
         identifier(args.app)
         if args.app in protected_apps(root):
             raise ProjectError(f"Protected app: {args.app}")
@@ -235,7 +267,18 @@ def run(args):
         manifests.append(generator.new_app(args.app, manifests))
         config["apps"].append({"name": args.app, "sensors": {}, "telemetry_bindings": {}, "command_bindings": {}})
         new_apps.append(args.app)
+    if args.action == "remove-device":
+        if not any(device["id"] == args.id for device in config["devices"]):
+            raise ProjectError("Device not found")
+        if any(args.id in app["sensors"].values() for app in config["apps"]):
+            raise ProjectError("Remove the sensor readers from the apps first")
+        config["devices"] = [device for device in config["devices"] if device["id"] != args.id]
     elif args.action == "add-device":
+        bus = args.bus
+        if bus is None:
+            if len(config["buses"]) != 1:
+                raise ProjectError("Select a configured bus using --bus")
+            bus = config["buses"][0]
         values = {}
         for specification in args.value:
             key, separator, value = specification.partition("=")
@@ -245,12 +288,12 @@ def run(args):
                 values[key] = int(value, 0)
             except ValueError as exc:
                 raise ProjectError("--value requires PROPERTY=INTEGER") from exc
-        config["devices"].append({"name": args.model, "id": args.id, "model": args.model,
-                                  "bus": args.bus, "address": args.address, "values": values})
-    elif args.action.startswith("add-"):
+        config["devices"].append({"name": args.name, "id": args.id, "model": args.model,
+                                  "bus": bus, "address": args.address, "values": values})
+    elif args.action in ("add-command", "add-sensor", "add-telemetry", "link-hal"):
         registry = registry_app(config, args.app)
         manifest = generator.app_by_name(manifests, args.app)
-        kind = args.action.removeprefix("add-")
+        kind = "sensor" if args.action == "link-hal" else args.action.removeprefix("add-")
         collection = generator.KINDS[kind]
         identifier(args.name)
         if any(entity["name"] == args.name for entity in manifest[collection]):
@@ -263,6 +306,8 @@ def run(args):
             device = next((device for device in config["devices"] if device["id"] == args.device), None)
             if device is None:
                 raise ProjectError(f"Unknown device: {args.device}")
+            if args.action == "link-hal" and args.device in registry["sensors"].values():
+                raise ProjectError("This app already has a HAL reader for this sensor")
             catalog = board_catalog(config["board"], root)
             driver = catalog["models"][device["model"]]["cfs_driver"]
             if driver is None:
@@ -291,10 +336,13 @@ def run(args):
         registry = registry_app(config, args.app)
         registry["command_bindings"][args.name] = args.actuator
     validate_config(root, config, manifests, new_apps)
+    if args.action in ("add-device", "remove-device"):
+        changed = commit(root, {"project/config.json": json.dumps(config, indent=2) + "\n"})
+        return {"changed": changed, "deleted": []}, 0
     mapped_manifests(config, manifests, root)
     plan = planned_project_files(root, config, manifests)
     plan.update(extra)
-    if args.action == "add-app":
+    if new_apps:
         from project.appgen.native_startup import parse_startup, render_startup
         from project.cfs_config import STARTUP, native_startup
         current = plan[STARTUP] if STARTUP in plan else native_startup(root, config)

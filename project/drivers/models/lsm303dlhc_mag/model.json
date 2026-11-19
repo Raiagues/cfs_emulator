@@ -1,0 +1,100 @@
+{
+  "name": "lsm303dlhc_mag",
+  "emulator": "builtin",
+  "address": 30,
+  "address_source": "https://www.st.com/resource/en/datasheet/lsm303dlhc.pdf#page=22",
+  "id_register": 10,
+  "identity_bytes": [
+    72,
+    52,
+    51
+  ],
+  "ready": {
+    "register": 9,
+    "mask": 1
+  },
+  "controls": [
+    {
+      "register": 0,
+      "setup": 16
+    },
+    {
+      "register": 1,
+      "setup": 32
+    },
+    {
+      "register": 2,
+      "setup": 0
+    }
+  ],
+  "scales": {
+    "horizontal": {
+      "unit": "milli-microtesla",
+      "offset": 0,
+      "divisor": 100000,
+      "gain_counts": [
+        0,
+        1100,
+        855,
+        670,
+        450,
+        400,
+        330,
+        230
+      ],
+      "range_register": 1,
+      "range_shift": 5,
+      "invalid_raw": -4096,
+      "min": -180000,
+      "max": 180000
+    },
+    "vertical": {
+      "unit": "milli-microtesla",
+      "offset": 0,
+      "divisor": 100000,
+      "gain_counts": [
+        0,
+        980,
+        760,
+        600,
+        400,
+        355,
+        295,
+        205
+      ],
+      "range_register": 1,
+      "range_shift": 5,
+      "invalid_raw": -4096,
+      "min": -180000,
+      "max": 180000
+    }
+  },
+  "outputs": [
+    {
+      "name": "mag-x",
+      "register": 3,
+      "initial": 0,
+      "scale": "horizontal"
+    },
+    {
+      "name": "mag-y",
+      "register": 7,
+      "initial": 0,
+      "scale": "horizontal"
+    },
+    {
+      "name": "mag-z",
+      "register": 5,
+      "initial": 0,
+      "scale": "vertical"
+    }
+  ],
+  "abi": {
+    "sample": "LSM303DLHC_MAG_Vector_t",
+    "fields": [
+      "X",
+      "Y",
+      "Z"
+    ]
+  }
+}

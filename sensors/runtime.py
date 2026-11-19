@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -14,7 +15,7 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from project.model import board_catalog, load_config, topology, validate_hardware
+from project.model import board_catalog, configured_buses, load_config, topology, validate_hardware
 
 try:
     from .qmp import connect, set_property
@@ -32,8 +33,8 @@ def qemu_models(config):
     return dict(re.findall(r'name "([^"]+)", bus ([^,\s]+)', result.stdout + result.stderr))
 
 
-def qemu_arguments(config):
-    validate_hardware(config)
+def qemu_arguments(config, root=None):
+    validate_hardware(config, root)
     available = qemu_models(config)
     arguments = []
     for device in config["devices"]:
@@ -64,11 +65,32 @@ def record(root, config):
             temporary.unlink(missing_ok=True)
 
 
+def boot_hardware(root, config):
+    """Prepare one guest device tree and matching QEMU arguments from one snapshot."""
+    args = qemu_arguments(config, root)
+    buses = board_catalog(config["board"], root)["buses"]
+    directory = root / "board"
+    with tempfile.NamedTemporaryFile(dir=directory, prefix=".dtb-", delete=False) as temporary:
+        tree = Path(temporary.name)
+    try:
+        shutil.copyfile(directory / "bcm2711-rpi-4-b.dtb", tree)
+        for name, spec in buses.items():
+            if spec.get("dt_node"):
+                status = "okay" if name in config["buses"] else "disabled"
+                subprocess.run(["fdtput", "-t", "s", str(tree), spec["dt_node"], "status", status], check=True)
+        tree.replace(directory / "mission.dtb")
+    finally:
+        tree.unlink(missing_ok=True)
+    record(root, config)
+    return args
+
+
 def check_record(root, config):
     try:
         recorded = json.loads((root / "board" / "hardware.json").read_text())
         matches = (recorded.get("board") == config["board"]
                    and recorded.get("os") == config["os"]
+                   and set(recorded.get("buses", board_catalog(config["board"], root)["buses"])) == set(configured_buses(config))
                    and topology(recorded) == topology(config))
     except (OSError, ValueError, KeyError, TypeError, AttributeError):
         raise ValueError(f"The booted board has no valid hardware record. {REBOOT}") from None
@@ -103,17 +125,19 @@ def apply_values(config, qmp):
             set_property(qmp, f"/machine/peripheral/{device['id']}", name, value)
 
 
-def prepare_guest(config):
-    if not config["devices"]:
+def prepare_guest(config, root=ROOT):
+    if not config["buses"]:
         return
-    buses = board_catalog()["buses"]
-    paths = sorted({buses[device["bus"]]["device"] for device in config["devices"]})
+    buses = board_catalog(config["board"], root)["buses"]
+    paths = sorted({buses[name]["device"] for name in config["buses"] if buses[name].get("transport") == "linux_i2c"})
+    if not paths:
+        return
     commands = ["modprobe i2c-dev"]
     commands.extend(f"test -c {shlex.quote(path)}" for path in paths)
     from hardware.infrastructure import emulator_config
     subprocess.run([
         "ssh", "-F", str(Path.home() / ".ssh/cfs-emulator/config"),
-        "-p", str(emulator_config(ROOT)["ssh_port"]),
+        "-p", str(emulator_config(root)["ssh_port"]),
         "pi4-cfs", " && ".join(commands),
     ], check=True)
 
@@ -130,7 +154,7 @@ def list_devices():
             continue
         model = catalog["models"].get(name, {})
         print(f"{name:25} {model.get('cfs_driver') or '-':17} {'yes' if model else 'not configured'}")
-    print("\nQEMU models require a project adapter and cFS driver before use by an app.")
+    print("\nFlight sensor definitions live in project/drivers/models/<id>/model.json.")
     for name, model in catalog["models"].items():
         for prop, limits in model["properties"].items():
             print(f"{name}.{prop}: integer {limits['min']}..{limits['max']} {limits['unit']}")
@@ -139,15 +163,15 @@ def list_devices():
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=ROOT)
-    parser.add_argument("command", choices=("args", "record", "check", "values", "prepare", "devices"))
+    parser.add_argument("command", choices=("args", "boot", "record", "check", "values", "prepare", "devices"))
     args = parser.parse_args()
     try:
         if args.command == "devices":
             list_devices()
             return
         config = load_config(args.root)
-        if args.command == "args":
-            arguments = qemu_arguments(config)
+        if args.command in ("args", "boot"):
+            arguments = boot_hardware(args.root, config) if args.command == "boot" else qemu_arguments(config, args.root)
             if arguments:
                 sys.stdout.buffer.write(("\0".join(arguments) + "\0").encode())
         elif args.command == "record":
@@ -158,7 +182,7 @@ def main():
                 with connect_board(args.root) as qmp:
                     check_live(config, qmp)
                 # Do not occupy the shared QMP monitor while waiting for SSH.
-                prepare_guest(config)
+                prepare_guest(config, args.root)
             with connect_board(args.root) as qmp:
                 check_live(config, qmp)
                 if args.command in ("values", "prepare"):

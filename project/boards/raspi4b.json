@@ -14,119 +14,20 @@
   "buses": {
     "i2c-bus.1": {
       "device": "/dev/i2c-1",
-      "dt_node": "/soc/i2c@7e804000"
+      "dt_node": "/soc/i2c@7e804000",
+      "label": "I²C 1",
+      "sensor_pins": {"VCC": [1, 17], "GND": [6, 9, 14, 20, 25, 30, 34, 39], "SDA": [3], "SCL": [5]},
+      "transport": "linux_i2c",
+      "library": "linux_i2c_lib"
     }
   },
-  "models": {
-    "tmp105": {
-      "cfs_driver": "tmp105",
-      "library": "tmp105_lib",
-      "default_address": 72,
-      "default_values": {
-        "temperature": 23500
-      },
-      "kind": "sensor",
-      "properties": {
-        "temperature": {
-          "type": "integer",
-          "min": -128000,
-          "max": 127937,
-          "unit": "millidegrees Celsius"
-        }
-      }
-    },
-    "lsm303dlhc_mag": {
-      "cfs_driver": "lsm303dlhc_mag",
-      "library": "lsm303dlhc_mag_lib",
-      "default_address": 30,
-      "default_values": {
-        "mag-x": 0,
-        "mag-y": 0,
-        "mag-z": 0
-      },
-      "address_source": "https://www.st.com/resource/en/datasheet/lsm303dlhc.pdf#page=22",
-      "kind": "sensor",
-      "properties": {
-        "mag-x": {
-          "type": "integer",
-          "min": -180000,
-          "max": 180000,
-          "unit": "milli-microtesla"
-        },
-        "mag-y": {
-          "type": "integer",
-          "min": -180000,
-          "max": 180000,
-          "unit": "milli-microtesla"
-        },
-        "mag-z": {
-          "type": "integer",
-          "min": -180000,
-          "max": 180000,
-          "unit": "milli-microtesla"
-        }
-      }
-    },
-    "mpu6050": {
-      "cfs_driver": "mpu6050",
-      "library": "mpu6050_lib",
-      "default_address": 104,
-      "default_values": {
-        "accel-x": 1044,
-        "accel-y": -5,
-        "accel-z": 178,
-        "temperature": 28480,
-        "gyro-x": -2060,
-        "gyro-y": 690,
-        "gyro-z": -540
-      },
-      "kind": "sensor",
-      "properties": {
-        "accel-x": {
-          "type": "integer",
-          "min": -2000,
-          "max": 1999,
-          "unit": "millig"
-        },
-        "accel-y": {
-          "type": "integer",
-          "min": -2000,
-          "max": 1999,
-          "unit": "millig"
-        },
-        "accel-z": {
-          "type": "integer",
-          "min": -2000,
-          "max": 1999,
-          "unit": "millig"
-        },
-        "temperature": {
-          "type": "integer",
-          "min": -59846,
-          "max": 132903,
-          "unit": "millidegrees Celsius"
-        },
-        "gyro-x": {
-          "type": "integer",
-          "min": -250137,
-          "max": 250129,
-          "unit": "millidegrees per second"
-        },
-        "gyro-y": {
-          "type": "integer",
-          "min": -250137,
-          "max": 250129,
-          "unit": "millidegrees per second"
-        },
-        "gyro-z": {
-          "type": "integer",
-          "min": -250137,
-          "max": 250129,
-          "unit": "millidegrees per second"
-        }
-      }
-    }
-  },
+  "header_pins": [
+    "3V3", "5V", "GPIO2 SDA", "5V", "GPIO3 SCL", "GND", "GPIO4", "GPIO14 TX",
+    "GND", "GPIO15 RX", "GPIO17", "GPIO18", "GPIO27", "GND", "GPIO22", "GPIO23",
+    "3V3", "GPIO24", "GPIO10 MOSI", "GND", "GPIO9 MISO", "GPIO25", "GPIO11 SCLK", "GPIO8 CE0",
+    "GND", "GPIO7 CE1", "GPIO0 ID_SD", "GPIO1 ID_SC", "GPIO5", "GND", "GPIO6", "GPIO12",
+    "GPIO13", "GND", "GPIO19", "GPIO16", "GPIO26", "GPIO20", "GND", "GPIO21"
+  ],
   "os_families": {
     "raspios": "linux"
   },
