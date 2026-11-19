@@ -20,25 +20,65 @@ export function stageProgress(id,job,states) {
   return {label,percent:null};
 }
 
-function model(data) {
+export function bootLayers(data) {
   const {flight,job}=data,initialized=flight.initialized||{},es=flight.states||[];
   const phase=job.phase||(job.action==='run' || es.length?'run':'build');
   const process=Boolean(flight.process_started);
   const machine=process || phase==='copy' || (phase==='run' && data.target!=='native');
   const guest=phase==='boot'?job.guest_stage||0:0;
-  const core=es.includes('CORE_READY');
+  const core=es.includes('CORE_READY'), coreStarted=es.length>0;
+  // Earlier receipts captured process entry, but did not distinguish PSP from OSAL.
+  const psp=Boolean(process || flight.platform_layers?.includes('psp'));
+  const osal=Boolean(flight.platform_layers?.includes('osal') || coreStarted);
   const apps=data.apps.map(app=>[app.name,Boolean(initialized[app.task])]);
   const svc=data.services.map(name=>[name,core || Boolean(initialized['CFE_'+name])]);
   const layers=[
-    ['apps','Apps','cube',apps,apps.some(([,lit])=>lit)],
-    ['cfe','cFE','layers',svc,es.includes('CORE_STARTUP') || core],
-    ['osal','OSAL','layers',['tasks','queues','files','timers'].map(x=>[x,process]),process],
-    ['psp','PSP','cpu',[['pc-linux',process]],process],
+    ['apps','Apps','cube',apps,apps.some(([,lit])=>lit) || es.includes('APPS_INIT')],
+    ['cfe','cFE','layers',svc,coreStarted || svc.some(([,lit])=>lit)],
+    ['osal','OSAL','layers',['tasks','queues','files','timers'].map(x=>[x,osal]),osal],
+    ['psp','PSP','cpu',[['pc-linux',psp]],psp],
     ['os',data.os,'terminal',[['Linux',machine||guest>=4]],machine||guest>=4],
     ['hw',data.hardware,data.target==='native'?'monitor':'circuit',[[data.architecture,machine||guest>=3]],machine||guest>=3]
   ];
   return {layers,phase,auto:layers.find(row=>row[4])?.[0]||'build',es};
 }
+// The infrastructure steps report completed jobs; each startup card requires its own ES line.
+export function bootStages(data, {phase,es}=bootLayers(data)) {
+  const steps=stagesFor(data.target);
+  const stepIndex=steps.findIndex(([id])=>id===phase);
+  const job=data.job, last=es.at(-1);
+  const fault=data.unverified?'Unverified':data.stopped?'Stopped':
+    job.status==='failed'?'Failed':job.status==='cancelled'?'Cancelled':'';
+  const preparation=steps.slice(0,-1).map(([key,label],index)=>{
+    const reached=stepIndex>index && data.trace.some(event=>event.phase===key);
+    const active=stepIndex===index && job.phase===key && Boolean(job.id);
+    const progress=stageProgress(key,job,es);
+    return {key,label,layer:key==='build'?'build':key==='boot'&&job.guest_stage>=4?'os':'hw',
+      state:reached?'done':active?(fault?'failed':'active'):'waiting',
+      caption:reached?'Ready':active?(fault || progress.label):'', percent:active&&!fault?progress.percent:null};
+  });
+  const startup=data.es_states.map(key=>{
+    const observed=es.includes(key);
+    const current=observed && key===last && key!=='OPERATIONAL';
+    const state=current && fault?'failed':current?'active':observed?'done':'waiting';
+    return {key,label:esLabels[key]||key,state,layer:['APPS_INIT','OPERATIONAL'].includes(key)?'apps':'cfe'};
+  });
+  return {preparation,startup,runStatus:phase==='run'?(fault || (!last?'Starting process':'')):''};
+}
+
+function stageCard(card,index,pickKey) {
+  const {key,label,caption,state,percent,layer}=card;
+  const measured=state==='active' && Number.isFinite(percent);
+  const complete=state==='done';
+  const status=measured?caption+' '+percent+'%':caption;
+  const spoken={waiting:'Waiting', active:'In progress', done:'Complete', failed:'Interrupted'}[state];
+  return `<button type="button" class="boot-stage" data-stage="${key}" data-stage-layer="${layer}" data-state="${state}"
+    data-boot-focus="stage-${key}" aria-label="${escape(label+', '+(status||spoken))}" aria-pressed="${pickKey===key}" title="${escape(status||key)}">
+    <span class="boot-stage-caption"><i aria-hidden="true">${complete?drawnCheck:index+1}</i><strong>${escape(label)}</strong></span>
+    <span class="boot-meter" aria-hidden="true" data-indeterminate="${state==='active'&&!measured}"><b style="width:${complete?100:measured?percent:0}%"></b></span>
+  </button>`;
+}
+
 function picture(id,data,layers) {
   const layer = layers.find(row=>row[0]===id);
   const name = layer?.[1] || 'Build';
@@ -51,7 +91,7 @@ function picture(id,data,layers) {
   } else if(id==='hw') {
     figure=`<div class="boot-hardware">${targetDrawing(data.target)}</div><code>${escape(data.architecture)}</code>`;
   } else if(id==='os') {
-    const processes=Array.from({length:8},(_,i)=>i===5?'<b>cFS</b>':'<i aria-hidden="true"></i>').join('');
+    const processes=Array.from({length:8},(_,i)=>i===5?`<b data-lit="${Boolean(data.flight.process_started)}">cFS</b>`:'<i aria-hidden="true"></i>').join('');
     figure=`<div class="boot-os-window"><header>${icon('terminal')}${escape(data.os)}</header>
       <div class="boot-processes" aria-label="Operating system processes">${processes}</div></div>`;
   } else if(id==='osal' || id==='psp') {
@@ -59,8 +99,8 @@ function picture(id,data,layers) {
     figure=`<div class="boot-portability"><span class="boot-object">${icon(psp?'layers':'cube')}${psp?'OSAL':'Your app'}</span>
       <i></i><strong>${name}</strong>
       <svg class="boot-branches" aria-hidden="true" viewBox="0 0 300 28" preserveAspectRatio="none">
-        <path d="M150 0v13h100v14 M150 13v14"/><path class="selected" d="M150 0v13H50v14"/></svg>
-      <div class="boot-options">${options.map((text,index)=>chip(text,index===0)).join('')}</div></div>`;
+        <path d="M150 0v13h100v14 M150 13v14"/><path class="${layer[4]?'selected':''}" d="M150 0v13H50v14"/></svg>
+      <div class="boot-options">${options.map((text,index)=>chip(text,index===0 && layer[4])).join('')}</div></div>`;
   } else if(id==='cfe') {
     figure=`<div class="boot-services">${layer[3].map(([service,lit])=>{
       const [glyph,label]=serviceIcons[service];
@@ -99,11 +139,12 @@ function updateNode(current,next){
 }
 
 // Replay only observations that the backend had received at this instant.
-export function bootFrame(snapshot,milliseconds) {
-  const flight={states:[],initialized:{},process_started:false}, lines=[];
+export function bootFrame(snapshot,milliseconds,lastIndex=snapshot.trace.length-1) {
+  const flight={states:[],initialized:{},platform_layers:[],process_started:false}, lines=[];
   const job={action:snapshot.job.action||'first-boot',id:snapshot.job.id||'recorded',status:'running'};
-  for(const event of snapshot.trace) {
-    if(event.ms>milliseconds) break;
+  for(let i=0;i<=lastIndex;i++){
+    const event=snapshot.trace[i];
+    if(event.ms>milliseconds)break;
     if(event.line) lines.push(event.line);
     if(event.phase) job.phase=event.phase;
     if('percent' in event) job.build_percent=event.percent;
@@ -111,6 +152,7 @@ export function bootFrame(snapshot,milliseconds) {
     if(event.activity) job.build_activity=event.activity;
     if(event.fact) {
       flight.process_started=true;
+      if(event.fact.layer) flight.platform_layers.push(event.fact.layer);
       if(event.fact.state) flight.states.push(event.fact.state);
       if(event.fact.app) flight.initialized[event.fact.app]=event.fact;
     }
@@ -122,8 +164,8 @@ function clock(milliseconds) {
   return [Math.floor(seconds/60), seconds%60].map(x=>String(x).padStart(2,'0')).join(':');
 }
 export function mountFirstBoot(container,{api,target,onNext}) {
-  let disposed=false,timer=null,requested=false,data=null,pick='',consoleOpen=false,stateOpen=false,err='';
-  let live=null, pausedAt=null, replayStart=null, replayTimer=null;
+  let disposed=false,timer=null,requested=false,data=null,pick='',pickKey='',lastCue='',consoleOpen=false,err='';
+  let live=null, pausedAt=null, pausedIndex=null, replayStart=null, replayTimer=null;
   function elapsed() {
     if(pausedAt!=null) return pausedAt;
     if(replayStart!=null) return performance.now()-replayStart;
@@ -138,11 +180,17 @@ export function mountFirstBoot(container,{api,target,onNext}) {
     if(!live) return;
     const ms=elapsed();
     if(replayStart!=null && pausedAt==null && ms>=(live.trace.at(-1)?.ms||0)) replayStart=null;
-    data=pausedAt!=null||replayStart!=null ? bootFrame(live,ms) : live;
+    data=pausedAt!=null||replayStart!=null ? bootFrame(live,ms,pausedIndex??live.trace.length-1) : live;
     if(disposed || !data)return;
-    const {layers,phase,auto,es}=model(data),steps=stagesFor(target);
-    const stage=steps.findIndex(([id])=>id===phase),job=data.job;
-    const failed=job.status==='failed'||job.status==='cancelled',running=data.running;
+    const {layers,phase,auto,es}=bootLayers(data);
+    const {preparation,startup,runStatus}=bootStages(data,{phase,es});
+    const currentStep=preparation.find(card=>card.state==='active'||card.state==='failed');
+    const prepStatus=currentStep?.percent!=null?currentStep.caption+' '+currentStep.percent+'%':currentStep?.caption;
+    const job=data.job,running=data.running,failed=['failed','cancelled'].includes(job.status);
+    const cue=[job.id,phase,job.guest_stage,auto,es.at(-1)].join('/');
+    if(cue!==lastCue && pausedAt==null){pick='';pickKey='';}
+    lastCue=cue;
+    const selected=pick||auto;
     const focus=container.contains(document.activeElement)?document.activeElement.dataset.bootFocus:null;
     const output=container.querySelector('.boot-console pre:not([hidden])');
     const oldScroll=output?.scrollTop||0,atEnd=!output||output.scrollTop+output.clientHeight>=output.scrollHeight-4;
@@ -153,21 +201,16 @@ export function mountFirstBoot(container,{api,target,onNext}) {
       <time class="boot-clock" aria-label="Boot elapsed">${clock(elapsed())}</time>
       <button class="boot-control" data-pause data-boot-focus="pause" aria-label="${pausedAt==null?'Pause view':'Resume view'}" title="${pausedAt==null?'Pause view':'Resume view'}" ${!live.trace.length || (!replayStart && pausedAt==null && live.running)?'disabled':''}>${pausedAt==null?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14m8-14v14"/></svg>':icon('play')}</button>
       <button class="boot-control" data-replay data-boot-focus="replay" aria-label="Replay boot" title="Replay boot" ${live.trace.length<2?'disabled':''}>${icon('rotate')}</button></header>
-      <div class="boot-stages">${steps.map(([id,label],index)=>{
-        const done=running || index<stage,active=!done&&index===stage&&Boolean(job.id||es.length),error=active&&(failed||data.stopped||data.unverified);
-        const {label:activity,percent}=stageProgress(id,job,es);
-        const status=done?(id==='run'?'Operational':'Ready'):error?(data.unverified?'Unverified':data.stopped?'Stopped':'Failed'):active?(percent==null?activity:activity+' '+percent+'%'):'';
-        const run=id==='run',state=done?'done':error?'failed':active?'active':'waiting';
-        const meter=run?`<span class="boot-segments" aria-hidden="true">${data.es_states.map(s=>`<b data-lit="${es.includes(s)}"></b>`).join('')}</span>`:
-          `<span class="boot-meter" data-indeterminate="${active&&!error&&percent==null}"><b style="width:${done?100:percent||0}%"></b></span>`;
-        const content=`<i>${done?drawnCheck:index+1}</i><span class="boot-stage-body"><span class="boot-stage-caption"><strong>${label}</strong><small>${escape(status)}</small>${run?icon(stateOpen?'chevron-down':'chevron-right'):''}</span>${meter}</span>`;
-        const details=run&&stateOpen?`<div class="boot-milestones" id="boot-milestones"><h2>Executive Services</h2>${data.es_states.map(s=>`<div data-lit="${es.includes(s)}" title="${s}"><i>${es.includes(s)?drawnCheck:''}</i>${escape(esLabels[s]||s)}</div>`).join('')}</div>`:'';
-        return `<div class="boot-stage" data-state="${state}" data-stage="${id}">${run?`<button data-states type="button" data-boot-focus="states" aria-expanded="${stateOpen}" title="Executive Services milestones">${content}</button>`:`<div class="boot-stage-content">${content}</div>`}${details}</div>`;
-      }).join('')}</div>
+      <div class="boot-stages" style="--prep-width:${preparation.length}fr">
+        <section class="boot-stage-group"><h2>${escape(names[target])}<small>${escape(prepStatus||'')}</small></h2>
+        <div class="boot-track">${preparation.map((card,i)=>stageCard(card,i,pickKey)).join('')}</div></section>
+        <section class="boot-stage-group"><h2>Start cFS<small>${escape(runStatus)}</small></h2>
+        <div class="boot-track">${startup.map((card,i)=>stageCard(card,preparation.length+i,pickKey)).join('')}</div></section>
+      </div>
       <div class="boot-layout"><section class="boot-stack"><h2>cFS · layer by layer</h2>
-      ${layers.map(([id,name,glyph,chips,lit])=>`<button type="button" class="boot-layer" data-layer="${id}" data-boot-focus="${id}" title="${tooltips[id]}" aria-pressed="${id===(pick||auto)}" data-lit="${!!lit}"><span>${icon(glyph)}</span><strong>${escape(name)}</strong><span class="boot-chips">${chips.map(([text,on])=>chip(text,on)).join('')}</span></button>`).join('')}
+      ${layers.map(([id,name,glyph,chips,lit])=>`<button type="button" class="boot-layer" data-layer="${id}" data-boot-focus="${id}" title="${tooltips[id]}" aria-pressed="${id===selected}" data-current="${id===auto && !running && !failed}" data-lit="${!!lit}"><span>${icon(glyph)}</span><strong>${escape(name)}</strong><span class="boot-chips">${chips.map(([text,on])=>chip(text,on)).join('')}</span></button>`).join('')}
       </section>
-      <section class="boot-picture" data-kind="${pick||auto}" data-animating="${job.status==='running'&&!failed&&!running&&pausedAt==null}">${picture(pick||auto,data,layers)}</section></div>
+      <section class="boot-picture" data-kind="${selected}" data-animating="${selected===auto && job.status==='running'&&!failed&&!running&&pausedAt==null}">${picture(selected,data,layers)}</section></div>
       <section class="boot-console" data-open="${consoleOpen}" aria-label="Boot console">
         <div class="boot-console-sheet">
           <div class="boot-console-heading">
@@ -207,28 +250,39 @@ export function mountFirstBoot(container,{api,target,onNext}) {
   }
   const click=async event=>{
     const button=event.target.closest('button');
-    if(!button){if(stateOpen&&!event.target.closest('.boot-milestones')){stateOpen=false;draw();}return;}
-    if(!button.hasAttribute('data-states'))stateOpen=false;
-    if(button.dataset.layer)pick=pick===button.dataset.layer?'':button.dataset.layer;
-    else if(button.hasAttribute('data-replay')){replayStart=performance.now();pausedAt=null;pick='';}
+    if(!button)return;
+    if(button.dataset.stageLayer){
+      const key=button.dataset.stage;
+      if(pickKey===key){
+        pick='';pickKey='';pausedAt=null;pausedIndex=null;
+      } else {
+        pick=button.dataset.stageLayer;pickKey=key;
+        // Journald can deliver several real milestones in the same read.
+        const index=live.trace.findIndex(e=>e.phase===key || e.fact?.state===key);
+        if(index>=0){
+          pausedAt=live.trace[index].ms;pausedIndex=index;replayStart=null;
+        }
+      }
+    }
+    else if(button.dataset.layer){pickKey='';pick=pick===button.dataset.layer?'':button.dataset.layer;}
+    else if(button.hasAttribute('data-replay')){replayStart=performance.now();pausedAt=null;pausedIndex=null;pick='';pickKey='';}
     else if(button.hasAttribute('data-pause')){
       if(pausedAt==null) pausedAt=elapsed();
       else {
         if(replayStart!=null) replayStart=performance.now()-pausedAt;
-        pausedAt=null;
+        pausedAt=null;pausedIndex=null;pick='';pickKey='';
       }
     }
     else if(button.hasAttribute('data-console'))consoleOpen=!consoleOpen;
-    else if(button.hasAttribute('data-states'))stateOpen=!stateOpen;
     else if(button.hasAttribute('data-next')){onNext();return;}
     else if(button.hasAttribute('data-retry')){button.disabled=true;await start();}
     draw();
   };
   container.innerHTML='<section class="first-boot"><h1>First boot</h1></section>';
   const closeDetails=event=>{
-    if(event.key==='Escape' && (stateOpen||consoleOpen)){
+    if(event.key==='Escape' && consoleOpen){
       const fromConsole=consoleOpen&&event.target.closest('.boot-console');
-      stateOpen=false;consoleOpen=false;draw();
+      consoleOpen=false;draw();
       if(fromConsole)container.querySelector('[data-console]').focus({preventScroll:true});
     }
   };

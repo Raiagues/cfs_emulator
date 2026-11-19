@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {bootFrame,stageProgress} from '../static/first-boot.js';
+import {bootFrame,bootLayers,bootStages,stageProgress} from '../static/first-boot.js';
 
 test('replay clears measured compilation progress during installation and catalog extraction', () => {
   const snapshot={job:{},trace:[{ms:1,phase:'build',percent:80,activity:'Compiling'},
@@ -42,4 +42,26 @@ test('boot playback reveals compiler, process and EVS observations at their reco
   const finished = bootFrame(snapshot,500);
   assert.deepEqual(finished.flight.states,['OPERATIONAL']);
   assert.equal(finished.running,false);
+});
+
+test('each startup card requires its own observation; a batched record can be inspected exactly', () => {
+  const states=['EARLY_INIT','CORE_STARTUP','CORE_READY','APPS_INIT','OPERATIONAL'];
+  const snap={target:'qemu', job:{id:'flight',action:'first-boot'}, hardware:'Pi',os:'Linux',
+    apps:[{name:'demo',task:'DEMO'}],services:['ES','EVS'],es_states:states,trace:[
+      {ms:1,phase:'build'},{ms:2,phase:'boot',guest_stage:3},{ms:3,guest_stage:4},
+      {ms:6,phase:'run'},{ms:6,fact:{layer:'psp'}},{ms:6,fact:{layer:'osal'}},
+      {ms:6,fact:{state:'EARLY_INIT'}},{ms:6,fact:{state:'CORE_STARTUP'}},
+      {ms:6,fact:{app:'DEMO'}},{ms:6,fact:{state:'APPS_INIT'}},{ms:6,fact:{state:'OPERATIONAL'}}
+    ]};
+  const at=index=>bootFrame(snap,snap.trace[index].ms,index);
+  assert.deepEqual([0,1,2,4,5,6,8].map(i=>bootLayers(at(i)).auto), ['build','hw','os','psp','osal','cfe','apps']);
+  assert.deepEqual(bootStages(at(7)).startup.map(c=>c.state),['done','active','waiting','waiting','waiting']);
+  assert.deepEqual(bootStages(at(10)).startup.map(c=>c.state),['done','done','waiting','done','done']);
+  assert.deepEqual(bootStages(at(10)).preparation.map(c=>c.state),['done','done']);
+  assert.equal(bootLayers(at(7)).layers[0][3][0][1],false);
+  assert.equal(bootLayers(at(8)).layers[0][3][0][1],true);
+  const runOnly=at(10);
+  runOnly.job.action='run';
+  runOnly.trace=runOnly.trace.filter(e=>!['build','boot'].includes(e.phase));
+  assert.deepEqual(bootStages(runOnly).preparation.map(c=>c.state),['waiting','waiting']);
 });
