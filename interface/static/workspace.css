@@ -307,7 +307,7 @@ svg{fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-l
 .topbar .stop-action:not(:disabled){color:var(--fs-danger)}.topbar .stop-action:not(:disabled):hover{background:color-mix(in srgb, var(--fs-danger) 9%, transparent)}
 #feedback{position:fixed;left:60px;bottom:13px;z-index:110;max-width:min(580px,calc(100vw - 82px));padding:9px 13px;border:1px solid var(--fs-line);border-radius:var(--fs-radius-control);background:var(--fs-raised);color:var(--fs-muted);box-shadow:0 5px 18px var(--fs-shadow-3);font-size:var(--fs-caption);line-height:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;pointer-events:none}
 #feedback:empty{display:none}#feedback.error{color:var(--fs-danger);border-color:var(--fs-line);background:var(--fs-raised);white-space:normal;overflow-wrap:anywhere}
-.studio#studio{display:flex;height:calc(100dvh - var(--topbar-height) - var(--operation-height,0px));min-height:0}
+.studio#studio{display:flex;height:calc(100dvh - var(--topbar-height) - var(--operation-height,0px) - var(--fs-guide-height));min-height:0}
 .rail{flex:none}
 .rail>div{display:flex;flex-direction:column}
 .explorer{width:220px;min-width:150px;max-width:360px;resize:horizontal;flex:none;overflow:hidden;background:var(--fs-surface)}

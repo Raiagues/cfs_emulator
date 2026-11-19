@@ -780,6 +780,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
                 tar.add(payload, arcname="cpu1")
             archive.seek(0)
             self._stream(argv + [unpack], emit, cancel, stdin=archive, timeout=180)
+        emit("[deploy] Release uploaded")
         self.assert_can_start('physical', connection)
         command = shlex.join(["python3", "-", directory, release])
         with (self.root / "hardware/activate_release.py").open("rb") as script:
@@ -863,7 +864,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
         if action == "logs":
             return self._logs(target, connection, options.get("kind"), options.get("tail", 100), emit, cancel)
         if action in {"simulate", "simulate-preview"}:
-            return self._simulate(action, target, options.get("device"), options.get("model"), emit, cancel)
+            return self._simulate(action, target, options.get("device"), options.get("model"), emit, cancel, options.get("scenario"))
         if not self._lock.acquire(blocking=False):
             raise HardwareError("Another build or runtime operation is running.")
         execution_lock = None
@@ -902,19 +903,37 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
             log = self.runtime / "native.log"
             if not log.exists():
                 raise HardwareError("Run native cFS before opening its output.")
-            return self._stream(["tail", "-n", "100", "-F", str(log)], emit, cancel)
+            return self._stream(["tail", "-n", "+1" if kind == "current-flight" else "100", "-F", str(log)], emit, cancel)
         if kind == "boot" and target == "qemu":
             return self._stream(["bash", "logs.sh", "--tail", str(tail)], emit, cancel)
         argv = self.ssh_argv(target, connection)
         if kind == "boot":
             return self._stream(argv + ["journalctl -b -n 100 -f -o short-monotonic"], emit, cancel)
-        if target == "physical":
+        if kind == "current-flight":
+            service = "cfs-studio.service" if target == "physical" else "cfs.service"
+            code, invocation = self._capture(argv + [f"systemctl show --property=InvocationID --value {service}"], 15)
+            invocation = invocation.strip()
+            if code or not re.fullmatch(r"[0-9a-f]{32}", invocation):
+                raise HardwareError("Current cFS service invocation unavailable.")
+            if target == "physical":
+                # Fixed journal arguments keep the board's sudo authorization limited to this service.
+                def flight_message(line):
+                    if not line.startswith("{"):
+                        emit(line)
+                        return
+                    entry = json.loads(line)
+                    if entry.get("_SYSTEMD_INVOCATION_ID") == invocation and isinstance(entry.get("MESSAGE"), str):
+                        emit(entry["MESSAGE"])
+                return self._stream(argv + ["sudo -n journalctl -u cfs-studio.service -n all -f -o json"],
+                                    flight_message, cancel)
+            command = f"journalctl -n all -f -o cat _SYSTEMD_INVOCATION_ID={invocation}"
+        elif target == "physical":
             command = "sudo -n journalctl -u cfs-studio.service -n 100 -f -o cat"
         else:
             command = "journalctl -u cfs.service -n 100 -f -o cat"
         return self._stream(argv + [command], emit, cancel)
 
-    def _simulate(self, action, target, device, model, emit, cancel):
+    def _simulate(self, action, target, device, model, emit, cancel, scenario=None):
         """Write synthetic sensor values to QEMU, or print a local preview for simulate-preview."""
         preview = action == "simulate-preview"
         if not preview and target != "qemu":
@@ -925,14 +944,19 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
                 raise HardwareError("Select a Python sensor model to preview.")
             return self._stream([sys.executable, "-u", "-m", "sensors." + model, "--steps", "8"], emit, cancel)
         self.simulation_script(device)
+        if scenario is not None:
+            from sensors.scenarios import SCENARIOS
+            if not preview or scenario not in SCENARIOS or not device:
+                raise HardwareError("Select a local sensor scenario")
+            return self._stream([sys.executable, "-u", "-m", "sensors.scenarios", device, scenario], emit, cancel)
         if not preview and not self._qemu_running():
             raise HardwareError("Boot QEMU Linux before running synthetic data.")
         if preview:
-            command = [sys.executable, "-u", "-m", "sensors.session", "--dry-run", "--events"]
+            command = [sys.executable, "-u", "-m", "sensors.session", "--dry-run", "--events", "--steps", "24"]
             if device is not None:
                 command += ["--device", device]
         elif device is not None:
-            command = [sys.executable, "-u", "-m", "sensors.simulator", device]
+            command = [sys.executable, "-u", "-m", "sensors.session", "--events", "--device", device]
         else:
             command = [sys.executable, "-u", "-m", "sensors.session", "--events"]
         return self._stream(command, emit, cancel)

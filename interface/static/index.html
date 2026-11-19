@@ -7,6 +7,7 @@
   <title>Flight Studio</title>
   <link rel="stylesheet" href="/design.css">
   <link rel="stylesheet" href="/workspace.css">
+  <link rel="stylesheet" href="/first-boot.css">
   <link rel="stylesheet" href="/board.css">
   <link rel="stylesheet" href="/vendor/xterm.css">
   <link rel="stylesheet" href="/terminal.css">
@@ -48,6 +49,7 @@
     <button type="button" class="workspace-theme" data-theme-toggle aria-label="Switch theme"></button>
     <div id="operation-status" class="operation-status" role="status" hidden><i class="operation-spinner" aria-hidden="true"></i><span id="operation-label"></span><ol id="boot-stages" aria-label="Emulator startup"></ol><span id="operation-time"></span><button id="operation-output">Show output</button></div>
   </header>
+  <nav id="flight-guide"></nav>
   <div id="feedback" class="workspace-feedback" role="status" aria-live="polite"></div>
   <main class="studio" id="studio">
     <nav class="activity-rail rail" aria-label="Project areas">
@@ -99,6 +101,7 @@
   <dialog id="dialog"><form id="dialog-form"><header><h2 id="dialog-title"></h2><button type="button" id="close-dialog" class="icon-button" aria-label="Close"><span class="icon" data-icon="close"></span></button></header><div id="dialog-body"></div><p id="dialog-error" role="alert"></p><footer><button type="button" id="cancel-dialog">Cancel</button><button class="primary" type="submit">Apply</button></footer></form></dialog>
   <script src="/vendor/xterm.js"></script>
   <script src="/vendor/addon-fit.js"></script>
+  <script src="/journey.js" type="module"></script>
   <script src="/app.js" type="module"></script>
   <dialog id="source-inspector-dialog" aria-labelledby="source-inspector-title"><header><h2 id="source-inspector-title"></h2><button type="button" data-close-inspector aria-label="Close source inspector">×</button></header><section class="guide-body"></section></dialog>
 </body>

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Local Flight Studio. Start with: python3 interface/server.py."""
 import argparse
+from copy import deepcopy
 import json
 import secrets
 import sys
@@ -15,6 +16,7 @@ from urllib.parse import parse_qs, urlparse
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from interface.backend.workspace import Workspace
+from interface.backend import first_boot, journey
 from interface.backend.terminal import Shells
 from interface.backend.hardware_settings import device_settings, update_device
 from hardware.manager import HardwareManager
@@ -32,7 +34,7 @@ CONTENT_SECURITY_POLICY = ("default-src 'self'; style-src 'self' 'unsafe-inline'
 
 
 class Studio:
-    ACTIONS = {'clone-cfs', 'model-test', 'sensor-test', 'connect', 'probe', 'logs', 'simulate', 'setup', 'build', 'boot',
+    ACTIONS = {'first-boot', 'clone-cfs', 'model-test', 'sensor-test', 'connect', 'probe', 'logs', 'simulate', 'setup', 'build', 'boot',
                'run', 'stop', 'shutdown', 'values', 'simulate-preview'}
     BACKGROUND = {'logs', 'simulate', 'simulate-preview'}
 
@@ -64,7 +66,7 @@ class Studio:
             if self.closing:
                 raise ValueError('The server is shutting down.')
             destination = tuple(sorted(connection.items())) if connection else None
-            key = (action, target, kind, destination, options.get('device'), options.get('model'))
+            key = (action, target, kind, destination, options.get('device'), options.get('model'), options.get('scenario'))
             existing = None if exclusive else self._running_reader(action, key, target, kind, connection)
             if existing:
                 return {'id': existing['id'], 'existing': True}
@@ -72,7 +74,7 @@ class Studio:
                 raise ValueError('An operation is already running. Follow its progress in the terminal.')
             ident = secrets.token_hex(6)
             record = {'id': ident, 'action': action, 'target': target, 'connection': connection,
-                      'device': options.get('device'), 'script': script, 'retry': bool(options.get('retry')),
+                      'device': options.get('device'), 'scenario': options.get('scenario'), 'script': script, 'retry': bool(options.get('retry')),
                       'kind': kind, 'status': 'running', 'key': key,
                       'streaming': action in self.BACKGROUND, 'operation_complete': False,
                       'lines': deque(maxlen=3000), 'line_count': 0, 'started': time.time(), 'exit_code': None,
@@ -101,7 +103,7 @@ class Studio:
                 return existing
             # A boot or run job keeps streaming the log this reader would open.
             same_log = existing['kind'] == kind and existing['target'] == target and existing['connection'] == connection
-            if action == 'logs' and existing['action'] in {'boot', 'run'} and same_log:
+            if action == 'logs' and existing['action'] in {'boot', 'run', 'first-boot'} and same_log:
                 return existing
         return None
 
@@ -109,10 +111,15 @@ class Studio:
         """Validate a job request: (options with target, log kind, sensor script, SSH connection)."""
         if not isinstance(action, str) or action not in self.ACTIONS or not isinstance(options, dict):
             raise ValueError('Invalid operation')
-        if set(options) - {'target', 'connection', 'sensorless', 'kind', 'board', 'os', 'device', 'model', 'retry'}:
+        if set(options) - {'target', 'connection', 'sensorless', 'kind', 'board', 'os', 'device', 'model', 'retry', 'scenario'}:
             raise ValueError('Invalid operation parameters')
         if options.get('target', self.hardware.default_target()) not in ('native', 'qemu', 'physical'):
             raise ValueError('Invalid target')
+        if 'scenario' in options:
+            from sensors.scenarios import SCENARIOS
+            if (action != 'simulate-preview' or options['scenario'] not in SCENARIOS
+                    or not options.get('device') or 'model' in options):
+                raise ValueError('Select a local sensor scenario')
         if 'sensorless' in options and type(options['sensorless']) is not bool:
             raise ValueError('Invalid sensor profile')
         if 'retry' in options and (type(options['retry']) is not bool or action != 'boot' or options.get('target', 'qemu') != 'qemu'):
@@ -152,13 +159,17 @@ class Studio:
         elif 'device' in options or 'model' in options:
             raise ValueError('A device can only be selected for synthetic data.')
         connection = None
-        if target == 'physical' and action in {'sensor-test', 'logs', 'boot', 'run', 'stop', 'shutdown', 'connect', 'probe', 'setup'}:
+        if target == 'physical' and action in {'first-boot', 'sensor-test', 'logs', 'boot', 'run', 'stop', 'shutdown', 'connect', 'probe', 'setup'}:
             connection = self.hardware.connection(options.get('connection'))
             options['connection'] = connection
         return options, kind, script, connection
 
     def _emit(self, record, line):
         with self.lock:
+            first_boot.observe(self.hardware, record, str(line))
+            if record.get('scenario') and str(line).startswith('@scenario '):
+                record['scenario_result'] = json.loads(line[len('@scenario '):])
+                return
             if record['action'] in {'simulate', 'simulate-preview'} and str(line).startswith('@sensor '):
                 try:
                     samples = json.loads(str(line)[8:])
@@ -166,6 +177,7 @@ class Studio:
                     samples = None
                 if isinstance(samples, dict):
                     record['samples'] = dict(samples, received_at=time.time())
+                    journey.record_signal(self.hardware, record)
                     return
             if record['action'] == 'boot' and record['target'] == 'qemu':
                 output = str(line)
@@ -190,7 +202,7 @@ class Studio:
         with self.lock:
             for other in self.jobs.values():
                 here = other['target'] == target and other['connection'] == connection
-                follows = kind is None or other['action'] in {'logs', 'boot', 'run'} and other['kind'] == kind
+                follows = kind is None or other['action'] in {'first-boot', 'logs', 'boot', 'run'} and other['kind'] == kind
                 if other['streaming'] and (here and follows or elsewhere and not here):
                     other['cancel'].set()
 
@@ -204,7 +216,7 @@ class Studio:
             result = self._execute_job(record, options, emit)
             with self.lock:
                 record['result'] = result
-            if record['action'] in {'run', 'boot'} and not record['cancel'].is_set():
+            if record['action'] in {'first-boot', 'run', 'boot'} and not record['cancel'].is_set():
                 # The same output continues after startup. Release the operation
                 # lock so a long-running log tail never blocks Build/Run/Stop.
                 with self.lock:
@@ -230,11 +242,15 @@ class Studio:
                 if record['cancel'].is_set():
                     record['status'] = 'cancelled'
                 record['ended'] = time.time()
+                if record['action'] == 'simulate-preview':
+                    journey.record_signal(self.hardware, record)
             if owns_operation:
                 self.operation.release()
 
     def _execute_job(self, record, options, emit):
         action, target, kind, connection = record['action'], record['target'], record['kind'], record['connection']
+        if action == 'first-boot':
+            return first_boot.execute(self, record, options, emit)
         if action == 'clone-cfs':
             self.hardware._stream([str(self.workspace.root / 'scripts/install-cfs.sh')], emit,
                                   cancel=record['cancel'], cwd=self.workspace.root)
@@ -270,6 +286,8 @@ class Studio:
         follow = {'target': record['target'], 'kind': record['kind']}
         if record['connection']:
             follow['connection'] = record['connection']
+        if record['action'] in {'first-boot', 'run'}:
+            follow['kind'] = 'current-flight'
         if record['action'] == 'boot' and record['target'] == 'qemu':
             follow['tail'] = 0  # boot.sh already printed the serial history.
         if not record['cancel'].is_set():
@@ -289,6 +307,8 @@ class Studio:
         with self.lock:
             for job in self.jobs.values():
                 public = {key: value for key, value in job.items() if key not in ('cancel', 'thread', 'key', 'lines')}
+                if 'flight' in job:
+                    public['flight'] = deepcopy(job['flight'])
                 public['lines'] = list(job['lines'])
                 jobs.append(public)
         return jobs + self.shells.snapshots()
@@ -478,12 +498,14 @@ class Handler(BaseHTTPRequestHandler):
             query = {k: v[0] for k, v in parse_qs(url.query).items()}
             app = self.server.studio
             routes = {
+                '/api/journey': lambda: journey.snapshot(app, query.get('target')),
                 '/api/session': lambda: {'token': app.token},
                 '/api/workspace': lambda: {**app.workspace.snapshot(), 'builds': app.hardware.builds_status()},
                 '/api/tree': lambda: app.workspace.tree(query.get('path', '')),
                 '/api/files/search': lambda: app.workspace.search_files(query.get('root', 'cFS'), query.get('q', '')),
                 '/api/file': lambda: app.workspace.read_file(query['path']),
                 '/api/hardware': app.hardware.status,
+                '/api/first-boot': lambda: first_boot.snapshot(app, query.get('target', app.hardware.default_target())),
                 '/api/infrastructure': lambda: infrastructure.snapshot(app.hardware, verify_source=query.get('verify_source') == '1'),
                 '/api/simulation': app.workspace.simulation_snapshot,
                 '/api/hardware/device': lambda: device_settings(app.workspace, query.get('id')),
