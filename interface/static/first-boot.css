@@ -13,8 +13,10 @@
 .boot-stage:not(:last-child)::after {content:'';position:absolute;left:100%;top:50%;width:clamp(12px,3vw,38px);border-top:1px solid var(--fs-line);}
 .boot-stage i {position:relative;display:grid;place-items:center;width:26px;height:26px;border:1px solid var(--fs-line);border-radius:var(--fs-radius-pill);font:var(--fs-caption) var(--fs-mono);color:var(--fs-muted);}
 .boot-stage[data-state=active] i::after {content:'';position:absolute;inset:-1px;border:2px solid transparent;border-top-color:var(--fs-accent);border-radius:inherit;animation:boot-spin .75s linear infinite;}
-.boot-stage[data-state=done] i {color:var(--fs-success);border-color:var(--fs-success);}
-.boot-stage[data-state=done] svg path,.boot-success svg path {stroke-dasharray:1;animation:boot-draw .32s ease-out both;}
+.boot-stage[data-state=done] i {color:var(--fs-success);border-color:var(--fs-success);animation:fs-pop .32s ease-out both,fs-ring .52s ease-out;}
+.boot-success svg {animation:fs-pop .32s ease-out both;}
+.boot-stage[data-state=waiting] i {animation:fs-wait 1.8s ease-in-out infinite;}
+.boot-stage[data-state=done] svg path,.boot-success svg path {stroke-dasharray:1;animation:fs-check .32s ease-out both;}
 .boot-stage[data-state=failed] i {color:var(--fs-danger);border-color:var(--fs-danger);}
 .boot-stage>div {flex:1;min-width:0;}
 .boot-stage header {justify-content:space-between;}
@@ -63,7 +65,6 @@
 .first-boot footer output {color:var(--fs-danger);font-size:var(--fs-caption);}
 .first-boot footer output:empty {display:none;}
 @keyframes boot-spin {to {transform:rotate(1turn);}}
-@keyframes boot-draw {from {stroke-dashoffset:1;} to {stroke-dashoffset:0;}}
 @media(max-width:800px){.boot-layout{grid-template-columns:minmax(0,1.5fr) minmax(160px,1fr);}.boot-layer{grid-template-columns:20px minmax(60px,.65fr) minmax(0,1.8fr);gap:4px;}.boot-stack,.boot-picture{padding:8px;}.boot-chip{padding:2px 3px;}}
 @media(max-width:550px){.boot-layout{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(200px,2fr) minmax(100px,1fr);max-height:none;}.boot-services{grid-template-columns:repeat(6,1fr);}.boot-title,.boot-stage header{flex-wrap:wrap;}.boot-stage{padding:5px;}.boot-stages{gap:5px;}.boot-stage::after{display:none;}.boot-figure{overflow:auto;}.boot-layer{min-height:28px;}.boot-chips{flex-wrap:nowrap;overflow:auto;}.boot-picture .boot-services{gap:3px;}.boot-picture .boot-services>span{padding:3px;}.boot-figure .boot-hardware{max-height:100px;}}
 @media(prefers-reduced-motion:reduce){.first-boot *, .first-boot *::after {animation:none!important;transition:none!important;}}

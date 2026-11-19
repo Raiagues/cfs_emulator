@@ -64,9 +64,9 @@ export function mountFirstBoot(container,{api,target,onNext}) {
     fragment.innerHTML=`<section class="first-boot">
       <header class="boot-title"><h1>First boot</h1><span>${icon(target==='native'?'monitor':'cpu')}${escape(title)}</span><a href="/">Change</a></header>
       <div class="boot-stages">${steps.map(([id,label],index)=>{
-        const done=running || index<stage,active=!done&&index===stage&&Boolean(job.id),error=active&&failed;
+        const done=running || index<stage,active=!done&&index===stage&&Boolean(job.id),error=active&&(failed||data.stopped);
         const percent=active&&id==='build'?job.build_percent:null;
-        return `<div class="boot-stage" data-state="${done?'done':error?'failed':active?'active':'waiting'}"><i>${done?drawnCheck:index+1}</i><div><header><strong>${label}</strong><small>${done?(id==='run'?'OPERATIONAL':'Ready'):error?'Failed':percent!=null?percent+'%':active?'Running':''}</small></header><div class="boot-meter"><b style="width:${done?100:percent||0}%"></b></div></div></div>`;
+        return `<div class="boot-stage" data-state="${done?'done':error?'failed':active?'active':'waiting'}"><i>${done?drawnCheck:index+1}</i><div><header><strong>${label}</strong><small>${done?(id==='run'?'OPERATIONAL':'Ready'):error?(data.stopped?'Stopped':'Failed'):percent!=null?percent+'%':active?'Running':''}</small></header><div class="boot-meter"><b style="width:${done?100:percent||0}%"></b></div></div></div>`;
       }).join('')}</div>
       <div class="boot-layout"><section class="boot-stack"><h2>cFS · layer by layer</h2>
       ${layers.map(([id,name,glyph,chips,lit])=>`<button type="button" class="boot-layer" data-layer="${id}" data-boot-focus="${id}" title="${tooltips[id]}" aria-pressed="${id===(pick||auto)}" data-lit="${!!lit}"><span>${icon(glyph)}</span><strong>${escape(name)}</strong><span class="boot-chips">${chips.map(([text,on])=>chip(text,on)).join('')}</span></button>`).join('')}
