@@ -207,12 +207,13 @@ def execute(studio, record, options, emit):
         with studio.lock:
             record["phase"] = name
             _record(record, phase=name)
-    if target == "qemu" and hardware._qemu_running():
+    resume_emulator = target == "qemu" and hardware._qemu_running() is True
+    if resume_emulator:
         hardware.verify_running_emulator(emit, cancel)
     hardware.assert_can_start(target, record.get("connection"))
     studio.ground.stop()
     phase("build")
-    build = hardware.execute("build", emit, cancel=cancel, **options)
+    build = hardware.execute("build", emit, cancel=cancel, reuse_build=resume_emulator, **options)
     if cancel.is_set():
         raise ValueError("Build cancelled")
     emit(CATALOG_ACTIVITY)

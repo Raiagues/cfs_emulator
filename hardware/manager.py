@@ -18,6 +18,7 @@ import selectors
 import shlex
 import shutil
 import signal
+import stat
 import subprocess
 import sys
 import tarfile
@@ -897,7 +898,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
             if action == "setup":
                 return self._stream(["bash", "scripts/setup.sh"], emit, cancel)
             if action == "build":
-                return self._build(target, sensorless, emit, cancel)
+                return self._build(target, sensorless, emit, cancel, reuse=options.get("reuse_build", False))
             if action == "boot":
                 return self._boot(target, connection, bool(options.get("retry")), emit, cancel)
             if action == "run":
@@ -980,18 +981,55 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
             command = [sys.executable, "-u", "-m", "sensors.session", "--events"]
         return self._stream(command, emit, cancel)
 
-    def _build(self, target, sensorless, emit, cancel):
+    def _installed_digest(self, root, target):
+        """Identify the exact deployable tree, permissions and generated build configuration."""
+        directory = self.build_directory(target)
+        payload = root / directory / "exe/cpu1"
+        stamp = root / "project/generated" / (Path(directory).name + ".json")
+        try:
+            binary = payload / "core-cpu1"
+            if payload.is_symlink() or not binary.is_file() or not os.access(binary, os.X_OK):
+                return None
+            if not stamp.is_file() or not (payload / "cf/cfe_es_startup.scr").is_file():
+                return None
+            digest = hashlib.sha256()
+            for path in [stamp, payload, *sorted(payload.rglob("*"))]:
+                mode = path.lstat().st_mode
+                # Device nodes and links can depend on files outside the deployed tree.
+                if not (stat.S_ISREG(mode) or stat.S_ISDIR(mode)):
+                    return None
+                digest.update(os.fsencode(path.relative_to(root)) + b"\0" + str(mode).encode() + b"\0")
+                if stat.S_ISREG(mode):
+                    content = hashlib.sha256()
+                    with path.open("rb") as source:
+                        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+                            content.update(chunk)
+                    digest.update(content.digest())
+            return digest.hexdigest()
+        except OSError:
+            return None
+
+    def _build(self, target, sensorless, emit, cancel, *, reuse=False):
         if target == "native" and self._local_flight_state()["running"]:
             raise HardwareError("Stop native cFS before replacing its installed binaries.")
         if not sensorless:
             self._stream([sys.executable, "project/manage.py", "sync"], emit, cancel)
         source = self.fingerprint()
+        if reuse:
+            state = self.build_state(target, sensorless)
+            existing_root = self.runtime / "sensorless" if sensorless else self.root
+            if (state.get("fingerprint") == source and state.get("target") == target
+                    and state.get("sensorless") == sensorless and state.get("installed_sha256")
+                    and self._installed_digest(existing_root, target) == state["installed_sha256"]):
+                emit("Build ready: verified installed payload")
+                return state
         root = self._sensorless_root(emit) if sensorless else self.root
         self._stream(["bash", "scripts/build-cfs.sh", "--target", target], emit, cancel, cwd=root)
         # An edit saved while compiling is not in these binaries.
         if self.fingerprint() != source:
             raise HardwareError("Sources changed during the build; build again.")
-        state = {"fingerprint": source, "built_at": time.time(), "sensorless": sensorless, "target": target, "build_dir": self.build_directory(target)}
+        state = {"fingerprint": source, "built_at": time.time(), "sensorless": sensorless, "target": target,
+                 "build_dir": self.build_directory(target), "installed_sha256": self._installed_digest(root, target)}
         self._save(self.build_state_file(target, sensorless), state)
         return state
 
