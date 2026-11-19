@@ -89,3 +89,5 @@
 .wizard-settings>div{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.app-wizard footer{justify-content:flex-end;border-top:1px solid var(--fs-line)}.app-wizard output{margin-right:auto;color:var(--fs-danger)}
 .empty-apps{padding:8px 0}.empty-apps .primary{margin-left:auto}.empty-apps .slot,body[data-journey-step=app] .empty-apps .primary{animation:fs-wait 1.8s ease-in-out infinite}
 @media(max-width:620px){.wizard-files{grid-template-columns:1fr}.wizard-settings>div{grid-template-columns:repeat(2,1fr)}.wizard-file small{display:none}}
+
+.wizard-more summary{cursor:pointer;color:var(--fs-muted);font-size:var(--fs-caption);padding-block:4px}

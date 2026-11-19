@@ -1,15 +1,21 @@
 import {icon} from './ui.js';
 
 const groups=['How it runs','What it understands','How others reach it','How cFS finds it'];
-function fileRole(path) {
+function fileRole(path, name) {
   const file=path.split('/').at(-1);
-  if(/msgids|eventids|topicids/.test(file))return [2,'Bus addresses'];
-  if(/dispatch/.test(file))return [1,'Route messages'];
-  if(/cmds|fcncode/.test(file))return [1,'Command handlers'];
-  if(/msg|payload/.test(file))return [1,'Packet layout'];
-  if(/wakeup|schedule/.test(file))return [0,'Task schedule'];
-  if(/\.c$|\.h$/.test(file))return [0,/\.c$/.test(file)?'Task implementation':'Task interface'];
-  return [3,/cmake|CMake/.test(file)?'Build inputs':file.endsWith('.scr')?'Startup record':'Project files'];
+  if(path.includes('/unit-test/'))return [3,'Unit tests',false];
+  if(file===name+'.c')return [0,'Main loop',true];
+  if(/_eventids\.h$/.test(file))return [2,'Event numbers',true];
+  if(/msgids|topicids/.test(file))return [2,'Bus addresses',file.startsWith('default_') && file.endsWith('_msgids.h')];
+  if(/dispatch/.test(file))return [1,'Route messages',file===name+'_dispatch.c'];
+  if(/fcncode/.test(file))return [1,'Command numbers',file===name+'_fcncodes.h'];
+  if(/cmds/.test(file))return [1,'Command handlers',file===name+'_cmds.c'];
+  if(/msg|payload/.test(file))return [1,'Packet layout',file.endsWith('_msgstruct.h') && file.startsWith('default_')];
+  if(/wakeup|schedule/.test(file))return [0,'Task schedule',false];
+  if(/\.[ch]$/.test(file))return [0,file.endsWith('.c')?'Task implementation':'Task interface',false];
+  if(file.endsWith('.scr'))return [3,'Startup record',true];
+  if(/cmake/i.test(file))return [3,'Build inputs',file==='CMakeLists.txt'];
+  return [3,file.endsWith('.json')?'Mission settings':'Project files',false];
 }
 
 export function busDiagram(workspace, name, saved, esc) {
@@ -28,15 +34,20 @@ export function openAppWizard({initialName='',workspace,api,esc,refresh,onComman
   let step=0,name=initialName,draft=null,settings={},written=null,busy=false;
   const titles=['What it is','Its files','Create'];
   function files() {
-    return groups.map((title,i)=>{
-      const rows=Object.keys(draft.files).filter(path=>fileRole(path)[0]===i);
-      return '<section><h3>'+title+'</h3>'+rows.map(path=>'<div class="wizard-file" title="'+esc(path)+'">'+
-        (written?.has(path)?'<svg class="fs-tick" viewBox="0 0 16 16"><path pathLength="1" d="m3 8 3 3 7-7"/></svg>':icon('files'))+
-        '<code>'+esc(path.split('/').at(-1))+'</code><small>'+fileRole(path)[1]+'</small></div>').join('')+'</section>';
+    const records=Object.keys(draft.files).map(path=>({path,role:fileRole(path,name)}));
+    function row({path,role}) {
+      const mark=written?.has(path)?'<svg class="fs-tick" viewBox="0 0 16 16" aria-label="Written"><path pathLength="1" d="m3 8 3 3 7-7"/></svg>':icon('files');
+      return '<div class="wizard-file" title="'+esc(path)+'">'+mark+'<code>'+esc(path.split('/').at(-1))+'</code><small>'+role[1]+'</small></div>';
+    }
+    return groups.map((title,index)=>{
+      const rows=records.filter(record=>record.role[0]===index);
+      const main=rows.filter(record=>record.role[2]),more=rows.filter(record=>!record.role[2]);
+      return '<section><h3>'+title+'</h3>'+main.map(row).join('')+(more.length?'<details class="wizard-more"><summary>'+more.length+
+        ' more '+(more.length===1?'file':'files')+'</summary>'+more.map(row).join('')+'</details>':'')+'</section>';
     }).join('');
   }
   function render(){
-    const facts=[['clock','Its own task'],['workflow','Bus messages'],['link','Bus addresses']];
+    const facts=[['clock','Its own task'],['workflow','Talks through the bus'],['link','Has bus addresses']];
     const numbers=[['priority','Priority'],['stack_size','Stack · bytes'],['wakeup_hz','Wakeup · Hz'],['hk_hz','Housekeeping · Hz']];
     modal.innerHTML='<form><header><div><small>Mission app</small><h2 id="wizard-title">'+titles[step]+'</h2></div><button type="button" data-close aria-label="Close">'+icon('close')+'</button></header>'+
       '<ol class="wizard-steps">'+titles.map((t,i)=>'<li '+(i===step?'aria-current="step"':'')+'>'+String(i+1)+' · '+t+'</li>').join('')+'</ol><div class="wizard-content">'+
