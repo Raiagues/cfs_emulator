@@ -29,11 +29,17 @@
   --fs-code: #c3a6ff;
   --fs-sans: Inter, system-ui, sans-serif;
   --fs-mono: "JetBrains Mono", ui-monospace, monospace;
+  --fs-small: 10px;
   --fs-caption: 11px;
   --fs-label: 12px;
   --fs-body: 13px;
   --fs-heading: 15px;
-  --fs-radius: 5px;
+  --fs-title: 20px;
+  --fs-radius-control: 4px;
+  --fs-radius-card: 6px;
+  --fs-radius-pill: 99px;
+  --fs-radius: var(--fs-radius-control);
+  --fs-guide-height: 44px;
   --fs-motion: 150ms;
 }
 :root[data-theme="light"] {
@@ -62,11 +68,64 @@
 :focus-visible { outline: 2px solid var(--fs-accent); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
-    animation-duration: .01ms !important; animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important; scroll-behavior: auto !important;
+    animation: none !important;
+    transition: none !important; scroll-behavior: auto !important;
   }
 }
 :root[data-theme="light"] button:disabled:not(.is-running) {
   opacity: 1; color: #686154; background-color: var(--fs-surface);
   border-color: var(--fs-line); cursor: default;
+}
+
+@keyframes fs-check { from { stroke-dashoffset:1 } to { stroke-dashoffset:0 } }
+@keyframes fs-pop { from { transform:scale(.4) } 70% { transform:scale(1.14) } to { transform:scale(1) } }
+@keyframes fs-ring { from { box-shadow:0 0 0 0 var(--fs-success) } to { box-shadow:0 0 0 7px transparent } }
+@keyframes fs-fade { from { opacity:0 } to { opacity:1 } }
+@keyframes fs-wait { 50% { opacity:.65 } }
+.fs-tick { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2; }
+.fs-tick path { stroke-dasharray:1; stroke-dashoffset:0; animation:fs-check .32s ease-out; }
+@media (prefers-reduced-motion: reduce) { .fs-tick path { stroke-dashoffset:0; } }
+
+:root {
+  --fs-shadow-3: #0003;
+  --fs-shadow-5: #0005;
+  --fs-shadow-soft: #454e596b;
+  --fs-pcb: #264f40;
+  --fs-pcb-outline: #61927a;
+  --fs-trace: #406c56;
+  --fs-pin: #b7ae76;
+  --fs-silicon: #1b3a2f;
+  --fs-chip: #a2afa8;
+  --fs-chip-edge: #b6c7bb;
+  --fs-port: #91aa9b;
+  --fs-port-edge: #b0c0ad;
+  --fs-mount: #c3bb88;
+  --fs-app-face: #0e9975;
+  --fs-core-deck: #997096;
+  --fs-core-face: #a2749a;
+  --fs-osal-face: #6790b8;
+  --fs-psp-face: #8981b7;
+  --fs-metal: #829293;
+  --fs-glass: #203738;
+  --fs-wire-power: #d88070;
+  --fs-wire-ground: #9aabba;
+  --fs-wire-data: #c5ab6a;
+  --fs-wire-clock: #64c5c3;
+  --fs-shadow-8: #0008;
+  --fs-shadow-4: #0004;
+  --fs-shadow-2: #0002;
+  --fs-shadow-7: #0007;
+  --fs-scrim: #080b10a0;
+  --orbit-water: #12202b;
+  --orbit-land: #315747;
+  --orbit-grid: #293b49;
+  --orbit-night: #80b6f8;
+  --orbit-shadow: #263243;
+}
+:root[data-theme="light"] {
+  --orbit-water: #d4e2df;
+  --orbit-land: #7e9e88;
+  --orbit-grid: #aec3bb;
+  --orbit-night: #386699;
+  --orbit-shadow: #d9e1e4;
 }

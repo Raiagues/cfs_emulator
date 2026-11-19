@@ -111,7 +111,7 @@ function hardwarePanel(state, esc, native, osName) {
   const drawing = native ? `<svg class="mission-map-board-drawing" viewBox="0 0 240 155" aria-hidden="true">
     <rect x="36" y="12" width="168" height="106" rx="5" fill="#354650" stroke="#8a9fa8"/>
     <rect x="43" y="19" width="154" height="89" rx="2" fill="#1c2930" stroke="#57716e"/>
-    <text x="120" y="71" text-anchor="middle" stroke="none" fill="#c0d5ca" font-size="19">${esc(osName)}</text>
+    <text x="120" y="71" text-anchor="middle" stroke="none" fill="#c0d5ca" style="font-size:var(--fs-title)">${esc(osName)}</text>
     <path d="M111 118h18v14h31v6H80v-6h31z" fill="#839b9d" stroke="none"/></svg>` : boardIllustration();
   const devices = project.devices || [];
   return `<section class="map-panel map-hardware" data-section="hardware" aria-label="Hardware"><header class="map-panel-head">${icon('cpu')}<h2>Hardware</h2></header>

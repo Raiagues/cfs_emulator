@@ -10,7 +10,7 @@
   border: 2px solid transparent;
   border-top-color: currentColor;
   border-right-color: currentColor;
-  border-radius: 50%;
+  border-radius: var(--fs-radius-pill);
   animation: setup-spin 1s linear infinite;
 }
 #check-progress {
@@ -19,7 +19,7 @@
   height: 4px;
   width: clamp(36px, 14vw, 136px);
   accent-color: var(--fs-accent);
-  border-radius: 2px;
+  border-radius: var(--fs-radius-control);
   background: var(--fs-line);
   overflow: hidden;
 }
@@ -139,7 +139,7 @@ form:has(#checks .check-row:nth-child(9)) {
   display: inline-block;
   width: 6px;
   height: 6px;
-  border-radius: 50%;
+  border-radius: var(--fs-radius-pill);
   margin-right: 6px;
   vertical-align: 2px;
   background: var(--fs-accent);

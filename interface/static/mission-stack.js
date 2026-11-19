@@ -104,9 +104,9 @@ function boxSvg(o, camera, graph, selected, active, esc) {
     const [cx,cy]=projectPoint(camera,x+w/2,y+d/2,top);
     const c=Math.cos(camera.yaw),s=Math.sin(camera.yaw),p=Math.sin(camera.pitch), sign=c<0?-1:1;
     const m=[c*sign,s*p*sign,-s*sign,c*p*sign,cx,cy].map(v=>v.toFixed(4)).join(' ');
-    const fontSize=clamp(Math.min(w/Math.max(label.length*.62,3),d*.56),6,11);
+    const fontSize=10;
     const limit=Math.max(4,Math.floor(w/(fontSize*.59)));
-    text='<text class="cad-face-label" transform="matrix('+m+')" font-size="'+fontSize+'" text-anchor="middle" dominant-baseline="central">'+esc(label.length>limit?label.slice(0,limit-1)+'…':label)+'</text>';
+    text='<text class="cad-face-label" transform="matrix('+m+')" style="font-size:var(--fs-small)" text-anchor="middle" dominant-baseline="central">'+esc(label.length>limit?label.slice(0,limit-1)+'…':label)+'</text>';
   }
   const title=node?.name || o.label;
   return '<g class="cad-box tone-'+o.tone+(actionable?' stack-pick':'')+(chosen?' is-selected':related?' is-related':'')+(dim?' is-muted':'')+'" '+

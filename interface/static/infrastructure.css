@@ -26,7 +26,7 @@ svg { flex: none; }
 .header-actions { display: flex; align-items: center; gap: 14px; }
 #save-state { color: var(--fs-muted); font-size: var(--fs-label); }
 #save-state:not(:empty)::before, .target-caption small[data-status]::before {
-  content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 100%;
+  content: ''; display: inline-block; width: 6px; height: 6px; border-radius: var(--fs-radius-pill);
   background: var(--fs-success); margin-right: 6px; vertical-align: 2px;
 }
 #save-state[data-state="dirty"]::before, .target-caption small[data-status="missing"]::before { background: var(--fs-accent); }
@@ -44,7 +44,7 @@ form {
 }
 form:has(.setup-details > :not([hidden])) { --art-height: clamp(76px,18cqh,160px); }
 form > :not(.setup-panel) { flex-shrink: 0; }
-h1 { text-align: center; margin: 0; font-size: 22px; line-height: 1.35; font-weight: 500; letter-spacing: -.01em; }
+h1 { text-align: center; margin: 0; font-size: var(--fs-title); line-height: 1.35; font-weight: 500; letter-spacing: -.01em; }
 h2 { margin: 0; font-size: var(--fs-body); font-weight: 600; }
 #targets { display: grid; align-items: center; grid-template-columns: 1fr clamp(16px,4vw,56px) 1fr clamp(16px,4vw,56px) 1fr; }
 .target-option {
@@ -76,14 +76,14 @@ h2 { margin: 0; font-size: var(--fs-body); font-weight: 600; }
 #configuration, .fields, .actions, .stepper-field, .input-wrap, .stepper { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 #configuration { flex: 1 1 auto; }
 .stepper-field { color: var(--fs-muted); gap: 12px; }
-.stepper { flex-wrap: nowrap; gap: 0; border: 1px solid var(--fs-line); border-radius: 4px; }
-.stepper button { width: 40px; height: 40px; border: 0; padding: 0; background: var(--fs-surface); font-size: 17px; border-radius: 3px; }
+.stepper { flex-wrap: nowrap; gap: 0; border: 1px solid var(--fs-line); border-radius: var(--fs-radius-control); }
+.stepper button { width: 40px; height: 40px; border: 0; padding: 0; background: var(--fs-surface); font-size: var(--fs-heading); border-radius: var(--fs-radius-control); }
 .stepper button:hover { background: var(--fs-raised); }
 input, select, .input-wrap {
-  background: var(--fs-surface); border: 1px solid var(--fs-line); border-radius: 4px; min-height: 40px;
+  background: var(--fs-surface); border: 1px solid var(--fs-line); border-radius: var(--fs-radius-control); min-height: 40px;
   padding: 7px 10px; min-width: 0; max-width: 100%;
 }
-.stepper input { width: 46px; text-align: center; font: 14px var(--fs-mono); appearance: textfield; background: transparent; border: 0; padding: 3px; }
+.stepper input { width: 46px; text-align: center; font: var(--fs-body) var(--fs-mono); appearance: textfield; background: transparent; border: 0; padding: 3px; }
 .stepper input::-webkit-inner-spin-button, .stepper input::-webkit-outer-spin-button { appearance: none; margin: 0; }
 .input-wrap { gap: 8px; flex-wrap: nowrap; padding: 0 10px; }
 .input-wrap input { width: 150px; border: 0; padding: 6px 0; background: transparent; font: var(--fs-label) var(--fs-mono); }
@@ -94,10 +94,10 @@ input, select, .input-wrap {
 #requirements { display: flex; gap: clamp(5px,1.5vw,22px); align-items: start; }
 .requirement { display: grid; justify-items: center; gap: 5px; min-width: 64px; padding: 2px 0; border: 0; background: transparent; color: var(--fs-muted); font-size: var(--fs-caption); }
 .requirement:hover { background: transparent; }
-.requirement .ring { position: relative; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; border: 1px dashed currentColor; }
+.requirement .ring { position: relative; display: grid; place-items: center; width: 46px; height: 46px; border-radius: var(--fs-radius-pill); border: 1px dashed currentColor; }
 .requirement[data-state=ready] .ring { color: var(--fs-success); border-style: solid; background: color-mix(in srgb, var(--fs-success) 8%, transparent); }
 .requirement[data-state=missing] .ring { color: var(--fs-accent); background: var(--fs-accent-bg); }
-.requirement[data-state]:not([data-state=pending]) .ring::after { position: absolute; bottom: -2px; right: -3px; border-radius: 50%; border: 2px solid var(--fs-panel); width: 14px; height: 14px; display: grid; place-items: center; color: var(--fs-bg); font-size: 10px; font-weight: 700; }
+.requirement[data-state]:not([data-state=pending]) .ring::after { position: absolute; bottom: -2px; right: -3px; border-radius: var(--fs-radius-pill); border: 2px solid var(--fs-panel); width: 14px; height: 14px; display: grid; place-items: center; color: var(--fs-bg); font-size: var(--fs-small); font-weight: 600; }
 .requirement[data-state=ready] .ring::after { content: '✓'; background: var(--fs-success); }
 .requirement[data-state=missing] .ring::after { content: '!'; background: var(--fs-accent); }
 .requirement:hover .ring, .requirement[aria-expanded=true] .ring { outline: 1px solid currentColor; outline-offset: 3px; }
@@ -115,7 +115,7 @@ input, select, .input-wrap {
 .command-link { display: inline-flex; align-items: center; color: var(--fs-text); text-decoration: none; }
 .check-heading { flex: none; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
 #preparation { margin-left: auto; }
-#close-checks, .output-panel header button { width: 30px; height: 30px; min-height: 0; padding: 0; color: var(--fs-muted); background: transparent; font-size: 18px; border: 0; }
+#close-checks, .output-panel header button { width: 30px; height: 30px; min-height: 0; padding: 0; color: var(--fs-muted); background: transparent; font-size: var(--fs-title); border: 0; }
 #checks {
   min-height: 0; overflow: auto; overscroll-behavior: contain;
   display: grid; grid-template-columns: repeat(auto-fill,minmax(min(165px,100%),1fr)); gap: 6px;
@@ -123,7 +123,7 @@ input, select, .input-wrap {
 .check-row > div { min-width: 0; }
 .check-row small { display: block; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
 #preparation, .source-setup { flex: none; }
-.check-row { display: flex; gap: 8px; padding: 8px 10px; border-radius: 4px; background: var(--fs-surface); }
+.check-row { display: flex; gap: 8px; padding: 8px 10px; border-radius: var(--fs-radius-control); background: var(--fs-surface); }
 .check-mark { font-weight: 600; color: var(--fs-accent); }.check-row[data-ready=true] .check-mark { color: var(--fs-success); }
 .check-row strong { display: block; font-weight: 500; font-size: var(--fs-label); }
 .check-row small, #source-state { font: var(--fs-caption)/1.5 var(--fs-mono); color: var(--fs-muted); overflow-wrap: anywhere; }
@@ -137,7 +137,7 @@ input, select, .input-wrap {
 .output-dock:not(:has(.output-panel:not([hidden]))) { display: none; }
 .output-panel { display: flex; flex-direction: column; flex: 1; min-width: 0; }
 .output-panel>header { background: var(--fs-panel); display: flex; align-items: center; gap: 14px; padding: 0 16px; height: 37px; flex: none; border-bottom: 1px solid var(--fs-line); }
-.output-panel>header strong { font-weight: 550; }.output-panel header>span { font-size: var(--fs-label); color: var(--fs-muted); }.output-panel header button { margin-left: auto; }
+.output-panel>header strong { font-weight: 500; }.output-panel header>span { font-size: var(--fs-label); color: var(--fs-muted); }.output-panel header button { margin-left: auto; }
 #shell-terminal, #job-log { flex: 1; min-height: 0; margin: 0; padding: 8px 12px; }
 #shell-terminal { background: #191c22; }
 #shell-terminal .shell-screen,#shell-terminal .xterm { width: 100%; height: 100%; }
@@ -164,7 +164,7 @@ input, select, .input-wrap {
   .requirement { display: flex; align-items: center; gap: 7px; min-width: 0; }
   .requirement .ring { width: 29px; height: 29px; }
   .requirement .ring svg { width: 14px; height: 14px; }
-  .requirement[data-state]:not([data-state=pending]) .ring::after { width: 11px; height: 11px; font-size: 8px; }
+  .requirement[data-state]:not([data-state=pending]) .ring::after { width: 11px; height: 11px; font-size: var(--fs-small); }
   #checks { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .check-heading:has(#preparation:not(:empty)) #check-progress { flex: 1; min-width: 16px; width: 36px; }
   #preparation button { padding-inline: 7px; }
@@ -174,7 +174,7 @@ input, select, .input-wrap {
 /* The dock changes the workspace height independently of the browser window. */
 @container setup (max-height:650px) {
   form { --section-padding: 10px; gap: 11px; padding-block: 10px; }
-  h1 { font-size: 19px; }
+  h1 { font-size: var(--fs-title); }
   .target-caption { padding-block: 8px; }
   .requirement .ring { width: 32px; height: 32px; }
   .requirement { gap: 3px; }
