@@ -44,7 +44,8 @@ def report():
         # Device nodes only show that the I2C interface exists, not that a sensor answers.
         "i2c": sorted(str(path) for path in Path("/dev").glob("i2c-*")),
         "sudo": succeeds("sudo", "-n", "true"),
-        "authorized": succeeds("sudo", "-n", "-l", "systemctl", "start", "cfs-studio.service"),
+        "authorized": (succeeds("sudo", "-n", "-l", "systemctl", "start", "cfs-studio.service") and
+                       succeeds("sudo", "-n", "-l", "journalctl", "-u", "cfs-studio.service", "-n", "all", "-f", "-o", "json")),
         "shutdown_authorized": succeeds("sudo", "-n", "-l", "systemctl", "poweroff", "--no-block"),
         "service_installed": service_installed(),
         "service": output("systemctl", "is-active", "cfs-studio.service"),
