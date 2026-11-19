@@ -49,7 +49,7 @@ class HardwareManager:
         self._fingerprint_cache = None
         self._last_probe = self._load("probe.json")
         self._observation_lock = threading.Lock()
-        self._physical_observation = None
+        self._flight_observations = {}
 
     def _load(self, name, fallback=None):
         try:
@@ -287,24 +287,31 @@ class HardwareManager:
     def board_directory(self, board, connection=None):
         return board["home"] + "/" + self.connection(connection).get("directory", "cfs-arm64")
 
+    def observed_flight(self, target, connection=None):
+        """Share the last remote probe across status views; startup guards always check afresh."""
+        with self._observation_lock:
+            cached = self._flight_observations.get(target)
+            if cached and cached[0] == connection and time.monotonic() - cached[1] < 3:
+                return cached[2]
+            flight = dict(self._flight_state(target, connection), observed_at=time.time())
+            self._flight_observations[target] = (connection, time.monotonic(), flight)
+            return flight
+
+    def _invalidate_observation(self, target):
+        with self._observation_lock:
+            self._flight_observations.pop(target, None)
+
     def _physical_status(self):
-        """The saved board's last probe plus its live cFS service state, cached for 3 s."""
         previous = self._load("probe.json", self._last_probe)
         connection = self._load("connection.json")
         if not connection:
             return None
-        with self._observation_lock:
-            cached = self._physical_observation
-            if cached and cached[0] == connection and time.monotonic() - cached[1] < 3:
-                return dict(cached[2])
-            flight = self._flight_state("physical", connection)
-            recognized = flight['running'] is not None
-            result = dict(previous or {})
-            result.update(observed_at=time.time(), service=flight['service'], flight_running=flight['running'], pids=flight['pids'])
-            result['connected'] = True if recognized else None
-            result['observation_error'] = flight.get('error')
-            self._physical_observation = (connection, time.monotonic(), result)
-            return dict(result)
+        flight = self.observed_flight("physical", connection)
+        result = dict(previous or {})
+        result.update(observed_at=flight["observed_at"], service=flight['service'], flight_running=flight['running'], pids=flight['pids'])
+        result['connected'] = True if flight['running'] is not None else None
+        result['observation_error'] = flight.get('error')
+        return result
 
     def _local_flight_state(self):
         """core-cpuN processes whose executable is inside this checkout's cFS directory."""
@@ -366,19 +373,22 @@ class HardwareManager:
             return self._local_flight_state()
         service = 'cfs.service' if target == 'qemu' else 'cfs-studio.service'
         script = '''import json,subprocess,sys
-s=subprocess.run(['systemctl','show',sys.argv[1],'--property=ActiveState','--value'],capture_output=True,text=True)
+s=subprocess.run(['systemctl','show',sys.argv[1],'-p','ActiveState','-p','InvocationID','-p','MainPID'],capture_output=True,text=True)
 p=subprocess.run(['pgrep','-x','core-cpu[0-9]+'],capture_output=True,text=True)
-state=s.stdout.strip()
+props=dict(line.split('=',1) for line in s.stdout.splitlines() if '=' in line)
+state=props.get('ActiveState','')
 known=state in ('active','inactive','failed','activating','deactivating','reloading') and p.returncode in (0,1)
 pids=[int(pid) for pid in p.stdout.split() if pid.isdigit()]
 running=True if pids or state in ('active','activating','deactivating','reloading') else False if known else None
-print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'''
+main_pid=props.get('MainPID','')
+invocation=props.get('InvocationID') if main_pid.isdigit() and int(main_pid) in pids else None
+print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'instance':invocation}))'''
         command = 'python3 -c ' + shlex.quote(script) + ' ' + shlex.quote(service)
         argv = self.ssh_argv(target, connection) + [command]
         code, output = self._capture(argv, 8)
         try:
             state = json.loads(output.splitlines()[0]) if not code and output else None
-            if not isinstance(state, dict) or set(state) != {'service', 'pids', 'running'}:
+            if not isinstance(state, dict) or set(state) != {'service', 'pids', 'running', 'instance'}:
                 raise ValueError('Invalid state')
             return dict(state, reachable=True)
         except (ValueError, TypeError):
@@ -529,7 +539,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
             lines = output.splitlines()
         if code or not lines or lines[-1] != "process-stopped" or ACTIVE_STATES.intersection(lines):
             raise HardwareError("cFS is still running on the physical board. Stop any unmanaged core-cpu1 process before switching targets.")
-        self._physical_observation = None
+        self._invalidate_observation("physical")
         emit("Board cFS is stopped; its Linux remains on.")
 
     def _switch_target(self, target, connection, emit, cancel=None):
@@ -569,6 +579,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
         self._save("active.json", active)
 
     def _mark_stopped(self, target, connection=None):
+        self._invalidate_observation(target)
         previous = self._load("active.json", {})
         if previous.get("target") == target and (target != "physical" or self.same_board(previous.get("connection"), connection)):
             self._save("active.json", dict(previous, phase="stopped", updated_at=time.time()))
@@ -589,7 +600,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
         qemu_pids = []
         if not code:
             if running:
-                flight = self._flight_state('qemu')
+                flight = self.observed_flight('qemu')
                 service, flight_running, qemu_pids = flight['service'], flight['running'], flight['pids']
                 linux_ready = flight.get('reachable', flight_running is not None)
                 boot_error = flight.get('error') if not linux_ready else None
@@ -669,7 +680,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
         result["service_ready"] = result["ready"]
         self._last_probe = result
         self._save("probe.json", result)
-        self._physical_observation = None
+        self._invalidate_observation("physical")
         emit(f"SSH connected: {result['model']} · {result['arch']} · cFS {result['service']}")
         return result
 
@@ -749,6 +760,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
         return root, payload, state
 
     def _deploy_record(self, target, state, **extra):
+        self._invalidate_observation(target)
         records = self._load("deployed.json", {})
         records[target] = dict(state, target=target, deployed_at=time.time(), **extra)
         self._save("deployed.json", records)
@@ -862,7 +874,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
                 self.prepare_board(connection, emit, cancel)
             return self._last_probe
         if action == "logs":
-            return self._logs(target, connection, options.get("kind"), options.get("tail", 100), emit, cancel)
+            return self._logs(target, connection, options.get("kind"), options.get("tail", 100), emit, cancel, options.get("on_invocation"))
         if action in {"simulate", "simulate-preview"}:
             return self._simulate(action, target, options.get("device"), options.get("model"), emit, cancel, options.get("scenario"))
         if not self._lock.acquire(blocking=False):
@@ -897,7 +909,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
                 execution_lock.close()
             self._lock.release()
 
-    def _logs(self, target, connection, kind, tail, emit, cancel):
+    def _logs(self, target, connection, kind, tail, emit, cancel, on_invocation=None):
         """Follow the flight software output, or the Linux boot log when kind is "boot"."""
         if target == "native":
             log = self.runtime / "native.log"
@@ -915,6 +927,8 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
             invocation = invocation.strip()
             if code or not re.fullmatch(r"[0-9a-f]{32}", invocation):
                 raise HardwareError("Current cFS service invocation unavailable.")
+            if on_invocation:
+                on_invocation(invocation)
             if target == "physical":
                 # Fixed journal arguments keep the board's sudo authorization limited to this service.
                 def flight_message(line):
@@ -1052,6 +1066,6 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running}))'
         self._mark_stopped(target, connection)
         emit("Requesting Linux shutdown over SSH...")
         self._stream(argv + ["sudo -n systemctl poweroff --no-block"], emit, cancel, timeout=20)
-        self._physical_observation = None
+        self._invalidate_observation("physical")
         emit("Linux accepted the shutdown request. SSH will disconnect as the board powers off.")
         return {"shutdown_requested": True}

@@ -10,7 +10,7 @@ const chip=(name,lit)=>`<span class="boot-chip" data-lit="${!!lit}">${escape(nam
 
 function model(data) {
   const {flight,job}=data,initialized=flight.initialized||{},es=flight.states||[];
-  const phase=job.phase||(job.action==='run'?'run':'build');
+  const phase=job.phase||(job.action==='run' || es.length?'run':'build');
   const process=Boolean(flight.process_started);
   const machine=process || phase==='copy' || (phase==='run' && data.target!=='native');
   const core=es.includes('CORE_READY');
@@ -64,9 +64,9 @@ export function mountFirstBoot(container,{api,target,onNext}) {
     fragment.innerHTML=`<section class="first-boot">
       <header class="boot-title"><h1>First boot</h1><span>${icon(target==='native'?'monitor':'cpu')}${escape(title)}</span><a href="/">Change</a></header>
       <div class="boot-stages">${steps.map(([id,label],index)=>{
-        const done=running || index<stage,active=!done&&index===stage&&Boolean(job.id),error=active&&(failed||data.stopped);
+        const done=running || index<stage,active=!done&&index===stage&&Boolean(job.id||es.length),error=active&&(failed||data.stopped||data.unverified);
         const percent=active&&id==='build'?job.build_percent:null;
-        return `<div class="boot-stage" data-state="${done?'done':error?'failed':active?'active':'waiting'}"><i>${done?drawnCheck:index+1}</i><div><header><strong>${label}</strong><small>${done?(id==='run'?'OPERATIONAL':'Ready'):error?(data.stopped?'Stopped':'Failed'):percent!=null?percent+'%':active?'Running':''}</small></header><div class="boot-meter"><b style="width:${done?100:percent||0}%"></b></div></div></div>`;
+        return `<div class="boot-stage" data-state="${done?'done':error?'failed':active?'active':'waiting'}"><i>${done?drawnCheck:index+1}</i><div><header><strong>${label}</strong><small>${done?(id==='run'?'OPERATIONAL':'Ready'):error?(data.unverified?'Unverified':data.stopped?'Stopped':'Failed'):percent!=null?percent+'%':active?'Running':''}</small></header><div class="boot-meter"><b style="width:${done?100:percent||0}%"></b></div></div></div>`;
       }).join('')}</div>
       <div class="boot-layout"><section class="boot-stack"><h2>cFS · layer by layer</h2>
       ${layers.map(([id,name,glyph,chips,lit])=>`<button type="button" class="boot-layer" data-layer="${id}" data-boot-focus="${id}" title="${tooltips[id]}" aria-pressed="${id===(pick||auto)}" data-lit="${!!lit}"><span>${icon(glyph)}</span><strong>${escape(name)}</strong><span class="boot-chips">${chips.map(([text,on])=>chip(text,on)).join('')}</span></button>`).join('')}
@@ -74,7 +74,7 @@ export function mountFirstBoot(container,{api,target,onNext}) {
       ${stateOpen?`<div class="boot-es">${data.es_states.map(x=>chip(x,es.includes(x))).join('')}</div>`:''}</section>
       <section class="boot-picture" data-kind="${pick||auto}">${picture(pick||auto,data,layers)}</section></div>
       <section class="boot-console"><button class="boot-disclosure" data-console data-boot-focus="console" aria-expanded="${consoleOpen}">${icon(consoleOpen?'chevron-down':'chevron-right')}Console <code>${escape(data.lines.at(-1)||'—')}</code></button>${consoleOpen?`<pre>${escape(data.lines.join('\n'))}</pre>`:''}</section>
-      <footer>${running?`<span class="boot-success">${drawnCheck}cFS is running</span><button class="primary" data-next data-boot-focus="next">Next</button>`:!data.verified?'<a href="/">Check target</a>':failed||data.stopped||err?'<button data-retry data-boot-focus="retry">Retry first boot</button>':''}<output>${escape(err||job.error||'')}</output></footer></section>`;
+      <footer>${running?`<span class="boot-success">${drawnCheck}cFS is running</span><button class="primary" data-next data-boot-focus="next">Next</button>`:(!data.verified||data.unverified)?'<a href="/">Check target</a>':failed||data.stopped||err?'<button data-retry data-boot-focus="retry">Retry first boot</button>':''}<output>${escape(err||job.error||'')}</output></footer></section>`;
     const next=fragment.content.firstElementChild, existing=container.firstElementChild;
     if(existing?.children.length!==next.children.length)container.replaceChildren(next);
     else Array.from(next.children).forEach((node,i)=>{
@@ -96,7 +96,7 @@ export function mountFirstBoot(container,{api,target,onNext}) {
       const changed=JSON.stringify(next)!==JSON.stringify(data);
       data=next;
       if(changed)draw();
-      if(data.verified&&!requested&&!data.running&&!data.job.id&&!data.stopped){await start();draw();}
+      if(data.verified&&!requested&&!data.running&&!data.job.id&&!data.stopped&&!data.unverified){await start();draw();}
     }catch(error){if(!disposed){err=error.message;if(data)draw();else container.textContent=err;}}
     if(!disposed)timer=setTimeout(poll,600);
   }

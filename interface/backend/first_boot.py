@@ -54,7 +54,8 @@ def observe(hardware, job, line):
         if fact["state"] == "OPERATIONAL":
             hardware._save("operational-" + job["target"] + ".json",
                            {"run_id": job["id"], "time": time.time(), "target": job["target"],
-                            "connection": job.get("connection"), "apps": job.get("boot_apps"), "flight": facts})
+                            "connection": job.get("connection"), "instance": job.get("instance"),
+                            "apps": job.get("boot_apps"), "flight": facts})
 
 
 def _app_records(startup):
@@ -74,7 +75,10 @@ def snapshot(studio, target):
     hardware = studio.hardware
     if target not in {"native", "physical", "qemu"}:
         raise ValueError("Invalid boot target")
-    jobs = [j for j in studio.jobs_snapshot() if j["target"] == target and j["action"] in {"first-boot", "run"}]
+    connection = hardware._load("connection.json") if target == "physical" else None
+    jobs = [j for j in studio.jobs_snapshot()
+            if j["target"] == target and j["action"] in {"first-boot", "run"}
+            and (target != "physical" or hardware.same_board(j.get("connection"), connection))]
     job = jobs[-1] if jobs else {}
     config_data = load_config(hardware.root)
     profile = next((p for p in hardware.profiles() if target in p["targets"]
@@ -84,14 +88,25 @@ def snapshot(studio, target):
     deployed = hardware._load("deployed.json", {}).get(target, {})
     stopped_at = deployed.get("stopped_at") or 0
     stopped = stopped_at > (job.get("started") or receipt.get("time") or 0)
-    live_receipt = bool(receipt.get("time") and receipt["time"] >= deployed.get("deployed_at", 0)
-                        and not stopped and boot_observed(hardware, target))
-    flight = job.get("flight", {}) if job else receipt.get("flight", {}) if live_receipt else {}
+    matching_receipt = bool(receipt.get("time") and receipt["time"] >= deployed.get("deployed_at", 0)
+                        and boot_observed(hardware, target))
+    flight = job.get("flight", {}) if job else receipt.get("flight", {}) if matching_receipt else {}
     live = "OPERATIONAL" in flight.get("states", []) and not stopped
-    if live and target == "native":
-        local_state = hardware._local_flight_state()
-        live = deployed.get("pid") in local_state["pids"]
-        stopped = not live
+    unknown = False
+    if live:
+        if target == "native":
+            current = hardware._local_flight_state()
+            live = deployed.get("pid") in current["pids"]
+            unknown = not live and current.get("running", False) is None
+        else:
+            instance = (job or receipt).get("instance")
+            current = hardware.observed_flight(target, connection)
+            # A journal receipt may outlive SSH, the service, or an entire guest.
+            service_active = current["service"] == "active"
+            unknown = (current["service"] not in {"active", "inactive", "failed"} or
+                       service_active and not (instance and current.get("instance")))
+            live = bool(instance and service_active and current.get("instance") == instance)
+        stopped = not live and not unknown
     apps = job.get("boot_apps") if job else receipt.get("apps")
     if apps is None:
         # Before the first checkout there is no mission script to evaluate.
@@ -104,7 +119,7 @@ def snapshot(studio, target):
             "os": platform.system() if target == "native" else profile.get("os_label", "Linux"),
             "apps": apps,
             "services": [name for name in SERVICES if (hardware.root / "cFS/cfe/modules" / name.lower()).is_dir()], "es_states": STATES, "flight": flight, "stopped": stopped,
-            "running": live,
+            "running": live, "unverified": bool(unknown),
             "job": {k: job[k] for k in ("id", "status", "action", "phase", "build_percent", "error", "started") if k in job},
             "lines": lines[-300:]}
 

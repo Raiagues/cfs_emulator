@@ -66,6 +66,37 @@ class BootTest(unittest.TestCase):
             self.assertTrue(stopped["stopped"])
             self.assertTrue(boot_observed(h, "native"))
 
+    def test_remote_receipt_requires_live_service_with_same_invocation(self):
+        h = self.hardware
+        instances = ("a" * 32, "b" * 32)
+        for target in ("qemu", "physical"):
+            with self.subTest(target=target):
+                connection = {"host": "flight-board", "port": 22} if target == "physical" else None
+                if connection:
+                    h._save("connection.json", connection)
+                job = dict(self.job, phase="run", started=1, instance=instances[0], connection=connection,
+                           boot_apps=[], target=target)
+                observe(h, job, "CFE_ES_Main: CFE_ES_Main entering OPERATIONAL state")
+                # Reopening the server leaves a flight receipt, but no in-memory job.
+                studio = SimpleNamespace(hardware=h, jobs_snapshot=lambda: [])
+                with patch.object(h, "profiles", return_value=[]), patch.object(h, "_flight_state") as probe:
+                    probe.return_value = {"running": True, "service": "active", "pids": [71], "instance": instances[0]}
+                    self.assertTrue(snapshot(studio, target)["running"])
+                    self.assertTrue(snapshot(studio, target)["running"])
+                    probe.assert_called_once()
+                    for observation, stopped, unknown in (
+                        ({"running": False, "service":"inactive"}, True, False),
+                        ({"running": True, "service":"active", "instance":instances[1]}, True, False),
+                        ({"running": None, "service":"unknown"}, False, True),
+                    ):
+                        h._invalidate_observation(target)
+                        probe.return_value = observation
+                        state = snapshot(studio, target)
+                        self.assertFalse(state["running"])
+                        self.assertEqual((state["stopped"], state["unverified"]), (stopped, unknown))
+                        self.assertTrue(boot_observed(h, target))
+                        self.assertIn("OPERATIONAL", state["flight"]["states"])
+
     def test_saved_target_requires_verified_plan_and_an_installed_checkout(self):
         h = self.hardware
         for folder in ("config", "project", "cFS/.git", "cFS/cfe", "cFS/sample_defs"):
