@@ -4,7 +4,7 @@
 
 | Ambiente | Python | JavaScript |
 | --- | --- | --- |
-| Checkout com o cFS oficial instalado, após a revisão de configuração e primeiro boot | 77 de 77 passaram, inclusive os dois ciclos HTTP de missão e hardware. | 25 de 25 passaram. |
+| Checkout com o cFS oficial instalado, após a revisão de navegação | 79 de 79 passaram, incluindo os ciclos HTTP de missão e hardware e o redirecionamento para o setup antes do clone. | 33 de 33 passaram. |
 | Projeto antes do clone, ensaio anterior | 61 passaram. Os dois ciclos HTTP que dependem dos fontes oficiais foram pulados. | 20 de 20 passaram. |
 
 ## Primeiro voo nativo
@@ -38,7 +38,11 @@ Em 19 de novembro de 2026, o Raspberry Pi OS emulado já havia chegado ao login,
 | Processo e journal | `cfs.service` ativo, PID 1023. O journal dessa invocação registrou os cinco estados do ES, até `CFE_ES_Main entering OPERATIONAL state`. |
 | Retomada do console | Ao reiniciar o servidor do Studio, o mesmo serviço continuou em OPERATIONAL. Um leitor identificado pela invocação systemd recuperou o evento de inicialização **MD/1** e seguiu recebendo novas linhas. |
 | Apps | 13 entradas no startup. Doze apps emitiram seu evento EVS de inicialização. `sch_lab` confirmou a inicialização em texto no console. Seu chip aguarda um evento EVS identificado. |
-| Navegador | A faixa exibiu o build, o emulador e os cinco marcos de início do cFS. Abrir o console preservou a posição da pilha. Na versão atual, o espaço entre o rodapé e o fim da janela ficou em 18 px a 1440 × 900 e 8 px a 1366 × 768. O botão **Ground Station** abriu a etapa Event. |
+| Navegador | A faixa exibiu o build, o emulador e os cinco marcos de início do cFS. Abrir o console preservou a posição da pilha. Na versão atual, o espaço entre o rodapé e o fim da janela ficou em 18 px a 1440 × 900 e 8 px a 1366 × 768. Em OPERATIONAL, **Next** abriu a etapa **Event** no mesmo documento. |
+
+Com a placa física salva no setup e o voo ativo no QEMU, abrimos o Boot diretamente e acompanhamos os quadros renderizados no Chromium. O guia marcou **Boot**, com **Target** e **Boot** concluídos. Ao clicar em **Next**, apareceu **Event**. A estação leu o catálogo do emulador e selecionou `TO_LAB_OUTPUT_ENABLE_CC`. Voltar e avançar no navegador preservaram o alvo. A navegação enviou somente requisições de leitura.
+
+Repetimos o percurso nos dois temas, em 1440 × 900 e 1366 × 768, com atraso adicional de 370 ms nas leituras do hardware, da missão e do catálogo. A tela identificou a área durante o carregamento e coube na janela. Em um ensaio separado, interrompemos uma leitura da missão e outra do catálogo. **Retry** recuperou a estação no mesmo alvo.
 
 [![Voo QEMU em OPERATIONAL na janela do Studio](images/first-flight/boot-qemu-running.webp)](images/first-flight/boot-qemu-running.webp)
 
