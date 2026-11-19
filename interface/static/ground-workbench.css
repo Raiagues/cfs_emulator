@@ -101,7 +101,7 @@ body[data-view=communication] #view{overflow:auto;padding:clamp(10px,1.6vw,24px)
 .gs-packet-status b {font:inherit}
 .gs-values code {flex:1;min-width:0}
 .gs-values>div>span {max-width:48%;overflow-wrap:anywhere}
-.gs-shell {--sans:Arial,sans-serif;height:100%;min-height:0;font-size:var(--fs-label)}
+.gs-shell {--sans:var(--fs-sans);height:100%;min-height:0;font-size:var(--fs-label)}
 .gs-shell .gs-main {display:flex;flex-direction:column;min-height:0;overflow:hidden}
 .gs-shell .gs-list-item {font-family:var(--mono);border:0}
 .gs-shell .gs-item-label {font-size:var(--fs-label)}
@@ -160,7 +160,7 @@ body[data-view=communication] #view{overflow:auto;padding:clamp(10px,1.6vw,24px)
 }
 
 body[data-view="ground"] .visual,body[data-view="ground"] #view {min-width:0;min-height:0;overflow:hidden;padding:0}
-.flight-ground {height:100%;min-height:0;min-width:0;display:grid;grid-template-columns:clamp(160px,14vw,228px) minmax(0,1fr) clamp(220px,20vw,316px);color:var(--fs-text);background:var(--fs-bg);font:var(--fs-body)/1.45 var(--fs-sans);container:ground / inline-size}
+.flight-ground {height:100%;min-height:0;min-width:0;display:grid;grid-template-columns:clamp(176px,15.5vw,250px) minmax(0,1fr) clamp(218px,19vw,304px);color:var(--fs-text);background:var(--fs-bg);font:var(--fs-body)/1.45 var(--fs-sans);container:ground / inline-size}
 .flight-ground *{box-sizing:border-box}
 .flight-ground button,.flight-ground select,.flight-ground input,.trip-editor button {font:inherit;color:inherit}
 .flight-ground button,.flight-ground select,.flight-ground input{border:1px solid var(--fs-line);background:var(--fs-panel);border-radius:var(--fs-radius-control);min-width:0}
@@ -196,7 +196,7 @@ body[data-view="ground"] .visual,body[data-view="ground"] #view {min-width:0;min
 .trip-card{flex:1 1 60%;min-height:0;display:flex;flex-direction:column;overflow:hidden}
 .trip-modes,.trip-test-picker,.system-title{padding:8px 12px;display:flex;align-items:center;gap:6px}.trip-modes{border-bottom:1px solid var(--fs-line)}.trip-modes>div,.system-title>div,.trip-test-picker label{display:inline-flex;align-items:center;gap:5px}.trip-test-picker label{font-size:var(--fs-label);color:var(--fs-muted)}.trip-test-picker select{max-width:185px;padding:4px}
 .trip-canvas{min-height:48px;flex:1;padding:4px 12px}.trip-drawing{width:100%;height:100%;display:block}
-.trip-frame{stroke:var(--fs-line);fill:transparent;stroke-dasharray:4 5}.trip-caption{fill:var(--fs-muted);font:var(--fs-caption) var(--fs-mono)}.trip-node rect{fill:var(--fs-surface);stroke:var(--fs-line)}.trip-node text{text-anchor:middle;fill:var(--fs-text);font:var(--fs-label) var(--fs-mono)}.trip-node .node-meta{font:var(--fs-small) var(--fs-sans);fill:var(--fs-muted)}.trip-node circle{fill:var(--fs-muted)}.trip-node.seen circle{fill:var(--fs-success)}.trip-node.seen rect{stroke:var(--fs-success)}
+.trip-frame{stroke:var(--fs-line);fill:transparent;stroke-dasharray:4 5}.trip-caption{fill:var(--fs-muted);font:var(--fs-caption) var(--fs-mono)}.trip-node rect{fill:var(--fs-surface);stroke:var(--fs-line)}.trip-node text{text-anchor:start;fill:var(--fs-text);font:var(--fs-label) var(--fs-mono)}.trip-node .node-meta{font:var(--fs-small) var(--fs-sans);fill:var(--fs-muted)}.trip-node circle{fill:var(--fs-muted)}.trip-node.seen circle{fill:var(--fs-success)}.trip-node.seen rect{stroke:var(--fs-success)}
 .trip-proof-line,.trip-send-line{fill:none;stroke-width:2.3;stroke:var(--fs-success);stroke-linejoin:round;stroke-linecap:round;animation:trip-arrive 360ms ease-out}.trip-send-line{stroke:var(--fs-accent)}.uplink-end{fill:var(--fs-accent)}
 @keyframes trip-arrive{from{opacity:.2;stroke-dasharray:3 12}to{opacity:1;stroke-dasharray:12 0}}
 @media(prefers-reduced-motion:reduce){.trip-proof-line,.trip-send-line{animation:none}}
@@ -243,7 +243,7 @@ body[data-view="ground"] .visual,body[data-view="ground"] #view {min-width:0;min
 @keyframes ground-datagram {0%{offset-distance:0%;opacity:0}12%,80%{opacity:1}100%{offset-distance:100%;opacity:0}}
 @media(prefers-reduced-motion:reduce){.trip-packet{animation:none;display:none}}
 .trip-empty-track {display:block;height:12px;border:1px dashed var(--fs-line);border-radius:var(--fs-radius-pill);margin:14px 8px}
-.first-no-telemetry {display:grid;place-content:center;justify-items:center;gap:12px;flex:1;color:var(--fs-muted)}
+.first-no-telemetry {display:grid;justify-items:center;gap:12px;margin:12px;padding:20px 8px;border:1px dashed var(--fs-line);border-radius:var(--fs-radius-card);color:var(--fs-muted)}
 .first-no-telemetry>svg {width:32px;height:32px}
 .first-no-telemetry button {color:var(--fs-accent)}
 .gs-field-group h3 {font:600 var(--fs-label) var(--fs-mono);margin:8px 0}
@@ -252,3 +252,32 @@ body[data-view="ground"] .visual,body[data-view="ground"] #view {min-width:0;min
 .gs-field-card>span:first-child small {display:block;color:var(--fs-muted)}
 .gs-field-card .gs-delta {color:var(--fs-success);border:1px solid currentColor;border-radius:var(--fs-radius-pill);padding:0 4px}
 @media(max-width:1050px){.first-event-coach>*{padding:5px;gap:3px}.first-event-coach small{white-space:normal}.first-event-coach i{width:20px;height:20px}}
+
+.first-event-coach:has(>a){grid-template-columns:repeat(3,minmax(0,1fr)) auto}
+.first-event-coach [aria-current=step]{border-color:var(--fs-accent);background:var(--fs-accent-bg)}
+.first-event-coach [aria-current=step] i{color:var(--fs-accent);border-color:currentColor}
+.first-event-coach a{background:var(--fs-accent);color:var(--fs-on-accent);text-decoration:none;font-weight:600;justify-content:center}
+.first-event-coach a svg{width:14px}
+.flight-library .ground-new-command[data-all-ground-apps]{margin:8px 0;border:0;background:transparent}
+.flight-selection .ground-parameters>label,.command-no-fields,.packet-wire>summary{box-sizing:border-box;min-height:46px;border:1px solid var(--fs-line);border-radius:var(--fs-radius-control);padding:5px 10px;background:var(--fs-bg)}
+.command-no-fields{display:flex;align-items:center;flex:1;border-style:dashed;color:var(--fs-muted)}
+.flight-selection .selected-command small{display:flex;align-items:center;gap:4px}
+.flight-selection button.command-source{background:none;border:0;padding:2px;color:var(--fs-muted)}
+.flight-selection .command-source svg{width:12px;height:12px}
+.flight-selection .packet-wire>summary{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;min-width:48px}
+.packet-wire summary::-webkit-details-marker{display:none}
+.packet-bytes{display:flex;gap:2px}
+.packet-bytes b{width:7px;height:7px;border-radius:var(--fs-radius-control);background:var(--fs-code)}
+.packet-bytes b:nth-child(2){opacity:.6}.packet-bytes b:nth-child(3){background:var(--fs-accent)}.packet-bytes b:last-child{background:var(--fs-success)}
+.flight-selection button.gs-send{min-height:46px}
+.trip-legend{display:inline-flex;align-items:center;gap:5px;margin-left:auto;color:var(--fs-muted);font:var(--fs-caption) var(--fs-sans)}
+.trip-card:has(.first-test-menu) .trip-legend{margin-right:38px}
+.trip-legend i{height:2px;width:14px;background:var(--fs-accent)}.trip-legend i:nth-child(2){background:var(--fs-success);margin-left:6px}
+.trip-node-glyph rect{fill:var(--fs-raised);stroke:none}
+.flight-ground .trip-node-glyph svg{color:var(--fs-muted);fill:none;stroke:currentColor;stroke-width:1.6}
+.trip-node.seen .trip-node-glyph svg{color:var(--fs-success)}
+.trip-idle-node path,.trip-idle-node rect{fill:none;stroke:var(--fs-line);stroke-dasharray:3 3}
+.trip-idle-node text{text-anchor:middle;fill:var(--fs-muted);font:var(--fs-small) var(--fs-mono)}
+.trip-journal summary strong{font:500 var(--fs-label) var(--fs-mono);overflow-wrap:anywhere}
+.trip-journal details+details{border-top:1px solid var(--fs-line)}
+@media(max-width:980px){.first-event-coach:has(>a){grid-template-columns:repeat(3,minmax(0,1fr))}.first-event-coach a{grid-column:1/-1}}

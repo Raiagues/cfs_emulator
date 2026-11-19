@@ -32,3 +32,17 @@ test('the return path is marked off only when flight reports it',()=>{
  active.jobs[0].lines.push('EVS Port1 66/1/TO_LAB 5: TO telemetry output enabled for IP 127.0.0.1');
  assert.doesNotMatch(renderGroundRoute(active,helpers),/to_lab output off/);
 });
+
+test('the send journal retains other commands and scopes each return to its original send',()=>{
+ const flight={...state.ground.first_flight,telemetry:true,event:true,answer:true,
+   downlink_receipt:{send_id:1,mid:0x801},receipt:{send_id:9,reply:11,increase:12,baseline:2,count:3,message:'Sample NOOP confirmed'}};
+ const commands=[{...enable,event_id:1,sent_at:1},{...sample,event_id:9,sent_at:2},{...enable,event_id:15,sent_at:3}];
+ const after={...state,groundSelection:sample.id,ground:{...state.ground,first_flight:flight,commands}};
+ const page=renderGroundRoute(after,helpers);
+ assert.match(page,/data-inspect-send="1"/);
+ assert.match(page,/data-inspect-send="15"/);
+ assert.match(page,/Telemetry · MID 0x801/);
+ assert.match(page,/EVS · Sample NOOP confirmed · CommandCounter 2 → 3/);
+ const latest=renderGroundRoute({...after,groundSelection:enable.id},helpers);
+ assert.doesNotMatch(latest,/<circle[^>]+class="trip-packet returning"/);
+});

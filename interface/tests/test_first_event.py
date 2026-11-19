@@ -87,6 +87,18 @@ class FirstEventTest(unittest.TestCase):
                 self.assertTrue(ground.snapshot()['connected'])
                 ground.stop()
 
+    def test_first_downlink_is_linked_to_one_send_and_not_to_later_commands(self):
+        flight = FirstEvent(CATALOG)
+        enable = 'TO_LAB_OUTPUT_ENABLE_CC'
+        flight.sent({'id': enable, 'event_id': 2})
+        flight.received({**packet(3, 'to_lab', {}), 'errors': ['bad packet']})
+        self.assertIsNone(flight.snapshot()['downlink_receipt'])
+        flight.received({**packet(4, 'sample_app', {'CommandCounter': 7}, 2179), 'sequence': 5})
+        flight.sent({'id': enable, 'event_id': 7})
+        flight.received(packet(8, 'to_lab', {}))
+        self.assertEqual(flight.snapshot()['downlink_receipt'],
+                         {'send_id': 2, 'mid': 2179, 'sequence': 5, 'received_at': 4.5})
+
     def test_only_the_first_app_command_reply_and_its_hk_advance(self):
         flight = FirstEvent(CATALOG)
         self.assertNotIn('OTHER_NOOP_CC', flight.noops)

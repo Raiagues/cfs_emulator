@@ -10,6 +10,7 @@ class FirstEvent:
         self.destination = destination
         self.information = catalog.get('transport', {}).get('evs_information')
         self.downlink = self.event = self.answer = None
+        self.enable_send = self.downlink_receipt = None
         self.pending = None
         self.counter = {}
         self.hk_fields = {}
@@ -28,6 +29,8 @@ class FirstEvent:
                     self.hk_fields[packet['mid']] = field['name']
 
     def sent(self, command):
+        if self.enable and command['id'] == self.enable and not self.downlink:
+            self.enable_send = command['event_id']
         app = self.noops.get(command['id'])
         if app and not command.get('automatic') and not self.answer:
             self.pending = {'app': app, 'send_id': command['event_id'], 'baseline': self.counter.get(app),
@@ -39,6 +42,9 @@ class FirstEvent:
         values = packet['values']
         if not self.downlink:
             self.downlink = packet['received_at']
+            if self.enable_send is not None and packet['event_id'] > self.enable_send:
+                self.downlink_receipt = {'send_id': self.enable_send, 'mid': packet['mid'],
+                                         'sequence': packet.get('sequence'), 'received_at': self.downlink}
         field = self.hk_fields.get(packet['mid'])
         count = values.get(field)
         if field and type(count) is int:
@@ -50,11 +56,13 @@ class FirstEvent:
                 and self.information is not None and values.get('PacketID.EventType') == self.information
                 and str(values.get('PacketID.AppName', '')).casefold() == attempt['app'].casefold()
                 and re.search(r'\bno[ -]?op\b', str(values.get('Message', '')), re.I)):
-            attempt['reply'] = packet['event_id']
+            if not attempt['reply']:
+                attempt.update(reply=packet['event_id'], message=values['Message'], event_mid=packet['mid'])
             self.event = self.event or packet['received_at']
         if (packet['app'] == attempt['app'] and field and type(count) is int
                 and attempt['baseline'] is not None and count > attempt['baseline']):
-            attempt['increase'] = packet['event_id']
+            if not attempt['increase']:
+                attempt.update(increase=packet['event_id'], count=count)
         if attempt['reply'] and attempt['increase']:
             self.answer = packet['received_at']
 
@@ -64,5 +72,6 @@ class FirstEvent:
                 'event_at': self.event, 'answer_at': self.answer, 'return_host': self.destination,
                 'enable_command': self.enable, 'noop_command': standard or next(iter(self.noops), None),
                 'baseline_apps': sorted(self.counter),
+                'downlink_receipt': self.downlink_receipt,
                 'app': self.pending['app'] if self.pending else self.noops.get(standard),
                 'automatic': automatic, 'receipt': dict(self.pending) if self.pending else None}

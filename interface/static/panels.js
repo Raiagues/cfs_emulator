@@ -87,8 +87,8 @@ function commandList(state, helpers) {
   return `<label><span>${name}<small>${esc(field.type||field.format)}${field.count>1?' ['+field.count+']':''}</small></span>${input}</label>`;
  }).join('');
  const locations=Object.keys(selected.locations||{}).filter(section=>['dispatch','identifier','packet'].includes(section));
- return `<section class="flight-selection"><div class="selected-command"><small>${esc(selected.app)} · ${selected.dispatch==='mid'?hex(selected.mid):'FC '+selected.code}</small><h2 title="${esc(title)}">${esc(title)}</h2></div><form id="gs-command-form" data-command-id="${esc(selected.id)}"><div class="ground-parameters">${inputs}</div>
- <details class="packet-wire"><summary>${Number(selected.size)} B</summary><div>${commandBytes(selected,esc,hex)}${locations.map(s=>`<button type="button" data-gs-source="${esc(selected.id)}" data-source-kind="command" data-source-section="${s}">${icon('code')}${esc(s)}</button>`).join('')}</div></details>
+ return `<section class="flight-selection"><div class="selected-command"><small>${esc(selected.app)} · ${selected.dispatch==='mid'?hex(selected.mid):'FC '+selected.code}${locations.includes('identifier')?` <button type="button" class="command-source" data-gs-source="${esc(selected.id)}" data-source-kind="command" data-source-section="identifier" aria-label="Open command source">${icon('edit')}</button>`:''}</small><h2 title="${esc(title)}">${esc(title)}</h2></div><form id="gs-command-form" data-command-id="${esc(selected.id)}"><div class="ground-parameters">${inputs||'<span class="command-no-fields">No parameters</span>'}</div>
+ <details class="packet-wire"><summary aria-label="Packet layout"><i class="packet-bytes" aria-hidden="true"><b></b><b></b><b></b><b></b></i>${Number(selected.size)} B</summary><div>${commandBytes(selected,esc,hex)}${locations.map(s=>`<button type="button" data-gs-source="${esc(selected.id)}" data-source-kind="command" data-source-section="${s}">${icon('code')}${esc(s)}</button>`).join('')}</div></details>
  ${!connected && selected.id==='TO_LAB_OUTPUT_ENABLE_CC' ? `<button type="button" data-ground="start" class="gs-send" ${state.groundBusy?'disabled':''}>${icon('antenna')} Connect</button>` :
  `<button type="submit" class="gs-send" ${state.groundBusy||state.groundSending||state.catalogLoading||waitingForBaseline(state,selected)||stationState(state).runs?.some(run=>run.status==='waiting')?'disabled':''}>${icon('send')}${state.groundBusy?'Connecting…':state.groundSending?'Sending…':waitingForBaseline(state,selected)?'Waiting for HK':plan?'Run test':connected?'Send':'Connect & send'}</button>`}</form></section>`;
 }
@@ -103,8 +103,9 @@ function contactCoach(state, esc, icon) {
    ['First command',noop?noop.app+' · NOOP':'NOOP',flight.event,noop],
    ['Answer','INFO + CommandCounter ↑',flight.answer,null]
  ];
+ const current=steps.findIndex(([, , done])=>!done);
  return '<nav class="first-event-coach" aria-label="First event">'+steps.map(([label,detail,done,cmd],i)=>
-   `<${cmd?'button':'span'} ${cmd?'data-open-trip-command="'+esc(cmd.id)+'"':''} data-seen="${Boolean(done)}"><i>${done?icon('check'):i+1}</i><span><strong>${label}</strong><small>${esc(detail)}</small></span></${cmd?'button':'span'}>`).join('')+'</nav>';
+   `<${cmd?'button':'span'} ${cmd?'data-open-trip-command="'+esc(cmd.id)+'"':''} ${i===current?'aria-current="step"':''} data-seen="${Boolean(done)}"><i>${done?icon('check'):i+1}</i><span><strong>${label}</strong><small>${esc(detail)}</small></span></${cmd?'button':'span'}>`).join('')+(flight.answer?'<a href="/studio#app">Next · create app '+icon('chevron-right')+'</a>':'')+'</nav>';
 }
 export function renderGround(state,helpers){
   const {esc,icon,hex}=context(helpers), ground=stationState(state), catalog=stationCatalog(state);
@@ -115,10 +116,10 @@ export function renderGround(state,helpers){
   const narrow=state.groundPane||'route';
   return `<section class="flight-ground" data-pane="${esc(narrow)}"><header class="ground-mobile-tabs">${['commands','route','telemetry'].map(key=>`<button data-ground-pane="${key}" aria-pressed="${key===narrow}">${esc(key)}</button>`).join('')}</header>
   <aside class="flight-library"><header>Commands<button data-ground="catalog" title="Refresh catalog">${icon('refresh')} From build</button></header>
-  <label class="ground-search">${icon('search')}<input id="gs-search" type="search" aria-label="Search commands" placeholder="Search commands" value="${esc(state.groundQuery||'')}"></label>
+  ${!firstContact || state.groundQuery ? `<label class="ground-search">${icon('search')}<input id="gs-search" type="search" aria-label="Search commands" placeholder="Search commands" value="${esc(state.groundQuery||'')}"></label>`:''}
   ${!firstContact || state.groundApp ? `<label class="ground-app-filter"><select id="ground-app" aria-label="Application"><option value="">Applications</option>${catalog.appNames.map(app=>`<option ${state.groundApp===app?'selected':''}>${esc(app)}</option>`).join('')}</select></label>` : ''}
-  <nav class="gs-definition-list" aria-label="Commands">${selected?commandTree(visible,selected,state.groundQuery,managed,esc,firstContact):''}</nav>
-  ${!ground.first_flight?.event?`<button class="ground-new-command" data-all-ground-apps aria-pressed="${!!state.allGroundApps}">${icon('layers')} All apps</button>`:''}
+  <nav class="gs-definition-list" aria-label="Commands">${selected?commandTree(visible,selected,state.groundQuery,managed,esc,firstContact):''}
+  ${!ground.first_flight?.event?`<button class="ground-new-command" data-all-ground-apps aria-pressed="${!!state.allGroundApps}">${icon('layers')} All apps</button>`:''}</nav>
   ${managed.size?`<button class="ground-new-command" data-code-command="${esc([...managed].find(app=>app===state.groundApp)||[...managed][0])}">${icon('plus')} New command in code</button>`:''}
   <div class="ground-link"><span data-live="${!!ground.connected}">${ground.connected?'Connected':'Disconnected'}</span><button data-ground="${ground.connected?'stop':'start'}" ${state.groundBusy||state.catalogLoading?'disabled':''}>${ground.connected?'Disconnect':'Connect'}</button></div></aside>
   <main class="flight-command-column">${state.groundError?`<div class="gs-error" role="alert">${esc(state.groundError)}</div>`:''}
@@ -178,7 +179,9 @@ export function renderTelemetry(state, helpers) {
   const selected = visible.find(packet => packet.mid === Number(state.groundPacket)) ||
     visible.find(packet=>packet.app===app && /HK/i.test(packet.id||'')) ||
     visible.find(packet=>packet.app===app) || visible[0];
-  const heading = '<section class="gs-desk"><h2>Received telemetry <small>Target → Ground</small></h2>';
+  const receiver=state.catalog?.transport;
+  const status=ground.first_flight?.telemetry || packets.length ? [receiver?.subscription_app,receiver?.telemetry_port && 'UDP '+receiver.telemetry_port].filter(Boolean).join(' · ') : 'Off';
+  const heading = '<section class="gs-desk"><h2>Telemetry <small>'+esc(status)+'</small></h2>';
   const footer = '</section>' + telemetryEvents(state,helpers);
   if(!ground.received && !packets.length){
     const enable=state.catalog?.commands?.find(c=>c.id==='TO_LAB_OUTPUT_ENABLE_CC');
