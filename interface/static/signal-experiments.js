@@ -1,19 +1,22 @@
-import {icon} from './ui.js';
+import {highlight,icon} from './ui.js';
 
-const scenarios = [['orbit','One orbit','compass'],['eclipse','Eclipse entry','moon'],['dropout','Sensor drops out','pulse']];
+const scenarios = [['orbit','One orbit','compass','Full period'],['eclipse','Eclipse entry','moon','Sun → shadow'],['dropout','Sensor drops out','pulse','Loss → recovery']];
 const number = n => Number.isFinite(n) ? Number(n.toFixed(3)).toString() : '—';
 
 export function pythonPanel(state,esc,active,reason) {
   const session=state.simulation;
   const device=session?.available.find(d=>d.id===state.selectedDevice);
   const path=state.signalScript?.path||device?.script||session?.source||'';
-  const lines=state.jobs.filter(j=>['simulate','simulate-preview'].includes(j.action)&&!j.scenario).at(-1)?.lines||[];
+  const job=state.jobs.filter(j=>['simulate','simulate-preview'].includes(j.action)&&!j.scenario).at(-1);
+  const source=state.signalScript?.content||'';
+  const lines=source ? source.trimEnd().split('\n').map((_,i)=>i+1).join('\n') : '';
+  const running=job?.action==='simulate'?'QEMU':'Dry run';
   return `<section class="signal-script-card"><header><select aria-label="Python source" data-signal-script>${(session?.sources||[]).map(file=>`<option ${file===path?'selected':''}>${esc(file)}</option>`).join('')}</select>
     <button data-signal-source="${esc(path)}" title="Open source" aria-label="Open source">${icon('code')}</button>
     <button data-run-signal-test ${active?.action==='simulate'||!session?.settings.sensors.some(s=>s.enabled)?'disabled':''}>${icon('play')}${active?.action==='simulate-preview'?'Stop dry run':'Dry run'}</button>
     <button ${active?.action==='simulate'?'data-board-stop="simulate"':'data-signal-begin'} ${reason||active?.action==='simulate-preview'?'disabled':''}>${icon('send')}${active?.action==='simulate'?'Stop sending':'Send to QEMU'}</button></header>
-    <pre><code>${esc(state.signalScript?.content||'')}</code></pre></section>
-    <section class="signal-console"><h3>Console</h3><pre data-signal-console>${esc(lines.slice(-24).join('\n'))}</pre></section>`;
+    <pre><i class="signal-line-numbers" aria-hidden="true">${lines}</i><code>${highlight(source,path)}</code></pre></section>
+    <section class="signal-console"><h3>Console <span>${job?esc(running+' · '+job.status):''}</span></h3><pre data-signal-console>${esc((job?.lines||[]).slice(-24).join('\n'))}</pre></section>`;
 }
 
 function matchingReads(state,device,key,latestJob) {
@@ -36,6 +39,8 @@ function matchingReads(state,device,key,latestJob) {
 
 export function qemuPanel(state,esc) {
   const devices=state.simulation?.available||[];
+  const enabled=new Set((state.simulation?.settings.sensors||[]).filter(d=>d.enabled).map(d=>d.device));
+  const buses=state.workspace?.project?.buses||[];
   const last=state.jobs.filter(j=>j.target==='qemu'&&j.action==='simulate'&&j.samples).at(-1);
   const rows=devices.map(device=>{
     const active=last?.samples.devices?.find(d=>d.id===device.id);
@@ -50,10 +55,12 @@ export function qemuPanel(state,esc) {
       const observed=matchingReads(state,device,key,last);
       reads.push(observed.length?observed.map(x=>cell(number(x.value)+' '+prop.unit,x.app)).join(''):cell('—',prop.telemetry_field||key));
     }
-    return `<section class="chain-device"><header><b>${esc(device.name||device.id)}</b><code>${esc(device.qom_path)}</code><small>${esc(device.bus)} · 0x${device.address.toString(16)}</small></header>
+    return `<section class="chain-device"><header><b>${esc(device.name||device.id)}</b><span class="chain-selected" data-on="${enabled.has(device.id)}">${enabled.has(device.id)?'Selected':'Off'}</span><code>${esc(device.qom_path)}</code><small>${esc(device.bus)} · 0x${device.address.toString(16)}</small></header>
       <div class="value-chain">${[python,qmp,registers,reads].map(c=>'<div>'+c.join('')+'</div>').join('')}</div></section>`;
   });
-  return `<div class="value-chain chain-head">${['Python','qom-set','Device register','cFS read'].map(s=>'<span>'+s+'</span>').join('')}</div>${rows.join('')||'<div class="signal-empty">No devices</div>'}`;
+  if(!devices.length && !buses.length)return `<section class="signal-empty-device">${icon('circuit')}<strong>No devices</strong><button data-signal-hardware>Open hardware</button></section>`;
+  const hardware=`<div class="signal-hardware-summary"><section><h3>QEMU arguments</h3><pre>${devices.map(d=>d.device_argument?'-device '+esc(d.device_argument):'').filter(Boolean).join('\n')}</pre></section><section><h3>Configured buses</h3>${buses.map(bus=>`<div><b>${esc(bus)}</b><small>${esc(devices.filter(d=>d.bus===bus).map(d=>'0x'+d.address.toString(16)).join(' · ')||'No devices')}</small></div>`).join('')}</section></div>`;
+  return `<div class="value-chain chain-head">${['Python','qom-set','Device register','cFS read'].map(s=>'<span>'+s+'</span>').join('')}</div>${rows.join('')}${hardware}`;
 }
 
 export function scenarioPanel(state,esc,active) {
@@ -61,7 +68,7 @@ export function scenarioPanel(state,esc,active) {
   const enabled=state.simulation?.settings.sensors.filter(s=>s.enabled)||[];
   const device=state.selectedDevice||enabled[0]?.device;
   const job=state.jobs.filter(j=>j.action==='simulate-preview'&&j.device===device&&j.scenario===name).at(-1);
-  const result=job?.scenario_result;
+  const result=state.scenarioStarting?null:job?.scenario_result;
   const outputs=Object.keys(result?.units||{});
   const key=outputs.includes(state.signalTestOutput)?state.signalTestOutput:outputs[0];
   let chart='';
@@ -79,11 +86,11 @@ export function scenarioPanel(state,esc,active) {
         }
         return path;
       };
-      chart=`<div class="signal-check-graph"><output>${number(max)}<br>${number(min)}</output><svg viewBox="0 0 1000 150" preserveAspectRatio="none" role="img" aria-label="Sent and local HAL read"><path class="sent-trace" d="${makePath('sent')}"/><path class="read-trace" d="${makePath('read')}"/></svg></div>`;
+      chart=`<div class="signal-check-graph"><output>${number(max)}<br>${number(min)}</output><svg viewBox="0 0 1000 150" preserveAspectRatio="none" role="img" aria-label="Sent and local HAL read"><path class="sent-trace" d="${makePath('sent')}"/><path class="read-trace" d="${makePath('read')}"/></svg></div><div class="signal-test-axis"><span>${number(points[0].t/60)} min</span><span>${number(points.at(-1).t/60)} min</span></div>`;
     }
   }
-  return `<nav class="scenario-choices" aria-label="Scenario">${scenarios.map(([id,title,glyph])=>`<button data-signal-scenario="${id}" aria-pressed="${id===name}">${icon(glyph)}${title}</button>`).join('')}<button class="scenario-run" data-run-signal-scenario ${active||!device?'disabled':''}>${icon('play')}Run</button></nav>
+  return `<nav class="scenario-choices" aria-label="Scenario">${scenarios.map(([id,title,glyph,detail])=>`<button data-signal-scenario="${id}" aria-pressed="${id===name}">${icon(glyph)}<span>${title}<small>${detail}</small></span></button>`).join('')}<button class="scenario-run" data-run-signal-scenario ${active||state.scenarioStarting||!device?'disabled':''}>${icon('play')}${state.scenarioStarting||job?.status==='running'?'Running':'Run'}</button></nav>
     <section class="signal-scenario-card"><header><strong>${esc(device||'Sensor')}</strong><span>Python sent</span><span>Local HAL read</span>${outputs.length?`<select aria-label="Output" data-test-output>${outputs.map(k=>`<option ${k===key?'selected':''}>${esc(k)}</option>`).join('')}</select><small>${esc(result.units[key])}</small>`:''}</header>
-    ${chart||`<div class="signal-empty">${job?.status==='running'?'Running':esc(job?.error||'Awaiting run')}</div>`}</section>
-    <section class="signal-checks"><h3>Checks</h3>${Object.entries(result?.checks||{}).map(([label,passed])=>`<div><strong data-passed="${passed}">${passed?'✓':'×'}</strong>${esc(label)}</div>`).join('')}</section>`;
+    ${chart||`<div class="signal-empty empty-test-chart">${state.scenarioStarting||job?.status==='running'?'Running':esc(job?.error||'Awaiting run')}</div>`}</section>
+    <section class="signal-checks"><h3>Checks <span>${result?Object.values(result.checks).filter(Boolean).length+' / '+Object.keys(result.checks).length:''}</span></h3>${Object.entries(result?.checks||{}).map(([label,passed])=>`<div><strong data-passed="${passed}">${passed?'✓':'×'}</strong>${esc(label)}</div>`).join('')}</section>`;
 }

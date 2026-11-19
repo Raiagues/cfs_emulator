@@ -24,7 +24,9 @@ class SignalScenarioTest(unittest.TestCase):
             device = dict(name='Cabin', id='cabin', model='thermal_probe', bus='i2c-bus.1', address=72, values={})
             config = dict(schema_version=1, board='raspi4b', os='raspios', buses=['i2c-bus.1'], devices=[device], apps=[])
             (root/'project/config.json').write_text(json.dumps(config))
-            channel = load_session(root)['available'][0]['properties']['temperature']
+            simulated = load_session(root)['available'][0]
+            self.assertEqual(simulated['device_argument'], 'thermal_probe,id=cabin,bus=i2c-bus.1,address=0x48')
+            channel = simulated['properties']['temperature']
             self.assertEqual(channel['scale'],1000)
             self.assertNotIn('register',channel)
             with self.assertRaisesRegex(ValueError, 'Register profile required'):
@@ -45,6 +47,8 @@ class SignalScenarioTest(unittest.TestCase):
                     result = run_scenario(root, device['id'], scenario)
                     self.assertTrue(all(result['checks'].values()))
                     self.assertEqual(result['units'], {'temperature':'°C'})
+                    low, high = result['ranges']['temperature']
+                    self.assertIn(f'temperature in @range {low:g}..{high:g} °C', result['checks'])
                     samples = result['samples']
                     self.assertTrue(any(row['read'].get('temperature') != row['sent']['temperature']
                                         for row in samples if row['status'] == 0))

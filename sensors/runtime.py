@@ -34,6 +34,10 @@ def qemu_models(config):
     return dict(re.findall(r'name "([^"]+)", bus ([^,\s]+)', result.stdout + result.stderr))
 
 
+def device_argument(device):
+    return f"{device['model']},id={device['id']},bus={device['bus']},address={device['address']:#x}"
+
+
 def qemu_arguments(config, root=None):
     validate_hardware(config, root)
     available = qemu_models(config)
@@ -44,10 +48,7 @@ def qemu_arguments(config, root=None):
                 f"Installed QEMU does not provide I2C model {device['model']!r}; "
                 "run ./scripts/project.sh devices"
             )
-        arguments.extend([
-            "-device",
-            f"{device['model']},id={device['id']},bus={device['bus']},address={device['address']:#x}",
-        ])
+        arguments.extend(["-device", device_argument(device)])
     return arguments
 
 

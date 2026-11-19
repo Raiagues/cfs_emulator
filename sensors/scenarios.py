@@ -99,9 +99,13 @@ def run_scenario(root, device_id, name):
     units = {s.property:s.unit for s in binding.signals if s.property in waveform.enabled}
     if not units:
         raise ValueError('Select a sensor output')
-    checks = {'Read ≈ sent':True, 'Sensor range':True}
+    bounds = {out['name']: output_limits(out) for out in model['outputs'] if out['name'] in units}
+    ranges = {key: [value / scales[key] for value in pair] for key, pair in bounds.items()}
+    labels = {key: f'{key} in @range {low:g}..{high:g} {units[key]}' for key, (low, high) in ranges.items()}
+    checks = {'Read ≈ sent': True, **dict.fromkeys(labels.values(), True)}
     if name == 'dropout':
         checks.update({'Dropout detected':True, 'Read recovered':False})
+    observed = set()
     samples = []
     with tempfile.TemporaryDirectory(prefix='flight-signal-test-') as temporary:
         bench = RegisterBench(root, model, Path(temporary))
@@ -115,14 +119,15 @@ def run_scenario(root, device_id, name):
                 checks['Read ≈ sent'] &= status == 0 and all(abs(read[k]-v) <= tolerance[k] for k,v in sent.items())
                 if name == 'dropout' and t == 16:
                     checks['Read recovered'] = status == 0
-            for out in model['outputs']:
-                low, high = output_limits(out)
-                key = out['name']
+            for key, (low, high) in bounds.items():
                 if not status and key in read:
-                    checks['Sensor range'] &= low <= read[key] <= high
+                    observed.add(key)
+                    checks[labels[key]] &= low <= read[key] <= high
             samples.append({'time':t, 'sent':{k:v/scales[k] for k,v in sent.items()},
                             'read':{} if status else {k:v/scales[k] for k,v in read.items()}, 'status':status})
-    return dict(device=device_id, scenario=name, units=units, checks=checks, samples=samples)
+    for key, label in labels.items():
+        checks[label] &= key in observed
+    return dict(device=device_id, scenario=name, units=units, ranges=ranges, checks=checks, samples=samples)
 
 
 if __name__ == '__main__':

@@ -17,6 +17,15 @@ function sensorCharts(sensor,device) {
   }
   return Array.from(byUnit,([unit,keys])=>({sensor,device,unit,keys}));
 }
+const chartsPerPage=3;
+function sessionCharts(session) {
+  return (session?.available||[]).flatMap(device=>sensorCharts(
+    session.settings.sensors.find(sensor=>sensor.device===device.id)||{...device.defaults,enabled:false},device));
+}
+export function chartPageForDevice(session,id) {
+  const index=sessionCharts(session).findIndex(chart=>chart.device.id===id);
+  return Math.floor(Math.max(0,index)/chartsPerPage);
+}
 function chartHtml({sensor,device,unit,keys},esc){
   const id=device.id+'|'+unit, chosen=seriesSelection.get(id)||'';
   return `<section class="signal-plot" data-series="${esc(id)}"><header><div class="series-title"><strong>${esc(device.name||device.id)}</strong><small>${identity(device,esc)}</small></div><small data-series-status></small>${keys.some(k=>['script','custom'].includes(sensor.signals[k]?.function))?`<button class="series-model-test" data-signal-preview-device="${esc(device.id)}" title="Run the Python model locally">Test Python</button>`:''}<div class="series-right">${keys.length>1?`<div class="series-channels" role="group" aria-label="Chart channels">${['',...keys].map(key=>`<button type="button" data-series-channel="${esc(key)}" data-series-id="${esc(id)}" aria-pressed="${chosen===key}" title="${esc(key||'All channels')}">${esc(key?key.replace(/.*[-_]/,''):'all')}</button>`).join('')}</div>`:''}<output></output></div></header><canvas class="wave-chart" data-device-id="${esc(sensor.device)}" data-unit="${esc(unit)}" role="img" aria-label="${esc(sensor.device+' waveform in '+unit)}"></canvas><div class="plot-empty" hidden></div></section>`;
@@ -31,18 +40,20 @@ export function renderSimulationBoard(state,{esc}){
     return `<div class="signal-entry" data-selected="${item.id===state.selectedDevice}"><input type="checkbox" data-simulation-enable="${esc(item.id)}" aria-label="Include ${esc(item.id)} in session" ${sensor?.enabled?'checked':''} ${active||state.simulationSaving?'disabled':''}><button class="signal-pick" data-signal-device="${esc(item.id)}" aria-pressed="${item.id===state.selectedDevice}"><span>${esc(item.name||item.id)}<small>${identity(item,esc)}</small></span><output data-sensor-reading="${esc(item.id)}"></output></button></div>`;
   }).join('');
   const reason=state.target!=='qemu'?'Emulator required':!state.hardware?.qemu?.running?'Emulator stopped':!selected.length?'No sensors selected':'';
-  const action=active?`<button data-board-stop="${active.action}">Stop</button>`:`<button data-signal-begin ${reason?'disabled':''} title="${reason||'Send samples to QEMU'}">Start</button>`;
+  const stream=active?.action==='simulate' && active;
+  const count=selected.length+' sensor'+(selected.length===1?'':'s')+' enabled';
+  const action=stream?'<button data-board-stop="simulate">Stop</button>':`<button data-signal-begin ${reason||active?'disabled':''} title="${esc(reason||(active?'Local test running':'Send samples to QEMU'))}">Start</button>`;
+  const streamStatus=`<div class="signal-session-state" data-active="${Boolean(stream)}"><i></i><strong>${stream?(stream.samples?.devices?.length?'Sending to QEMU':'Starting QEMU session'):'Synthetic data is off'}</strong><small>${esc([count,stream?'':active?'Local test running':reason].filter(Boolean).join(' · '))}</small>${action}</div>`;
   let content;
   if(tab==='signals'){
-    const charts=available.flatMap(item=>sensorCharts(sensors.find(s=>s.device===item.id)||{...item.defaults,enabled:false},item));
-    const page=Math.min(state.signalPage||0,Math.max(0,Math.ceil(charts.length/2)-1));
-    const pagination=charts.length>2?`<nav class="series-pages" aria-label="Signal charts"><button data-signal-page="${page-1}" aria-label="Previous charts" ${page?'':'disabled'}>‹</button><span>${page+1} / ${Math.ceil(charts.length/2)}</span><button data-signal-page="${page+1}" aria-label="Next charts" ${(page+1)*2>=charts.length?'disabled':''}>›</button></nav>`:'';
-    const count=active?.device?'sensor · '+active.device:selected.length+' sensor'+(selected.length===1?'':'s')+' enabled';
-    content=`<div class="signal-session-state" data-active="${Boolean(active)}"><i></i><strong>${active?.action==='simulate'?(active.samples?.devices?.length?'Sending to QEMU':'Starting QEMU session'):active?'Local test running':'Synthetic data is off'}</strong><small>${esc(active?count:[count,reason].filter(Boolean).join(' · '))}</small>${action}</div>${orbitCard()}${charts.length?`<div class="series-grid">${charts.slice(page*2,page*2+2).map(chart=>chartHtml(chart,esc)).join('')}</div>`:''}${pagination}`;
+    const charts=sessionCharts(session);
+    const page=Math.min(state.signalPage||0,Math.max(0,Math.ceil(charts.length/chartsPerPage)-1));
+    const pagination=charts.length>chartsPerPage?`<nav class="series-pages" aria-label="Signal charts"><button data-signal-page="${page-1}" aria-label="Previous charts" ${page?'':'disabled'}>‹</button><span>${page+1} / ${Math.ceil(charts.length/chartsPerPage)}</span><button data-signal-page="${page+1}" aria-label="Next charts" ${(page+1)*chartsPerPage>=charts.length?'disabled':''}>›</button></nav>`:'';
+    content=`${orbitCard()}${charts.length?`<div class="series-grid">${charts.slice(page*chartsPerPage,(page+1)*chartsPerPage).map(chart=>chartHtml(chart,esc)).join('')}</div>`:''}${pagination}`;
   }else if(tab==='python')content=pythonPanel(state,esc,active,reason);
   else if(tab==='qemu')content=qemuPanel(state,esc);
   else content=scenarioPanel(state,esc,active);
-  return `<div class="signals-bench"><aside class="signal-catalog"><h2>Synthetic data</h2><button class="signal-pick signal-orbit-pick" data-signal-orbit aria-pressed="${!device}"><i>${icon('compass')}</i><span>Orbit<small data-orbit-subtitle>${esc(orbitSubtitle(session?.settings.orbit))}</small></span></button><h3>Sensors <small>${selected.length} enabled</small></h3><div class="signal-entries">${sensorList}</div><button class="signal-add" data-signal-hardware>${icon(state.target==='native'?'circuit':'plus')}${state.target==='native'?'Hardware':'Add sensor'}</button></aside><section class="signal-main"><header class="signal-tabs"><nav aria-label="Synthetic data views">${[['signals','Signals'],['python','Python'],['qemu','QEMU'],['test','Test']].map(([id,title])=>`<button data-signal-view="${id}" aria-pressed="${tab===id}">${title}</button>`).join('')}</nav>${tab==='signals'?orbitToolbar():''}<button class="signal-settings-toggle" data-signal-sidebar aria-label="Signal settings" aria-controls="simulation-fields" aria-expanded="${state.signalSidebar!==false}">${icon('settings')}</button></header><div class="signal-content" data-tab="${tab}">${content}</div></section></div>`;
+  return `<div class="signals-bench"><aside class="signal-catalog"><h2>Synthetic data</h2><button class="signal-pick signal-orbit-pick" data-signal-orbit aria-pressed="${!device}"><i>${icon('compass')}</i><span>Orbit<small data-orbit-subtitle>${esc(orbitSubtitle(session?.settings.orbit))}</small></span></button><h3>Sensors <small>${selected.length} enabled</small></h3><div class="signal-entries">${sensorList}</div><button class="signal-add" data-signal-hardware>${icon(state.target==='native'?'circuit':'plus')}${state.target==='native'?'Hardware':'Add sensor'}</button></aside><section class="signal-main"><header class="signal-tabs"><nav aria-label="Synthetic data views">${[['signals','Signals'],['python','Python'],['qemu','QEMU'],['test','Test']].map(([id,title])=>`<button data-signal-view="${id}" aria-pressed="${tab===id}">${title}</button>`).join('')}</nav>${orbitToolbar()}<button class="signal-settings-toggle" data-signal-sidebar aria-label="Signal settings" aria-controls="simulation-fields" aria-expanded="${state.signalSidebar!==false}">${icon('settings')}</button></header>${streamStatus}<div class="signal-content" data-tab="${tab}">${content}</div></section></div>`;
 }
 const patterns=[['constant','Constant'],['sine','Sine wave'],['ramp','Linear ramp'],['orbit.sunlight','Orbit · sunlight'],['uniform','Uniform noise'],['gaussian','Gaussian noise']];
 
@@ -179,7 +190,7 @@ export function updateSignalValues(state){
     const unit=canvas.dataset.unit,section=canvas.closest('.signal-plot'), filter=seriesSelection.get(section.dataset.series), values=present.get(device.id)||{};
     const keys=Object.keys(device.properties).filter(k=>device.properties[k].unit===unit&&sensor.signals[k]?.enabled&&(!filter||k===filter));
     const measured=readings.get(device.id), lasts=keys.map(k=>formatted(values[k]));
-    section.querySelector('output').textContent=lasts.length?lasts.join('  ')+' '+unit:'—';
+    section.querySelector('output').textContent=!sensor.enabled?'—':lasts.length?lasts.join('  ')+' '+unit:'—';
     const tag=section.querySelector('[data-series-status]');
     tag.textContent=!sensor.enabled?'off':job?.action==='simulate'&&measured?'sent to QEMU':job?.action==='simulate-preview'&&measured?'local test':job?(job.device&&job.device!==device.id?'not in test':'waiting'):'preview';
     const testButton=section.querySelector('[data-signal-preview-device]');if(testButton)testButton.hidden=Boolean(job);
@@ -197,7 +208,7 @@ export function updateSignalValues(state){
     const numbers=points.flatMap(p=>keys.map(k=>p[k]).filter(Number.isFinite));
     const empty=section.querySelector('.plot-empty');
     canvas.hidden=!numbers.length;empty.hidden=Boolean(numbers.length);
-    if(!numbers.length){empty.textContent=!sensor.enabled?'Excluded from session':!keys.length?'Outputs disabled':job?'Waiting for samples…':'Awaiting Python samples';continue;}
+    if(!numbers.length){empty.textContent=!sensor.enabled?'':!keys.length?'Outputs disabled':job?'Waiting for samples…':'Awaiting Python samples';continue;}
     chart(canvas,points,keys,Math.min(...numbers),Math.max(...numbers),now,Boolean(orbital&&!job));
   }
 }

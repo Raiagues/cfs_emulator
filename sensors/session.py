@@ -12,7 +12,7 @@ from types import SimpleNamespace
 
 from project.model import board_catalog, board_catalogs, load_config
 from sensors.orbit import Orbit, ThermalMaterial, default_elements, validate as orbital_elements
-from sensors.runtime import ROOT
+from sensors.runtime import ROOT, device_argument
 from project.sensor_models import display_units, load as load_model, model_paths
 from sensors.simulator import configuration, load_waveform, sample_values, simulate, print_samples
 
@@ -187,6 +187,7 @@ def load_session(root=ROOT):
         entry = {"device": device["id"], "enabled": True, "signals": signals}
         available.append({"id": device["id"], "name": device["name"], "model": device["model"], "bus": device["bus"],
                           "address": device["address"], "qom_path": "/machine/peripheral/" + device["id"],
+                          "device_argument": device_argument(device),
                           "script": script, "source_line": model["source_line"], "sample_line": model["sample_line"],
                           "functions": [{"name": name, "line": line} for name, line in model["functions"].items()],
                           "defaults": copy.deepcopy(entry),

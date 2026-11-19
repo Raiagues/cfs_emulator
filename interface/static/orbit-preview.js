@@ -180,7 +180,7 @@ async function loadTrack(el,cycle,key,responses,materials){
 }
 export function drawOrbit(){
   const globe=document.querySelector('[data-orbit-globe]'),el=stateElements();
-  if(!globe||!el||!context)return;
+  if(!document.querySelector('[data-orbit-clock]')||!el||!context)return;
   if(firstVisit){setClock(0);firstVisit=false;}
   const time=orbitalTime(), period=track?.period||2*Math.PI*Math.sqrt((earth+(el.apogee+el.perigee)/2)**3/398600.4418);
   const sensors=context.state.simulation.settings.sensors;
@@ -190,7 +190,8 @@ export function drawOrbit(){
   const cycle=Math.floor(time/period),key=JSON.stringify([el,cycle,responses,materials]);
   if(signature!==key){if(!timer)loadTrack(el,cycle,key,responses,materials);if(!track)return;}
   const now=orbitPoint(time);
-  drawScene(globe,false,now,time);drawScene(document.querySelector('[data-orbit-map]'),true,now,time);
+  const map=document.querySelector('[data-orbit-map]');
+  if(globe && map){drawScene(globe,false,now,time);drawScene(map,true,now,time);}
   const utc=new Date(Date.parse(el.epoch)+time*1000);
   setText('[data-orbit-clock]',utc.toISOString().slice(0,19).replace('T',' ')+' UTC · orbit '+(cycle+1));
   setText('[data-orbit-position]',Math.abs(now[1]).toFixed(1)+'°'+(now[1]<0?'S':'N')+'  '+Math.abs(now[0]).toFixed(1)+'°'+(now[0]<0?'W':'E')+' · '+Math.round(now[2])+' km');
@@ -198,10 +199,12 @@ export function drawOrbit(){
   for(const [id,val] of Object.entries(facts))setText('[data-orbit-fact="'+id+'"]',val);
   setText('[data-orbit-summary="period"]',facts.period);setText('[data-orbit-summary="ecc"]',numeric(track.eccentricity,4));
   setText('[data-orbit-subtitle]',orbitSubtitle(el));
-  const active=Boolean(currentJob()),map=document.querySelector('[data-orbit-map]');
-  map.setAttribute('aria-valuenow',Math.round((time/track.period%1)*100));
-  map.setAttribute('aria-valuetext',utc.toISOString().slice(11,19)+' UTC');
-  map.setAttribute('aria-disabled',String(active));
+  const active=Boolean(currentJob());
+  if(map){
+    map.setAttribute('aria-valuenow',Math.round((time/track.period%1)*100));
+    map.setAttribute('aria-valuetext',utc.toISOString().slice(11,19)+' UTC');
+    map.setAttribute('aria-disabled',String(active));
+  }
   for(const btn of document.querySelectorAll('[data-orbit-rate]')){btn.disabled=active;btn.setAttribute('aria-pressed',+btn.dataset.orbitRate===(active?1:clock.speed));}
   const btn=document.querySelector('[data-orbit-play]');
   if(btn){btn.disabled=active;btn.textContent=clock.playing?'Ⅱ':'▶';btn.setAttribute('aria-label',clock.playing?'Pause orbit preview':'Play orbit preview');}
