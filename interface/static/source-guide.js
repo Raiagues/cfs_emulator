@@ -202,7 +202,14 @@ export function renderSourceGuide(state,esc) {
     if(h?.handler)body+=rows('fn','Handler',[jumpRow(h.handler,h.handler.symbol,guideRef(h.handler),esc)],esc);
   }else if(step===4){
     const events=h?.events || [];
-    if(!events.length && h?.handler)body+='<button class="guide-shortcut" data-edit-handler>'+icon('edit')+'Edit event emission</button>';
+    if(!events.length && h?.handler) {
+      body+='<button class="guide-shortcut" data-edit-handler>'+icon('edit')+'Edit event emission</button>';
+      const example=items.flatMap(item=>item.handler?.events||[]).find(event=>event.source?.path && event.id?.source?.path);
+      if(example) body+=rows('EVS','App example',[
+        jumpRow(example.id.source,example.id.symbol,'Event number',esc),
+        jumpRow(example.source,example.source.symbol||'CFE_EVS_SendEvent',example.severity,esc)
+      ],esc);
+    }
     body+=rows('EVS','Emissions',events.map(event=>jumpRow(event.source,event.id.symbol,event.severity,esc)),esc);
     body+=rows('ID','Event definitions',events.filter(e=>e.id.source).map(e=>jumpRow(e.id.source,e.id.symbol,Number.isInteger(e.id.value)?String(e.id.value):e.id.expression,esc)),esc);
   }else if(step===5){

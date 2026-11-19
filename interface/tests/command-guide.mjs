@@ -96,4 +96,6 @@ test('looking up another function code preserves the current author activity',()
   assert.match(renderCommandTrail(s,esc),/0\/7/);
   s.sourceStep={app:'reader',command:'CALIBRATE_CC/6144',index:4};
   assert.match(renderSourceGuide(s,esc),/data-edit-handler/);
+  assert.match(renderSourceGuide(s,esc),/READ_EID/);
+  assert.match(renderSourceGuide(s,esc),/data-source-jump="mission\/apps\/reader\/cmds.c" data-line="21"/);
 });
