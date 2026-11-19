@@ -112,6 +112,37 @@ class TestPlans:
             return dict(self.read(), id=ident)
 
 
+class PassedTests:
+    """Latest confirmed run per target and command, independent of the receiver lifetime."""
+    def __init__(self, root):
+        self.path = Path(root) / 'ground_station/.runtime/passed-tests.json'
+
+    def read(self, target=None):
+        try:
+            receipts = json.loads(self.path.read_bytes())
+        except FileNotFoundError:
+            return []
+        return [r for r in receipts if not target or r['target'] == target]
+
+    def record(self, run, catalog):
+        import fcntl
+        if (not catalog.get('build_target') or not catalog.get('build_fingerprint')
+                or run['status'] != 'passed' or not run['steps']
+                or any('observation' not in step for step in run['steps'])):
+            return
+        receipt = {'target': catalog['build_target'], 'build': catalog['build_fingerprint'],
+                   'app': run['sent']['app'], 'command': run['command'], 'finished_at': run['finished_at'],
+                   'sent_at': run['sent']['sent_at'], 'test_id': run['test_id'],
+                   'observations': [s['observation'] for s in run['steps']]}
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        with self.path.with_suffix('.lock').open('a') as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            rows = [r for r in self.read() if (r['target'], r['command']) != (receipt['target'], receipt['command'])]
+            with tempfile.NamedTemporaryFile(dir=self.path.parent, mode='w', delete=False) as f:
+                json.dump(rows + [receipt], f)
+            Path(f.name).replace(self.path)
+
+
 class RoundTrips:
     """Access under the station lock. One observation can satisfy only one step."""
     def __init__(self):

@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from ground_station.first_event import FirstEvent
+from ground_station.round_trip import PassedTests
 from ground_station.station import GroundStation
 
 
@@ -23,6 +24,24 @@ def packet(index, app, values, mid=2056):
 
 
 class FirstEventTest(unittest.TestCase):
+    def test_only_passed_runs_survive_a_new_station(self):
+        with tempfile.TemporaryDirectory() as root:
+            receipts = PassedTests(root)
+            run = {'status': 'waiting', 'sent': {'app': 'demo', 'sent_at': 1},
+                   'command': 'DEMO_ACTION_CC', 'finished_at': 3, 'test_id': 'receipt',
+                   'steps': [{'observation': {'mid': 2056, 'sequence': 21}}]}
+            catalog = dict(CATALOG, build_fingerprint='flight-build')
+            receipts.record(run, catalog)
+            self.assertEqual(receipts.read(), [])
+            receipts.record(dict(run, status='passed'), catalog)
+            restored = GroundStation(root)
+            self.assertEqual(restored.passed_tests('physical'), [])
+            saved, = restored.passed_tests('native')
+            self.assertEqual((saved['app'], saved['command'], saved['build']),
+                             ('demo', 'DEMO_ACTION_CC', 'flight-build'))
+            self.assertEqual(saved['observations'][0]['sequence'], 21)
+            self.assertFalse(restored.snapshot()['first_flight']['event'])
+
     def test_connect_waits_for_user_before_first_answer(self):
         with tempfile.TemporaryDirectory() as root:
             ground = GroundStation(root)

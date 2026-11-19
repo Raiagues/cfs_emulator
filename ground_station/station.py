@@ -4,6 +4,7 @@ import hashlib
 import json
 import re
 import socket
+import sys
 import threading
 import time
 import tempfile
@@ -12,7 +13,7 @@ from pathlib import Path
 
 from .catalog import build_catalog, apply_overrides
 from .first_event import FirstEvent
-from .round_trip import RoundTrips, TestPlans
+from .round_trip import PassedTests, RoundTrips, TestPlans
 
 
 class GroundStation:
@@ -37,6 +38,7 @@ class GroundStation:
         self._events = deque(maxlen=256)
         self._commands = deque(maxlen=100)
         self.plans = TestPlans(self.root)
+        self.receipts = PassedTests(self.root)
         self.trips = RoundTrips()
         self._communication = {}
         self._session_started = None
@@ -79,6 +81,12 @@ class GroundStation:
 
     def start(self, host, listen_host='0.0.0.0', return_host=None, build_root=None, catalog=None,
               service_instance=None, build_dir=None):
+        # The Studio may serve a different project from the installation of its
+        # Python package. Load GroundSystem from the mission's verified checkout.
+        tools = self.root / 'cFS/tools/cFS-GroundSystem'
+        for directory in (tools, tools / 'Subsystems/cmdGui', tools / 'Subsystems/tlmGUI'):
+            if directory.is_dir() and str(directory) not in sys.path:
+                sys.path.insert(0, str(directory))
         from . import official
         self.stop()
         self._official = official
@@ -264,7 +272,13 @@ class GroundStation:
                 if self.first_contact.event:
                     self._learned_targets.add(self._target)
                 if self.trips.active:
+                    active = self.trips.active
                     self.trips.observe(packet)
+                    if active['status'] == 'passed':
+                        try:
+                            self.receipts.record(active, self._active_catalog)
+                        except (OSError, ValueError) as error:
+                            self._error = 'Could not save flight receipt: ' + str(error)
             if self.first_contact.downlink and self._subscriptions_due and not self._stop.is_set():
                 # An EVS acknowledgment cannot arrive on a closed downlink. Complete
                 # subscriptions from a worker so the receiver can deliver the reply.
@@ -317,6 +331,9 @@ class GroundStation:
             if self.trips.active and self.trips.active['id'] == ident:
                 self.trips.finish('cancelled')
             return self.snapshot()
+
+    def passed_tests(self, target):
+        return self.receipts.read(target)
 
     def stop(self):
         self._stop.set()

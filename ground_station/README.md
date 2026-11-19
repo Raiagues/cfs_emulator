@@ -2,7 +2,7 @@
 
 A estação envia comandos ao cFS em execução e decodifica a telemetria recebida. Os módulos oficiais em `cFS/tools/cFS-GroundSystem/` vêm com o checkout da NASA feito no setup. O Studio usa o MiniCmdUtil para enviar comandos, o RoutingService para receber datagramas UDP e o GenericTelemetry para decodificar os pacotes. Para preparar o checkout e o ambiente Python, consulte o [guia inicial](../README.md).
 
-![Tela de comandos e telemetria da Ground Station](../docs/images/studio-ground.png)
+![Primeiro contato na Ground Station, com o destino do downlink selecionado](../docs/images/first-flight/ground-1440-dark-studio.webp)
 
 ## Enviar um comando e confirmar a resposta
 
@@ -54,6 +54,7 @@ A associação de um código de comando ao seu MID vem do despacho em C, por com
 | `hardware/.runtime/catalog-<perfil>-<fingerprint>.json` | Catálogo do build nativo ou de voo |
 | `ground_station/.runtime/definitions/<fingerprint>/` | Definições consumidas pelos módulos da NASA |
 | `ground_station/.runtime/subscriptions.json` | Inscrições confirmadas por conexão, compilação e execução do serviço |
+| `ground_station/.runtime/passed-tests.json` | Última execução aprovada por destino e comando, com o fingerprint da compilação e as observações recebidas |
 
 Editar um header altera o código da missão. Depois de compilar e executar a nova versão, **Connect** seleciona seu catálogo pelo fingerprint. A primeira abertura de um catálogo demanda consultas ao compilador.
 

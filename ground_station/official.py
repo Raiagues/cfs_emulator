@@ -15,10 +15,6 @@ import uuid
 from pathlib import Path
 from types import SimpleNamespace
 
-ROOT = Path(__file__).resolve().parents[1] / 'cFS/tools/cFS-GroundSystem'
-for directory in (ROOT, ROOT / 'Subsystems/cmdGui', ROOT / 'Subsystems/tlmGUI'):
-    if str(directory) not in sys.path:
-        sys.path.insert(0, str(directory))
 _bytecode_setting = sys.dont_write_bytecode
 sys.dont_write_bytecode = True
 try:
