@@ -29,8 +29,8 @@ const clip=(text,n)=>text.length<=n?text:text.slice(0,n-1)+'…';
 
 function outputOff(state) {
   if(state.ground?.target===state.target && state.ground?.first_flight?.telemetry)return false;
-  const run=(state.jobs||[]).findLast(job=>job.target===state.target && job.action==='run' && job.status!=='failed');
-  if(!run)return false;
+  const run=(state.jobs||[]).findLast(job=>job.target===state.target && ['run','first-boot','stop'].includes(job.action) && job.status!=='failed');
+  if(!run || run.action==='stop')return false;
   const stateLine=run.lines.findLast(line=>/Tlm output suppressed|Awaiting enable command|TO telemetry output enabled/i.test(line));
   return Boolean(stateLine && !/TO telemetry output enabled/i.test(stateLine));
 }
@@ -60,8 +60,9 @@ function routeDiagram(state, command, steps, sent, esc, hex) {
       lines+='<path class="trip-proof-line" d="M'+x+' '+(y+23)+' V'+lead+' H'+gutter+' V'+baseline+' H'+groundX+' V'+(groundY+29)+'" marker-end="url(#downlink-arrow)"><title>'+
         esc('Received '+observed.name+' · '+hex(observed.mid)+' · sequence '+observed.sequence+' · '+time(observed.received_at))+'</title></path>';
     }
-    const title=step?(step.kind==='event'?step.app:(state.catalog?.packets||[]).find(p=>p.id===step.packet)?.app||step.packet):command?.app||'cFS';
-    const detail=step?(step.kind==='event'?(observed?'EVS #'+observed.values['PacketID.EventID']:'EVS '+(step.event_id??step.message)):step.field||'Telemetry packet'):'Command destination';
+    const standby=!step && command?.app===egress && apps.find(app=>app.name==='sample_app');
+    const title=step?(step.kind==='event'?step.app:(state.catalog?.packets||[]).find(p=>p.id===step.packet)?.app||step.packet):standby?.name||command?.app||'cFS';
+    const detail=step?(step.kind==='event'?(observed?'EVS #'+observed.values['PacketID.EventID']:'EVS '+(step.event_id??step.message)):step.field||'Telemetry packet'):standby?'Example app':'Command destination';
     observations+=node(x,y,title,detail,observed||reply?'seen':'pending',step?describeStep(step):'Addressed by MID');
   });
   const incoming=ingress?node(272,upY,ingress,'Commands in','configured','Command interface in the compiled mission'): '';
@@ -73,7 +74,8 @@ function routeDiagram(state, command, steps, sent, esc, hex) {
   // Configured segments stay muted. Only datagrams or a flight receipt illuminate a path.
   const center=351+.5*(403/cols);
   const ingressPath='M128 '+groundY+' H166 V'+upY+' H205';
-  const returnPath='M'+center+' '+(upY+24)+' V'+(busY+8)+' H272 V'+(returnY-25);
+  const returnPath=command?.app===egress?'M272 '+(upY+24)+' V'+(returnY-25):
+    'M'+center+' '+(upY+24)+' V'+(busY+8)+' H272 V'+(returnY-25);
   const groundPath='M214 '+returnY+' H178 V'+(groundY+25)+' H126';
   const topology='<g class="trip-wires"><path d="'+ingressPath+'"/><path d="M272 '+(upY+24)+' V'+(busY+3)+' H'+center+' V'+(upY+24)+'"/><path d="'+returnPath+'"/><path d="'+groundPath+'"/></g>';
   const anyReturn=Boolean(reply || steps.some(step=>step.observation) ||
@@ -86,7 +88,7 @@ function routeDiagram(state, command, steps, sent, esc, hex) {
     '<rect class="trip-frame" x="196" y="22" width="569" height="'+(height-30)+'" rx="8"/><text class="trip-caption" x="208" y="17">cFS · '+esc(target)+'</text>'+
     topology+backbone+confirmed+incoming+outgoing+lines+uplink+(sent?burst('sending',ingressPath):'')+node(groundX,groundY,'Ground','This computer','ground','Local UDP socket')+observations+
     (transport.command_port?'<text class="trip-caption" x="93" y="'+(upY-7)+'">UDP '+Number(transport.command_port)+'</text>':'')+
-    (anyReturn&&transport.telemetry_port?'<text class="trip-caption" x="85" y="'+(height-34)+'">UDP '+Number(transport.telemetry_port)+'</text>':'')+'</svg>';
+    (transport.telemetry_port?'<text class="trip-caption" x="85" y="'+(height-34)+'">UDP '+Number(transport.telemetry_port)+'</text>':'')+'</svg>';
 }
 
 function evidenceLine(step, esc, hex) {
@@ -120,7 +122,7 @@ export function tripPanel(state,command,helpers){
   const observed=showRun && steps.filter(step=>step.observation).at(-1)?.observation;
   const caption=observed?observed.app+' → Ground · MID '+hex(observed.mid):
     receipt?.reply?command.app+' → Ground · EVS':
-    last && outputOff(state)?'to_lab output off':
+    outputOff(state)?'to_lab output off':
     last?'Ground → ci_lab · MID '+hex(last.mid):'';
   const header='<header class="trip-modes"><div role="group" aria-label="Ground view">'+
     ['trip','system'].map((mode,i)=>'<button data-ground-mode="'+mode+'" aria-pressed="'+((system?'system':'trip')===mode)+'">'+(i?'System overview':'Round trip')+'</button>').join('')+'</div></header>';

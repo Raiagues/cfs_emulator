@@ -11,8 +11,13 @@ function stationCatalog(state) {
   const catalog = state.catalog || {}, app = state.groundApp || '';
   const allowed = new Set(['to_lab','sample_app',...state.workspace.project.apps.map(item=>item.name)]);
   const all = state.allGroundApps || stationState(state).first_flight?.event;
-  const commands = (catalog.commands || []).filter(command => (!app || command.app === app) &&
-    (all || allowed.has(command.app) || command.id === state.groundSelection || command.app === app));
+  const commands = (catalog.commands || []).filter(command => {
+    if (app) return command.app === app;
+    if (all || command.id === state.groundSelection) return true;
+    if (command.app === 'to_lab') return command.id === 'TO_LAB_OUTPUT_ENABLE_CC';
+    if (command.app === 'sample_app') return /_(NOOP|RESET_COUNTERS)_CC$/.test(command.id);
+    return allowed.has(command.app) && command.dispatch !== 'mid';
+  });
   const packets = (catalog.packets || []).filter(packet => !app || packet.app === app);
   const appNames = [...new Set((catalog.commands || []).map(item=>item.app).filter(name=>all || allowed.has(name) || name===app))].sort();
   return {commands, packets, appNames};
@@ -40,6 +45,7 @@ function selectedCommand(state, commands) {
    commands.find(item=>/_NOOP_CC$/.test(item.id)) || commands[0];
 }
 function displayCommand(command) {
+ if(command.id==='TO_LAB_OUTPUT_ENABLE_CC')return 'ENABLE_OUTPUT';
  const prefix=command.app.toUpperCase()+'_';
  const name=commandLabel(command);
  return (name.startsWith(prefix)?name.slice(prefix.length):name).replace(/_CC$/,'');
@@ -48,14 +54,15 @@ function filteredCommands(state,hex) {
  const query=(state.groundQuery||'').trim().toLowerCase();
  return stationCatalog(state).commands.filter(command=>!query||[command.id,command.name,command.app,hex(command.mid)].join(' ').toLowerCase().includes(query));
 }
-function commandTree(visible, selected, query, managed, esc) {
+function commandTree(visible, selected, query, managed, esc, firstContact) {
  const groups=new Map();
  for(const command of visible){
   if(!groups.has(command.app))groups.set(command.app,[]);
   groups.get(command.app).push(command);
  }
- return [...groups].sort(([a],[b])=>Number(managed.has(b))-Number(managed.has(a))||a.localeCompare(b)).map(([app,commands])=>
-  `<details class="gs-command-group" data-detail-key="command-group-${esc(app)}" ${query||app===selected?.app?'open':''}><summary>${esc(app)}<small>${commands.length}</small></summary>${commands.map(command=>`<button class="gs-definition ${command===selected?'selected':''}" data-gs-select="${esc(command.id)}" title="${esc(command.id)}" aria-pressed="${command===selected}"><strong>${esc(displayCommand(command))}</strong><small>${command.dispatch==='mid'?'MID':'FC '+Number(command.code)}</small></button>`).join('')}</details>`).join('');
+ const order=app=>firstContact && app==='to_lab' ? 0 : firstContact && app==='sample_app' ? 1 : managed.has(app) ? 2 : 3;
+ return [...groups].sort(([a],[b])=>order(a)-order(b)||a.localeCompare(b)).map(([app,commands])=>
+  `<details class="gs-command-group" data-detail-key="command-group-${esc(app)}" ${query||app===selected?.app||firstContact&&['to_lab','sample_app'].includes(app)?'open':''}><summary>${esc(app)}<small>${commands.length}</small></summary>${commands.map(command=>`<button class="gs-definition ${command===selected?'selected':''}" data-gs-select="${esc(command.id)}" title="${esc(command.id)}" aria-pressed="${command===selected}"><strong>${esc(displayCommand(command))}</strong><small>${command.dispatch==='mid'?'MID':'FC '+Number(command.code)}</small></button>`).join('')}</details>`).join('');
 }
 function commandBytes(selected,esc,hex) {
  return `<dl><div><dt>Message ID</dt><dd>${hex(selected.mid)}</dd></div>${selected.dispatch==='mid'?'':`<div><dt>Function code</dt><dd>${Number(selected.code)}</dd></div>`}${(selected.fields||[]).map(field=>`<div><dt>${esc(field.name)}</dt><dd>${Number(field.size)} B · offset ${Number(field.offset)}</dd></div>`).join('')}</dl>`;
@@ -103,16 +110,17 @@ export function renderGround(state,helpers){
   const {esc,icon,hex}=context(helpers), ground=stationState(state), catalog=stationCatalog(state);
   const visible=filteredCommands(state,hex), selected=selectedCommand(state,visible);
   const managed=new Set(state.workspace.project.apps.map(app=>app.name));
+  const firstContact=!ground.first_flight?.event && !state.allGroundApps;
   const errors=[...(state.catalog?.errors||[]),...(ground.subscription_errors||[])];
   const narrow=state.groundPane||'route';
   return `<section class="flight-ground" data-pane="${esc(narrow)}"><header class="ground-mobile-tabs">${['commands','route','telemetry'].map(key=>`<button data-ground-pane="${key}" aria-pressed="${key===narrow}">${esc(key)}</button>`).join('')}</header>
   <aside class="flight-library"><header>Commands<button data-ground="catalog" title="Refresh catalog">${icon('refresh')} From build</button></header>
   <label class="ground-search">${icon('search')}<input id="gs-search" type="search" aria-label="Search commands" placeholder="Search commands" value="${esc(state.groundQuery||'')}"></label>
-  <label class="ground-app-filter"><select id="ground-app" aria-label="Application"><option value="">Applications</option>${catalog.appNames.map(app=>`<option ${state.groundApp===app?'selected':''}>${esc(app)}</option>`).join('')}</select></label>
-  <nav class="gs-definition-list" aria-label="Commands">${selected?commandTree(visible,selected,state.groundQuery,managed,esc):''}</nav>
+  ${!firstContact || state.groundApp ? `<label class="ground-app-filter"><select id="ground-app" aria-label="Application"><option value="">Applications</option>${catalog.appNames.map(app=>`<option ${state.groundApp===app?'selected':''}>${esc(app)}</option>`).join('')}</select></label>` : ''}
+  <nav class="gs-definition-list" aria-label="Commands">${selected?commandTree(visible,selected,state.groundQuery,managed,esc,firstContact):''}</nav>
   ${!ground.first_flight?.event?`<button class="ground-new-command" data-all-ground-apps aria-pressed="${!!state.allGroundApps}">${icon('layers')} All apps</button>`:''}
   ${managed.size?`<button class="ground-new-command" data-code-command="${esc([...managed].find(app=>app===state.groundApp)||[...managed][0])}">${icon('plus')} New command in code</button>`:''}
-  <div class="ground-link"><span data-live="${!!ground.connected}">${ground.connected?'Connected':'Disconnected'}</span><button data-ground="${ground.connected?'stop':'start'}" ${state.groundBusy?'disabled':''}>${ground.connected?'Disconnect':'Connect'}</button></div></aside>
+  <div class="ground-link"><span data-live="${!!ground.connected}">${ground.connected?'Connected':'Disconnected'}</span><button data-ground="${ground.connected?'stop':'start'}" ${state.groundBusy||state.catalogLoading?'disabled':''}>${ground.connected?'Disconnect':'Connect'}</button></div></aside>
   <main class="flight-command-column">${state.groundError?`<div class="gs-error" role="alert">${esc(state.groundError)}</div>`:''}
   ${errors.length?`<details class="gs-catalog-errors" data-detail-key="issues"><summary>Catalog details · ${errors.length}</summary><pre>${esc(errors.join('\n'))}</pre></details>`:''}
   ${contactCoach(state,esc,icon)}${commandList(state,helpers)}<div id="ground-route"></div></main><aside id="ground-live"></aside></section>`;
@@ -147,7 +155,7 @@ function packetDetail(state, packet, definition, helpers) {
   // A packet with Valid = 0 still carries its last or zeroed sample; never show it as current.
   const stale = name => !valid && !NOT_A_SAMPLE.test(name);
   const definitionFields = definition.fields || [];
-  return `<div class="gs-packet-status"><span>${packet ? 'Last received · ' + stationTime(packet.received_at) : 'Waiting for telemetry'}</span><strong>${packet?.count || 0} <small>packets</small></strong></div>${definition.warnings?.length ? `<div class="gs-packet-note">${definition.warnings.map(esc).join(' ')}</div>` : ''}${numeric ? `<div class="gs-reading ${!valid ? 'invalid' : ''}"><strong>${valid ? esc(numeric[1]) : '—'}</strong><span>${esc(numeric[0])}</span>${!valid ? '<small>Invalid data</small>' : ''}</div>${valid ? seriesChart(state, packet, numeric[0], helpers) : ''}` : ''}<div class="gs-envelope"><span>${icon('cube')}${hex(definition.mid)}</span><code>${packet?.bytes || definition.size || '—'} bytes</code></div><details class="gs-packet-fields" data-detail-key="fields-${definition.mid}" open><summary>${icon('chevron-right')}Fields<span>${packet ? Object.keys(fields).length : definitionFields.length}</span></summary><div class="gs-values">${packet ? Object.entries(fields).map(([key, value]) => `<div${stale(key) ? ' class="gs-invalid-field" title="Valid = 0: not a current sample"' : ''}><code>${esc(key)}</code>${packetValue(value, definitionFields.find(field => field.name === key), esc, definition.mid + '-' + key)}</div>`).join('') || '<span class="gs-hint">No decoded fields in this packet.</span>' : definitionFields.map(field => `<div><code>${esc(field.name)}</code><span class="gs-field-type">${esc(field.type)}${field.count > 1 ? '[' + field.count + ']' : ''}</span></div>`).join('') || '<span class="gs-hint">No fields in this packet definition.</span>'}</div></details>${packet?.hex ? `<details class="gs-packet-fields" data-detail-key="bytes-${definition.mid}"><summary>${icon('chevron-right')}Raw bytes</summary><pre class="gs-bytes">${esc(packet.hex)}</pre></details>` : ''}${packet?.errors?.length ? `<div class="gs-error">${esc(packet.errors.join(' · '))}</div>` : ''}${definition.source ? `<div class="gs-source-actions"><button data-gs-source="${esc(definition.id)}" data-source-kind="telemetry" data-source-section="packet">${icon('code')}Packet type${icon('arrow-up-right')}</button>${definition.locations?.identifier?`<button data-gs-source="${esc(definition.id)}" data-source-kind="telemetry" data-source-section="identifier">${icon('code')}Identifier${icon('arrow-up-right')}</button>`:''}</div>` : ''}`;
+  return `<div class="gs-packet-status"><span>${packet ? 'Last received · ' + stationTime(packet.received_at) : 'Waiting for telemetry'}</span><strong>${packet?.count || 0} <small>packets</small></strong></div>${definition.warnings?.length ? `<div class="gs-packet-note">${definition.warnings.map(esc).join(' ')}</div>` : ''}${numeric ? `<div class="gs-reading ${!valid ? 'invalid' : ''}"><strong>${valid ? esc(numeric[1]) : '—'}</strong><span>${esc(numeric[0])}</span>${!valid ? '<small>Invalid data</small>' : ''}</div>${valid ? seriesChart(state, packet, numeric[0], helpers) : ''}` : ''}<div class="gs-envelope"><span>${icon('cube')}${hex(definition.mid)}</span><code>${packet?.bytes || definition.size || '—'} bytes</code></div><details class="gs-packet-fields" data-detail-key="fields-${definition.mid}" open><summary>${icon('chevron-right')}Fields<span>${packet ? Object.keys(fields).length : definitionFields.length}</span></summary><div class="gs-values">${packet ? Object.entries(fields).map(([key, value]) => `<div${stale(key) ? ' class="gs-invalid-field" title="Valid = 0: not a current sample"' : ''}><code>${esc(key)}</code>${packetValue(value, definitionFields.find(field => field.name === key), esc, definition.mid + '-' + key)}</div>`).join('') || '<span class="gs-hint">No decoded fields</span>' : definitionFields.map(field => `<div><code>${esc(field.name)}</code><span class="gs-field-type">${esc(field.type)}${field.count > 1 ? '[' + field.count + ']' : ''}</span></div>`).join('') || '<span class="gs-hint">No fields</span>'}</div></details>${packet?.hex ? `<details class="gs-packet-fields" data-detail-key="bytes-${definition.mid}"><summary>${icon('chevron-right')}Raw bytes</summary><pre class="gs-bytes">${esc(packet.hex)}</pre></details>` : ''}${packet?.errors?.length ? `<div class="gs-error">${esc(packet.errors.join(' · '))}</div>` : ''}${definition.source ? `<div class="gs-source-actions"><button data-gs-source="${esc(definition.id)}" data-source-kind="telemetry" data-source-section="packet">${icon('code')}Packet type${icon('arrow-up-right')}</button>${definition.locations?.identifier?`<button data-gs-source="${esc(definition.id)}" data-source-kind="telemetry" data-source-section="identifier">${icon('code')}Identifier${icon('arrow-up-right')}</button>`:''}</div>` : ''}`;
 }
 
 function telemetryEvents(state, helpers) {
