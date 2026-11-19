@@ -1,6 +1,8 @@
+import {targetDrawing} from './target-drawing.js';
 import {icon} from './ui.js';
 import {mountShells} from './shell.js';
 
+for (const art of document.querySelectorAll('[data-art]')) art.innerHTML = targetDrawing(art.dataset.art);
 const $ = selector => document.querySelector(selector);
 const form = $('#infrastructure-form');
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -161,7 +163,8 @@ function renderChecks() {
     caption.dataset.status = status;
     caption.textContent = status === 'missing' ? count+' missing' : status;
   }
-  $('#group-summary').textContent = fixing ? 'Installing' : checking ? 'Checking target' : missing ? missing+' to fix' : ready ? 'Everything is ready' : '';
+  const probe = reportFor(target).find(item=>item.status==='running');
+  $('#group-summary').textContent = fixing ? 'Installing '+installation.group : probe ? 'Checking · '+probe.label : checking ? 'Checking target' : missing ? missing+' to fix' : ready ? 'Everything is ready' : '';
   const parent = $('#requirements');
   if (parent.dataset.target !== target) {
     parent.dataset.target = target;
@@ -172,7 +175,7 @@ function renderChecks() {
     button.dataset.state = group.state;
     button.setAttribute('aria-expanded',String(activeGroup===group.name));
     const repair = group.state === 'missing';
-    button.title = (repair ? 'Fix ' : 'Inspect ')+group.name;
+    button.title = (repair ? 'Fix or inspect ' : 'Inspect ')+group.name;
     button.setAttribute('aria-label',button.title);
     const percent = fixing && group.state==='installing' ? installation.progress : null;
     const glyph = button.querySelector('.tool-glyph');
@@ -184,6 +187,9 @@ function renderChecks() {
   $('#verification').hidden = !group;
   if (group) {
     $('#check-status').textContent = group.name;
+    $('#fix-group').hidden = group.state!=='missing';
+    $('#fix-group').disabled = checking || fixing || busy;
+    $('#fix-group').textContent = group.action==='settings' ? 'Settings' : 'Fix '+group.name;
     $('#check').disabled = checking || fixing || busy;
     const list=$('#checks');
     const details=group.entries.map(row=>`<div data-outcome="${row.status}"><code title="${escapeHtml(row.probe)}">${escapeHtml(row.probe)}</code><span>${escapeHtml(row.detail||row.status)}</span><small>${row.exit_code!=null?'Exit '+row.exit_code:''}${row.duration_ms!=null?' · '+row.duration_ms+' ms':''}</small></div>`).join('');
@@ -276,14 +282,21 @@ async function followInstaller(session,groupName) {
 }
 async function repair(group) {
   activeGroup=group.name;renderChecks();
-  if(checkRequests.has(target) || installation?.status==='running')return;
+  if(checkRequests.has(target) || installation?.status==='running' || busy)return;
   if(group.action==='settings'){
     advanced=true;renderFields();
     (form.elements.host||form.elements.ssh_port)?.focus();
     return;
   }
-  if(installation){await api('terminal/close',{id:installation.id});shells.dispose(installation.id);installation=null;}
-  const session=await api('terminal/create',{target,setup_action:group.action});
+  const mode=target;
+  busy=true;
+  let session;
+  try {
+    if(installation){await api('terminal/close',{id:installation.id});shells.dispose(installation.id);installation=null;}
+    session=await api('terminal/create',{target:mode,setup_action:group.action});
+  } finally {
+    busy=false;
+  }
   await followInstaller(session,group.name);
 }
 function showError(err){feedback(err.message,true);controls();}
@@ -296,8 +309,12 @@ $('#targets').addEventListener('click',event=>{
 $('#requirements').addEventListener('click',event=>{
   const name=event.target.closest('[data-group]')?.dataset.group,group=groups(target).find(g=>g.name===name);
   if(!group)return;
-  if(group.state==='missing')repair(group).catch(showError);
+  if(group.state==='missing' && !checkRequests.has(target) && event.target.closest('.ring'))repair(group).catch(showError);
   else {activeGroup=activeGroup===name?'':name;renderChecks();}
+});
+$('#fix-group').addEventListener('click',()=>{
+  const group=groups(target).find(item=>item.name===activeGroup);
+  if(group?.state==='missing')repair(group).catch(showError);
 });
 $('#check').addEventListener('click',()=>verify(activeGroup).catch(showError));
 $('#close-checks').addEventListener('click',()=>{activeGroup='';renderChecks();});

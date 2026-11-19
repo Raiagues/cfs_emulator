@@ -1,5 +1,7 @@
-.group-summary { display: grid; justify-items: end; gap: 8px; }
+.group-summary { display:grid; justify-items:end; gap:8px; }
 #group-summary { color: var(--fs-muted); font-size: var(--fs-caption); min-height: 1.4em; }
+#group-summary:not(:empty)::before { content:''; display:inline-block; width:6px; height:6px; border-radius:var(--fs-radius-pill); margin-right:7px; background:var(--fs-accent); }
+.group-summary:has(.requirement[data-state=ready]):not(:has(.requirement:not([data-state=ready]))) #group-summary::before { background:var(--fs-success); }
 .requirement .ring .tool-glyph { display: grid; place-items: center; font: var(--fs-small) var(--fs-mono); }
 .requirement .check-badge, .requirement .repair-badge {
   display: none; position: absolute; right: -3px; bottom: -2px; width: 18px; height: 18px; place-items: center;
@@ -35,7 +37,7 @@
 @keyframes setup-draw { from {stroke-dashoffset:1} to {stroke-dashoffset:0} }
 @keyframes setup-ring { from {box-shadow:0 0 0 0 color-mix(in srgb,var(--fs-success) 45%, transparent)} to {box-shadow:0 0 0 8px transparent} }
 @media (max-width:520px) {
-  .group-summary { width:100%; justify-items:start; }
+  .group-summary { width:100%; justify-items:stretch; gap:4px; }
   #checks > div { grid-template-columns:1fr auto; }
   #checks code { grid-column:1/-1; }
 }

@@ -35,12 +35,12 @@ main {
   container: setup / size;
 }
 form {
-  --art-height: clamp(110px,25cqh,230px);
+  --art-height: clamp(110px,34cqh,230px);
   --section-padding: clamp(12px,2.6cqh,22px);
   width: min(100% - 48px,1132px); height: 100%; margin: 0 auto;
-  padding-block: clamp(10px,3cqh,32px);
-  display: flex; flex-direction: column; justify-content: center;
-  gap: clamp(10px,3cqh,30px);
+  padding-block: clamp(10px,6cqh,48px) 12px;
+  display: flex; flex-direction: column;
+  gap: clamp(10px,4.4cqh,34px);
 }
 form:has(.setup-details > :not([hidden])) { --art-height: clamp(76px,18cqh,160px); }
 form > :not(.setup-panel) { flex-shrink: 0; }
@@ -60,9 +60,8 @@ h2 { margin: 0; font-size: var(--fs-body); font-weight: 600; }
   display: grid; place-items: center; height: var(--art-height);
   background: var(--fs-surface); border-bottom: 1px solid color-mix(in srgb, var(--fs-line) 65%, transparent);
 }
-.target-illustration svg { width: min(80%,240px); height: 85%; transition: transform var(--fs-motion) ease-out; }
+.target-illustration svg { width: min(80%,240px); height: min(85%,170px); transition: transform var(--fs-motion) ease-out; }
 .target-option:hover .target-illustration svg { transform: translateY(-2px); }
-:root[data-theme="light"] .target-option[data-target="qemu"] svg { filter: brightness(.60) saturate(1.5); }
 .target-caption { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 14px 17px; }
 .target-caption strong { font-size: var(--fs-heading); font-weight: 500; }
 .target-caption small { font: var(--fs-caption)/1.4 var(--fs-mono); color: var(--fs-muted); }
