@@ -149,7 +149,7 @@ body[data-view="ground"] .visual,body[data-view="ground"] #view {min-width:0;min
 .flight-selection,.trip-card,.trip-journal,.system-group,.system-detail{border:1px solid var(--fs-line);border-radius:var(--fs-radius-card);background:var(--fs-panel)}
 .flight-selection{display:flex;align-items:center;gap:12px;padding:10px 12px;flex:none;min-width:0}
 .selected-command{min-width:0;flex:0 1 auto}.selected-command small,.packet-wire summary,.node-meta,.trip-observations{font:var(--fs-caption) var(--fs-mono);color:var(--fs-muted)}
-.selected-command h2{font:600 clamp(var(--fs-body),1.4vw,20px)/1.4 var(--fs-mono);margin:0;overflow-wrap:anywhere}
+.selected-command h2{font:600 var(--fs-title)/1.4 var(--fs-mono);margin:0;overflow-wrap:anywhere}
 .flight-ground #gs-command-form{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:1;min-width:0}
 .ground-parameters{max-height:clamp(70px,14vh,135px);overflow:auto;display:flex;align-items:center;flex-wrap:wrap;gap:8px;flex:1}
 .ground-parameters label{display:flex;flex:1 1 150px;gap:8px;align-items:center;font:var(--fs-label) var(--fs-mono)}.ground-parameters label span{overflow-wrap:anywhere}.ground-parameters small{display:block;color:var(--fs-muted)}

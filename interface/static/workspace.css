@@ -1,5 +1,5 @@
 /* Base workspace layout, colors and typography. */
-:root {font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-synthesis:none;color:var(--ink)}
+:root {font-family:var(--fs-sans);font-synthesis:none;color:var(--ink)}
 * {box-sizing:border-box}
 body {margin:0;overflow:hidden}
 button, input, textarea {font:inherit}
@@ -19,7 +19,7 @@ a {text-decoration:none;color:inherit}
 .brand>span {display:flex;align-items:center}
 .brand-studio {margin-top:2px}
 .project-title {align-items:center}
-.slash {color:var(--fs-on-accent);font-size:var(--fs-title);font-weight:400}
+.slash {color:var(--fs-muted);font-size:var(--fs-title);font-weight:400}
 .top-actions>.icon-button {margin-right:2px}
 .studio {display:grid}
 .activity-rail {border-right:1px solid var(--line);display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:15px 0 14px}
@@ -271,13 +271,12 @@ body.resizing-panes, body.resizing-panes * {user-select:none!important}
 .workspace-feedback {display:none}
 }
 
-/* Workspace layout on top of the base rules in prototype.css. */
+/* Workspace layout and editor panes. */
 :root{--text:var(--ink);--green:var(--fs-muted);--red:var(--fs-danger);--raised:var(--fs-raised);--lh:24px}
 [hidden]{display:none!important}
 body{background:var(--fs-panel)}
 svg{fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
 /* Compact configuration and execution controls. */
-:root{color-scheme:dark}
 .topbar{height:calc(var(--topbar-height) + var(--operation-height,0px));padding:0 16px var(--operation-height,0px);position:relative;border-color:var(--fs-line);justify-content:initial;flex-wrap:nowrap}
 .workspace-identity{display:flex;align-items:center;gap:20px;min-width:0;flex:none}
 .topbar .brand{min-width:0}.topbar .brand>span{font-weight:500;letter-spacing:-.5px;gap:5px}.topbar .brand-studio{letter-spacing:0;color:var(--fs-muted)}
@@ -499,9 +498,7 @@ body:not(.code-only) #show-explorer{display:none}#boot-stages{display:flex;list-
 :root {
   --sans:var(--fs-sans); --mono:var(--fs-mono); --ink:var(--fs-text); --muted:var(--fs-muted); --accent:var(--fs-accent);
   --panel:var(--fs-panel); --bg:var(--fs-bg); --line:var(--fs-line); --topbar-height:52px;
-  --fs-code-bg:color-mix(in srgb,var(--fs-code) 12%,var(--fs-panel)); --fs-success-bg:color-mix(in srgb,var(--fs-success) 11%,var(--fs-panel)); --fs-danger-bg:color-mix(in srgb,var(--fs-danger) 12%,var(--fs-panel));
-    }
-:root[data-theme=light]{}
+}
 body,.simulation-mode{font-family:var(--fs-sans);color:var(--fs-text);background:var(--fs-bg)}
 button,a,input,textarea,select{font-family:inherit}
 button[hidden],[hidden]{display:none!important}
@@ -558,14 +555,14 @@ button svg,.visual svg:not(.mission-map-board-drawing),#source-guide svg{stroke:
 .map-bus .map-tile{align-items:center}.map-legend{justify-content:center}
 .stack-frame{width:min(100%,810px);margin:-8px auto 0}
 .visual svg.stack-diagram{display:block;width:100%;height:auto;max-height:max(420px,calc(100dvh - 152px));stroke:none}
-.stack-diagram .volume{--face:var(--fs-raised);--edge:color-mix(in srgb,var(--face) 72%,black)}
+.stack-diagram .volume{--face:var(--fs-raised);--edge:color-mix(in srgb,var(--face) 72%,var(--fs-shade))}
 .stack-diagram .volume.own,.stack-diagram .volume.board,.stack-diagram .volume.device{--face:color-mix(in srgb,var(--fs-success) 44%,var(--fs-bg))}
 .stack-diagram .volume.library,.stack-diagram .volume.pin{--face:color-mix(in srgb,var(--fs-accent) 50%,var(--fs-bg))}
 .stack-diagram .volume.upstream{--face:color-mix(in srgb,var(--fs-muted) 24%,var(--fs-panel))}
 .stack-diagram .volume.core{--face:color-mix(in srgb,var(--fs-code) 30%,var(--fs-panel))}
-.stack-diagram .volume.system{--face:var(--fs-muted)}.stack-diagram .volume.metal{--face:var(--fs-metal)}.stack-diagram .volume.glass{--face:#263832}
+.stack-diagram .volume.system{--face:var(--fs-muted)}.stack-diagram .volume.metal{--face:var(--fs-metal)}.stack-diagram .volume.glass{--face:var(--fs-glass)}
 .stack-diagram .face{fill:var(--face);stroke:var(--edge);stroke-width:.7}
-.stack-diagram .face-left{fill:var(--edge)}.stack-diagram .face-right{fill:color-mix(in srgb,var(--face) 56%,black)}
+.stack-diagram .face-left{fill:var(--edge)}.stack-diagram .face-right{fill:color-mix(in srgb,var(--face) 56%,var(--fs-shade))}
 .stack-pick{cursor:pointer}.stack-pick:focus-visible{outline:none}.stack-pick:is(:hover,:focus-visible) .face{stroke:var(--fs-accent);stroke-width:2.2}
 .stack-diagram .face-label{fill:var(--fs-text);font:600 var(--fs-small) var(--mono);pointer-events:none}.stack-diagram .layer-label,.stack-diagram .layer-caption{fill:var(--fs-text);text-anchor:end;stroke:none}
 .stack-diagram .layer-label{font:600 var(--fs-caption) var(--mono);letter-spacing:.07em;text-transform:uppercase}

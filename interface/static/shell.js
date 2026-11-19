@@ -1,7 +1,32 @@
+// xterm paints its own canvas. Supply resolved tokens on open and theme change.
+function terminalAppearance(reducedMotion) {
+ const style=getComputedStyle(document.documentElement);
+ const token=name=>style.getPropertyValue('--fs-'+name).trim();
+ const theme={
+  background:token('surface'), foreground:token('text'), cursor:token('accent'),
+  cursorAccent:token('on-accent'), selectionBackground:token('console-selection'),
+  black:token('bg'), brightBlack:token('muted'), white:token('text'), brightWhite:token('text'),
+ };
+ for(const [color,name] of Object.entries({red:'danger',green:'success',yellow:'accent',blue:'blue',magenta:'code',cyan:'cyan'})){
+  theme[color]=token(name);
+  theme['bright'+color[0].toUpperCase()+color.slice(1)]=theme[color];
+ }
+ return {theme,fontFamily:token('mono'),fontSize:parseFloat(token('label')),cursorBlink:!reducedMotion.matches};
+}
+
 // Each shell keeps its own ANSI screen and output cursor when switching tabs.
 export function mountShells({api,onError,onExit}) {
  const host=document.querySelector('#shell-terminal'), shells=new Map();
+ const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
  let active=null;
+ function updateAppearance(){
+  const appearance=terminalAppearance(reducedMotion);
+  for(const shell of shells.values()){
+   shell.term.options={...appearance,cursorBlink:!shell.ended&&appearance.cursorBlink};
+  }
+ }
+ new MutationObserver(updateAppearance).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+ reducedMotion.addEventListener('change',updateAppearance);
  function fit(shell){
   if(!shell||host.hidden||!host.clientWidth||!host.clientHeight)return;
   shell.fit.fit();
@@ -14,7 +39,10 @@ export function mountShells({api,onError,onExit}) {
   if(!job)return;
   if(!shells.has(job.id)){
    const element=document.createElement('div');element.className='shell-screen';host.append(element);
-   const term=new window.Terminal({cursorBlink:true,fontFamily:'"DejaVu Sans Mono", monospace',fontSize:12,lineHeight:1.35,scrollback:5000,theme:{background:'#191c22',foreground:'#c2ccd5',cursor:'#c4ac8d',selectionBackground:'#59616d77'},allowProposedApi:false});
+   const term=new window.Terminal({
+    ...terminalAppearance(reducedMotion),fontWeight:'400',fontWeightBold:'600',lineHeight:1.35,
+    minimumContrastRatio:4.5,screenReaderMode:true,scrollback:5000,allowProposedApi:false
+   });
    const fitAddon=new window.FitAddon.FitAddon();term.loadAddon(fitAddon);term.open(element);
    const shell={element,term,fit:fitAddon,cursor:0,ended:false,queue:Promise.resolve()};shells.set(job.id,shell);
    term.onData(data=>{shell.queue=shell.queue.then(()=>api('terminal/input',{id:job.id,data})).catch(onError);});

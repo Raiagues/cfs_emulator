@@ -7,7 +7,7 @@
   --map-accent:var(--fs-accent);
   --map-caption:var(--fs-label);
   --map-label:var(--fs-body);
-  --map-radius:6px;
+  --map-radius:var(--fs-radius-card);
   --map-height:62px;
   max-width:1480px;
   margin-inline:auto;
@@ -94,7 +94,7 @@
 }
 .map-legend [class^="change-"]::before { margin:0 5px 1px 0; }
 .mission-map :is(.map-tile,.map-computer):is(.change-new,.change-modified)::after { position:absolute; top:7px; right:7px; pointer-events:none; }
-.mission-map-error { display:flex; align-items:center; gap:8px; padding:10px 12px; margin:0 0 12px; border-left:2px solid var(--fs-danger); background:var(--fs-raised); color:var(--fs-danger); }
+.mission-map-error { display:flex; align-items:center; gap:8px; padding:10px 12px; margin:0 0 12px; border:1px solid var(--fs-line); border-radius:var(--fs-radius-card); background:var(--fs-panel); color:var(--fs-danger); }
 .mission-map-error button { margin-left:auto; display:flex; }
 .hardware-empty { display:grid; place-content:center; justify-items:center; gap:12px; padding:24px; text-align:center; }
 .hardware-empty button { padding:7px 12px; border:1px solid var(--fs-line); border-radius:var(--fs-radius-control); }
@@ -182,8 +182,8 @@
 .mission-map .cad-box.tone-glass {--surface:var(--fs-glass)}
 .mission-map .cad-box.tone-pin,.mission-map .cad-box.tone-bus {--surface:var(--fs-accent)}
 .mission-map .cad-top {fill:var(--surface);stroke:var(--ridge);stroke-width:.65;stroke-linejoin:round;transition:fill 140ms,stroke 140ms}
-.mission-map .side-0 {fill:color-mix(in srgb,var(--surface) 69%,black)}
-.mission-map .side-1 {fill:color-mix(in srgb,var(--surface) 50%,black)}
+.mission-map .side-0 {fill:color-mix(in srgb,var(--surface) 69%,var(--fs-shade))}
+.mission-map .side-1 {fill:color-mix(in srgb,var(--surface) 50%,var(--fs-shade))}
 .mission-map .cad-face-label {fill:var(--fs-text);pointer-events:none;stroke:none;font-family:var(--fs-mono);font-weight:500}
 .mission-map .cad-box.stack-pick:is(:hover,:focus-visible,.is-selected,.is-related) .cad-top {
   stroke:var(--fs-accent);stroke-width:1.65;fill:color-mix(in srgb,var(--surface) 78%,var(--fs-accent))

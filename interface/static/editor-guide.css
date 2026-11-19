@@ -109,7 +109,7 @@ button.source-index-row:hover { background: var(--fs-raised); }
 .task-command-name>svg {box-sizing:content-box;padding:6px;border-radius:var(--fs-radius-control);background:var(--fs-accent-bg)}
 .guide-pager {display:flex;justify-content:space-between;gap:8px;flex:none;padding:10px 14px;border-top:1px solid var(--fs-line)}
 .guide-pager button {min-height:27px;padding:4px 10px;border:1px solid var(--fs-line);border-radius:var(--fs-radius-control);color:var(--fs-text);font:500 var(--fs-label) var(--fs-sans)}
-.guide-pager button:last-child:not(:disabled) {background:var(--fs-accent);color:var(--fs-on-accent,#191510)}
+.guide-pager button:last-child:not(:disabled) {background:var(--fs-accent);color:var(--fs-on-accent)}
 .guide-pager button:disabled {color:var(--fs-muted);opacity:.45}
 @media (max-height:540px) {
  .code-only .command-trail {padding:4px 10px}

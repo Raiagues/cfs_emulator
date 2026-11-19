@@ -1,5 +1,5 @@
 body[data-view=communication] #view{overflow:auto;padding:clamp(10px,1.6vw,24px)}
-.communication-view{max-width:1320px;margin:0 auto;color:var(--fs-muted);font:var(--fs-body)/1.5 system-ui,sans-serif}
+.communication-view{max-width:1320px;margin:0 auto;color:var(--fs-muted);font:var(--fs-label)/1.5 var(--fs-sans)}
 .communication-view svg{width:14px;height:14px;flex:none}
 .communication-link,.communication-link>div,.communication-link>div>span{display:flex;align-items:center;gap:9px}
 .communication-link{justify-content:space-between;border:1px solid var(--fs-line);border-radius:var(--fs-radius-card);background:var(--fs-raised);padding:10px 14px}
@@ -10,7 +10,7 @@ body[data-view=communication] #view{overflow:auto;padding:clamp(10px,1.6vw,24px)
 .communication-view>.comm-source-links{padding:11px 0}
 .comm-source-links button,.communication-app header button{display:inline-flex;align-items:center;gap:6px;background:var(--fs-raised);border:1px solid transparent;border-radius:var(--fs-radius-control);padding:5px 7px;color:var(--fs-muted);text-align:left;font:var(--fs-label) var(--mono);overflow-wrap:anywhere}
 .comm-source-links button:hover,.communication-app header button:hover{background:var(--fs-raised)}
-.comm-source-links button[aria-current=true]{color:var(--fs-success);background:var(--fs-success-bg);box-shadow:inset 2px 0 var(--fs-success)}
+.comm-source-links button[aria-current=true]{color:var(--fs-success);background:var(--fs-success-bg);border-color:var(--fs-success)}
 .communication-app-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,208px),1fr));gap:10px;align-items:start}
 .communication-app{min-width:0;padding:10px 12px;border:1px solid var(--fs-line);border-radius:var(--fs-radius-card);background:var(--fs-raised)}
 .communication-app header button{padding:3px 0;color:var(--fs-text)}.comm-status{display:block;color:var(--fs-muted);font-size:var(--fs-caption);padding:1px 0 9px}.comm-status.live{color:var(--fs-success)}.comm-status.live:before{content:"● ";color:var(--fs-success)}
@@ -27,8 +27,8 @@ body[data-view=communication] #view{overflow:auto;padding:clamp(10px,1.6vw,24px)
 .comm-app-block strong,.comm-service strong,.comm-service b{display:block;font-size:var(--fs-label)}
 .comm-app-block small,.comm-service small{font-size:var(--fs-caption);color:var(--fs-muted)}
 .comm-app-block[aria-expanded=true],.comm-app-block:hover{border-color:var(--fs-line);background:var(--fs-line)}
-.comm-app-block[data-live=true]{border-left:3px solid var(--fs-line)}
+.comm-app-block[data-live=true] small{color:var(--fs-success)}
 .comm-stack .communication-app{margin-top:10px}.comm-stack .communication-app header{align-items:center;justify-content:space-between}
 .comm-services{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(140px,100%),1fr));gap:8px}
-.comm-bus{grid-column:1/-1;text-align:center;background:var(--fs-code-bg);border-color:var(--fs-code);color:white}
+.comm-bus{grid-column:1/-1;text-align:center;background:var(--fs-code-bg);border-color:var(--fs-code);color:var(--fs-text)}
 .comm-bus small{color:var(--fs-code)}
