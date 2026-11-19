@@ -7,7 +7,9 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 
-from interface.backend.journey import derive, mission_evidence, record_signal
+from hardware import infrastructure
+from hardware.manager import HardwareManager
+from interface.backend.journey import derive, mission_evidence, record_signal, setup_observed_at
 from interface.server import Studio
 from project.appgen.source_tags import region
 from sensors.runtime import apply_values
@@ -54,6 +56,33 @@ class JourneyTest(unittest.TestCase):
         self.assertFalse(any(empty[k]["done"] for k in ["target", "command", "send", "sensor"]))
         passed = [{"app":command[0],"command":command[1],"target":"native","finished_at":9,"observations":[12]}]
         self.assertTrue(derive("native",None,{}, {},{command:5},set(),{},[],passed)["steps"]["send"]["done"])
+
+    def test_setup_remembers_the_flown_target_without_permitting_a_new_boot(self):
+        with TemporaryDirectory() as tmp, patch.object(infrastructure, "_source_inventory") as source, \
+                patch.object(infrastructure, "_check_plan") as plan:
+            hardware = HardwareManager(tmp)
+            probe = infrastructure.Probe("Compiler", ("cc", "--version"))
+            plan.return_value = [probe]
+            source.return_value = {"state": "installed"}
+            hardware.select_target("native")
+            identity = infrastructure._identity(hardware, "native")
+            infrastructure._receipt(hardware, "native", identity, {"label": "Compiler", "ready": True})
+            hardware.select_target("physical")
+            self.assertFalse(infrastructure.target_verified(hardware, "native"))
+            self.assertIsNotNone(setup_observed_at(hardware, "native", None))
+
+            # An old validated First boot is evidence of selection. A plain Run is not.
+            path = "checks-native.json"
+            receipt = hardware._load(path)
+            receipt.pop("selected")
+            hardware._save(path, receipt)
+            self.assertIsNone(setup_observed_at(hardware, "native", 1))
+            hardware._save("operational-native.json", {"boot_trace": [{"phase": "build"}]})
+            self.assertIsNotNone(setup_observed_at(hardware, "native", 1))
+            self.assertIsNone(setup_observed_at(hardware, "native", None))
+            for invalid in ({"identity": "stale"}, {"checks": {}}, {"checks": {"Compiler": False}}):
+                hardware._save(path, {**receipt, **invalid})
+                self.assertIsNone(setup_observed_at(hardware, "native", 1))
 
     def test_dry_run_is_not_a_device_write(self):
         hw = Memory()

@@ -268,17 +268,23 @@ def _receipt(hardware, target, identity, row):
         if receipt.get("identity") != identity:
             receipt = {"identity": identity, "checks": {}}
         receipt["checks"][row["label"]] = row["ready"]
+        if hardware._load("target.json", {}).get("target") == target:
+            receipt["selected"] = True
         hardware._save(path, receipt)
+
+
+def checks_verified(hardware, target, receipt):
+    if target not in ("native", "qemu", "physical") or _source_inventory(hardware.root)["state"] != "installed":
+        return False
+    plan = list(_check_plan(hardware, target))
+    return receipt.get("identity") == _identity(hardware, target, plan) and all(
+        receipt.get("checks", {}).get(p.label) is True for p in plan)
 
 
 def target_verified(hardware, target):
     if target not in ("native", "qemu", "physical") or hardware._load("target.json", {}).get("target") != target:
         return False
-    if _source_inventory(hardware.root)["state"] != "installed":
-        return False
-    receipt = hardware._load("checks-" + target + ".json", {})
-    return receipt.get("identity") == _identity(hardware, target) and all(
-        receipt.get("checks", {}).get(p.label) is True for p in _check_plan(hardware, target))
+    return checks_verified(hardware, target, hardware._load("checks-" + target + ".json", {}))
 
 
 def _run(probe):

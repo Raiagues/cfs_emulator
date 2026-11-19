@@ -2,7 +2,7 @@
 from pathlib import Path
 import re
 
-from hardware.infrastructure import target_verified
+from hardware.infrastructure import checks_verified
 from interface.backend.first_boot import boot_observed
 from project.appgen.source_tags import regions
 from project.model import identifier, load_config
@@ -89,6 +89,20 @@ def record_signal(hardware, job):
         hardware._save("signal-observations.json", history)
 
 
+def setup_observed_at(hardware, target, operational):
+    path = hardware.runtime / ("checks-" + target + ".json")
+    receipt = hardware._load(path.name, {})
+    if not receipt or not checks_verified(hardware, target, receipt):
+        return None
+    selected = receipt.get("selected") is True or hardware._load("target.json", {}).get("target") == target
+    if not selected and operational:
+        # First boot entered build only after checking the saved target. Recover that
+        # evidence for older receipts without a selection marker. Run alone is insufficient.
+        boot = hardware._load("operational-" + target + ".json", {})
+        selected = any(event.get("phase") == "build" for event in boot.get("boot_trace", []))
+    return path.stat().st_mtime if selected else None
+
+
 def snapshot(studio, target=None):
     hardware = studio.hardware
     target = target or hardware.default_target()
@@ -100,8 +114,7 @@ def snapshot(studio, target=None):
     linked = {device for app in config["apps"] for device in app.get("sensors", {}).values()}
     operational = {mode: hardware._load("operational-" + mode + ".json", {}).get("time")
                    for mode in {target, "physical"} if boot_observed(hardware, mode)}
-    receipt = root / "hardware/.runtime" / ("checks-" + target + ".json")
-    verified = receipt.stat().st_mtime if receipt.is_file() and target_verified(hardware, target) else None
+    verified = setup_observed_at(hardware, target, operational.get(target))
     return derive(target, verified, operational, apps, commands, linked,
                   studio.ground_snapshot(), (), studio.ground.passed_tests(target),
                   hardware._load("signal-observations.json", {}))
