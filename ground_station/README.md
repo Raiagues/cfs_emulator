@@ -27,6 +27,8 @@ sequenceDiagram
 
 Depois do primeiro evento de NOOP confirmado, o Studio habilita a saída automaticamente nas reconexões ao mesmo destino durante a execução do Studio. As confirmações do painel pertencem à conexão ativa. Com o downlink aberto, a estação inscreve os pacotes ausentes da tabela compilada via `TO_LAB_ADD_PKT_CC` e espera até oito segundos por cada confirmação. As falhas ficam em **Catalog details**.
 
+**Start over** marca um novo início neste navegador. Se a última resposta de NOOP do destino for anterior ao reinício, a próxima conexão aguarda o envio manual de **ENABLE_OUTPUT**. A sessão de voo pode continuar durante o reinício do guia.
+
 ## Montar um teste de ida e volta
 
 Em **Ground Station → Round trip**, selecione um comando da árvore e clique em **New test**. Escolha o tempo limite e acrescente as observações na ordem esperada. O formulário de envio usa os campos do comando compilado.

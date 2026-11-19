@@ -357,7 +357,7 @@ class Studio:
         return apply_overrides(self.freeze_catalog(state, sensorless), self.workspace.root)
 
     def ground_start(self, options):
-        if set(options) - {'target', 'connection'}:
+        if set(options) - {'target', 'connection', 'journey_reset_at'}:
             raise ValueError('Invalid ground station configuration')
         if 'connection' in options and not isinstance(options['connection'], dict):
             raise ValueError('Invalid connection')
@@ -391,7 +391,8 @@ class Studio:
             if code or len(instance) != 32 or any(c not in '0123456789abcdef' for c in instance):
                 instance = None
         link = resolve_ground_link(self.hardware, target, catalog, options.get('connection'))
-        result = self.ground.start(**link, catalog=catalog, service_instance=instance)
+        result = self.ground.start(**link, catalog=catalog, service_instance=instance,
+                                   journey_reset_at=options.get('journey_reset_at', 0))
         self.ground_target = target
         return dict(result, target=target)
 

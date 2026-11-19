@@ -50,7 +50,7 @@ class GroundStation:
         self._malformed = 0
         self._last_received = None
         self.first_contact = FirstEvent()
-        self._learned_targets = set()
+        self._learned_targets = {}
         self._target = None
         self._auto_enable = False
         self._subscriptions_due = self._subscription_thread = None
@@ -80,7 +80,9 @@ class GroundStation:
             return copy.deepcopy(self._catalog)
 
     def start(self, host, listen_host='0.0.0.0', return_host=None, build_root=None, catalog=None,
-              service_instance=None, build_dir=None):
+              service_instance=None, build_dir=None, journey_reset_at=0):
+        if type(journey_reset_at) not in (int, float) or not 0 <= journey_reset_at < float('inf'):
+            raise ValueError('Invalid journey reset time')
         # The Studio may serve a different project from the installation of its
         # Python package. Load GroundSystem from the mission's verified checkout.
         tools = self.root / 'cFS/tools/cFS-GroundSystem'
@@ -121,7 +123,7 @@ class GroundStation:
                 self._error = self._failure = None
                 self._subscription_errors = []
                 self._target = (catalog.get('build_target'), target_ip, ports['command_port'])
-                self._auto_enable = self._target in self._learned_targets
+                self._auto_enable = self._learned_targets.get(self._target, 0) > journey_reset_at
                 self.first_contact = FirstEvent(catalog, return_host or listen_host)
                 self._subscriptions_due = ([target_ip, ports['command_port']], service_instance)
                 self._stop = threading.Event()
@@ -270,7 +272,7 @@ class GroundStation:
                        p['hex'] == packet['hex'] for p in reversed(self._history)):
                 self.first_contact.received(packet)
                 if self.first_contact.event:
-                    self._learned_targets.add(self._target)
+                    self._learned_targets[self._target] = self.first_contact.event
                 if self.trips.active:
                     active = self.trips.active
                     self.trips.observe(packet)

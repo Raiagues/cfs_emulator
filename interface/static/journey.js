@@ -17,6 +17,7 @@ const bar = document.querySelector('#flight-guide');
 const tick = '<svg class="fs-tick" viewBox="0 0 16 16" aria-hidden="true"><path pathLength="1" d="m3 8 3 3 7-7"/></svg>';
 let signature='', data, requestNumber=0, since=0, previousDone=[];
 try {since=Number(localStorage.getItem('fs-journey-reset')) || 0;} catch {}
+export function journeyResetAt() {return since;}
 function render() {
   if (!bar) return;
   const done = stages.map(([id]) => Boolean(data?.steps[id]?.done && data.steps[id].observed_at > since));

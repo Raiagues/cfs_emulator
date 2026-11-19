@@ -1,6 +1,6 @@
 import {openAppWizard} from './app-wizard.js';
 import {mountFirstBoot} from './first-boot.js';
-import {refreshJourney} from './journey.js';
+import {journeyResetAt, refreshJourney} from './journey.js';
 import {drawOrbit,mountOrbit} from './orbit-preview.js';
 import {renderSourceGuide, renderCommandTrail, renderCommandTest, renderSourceTools, renderInspectorDialog, commandContext, syncCommandToFile, attachTagPicker} from './source-guide.js';
 import {openModuleAction} from './module-actions.js';
@@ -762,7 +762,7 @@ async function groundConnection(connect){
  if(state.groundBusy)throw Error('Wait for the connection to complete.');
  state.groundBusy=true;state.groundError='';renderView();
  try{
-  const snapshot=await api(connect?'ground/start':'ground/stop',connect?{target:state.target}:{});
+  const snapshot=await api(connect?'ground/start':'ground/stop',connect?{target:state.target,journey_reset_at:journeyResetAt()}:{});
   updateGround(connect?snapshot:{...snapshot,target:state.ground?.target});
  }catch(error){state.groundError=error.message;throw error;}
  finally{state.groundBusy=false;if(state.view==='ground')renderView();}
