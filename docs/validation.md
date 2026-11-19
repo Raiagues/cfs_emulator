@@ -4,8 +4,8 @@
 
 | Ambiente | Python | JavaScript |
 | --- | --- | --- |
-| Cópia com o cFS oficial instalado | 59 de 59 passaram, inclusive os dois ciclos HTTP de missão e hardware. | 12 de 12 passaram na árvore da mesma versão. |
-| Projeto antes do clone | 57 passaram. Os dois ciclos HTTP que dependem dos fontes oficiais foram pulados. | 12 de 12 passaram. |
+| Cópia com o cFS oficial instalado | 63 de 63 passaram, inclusive os dois ciclos HTTP de missão e hardware. | 20 de 20 passaram na árvore da mesma versão. |
+| Projeto antes do clone | 61 passaram. Os dois ciclos HTTP que dependem dos fontes oficiais foram pulados. | 20 de 20 passaram. |
 
 ## Primeiro voo nativo
 
@@ -15,13 +15,18 @@ Em 19 de novembro de 2026, o primeiro voo foi executado em cópias isoladas do p
 | --- | --- |
 | Setup e instalação | Com **Source** pendente, **Continue** ficou indisponível. Clicar em **+** executou o clone oficial com submódulos, exibiu a transferência no terminal e repetiu a verificação. O checkout usado no voo foi `a4d305dc06fb`. |
 | Boot | O build produziu `core-cpu1`. O processo imprimiu `CFE_ES_Main entering OPERATIONAL state`. As marcas das apps vieram das respectivas mensagens de inicialização. |
+| Reprodução do boot | O registro nativo continha 30 transições até OPERATIONAL e 13 apps de startup. No Chromium, foi possível pausar e reproduzir o registro, abrir as seis camadas e inspecionar o console. |
 | Primeiro contato | A conexão iniciou com **zero** comandos. **TO_LAB_OUTPUT_ENABLE_CC** transmitiu 24 bytes. O **NOOP** de **sample_app** devolveu o evento de informação nº 3, na nave 66, processador 1. O housekeeping registrou o aumento de `CommandCounter`. |
 | Assistente e editor | Em Chromium, **orbit_reader** gerou um plano com 78 arquivos. O salvamento apresentou os quatro MIDs do plano. A atividade **capture** começou em **0/7**. Os sete passos abriram, e retornar ao editor pela barra lateral fechou a atividade. |
 | Comando da missão | Em **orbit_demo**, foi criado o handler de **stamp** e gravado o C com a revisão esperada. Após recompilar, o catálogo dava MID **0x1A00**, FC **4**. O envio com `Value=17` transmitiu `1a00c0000005043511000000`. |
-| Ida e volta confirmada | O EVS nº **15** de **ORBIT_DEMO** retornou **Stamp 17 received**, sequência CCSDS **52**. Em outro pacote, sequência **3**, o contador da app passou de **0 para 1**. As duas observações concluíram o teste. |
+| Do editor ao alvo | No Chromium, o assistente criou `orbit_demo` em uma missão nativa vazia. A etapa **Handler** abriu o trecho a implementar. Salvamos o C, seguimos **Test → Open Ground Station**, paramos o binário anterior e iniciamos o novo build pelo mesmo fluxo. A estação abriu `ORBIT_DEMO_STAMP_CC`. |
+| Ida e volta confirmada | No editor de testes da estação, configuramos o evento da app e o incremento de `CommandCounter`. O pacote com `Value=17` voltou como **Stamp 17 received**, evento **3** de **ORBIT_DEMO**, sequência CCSDS **42**. O housekeeping separado registrou **0 → 1**, sequência **29**. A estação confirmou as duas observações. |
+| Reinício do guia | Com uma alteração C em memória, **Start over** voltou a **0/9** no mesmo editor. O texto permaneceu no buffer. O documento coube em 1440 × 900, 1366 × 768 e 390 × 844. |
 | Progresso entre sessões | Esse voo concluiu **Target, Boot, Event, App, Command e Send**. Uma nova conexão voltou a aguardar o evento da sessão. Reabrir o backend preservou o resultado comprovado de **Send**. |
 | Temperatura | Na órbita de teste, com 1U, 1,3 kg, α = ε = 0,7 e 1 W, a temperatura variou de **−9,27 a 8,58 °C**. Os equilíbrios sob iluminação e em sombra foram **33,49 °C** e **−82,81 °C**. |
 | Testes de sinais | Os três cenários foram executados pelo botão **Run**. A curva enviada foi comparada com a leitura do HAL C em um barramento de teste local. O cenário de desconexão verificou o erro e a recuperação do dispositivo. |
+
+![Teste Stamp concluído com os dois recibos da app](images/first-flight/command-receipt.webp)
 
 A validação do novo percurso usou execução nativa e testes locais de sensores. Os ensaios em QEMU e placa física registrados no fim deste documento pertencem à bancada anterior.
 
@@ -32,7 +37,7 @@ Cada linha traz o export interativo fornecido e a tela correspondente servida pe
 <details>
 <summary>Escolha do alvo</summary>
 
-O reparo e a liberação de Continue dependem dos comandos do host. O tema claro da aplicação usa bege.
+O cartão Native aparece após a verificação manual. A captura do Studio mostra os três resultados aprovados. O reparo e a liberação de Continue dependem dos comandos do host. O tema claro da aplicação usa bege.
 
 | Janela e tema | Referência | Flight Studio |
 | --- | --- | --- |
@@ -78,7 +83,7 @@ No Chromium, a partir dessa missão, foi possível criar a app `orbit_reader`, a
 <details>
 <summary>Ground Station</summary>
 
-A captura foi feita no primeiro contato, antes da telemetria. O formulário mostra o destino IPv4 da conexão e o tamanho do pacote de habilitação do catálogo.
+A captura foi feita no primeiro contato, antes da telemetria. O formulário mostra o destino IPv4 da conexão e o tamanho do pacote de habilitação do catálogo. O seletor **Round trip / System overview** também abre a visão geral. As setas internas indicam a arquitetura e só recebem confirmação quando existe uma observação correspondente.
 
 | Janela e tema | Referência | Flight Studio |
 | --- | --- | --- |
@@ -106,7 +111,7 @@ O símbolo, o caminho no projeto e o número de linha pertencem à app criada no
 <details>
 <summary>Sensores e órbita</summary>
 
-Os números e curvas vêm dos dispositivos configurados e do modelo de sinal. Os cenários locais identificam a leitura do HAL e a telemetria de voo tem origem no downlink.
+Os números e curvas vêm dos dispositivos configurados e do modelo de sinal. O emulador estava desligado nas capturas e o controle de envio exibe esse estado. Os cenários locais identificam a leitura como **Local HAL read**. A telemetria de voo tem origem no downlink.
 
 | Janela e tema | Referência | Flight Studio |
 | --- | --- | --- |

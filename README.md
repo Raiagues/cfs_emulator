@@ -18,7 +18,7 @@ A plataforma e o código de voo têm origens separadas. A configuração baixa o
 2. Acompanhe **Compiler**, **Python** e **Source**. A seleção inicia os comandos em sequência. Clique em um grupo para ver a saída. Se faltar o checkout, clique no **+** de **Source** para baixar o cFS oficial e seus submódulos. O terminal inferior acompanha a instalação. O Studio repete a verificação ao terminar.
 3. Quando os três grupos passarem, clique em **Continue · first boot**. O Studio compila a missão e inicia o cFS. Na tela **First boot**, clique nas camadas para ver o que está carregando e abra o console para localizar `CFE_ES_Main entering OPERATIONAL state`.
 4. Em **Next → Ground Station**, clique em **Connect**. Envie o comando de **to_lab** para habilitar a saída de telemetria no endereço já preenchido. Aguarde o primeiro pacote e a amostra inicial do contador de **sample_app**. Envie **SAMPLE_APP_NOOP_CC**. O evento com a mensagem NOOP e o aumento de `CommandCounter` confirmam a resposta.
-5. Clique em **App** na barra **First flight** e em **Create your first app**. Dê um nome, confira os arquivos de C e as entradas de build e startup. Em **Create app**, a proposta é gravada. **Next → add a command** abre a atividade no editor dessa app.
+5. Clique em **App** na barra **First flight** e em **Create your first app**. Dê um nome, confira os arquivos de C e as entradas de build e startup. Confirme em **Create** para gravar a proposta. **Next → add a command** abre a atividade no editor dessa app.
 
 ![Primeiro boot com as camadas da missão](docs/images/first-flight/boot-1440-dark-studio.webp)
 
@@ -77,11 +77,11 @@ Uma **nova compilação** é necessária quando os insumos da missão mudam depo
 
 ### Do handler ao primeiro comando
 
-Ao entrar na atividade **Command**, escolha o nome e os campos. Os sete passos do editor levam ao código de função, à estrutura da mensagem, ao protótipo, ao despacho, aos eventos, ao handler e ao teste. Abra o handler, implemente o efeito esperado e salve o C. Um handler que emite um evento com um valor do payload permite verificar aquele valor pelo downlink. Você pode continuar explorando arquivos pelo ícone **Code** da barra lateral.
+Em **New command**, escolha a app de missão e dê um nome ao comando. A etapa **Struct** abre a estrutura C do payload. Os sete passos do editor levam ao código de função, à estrutura da mensagem, ao protótipo, ao despacho, aos eventos, ao handler e ao teste. Abra o handler, implemente o efeito esperado e salve o C. Um handler que emite um evento com um valor do payload permite verificar aquele valor pelo downlink. Você pode continuar explorando arquivos pelo ícone **Code** da barra lateral.
 
 ![Atividade de comando em uma app criada no assistente](docs/images/first-flight/code-1366-light-studio.webp)
 
-Recompile e execute a nova versão com os controles do cabeçalho. Na Ground Station, abra o comando da app. Em **New test**, escolha as observações que confirmam a execução, por exemplo um evento da app e o aumento de um campo de housekeeping. Aguarde pelo menos uma amostra do campo antes de medir um aumento. Envie o comando com o teste selecionado. As observações recebidas aparecem no histórico da ida e volta.
+Em **Test → Open Ground Station**, o Studio leva o comando selecionado até o alvo. Se uma versão anterior estiver rodando, use **Stop previous build**, **Build cFS** e **Start cFS**. O formulário abre quando o catálogo do binário em execução contém o comando. Os controles de compilação do cabeçalho também ficam disponíveis. Em **New test**, escolha as observações que confirmam a execução, por exemplo um evento da app e o aumento de um campo de housekeeping. Aguarde pelo menos uma amostra do campo antes de medir um aumento. Envie o comando com o teste selecionado. As observações recebidas aparecem no histórico da ida e volta.
 
 ![Ground Station e o primeiro contato com a missão](docs/images/first-flight/ground-1440-dark-studio.webp)
 
@@ -105,7 +105,7 @@ As apps partem do `sample_app` do checkout instalado. Marcadores `@studio.begin`
 
 ### Experimentar um sinal localmente
 
-Em **Synthetic data**, selecione um dispositivo conectado. Para temperatura orbital, escolha o tamanho do satélite, a massa, as propriedades da superfície e a potência interna. A prévia calcula a temperatura ao longo da órbita, incluindo a passagem pela sombra. Em **Python → Dry run** você pode amostrar o sinal no computador. **Test** exercita uma órbita, a entrada no eclipse ou a perda e a recuperação do dispositivo. Quando houver um guest disponível, **Send to QEMU** escreve no modelo emulado. A aba **QEMU** permite comparar o valor enviado com a leitura que chegar da app pelo downlink.
+Em **Synthetic data**, selecione um dispositivo conectado. Para temperatura orbital, escolha o tamanho do satélite, a massa, as propriedades da superfície e a potência interna. A prévia calcula a temperatura ao longo da órbita, incluindo a passagem pela sombra. Em **Python → Dry run** você pode amostrar o sinal no computador. **Test** exercita uma órbita, a entrada no eclipse ou a perda e a recuperação do dispositivo. Com o emulador ligado, **Send to QEMU** e o interruptor **Synthetic data** do cabeçalho controlam a mesma sessão de escrita nos sensores selecionados. A aba **QEMU** permite comparar o valor enviado com a leitura que chegar da app pelo downlink.
 
 ![Órbita e sensores no tema claro](docs/images/first-flight/sensors-1440-light-studio.webp)
 
