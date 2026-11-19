@@ -38,6 +38,8 @@ const icons = {
   'rotate':'M3 11a9 9 0 1 1 3 8 M3 5v6h6',
   'layers':'m12 3 10 5-10 5L2 8z M2 12l10 5 10-5 M2 16l10 5 10-5',
   'compass':'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20 m4 6-3 7-7 3 3-7z',
+  'moon':'M20 15a8 8 0 0 1-10-11 9 9 0 1 0 10 11z',
+  'pulse':'M2 12h5l2-5 4 10 2-5h7',
   'thermometer':'M9 14V5a3 3 0 0 1 6 0v9a5 5 0 1 1-6 0 M12 8v9 M18 6h3 M18 10h2',
   'arrow-up-right':'M6 18 18 6 M6 6h12v12'
 };

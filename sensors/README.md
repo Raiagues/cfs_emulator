@@ -37,7 +37,7 @@ Open **Synthetic data** in the left rail and select a sensor on the board.
 Each output has a baseline, waveform, noise type and amplitude-over-time plot.
 Enable the outputs you want, choose the sample interval, then press **Save**.
 
-**Start test** samples the configured outputs locally until you press **Stop test**.
+**Dry run** samples the configured outputs locally and prints the values in the console.
 To inject the same signals into the emulated devices, start the emulator and choose
 **Start simulation**. In Board mode the plots can still be tested locally. The
 physical sensor supplies its own measurements. Configure I²C buses and addresses
@@ -132,3 +132,41 @@ installed image that lacks this patch.
 QEMU implements the two models in
 [`tmp105.c`](https://github.com/qemu/qemu/blob/master/hw/sensor/tmp105.c) and
 [`lsm303dlhc_mag.c`](https://github.com/qemu/qemu/blob/master/hw/sensor/lsm303dlhc_mag.c).
+
+## Orbital temperature
+
+A new TMP105 uses the single-node thermal model. In **Signals**, select the
+temperature output and **Orbit physics**. Pick a spacecraft size, mass, surface
+absorptivity, emissivity and internal heat. The readouts show the minimum and
+maximum of the displayed orbit and two steady equilibria. Sun uses a surface
+facing the Sun at perigee. Shadow uses Earth infrared at apogee. Temperatures are
+computed in kelvin, then displayed in °C.
+
+| Size | Projected area (m²) | Surface area (m²) | Mass (kg) |
+| --- | --- | --- | --- |
+| 1U | 0.015 | 0.060 | 0.8–2 |
+| 3U | 0.039 | 0.156 | 2–6 |
+| 6U | 0.071 | 0.284 | 6–14 |
+
+With Earth view factor `F = (R/r)²` and solar zenith cosine `z`, absorbed power is
+`α A_p × 1361 × (lit + 0.3 F max(0,z)) + ε A_p × 239 F + P` in watts. The
+thermal capacity is `mass × 900 J/(kg K)`, and radiated power is
+`ε × 5.67e−8 × A × T⁴`. The orbit preview, Python dry run and QMP writer all sample
+the same integrated trajectory. Legacy `orbit.sunlight` waveforms retain their
+original base, offset and time constant.
+
+## Test scenarios
+
+In **Test**, select a configured sensor, choose a scenario and click **Run**.
+Each job compiles the register profile and the same C HAL used by the mission.
+A local register bus receives the Python values and records the HAL's decoded
+readings. The graph and checks use these actual results. **One orbit** samples a
+revolution. **Eclipse entry** samples forty minutes around the propagated shadow
+transition. **Sensor drops out** returns a bus error for six seconds, then checks
+the next successful read. Quantization follows the model's register width and
+sensitivity. A custom C protocol needs its own device implementation.
+
+**Python → Dry run** prints 24 samples locally. **Send to QEMU** uses the live
+emulator and continues until stopped. In **QEMU**, a completed write supplies
+the Python and integer columns. The cFS column requires a connected Ground
+Station and a valid packet from the linked app. A missing observation shows a dash.

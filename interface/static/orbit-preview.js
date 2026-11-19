@@ -140,7 +140,7 @@ function drawScene(canvas,isMap,now,time){
     const dx=Math.cos(delta)*Math.sin(lambda),dy=-Math.sin(delta)*Math.cos(tilt)+Math.cos(delta)*Math.cos(lambda)*Math.sin(tilt);
     const len=Math.hypot(dx,dy)||1, reach=Math.min(width,height)*.45;
     const x=Math.max(9,Math.min(width-9,g.center[0]+dx*reach/len)),y=Math.max(9,Math.min(height-9,g.center[1]+dy*reach/len));
-    ctx.fillStyle='#ecc775';ctx.strokeStyle='#ecc775';ctx.lineWidth=1;
+    ctx.fillStyle=color('--fs-accent');ctx.strokeStyle=ctx.fillStyle;ctx.lineWidth=1;
     ctx.beginPath();ctx.arc(x,y,3.3,0,2*Math.PI);ctx.fill();
     for(let i=0;i<8;i++){const a=i*Math.PI/4;ctx.beginPath();ctx.moveTo(x+Math.cos(a)*5,y+Math.sin(a)*5);ctx.lineTo(x+Math.cos(a)*7,y+Math.sin(a)*7);ctx.stroke();}
   }

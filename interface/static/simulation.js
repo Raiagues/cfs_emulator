@@ -1,10 +1,11 @@
 import {icon} from './ui.js';
+import {pythonPanel,qemuPanel,scenarioPanel} from './signal-experiments.js';
 import {orbitCard, orbitControls, orbitData, orbitIllumination, orbitTemperature, thermalCurve, orbitPoint, orbitSubtitle, orbitToolbar, orbitalTime} from './orbit-preview.js';
 
 const seriesSelection=new Map();
 const readings=new Map();
 let currentRun;
-const colors=['#d4b48a','#7cb4f0','#68d4b1','#c3a6ff','#df947d'];
+const colors=['--fs-accent','--orbit-night','--fs-success','--fs-code','--fs-danger'];
 const identity=(item,esc)=>esc(item.model)+' · 0x'+Number(item.address).toString(16);
 const formatted=n=>Number.isFinite(n)?Number(n.toFixed(2)).toString():'—';
 
@@ -38,14 +39,9 @@ export function renderSimulationBoard(state,{esc}){
     const pagination=charts.length>2?`<nav class="series-pages" aria-label="Signal charts"><button data-signal-page="${page-1}" aria-label="Previous charts" ${page?'':'disabled'}>‹</button><span>${page+1} / ${Math.ceil(charts.length/2)}</span><button data-signal-page="${page+1}" aria-label="Next charts" ${(page+1)*2>=charts.length?'disabled':''}>›</button></nav>`:'';
     const count=active?.device?'sensor · '+active.device:selected.length+' sensor'+(selected.length===1?'':'s')+' enabled';
     content=`<div class="signal-session-state" data-active="${Boolean(active)}"><i></i><strong>${active?.action==='simulate'?(active.samples?.devices?.length?'Sending to QEMU':'Starting QEMU session'):active?'Local test running':'Synthetic data is off'}</strong><small>${esc(active?count:[count,reason].filter(Boolean).join(' · '))}</small>${action}</div>${orbitCard()}${charts.length?`<div class="series-grid">${charts.slice(page*2,page*2+2).map(chart=>chartHtml(chart,esc)).join('')}</div>`:''}${pagination}`;
-  }else if(tab==='python'){
-    content=`<section class="signal-summary"><h3>Signal sources</h3>${(session?.sources||[]).map(path=>`<button class="signal-file" data-signal-source="${esc(path)}">${icon('code')}<code>${esc(path)}</code>${icon('arrow-up-right')}</button>`).join('')}</section>`;
-  }else if(tab==='qemu'){
-    content=`<section class="signal-summary"><h3>QEMU devices</h3>${available.map(item=>`<div class="qemu-device"><strong>${esc(item.id)}</strong><code>${esc(item.qom_path)}</code><small>${esc(item.bus)} · ${Object.keys(item.properties).map(esc).join(', ')}</small></div>`).join('')||'<p>No devices configured.</p>'}</section>`;
-  }else{
-    const tests=state.jobs.filter(job=>job.action==='simulate-preview').slice().reverse();
-    content=`<section class="signal-summary"><h3>Local signal test</h3><button data-run-signal-test ${(active || !(device||selected.length))?'disabled':''}>${icon('play')}Test ${device?esc(device.id):'enabled sensors'}</button>${tests.map(job=>`<div><strong>${esc(job.device||'Signal test')}</strong><span>${esc(job.status)}</span></div>`).join('')}</section>`;
-  }
+  }else if(tab==='python')content=pythonPanel(state,esc,active,reason);
+  else if(tab==='qemu')content=qemuPanel(state,esc);
+  else content=scenarioPanel(state,esc,active);
   return `<div class="signals-bench"><aside class="signal-catalog"><h2>Synthetic data</h2><button class="signal-pick signal-orbit-pick" data-signal-orbit aria-pressed="${!device}"><i>${icon('compass')}</i><span>Orbit<small data-orbit-subtitle>${esc(orbitSubtitle(session?.settings.orbit))}</small></span></button><h3>Sensors <small>${selected.length} enabled</small></h3><div class="signal-entries">${sensorList}</div><button class="signal-add" data-signal-hardware>${icon(state.target==='native'?'circuit':'plus')}${state.target==='native'?'Hardware':'Add sensor'}</button></aside><section class="signal-main"><header class="signal-tabs"><nav aria-label="Synthetic data views">${[['signals','Signals'],['python','Python'],['qemu','QEMU'],['test','Test']].map(([id,title])=>`<button data-signal-view="${id}" aria-pressed="${tab===id}">${title}</button>`).join('')}</nav>${tab==='signals'?orbitToolbar():''}<button class="signal-settings-toggle" data-signal-sidebar aria-label="Signal settings" aria-controls="simulation-fields" aria-expanded="${state.signalSidebar!==false}">${icon('settings')}</button></header><div class="signal-content" data-tab="${tab}">${content}</div></section></div>`;
 }
 const patterns=[['constant','Constant'],['sine','Sine wave'],['ramp','Linear ramp'],['orbit.sunlight','Orbit · sunlight'],['uniform','Uniform noise'],['gaussian','Gaussian noise']];
@@ -138,10 +134,10 @@ function chart(canvas,points,keys,lo,hi,now,orbital){
   }
   ctx.strokeStyle=theme.getPropertyValue('--fs-line');ctx.lineWidth=.65;
   ctx.beginPath();ctx.moveTo(left,bottom);ctx.lineTo(right,bottom);ctx.stroke();
-  ctx.font='10px "JetBrains Mono",monospace';ctx.fillStyle=theme.getPropertyValue('--fs-muted');ctx.textAlign='left';ctx.fillText(formatted(hi),0,top+6,34);ctx.fillText(formatted(lo),0,bottom,34);
+  ctx.font=theme.getPropertyValue('--fs-small').trim()+' '+theme.getPropertyValue('--fs-mono');ctx.fillStyle=theme.getPropertyValue('--fs-muted');ctx.textAlign='left';ctx.fillText(formatted(hi),0,top+6,34);ctx.fillText(formatted(lo),0,bottom,34);
   const minutes=end-start>=180,unit=minutes?' min':' s',div=minutes?60:1;
   ctx.fillText(Math.round(start/div)+unit,left,height-1);ctx.textAlign='right';ctx.fillText(Math.round(end/div)+unit,right,height-1);
-  keys.forEach((key,i)=>{ctx.strokeStyle=colors[i%colors.length];ctx.fillStyle=ctx.strokeStyle;ctx.lineWidth=1.6;ctx.beginPath();let connected=false;
+  keys.forEach((key,i)=>{ctx.strokeStyle=theme.getPropertyValue(colors[i%colors.length]);ctx.fillStyle=ctx.strokeStyle;ctx.lineWidth=1.6;ctx.beginPath();let connected=false;
     for(const point of points){const v=point[key];if(!Number.isFinite(v)){connected=false;continue;}ctx[connected?'lineTo':'moveTo'](x(point.t),y(v));connected=true;}
     ctx.stroke();if(points.length===1&&Number.isFinite(points[0][key])){ctx.beginPath();ctx.arc(left,y(points[0][key]),2.5,0,2*Math.PI);ctx.fill();}
   });
@@ -151,6 +147,12 @@ export function updateSignalValues(state){
   if(state.view!=='simulation'||!state.simulation)return;
   const session=state.simulation,job=state.jobs.find(j=>['simulate','simulate-preview'].includes(j.action)&&j.status==='running');
   collectSamples(job);
+  const consoleBox=document.querySelector('[data-signal-console]');
+  if(consoleBox){
+    const last=state.jobs.filter(j=>['simulate','simulate-preview'].includes(j.action)&&!j.scenario).at(-1);
+    const lines=last?.lines?.slice(-24).join('\n')||'';
+    if(consoleBox.textContent!==lines){consoleBox.textContent=lines;consoleBox.scrollTop=consoleBox.scrollHeight;}
+  }
   const now=orbitalTime(),track=orbitData();
   const focus=session.settings.sensors.find(sensor=>sensor.device===state.selectedDevice);
   const curve=focus&&thermalCurve((focus.signals[state.signalOutput]||Object.values(focus.signals)[0])?.material);

@@ -141,3 +141,45 @@
 .orbit-slider input[type=number]{appearance:textfield;box-sizing:border-box;width:6.5ch;min-width:0;padding:0 2px;border:1px solid transparent;border-radius:var(--fs-radius-control);background:transparent;color:inherit;font:inherit;text-align:right}
 .orbit-slider input[type=number]:is(:hover,:focus-visible){border-color:var(--fs-line);color:var(--fs-text);background:var(--fs-panel)}
 .orbit-slider input::-webkit-inner-spin-button{appearance:none}
+
+/* Signal editors and register experiments use the same panel surface as Signals. */
+.thermal-material{grid-column:1/-1;display:grid;gap:12px}
+.thermal-material label>span,.thermal-facts>span{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.thermal-material input[type=range]{width:100%;padding:0;accent-color:var(--fs-accent)}
+.thermal-material output{color:var(--fs-text);font:var(--fs-caption) var(--fs-mono)}
+.thermal-facts{display:grid;gap:6px;padding:8px;border:1px solid var(--fs-line);border-radius:var(--fs-radius-card);background:var(--fs-panel);color:var(--fs-muted);font-size:var(--fs-caption)}
+.signal-script-card,.signal-console,.signal-scenario-card,.signal-checks,.chain-device{background:var(--fs-panel);border:1px solid var(--fs-line);border-radius:var(--fs-radius-card);min-width:0}
+.signal-script-card header,.signal-scenario-card header,.chain-device header,.scenario-choices{display:flex;align-items:center;gap:8px;padding:8px}
+.signal-scenario-card header strong,.chain-device header b{margin-right:auto}
+.signal-script-card select{max-width:46%;margin-right:auto}
+.signal-script-card :is(button,select),.scenario-choices button,.signal-scenario-card select{display:inline-flex;align-items:center;gap:6px;background:var(--fs-surface);color:var(--fs-text);border:1px solid var(--fs-line);padding:6px 8px;border-radius:var(--fs-radius-control);font:500 var(--fs-body) var(--fs-sans)}
+.signal-script-card pre,.signal-console pre{background:var(--fs-bg);color:var(--fs-text);overflow:auto;min-height:0;margin:0;padding:12px;font:var(--fs-label)/1.65 var(--fs-mono)}
+.signal-content[data-tab=python]{display:grid;grid-template-rows:minmax(0,2fr) minmax(0,1fr)}
+.signal-script-card,.signal-console{display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;overflow:hidden}
+.signal-console h3,.signal-checks h3{margin:0;padding:10px;color:var(--fs-muted);font:500 var(--fs-caption) var(--fs-sans)}
+.value-chain{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px}
+.chain-head{color:var(--fs-muted);font-size:var(--fs-caption);padding:0 12px}
+.chain-device header{border-bottom:1px solid var(--fs-line);flex-wrap:wrap}
+.chain-device header :is(code,small){font:var(--fs-caption) var(--fs-mono);color:var(--fs-muted);overflow-wrap:anywhere}
+.chain-device .value-chain>div{padding:8px 10px;min-width:0}
+.chain-device .value-chain>div+div{border-inline-start:1px solid var(--fs-line)}
+.chain-device .value-chain>div div{display:grid;gap:2px;margin:3px 0}
+.value-chain b{font:500 var(--fs-label) var(--fs-mono)}
+.value-chain small{font:var(--fs-small) var(--fs-mono);color:var(--fs-muted);overflow-wrap:anywhere}
+.scenario-choices{padding:0;flex-wrap:wrap}
+.scenario-choices button{min-height:38px}
+.scenario-choices [aria-pressed=true]{border-color:var(--fs-accent);background:var(--fs-accent-bg)}
+.scenario-choices .scenario-run{margin-left:auto;background:var(--fs-accent);color:var(--fs-on-accent)}
+.signal-empty{padding:14px;color:var(--fs-muted);font:var(--fs-label) var(--fs-sans)}
+.signal-scenario-card header span,.signal-scenario-card header small{font-size:var(--fs-caption)}
+.signal-scenario-card header span::before{content:'';display:inline-block;width:12px;height:2px;margin-right:4px;background:var(--fs-accent)}
+.signal-scenario-card header span+span::before{background:var(--fs-code)}
+.signal-check-graph{height:clamp(90px,20vh,200px);display:flex;align-items:stretch;gap:5px;padding:6px}
+.signal-check-graph output{display:flex;flex-direction:column;justify-content:space-between;color:var(--fs-muted);font:var(--fs-small) var(--fs-mono)}
+.signal-check-graph svg{flex:1;min-width:0;width:100%;height:100%;overflow:visible}
+.signal-check-graph path{fill:none;stroke:var(--fs-accent);stroke-width:2px;vector-effect:non-scaling-stroke}
+.signal-check-graph .read-trace{stroke:var(--fs-code);stroke-dasharray:4 4}
+.signal-checks>div{border-top:1px solid var(--fs-line);padding:7px 10px;display:flex;gap:8px;align-items:center}
+.signal-checks [data-passed=true]{color:var(--fs-success)}
+.signal-checks [data-passed=false]{color:var(--fs-danger)}
+@media(max-width:660px){.signal-script-card header,.signal-scenario-card header{flex-wrap:wrap}.signal-script-card select{max-width:65%}}
