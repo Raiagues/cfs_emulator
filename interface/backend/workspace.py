@@ -18,6 +18,22 @@ import threading
 from project.flight_sources import module_directories
 
 
+def nasa_module_title(directory):
+    """Read the upstream module name from its Markdown title."""
+    readme = directory / "README.md"
+    if readme.is_symlink():
+        return ""
+    try:
+        with readme.open(encoding="utf-8") as file:
+            header = re.search(r"^#\s+(.+)$", file.read(8192), re.MULTILINE)
+    except (OSError, UnicodeError):
+        return ""
+    if not header:
+        return ""
+    title = re.sub(r"^core flight system\s*(?:\(cfs\)|:\s*framework\s*:\s*app\s*:)\s*", "", header[1], flags=re.I)
+    return re.sub(r"\s+(?:Application\s+)?\([A-Z_]+\)\s*$", "", title).strip()
+
+
 class Workspace:
     """Filesystem operations and cFS metadata, serialized against source mutations."""
 
@@ -232,6 +248,8 @@ class Workspace:
                        "entry": entry.relative_to(self.root).as_posix(), "managed": bool(manifest),
                        "built": name in installed, "enabled": name in enabled,
                        "manifest": manifest, "locations": []}
+                if not manifest:
+                    app["title"] = nasa_module_title(directory)
                 if manifest:
                     locations = generator.locations(self.root / "mission", manifest)["locations"]
                     app["locations"] = [dict(location, path="mission/" + location["path"]) for location in locations]
@@ -239,6 +257,9 @@ class Workspace:
                 app["behavior"] = summarize_application(app, recipes.get(name, {}).get("entry_point"), root=self.root)
                 apps.append(app)
             libraries = inspect_libraries(self.root, apps, self.source_index, mission)
+            for library in libraries:
+                if library["path"].startswith("cFS/"):
+                    library["title"] = nasa_module_title(self.root / library["path"])
             core_modules = []
             for module in sorted((self.root / "cFS/cfe/modules").glob("*")):
                 if (module / "CMakeLists.txt").is_file() and (module / "fsw/src").is_dir():

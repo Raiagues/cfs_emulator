@@ -18,12 +18,18 @@ function fileRole(path, name) {
   return [3,file.endsWith('.json')?'Mission settings':'Project files',false];
 }
 
-export function busDiagram(workspace, name, saved, esc) {
+const tick = '<svg class="fs-tick" viewBox="0 0 16 16" aria-label="Written"><path pathLength="1" d="m3 8 3 3 7-7"/></svg>';
+
+export function busDiagram(workspace, name, saved, esc, mids={}) {
   const enabled=new Set(workspace.mission.enabled);
-  const peers=['ci_lab','to_lab','sch_lab','sample_app'].filter(n=>enabled.has(n));
-  const node=n=>'<code>'+esc(n)+'</code>';
-  return '<div class="app-bus-picture"><div>'+peers.slice(0,2).map(node).join('')+'</div><strong>'+icon('workflow')+
-    'Software Bus</strong><div>'+peers.slice(2).map(node).join('')+'<code class="app-slot '+(saved?'written':'')+'" data-app-slot>'+esc(name||'Your app')+'</code></div></div>';
+  const nodes=names=>names.filter(n=>enabled.has(n)).map(n=>'<code>'+esc(n)+'</code>').join('');
+  const addresses=Object.entries(mids).map(([key,value])=>
+    '<code>'+esc(key)+' · 0x'+Number(value).toString(16).toUpperCase()+'</code>').join('');
+  return '<figure class="app-bus-picture"><figcaption>Where it lives</figcaption>'+
+    '<div class="bus-drawing"><div class="bus-top">'+nodes(['ci_lab','to_lab'])+
+    '<code class="app-slot '+(saved?'written':'')+'" data-app-slot>'+esc(name||'Your app')+'</code></div>'+
+    '<div class="bus-rail"><span>Software Bus</span></div><div class="bus-bottom">'+nodes(['sch_lab','sample_app'])+
+    '</div></div>'+(addresses?'<div class="wizard-mids">'+addresses+'</div>':'')+'</figure>';
 }
 
 export function openAppWizard({initialName='',workspace,api,esc,refresh,onCommand,requireSaved}) {
@@ -33,11 +39,15 @@ export function openAppWizard({initialName='',workspace,api,esc,refresh,onComman
   modal.className='app-wizard';modal.setAttribute('aria-labelledby','wizard-title');
   let step=0,name=initialName,draft=null,settings={},written=null,busy=false;
   const titles=['What it is','Its files','Create'];
+  const facts=[['cpu','Its own task'],['workflow','Talks through the bus'],['link','Has bus addresses']];
+  const numbers=[['priority','Priority'],['stack_size','Stack · bytes'],['wakeup_hz','Wakeup · Hz'],['hk_hz','Housekeeping · Hz']];
+
   function files() {
     const records=Object.keys(draft.files).map(path=>({path,role:fileRole(path,name)}));
     function row({path,role}) {
-      const mark=written?.has(path)?'<svg class="fs-tick" viewBox="0 0 16 16" aria-label="Written"><path pathLength="1" d="m3 8 3 3 7-7"/></svg>':icon('files');
-      return '<div class="wizard-file" title="'+esc(path)+'">'+mark+'<code>'+esc(path.split('/').at(-1))+'</code><small>'+role[1]+'</small></div>';
+      const mark=written?.has(path)?tick:'<i aria-hidden="true"></i>';
+      const prefix='mission/apps/'+name+'/';
+      return '<div class="wizard-file" title="'+esc(path)+'">'+mark+'<code>'+esc(path.startsWith(prefix)?path.slice(prefix.length):path)+'</code><small>'+role[1]+'</small></div>';
     }
     return groups.map((title,index)=>{
       const rows=records.filter(record=>record.role[0]===index);
@@ -46,51 +56,60 @@ export function openAppWizard({initialName='',workspace,api,esc,refresh,onComman
         ' more '+(more.length===1?'file':'files')+'</summary>'+more.map(row).join('')+'</details>':'')+'</section>';
     }).join('');
   }
+
   function render(){
-    const facts=[['clock','Its own task'],['workflow','Talks through the bus'],['link','Has bus addresses']];
-    const numbers=[['priority','Priority'],['stack_size','Stack · bytes'],['wakeup_hz','Wakeup · Hz'],['hk_hz','Housekeeping · Hz']];
-    modal.innerHTML='<form><header><div><small>Mission app</small><h2 id="wizard-title">'+titles[step]+'</h2></div><button type="button" data-close aria-label="Close">'+icon('close')+'</button></header>'+
-      '<ol class="wizard-steps">'+titles.map((t,i)=>'<li '+(i===step?'aria-current="step"':'')+'>'+String(i+1)+' · '+t+'</li>').join('')+'</ol><div class="wizard-content">'+
-      (step===0?busDiagram(workspace,name,false,esc)+'<div class="wizard-facts">'+facts.map(([g,t])=>'<span>'+icon(g)+t+'</span>').join('')+'</div>'+
-       '<label>App name<input name="app_name" autocomplete="off" required pattern="[a-z][a-z0-9]*(_[a-z0-9]+)*" maxlength="19" placeholder="orbit_demo" value="'+esc(name)+'"></label>':
-       (step===2?busDiagram(workspace,name,!!written,esc):'')+
-       '<div class="wizard-files">'+files()+'</div>'+
-       (step===1?'<details class="wizard-settings"><summary>'+icon('settings')+'Settings</summary><div>'+
-         numbers.map(([n,t])=>'<label>'+t+'<input required type="number" name="'+n+'" min="'+(n.endsWith('_hz')?'0.000001':'0')+'" step="'+(n.endsWith('_hz')?'any':'1')+'" value="'+esc(settings[n])+'"></label>').join('')+'</div></details>':'')+
-       '<div class="wizard-records"><code>'+esc(draft.preview.startup.record)+'</code><code>'+esc(draft.preview.build.statement)+'</code></div>'+
-       (written?'<div class="wizard-mids">'+Object.entries(draft.preview.mids).map(([k,v])=>'<code>'+esc(k)+' · 0x'+Number(v).toString(16).toUpperCase()+'</code>').join('')+'</div>':''))+
-      '</div><footer><output role="alert"></output>'+(step&&!written?'<button type="button" data-back>Back</button>':'')+
-      '<button type="submit" class="primary">'+(written?'Next → add a command':step===2?'Create app':'Next')+'</button></footer></form>';
-    if(step===0)modal.querySelector('input').focus();
+    const steps=titles.map((title,i)=>{
+      const done=i<step || !!written;
+      return '<li '+(i===step?'aria-current="step"':'')+' class="'+(done?'done':'')+'"><b>'+ (done?tick:(i+1))+'</b>'+title+'</li>';
+    }).join('');
+    const info='<div class="wizard-intro"><div class="wizard-facts">'+facts.map(([glyph,title])=>
+      '<span><i>'+icon(glyph)+'</i>'+title+'</span>').join('')+'</div><label>Name<input name="app_name" autocomplete="off" spellcheck="false" required pattern="[a-z][a-z0-9]*(_[a-z0-9]+)*" maxlength="19" placeholder="orbit_demo" value="'+esc(name)+'"></label></div>';
+    const options=step===1?'<details class="wizard-settings"><summary>'+icon('settings')+'Settings</summary><div>'+
+      numbers.map(([n,t])=>'<label>'+t+'<input required type="number" name="'+n+'" min="'+(n.endsWith('_hz')?'0.000001':'0')+'" step="'+(n.endsWith('_hz')?'any':'1')+'" value="'+esc(settings[n])+'"></label>').join('')+'</div></details>':'';
+    const review=draft?'<div class="wizard-review"><div class="wizard-files">'+files()+'</div>'+options+'<div class="wizard-records"><code>'+
+      esc(draft.preview.startup.record)+'</code><code>'+esc(draft.preview.build.statement)+'</code></div></div>':'';
+    modal.innerHTML='<form><header><h2 id="wizard-title">New app</h2><ol class="wizard-steps">'+steps+'</ol>'+
+      '<button type="button" data-close aria-label="Close" '+(busy?'disabled':'')+'>'+icon('close')+'</button></header>'+
+      '<div class="wizard-content">'+busDiagram(workspace,name,!!written,esc,written?draft.preview.mids:{})+(step===0?info:review)+'</div>'+
+      '<footer><output role="status">'+(written?tick+' '+esc(name)+' on the bus':'')+'</output>'+
+      (step===1?'<button type="button" data-back>Back</button>':'')+'<button type="submit" class="primary" '+(busy?'disabled':'')+'>'+
+      (written?'Next → add a command':step===2?'Creating…':step===1?'Create '+esc(name):'See its files →')+'</button></footer></form>';
   }
+
   modal.oninput=e=>{if(e.target.name==='app_name'){name=e.target.value;modal.querySelector('[data-app-slot]').textContent=name||'Your app';}};
   modal.onclick=e=>{
     if(busy)return;
     if(e.target.closest('[data-close]'))modal.close();
-    if(e.target.closest('[data-back]')){step--;render();}
+    if(e.target.closest('[data-back]')){step=0;render();modal.querySelector('input').focus();}
   };
   modal.oncancel=e=>{if(busy)e.preventDefault();};
   modal.onclose=()=>modal.remove();
   modal.onsubmit=async e=>{
     e.preventDefault();if(busy)return;
     if(written){modal.close();onCommand(name);return;}
-    const form=e.target, output=form.querySelector('output');
-    const controls=[...form.querySelectorAll('button,input')];for(const control of controls)control.disabled=true;
-    output.textContent='';busy=true;
-    try{
+    const form=e.target;
+    busy=true;form.querySelector('[type=submit]').disabled=true;
+    try {
       requireSaved();
-      if(step<2){
-        if(step===1)settings=Object.fromEntries(Object.keys(settings).map(k=>[k,Number(form.elements[k].value)]));
+      if(step===0){
         draft=await api('mission/draft',{kind:'app',mode:'create',name,settings,expected_hash:revision});
-        settings={...draft.draft.settings};step++;
+        settings={...draft.draft.settings};step=1;
       }else{
+        const proposed=Object.fromEntries(Object.keys(settings).map(k=>[k,Number(form.elements[k].value)]));
+        if(Object.keys(proposed).some(k=>proposed[k]!==settings[k])){
+          draft=await api('mission/draft',{kind:'app',mode:'create',name,settings:proposed,expected_hash:revision});
+          settings={...draft.draft.settings};
+        }
+        step=2;render();
         const result=await api('mission/save',{...draft.draft,expected_hash:draft.expected_hash,plan_hash:draft.plan_hash});
         written=new Set(result.changed);
         await refresh(result.changed,result.deleted);
       }
-      render();
-    }catch(error){if(written)render();modal.querySelector('output').textContent=error.message;}
-    finally{busy=false;for(const control of controls)control.disabled=false;}
+      busy=false;render();
+    }catch(error){
+      busy=false;if(step===2&&!written)step=1;
+      render();const output=modal.querySelector('output');output.setAttribute('role','alert');output.textContent=error.message;
+    }
   };
-  document.body.append(modal);render();modal.showModal();modal.querySelector('input')?.focus();
+  document.body.append(modal);render();modal.showModal();modal.querySelector('input').focus();
 }

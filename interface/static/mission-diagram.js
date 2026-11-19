@@ -45,7 +45,7 @@ export function moduleGroups(workspace) {
   }
   return {
     mission: {title: 'Your apps', kind: 'app', create: true, modules: apps.filter(app => app.managed)},
-    cfs: {title: 'cFS apps', kind: 'app', create: false, modules: apps.filter(app => !app.managed)},
+    cfs: {title: 'cFS apps', kind: 'app', create: false, modules: apps.filter(app => !app.managed).sort((a,b)=>Number(!!b.required)-Number(!!a.required))},
     library: {title: 'Libraries', kind: 'library', create: true, modules: [...libraries.values()]},
   };
 }
@@ -81,7 +81,8 @@ function moduleTile(item, group, state, esc) {
   return `<article class="map-tile map-module change-${status}" data-mission-block="${name}" data-flat-id="${library ? 'library' : 'app'}:${name}">
     <button class="map-module-open" ${library ? 'data-arch-library' : 'data-arch-app'}="${name}" title="Open ${name}">
       <span class="map-tile-title">${icon(library ? 'files' : item.managed ? 'code' : 'cube')}<strong>${name}</strong></span>
-      ${disabled ? '<small>Startup disabled</small>' : ''}
+      ${disabled ? '<small>Startup disabled</small>' : item.title ? '<small title="'+esc(item.title)+'">'+esc(item.title)+'</small>' : ''}
+      ${item.required ? '<i class="module-lock" title="Required">'+icon('lock')+'</i>' : ''}
     </button>
     ${deps.length ? `<div class="map-dependencies">${deps.map(dep => `<button data-arch-library="${esc(dep.name)}" title="Open library ${esc(dep.name)}">${icon('files')}${esc(dep.name)}</button>`).join('')}</div>` : ''}
   </article>`;
@@ -97,7 +98,7 @@ function groupSection(key, group, state, esc) {
     const enabled=new Set(state.workspace.mission.enabled);
     return '<section class="map-group map-group-mission" data-section="mission"><div class="map-group-head"><h3>Your apps<small>0</small></h3></div><div class="empty-apps">'+
       ['ci_lab','to_lab','sch_lab','sample_app'].filter(name=>enabled.has(name)).map(name=>'<code>'+esc(name)+'</code>').join('')+
-      '<code class="slot" aria-hidden="true">+</code><button class="primary" data-first-app>Create your first app</button></div></section>';
+      '<code class="slot" aria-hidden="true">+</code><button class="primary" data-first-app>'+icon('plus')+'Create your first app</button></div></section>';
   }
   return `<section class="map-group map-group-${key}" data-section="${key}" aria-label="${group.title}">
     <div class="map-group-head"><h3>${group.title}<small>${members.length}</small></h3>${pager(key)}${controls(key, group, state.missionBusy || state.missionDraft)}</div>
@@ -115,16 +116,16 @@ function hardwarePanel(state, esc, native, osName) {
   const profile = state.hardware?.profiles?.find(item => item.board === project.board && item.os === project.os);
   const boardName = profile?.board_label || catalog.name || project.board;
   const drawing = native ? `<svg class="mission-map-board-drawing" viewBox="0 0 240 155" aria-hidden="true">
-    <rect x="36" y="12" width="168" height="106" rx="5" fill="#354650" stroke="#8a9fa8"/>
-    <rect x="43" y="19" width="154" height="89" rx="2" fill="#1c2930" stroke="#57716e"/>
-    <text x="120" y="71" text-anchor="middle" stroke="none" fill="#c0d5ca" style="font-size:var(--fs-title)">${esc(osName)}</text>
-    <path d="M111 118h18v14h31v6H80v-6h31z" fill="#839b9d" stroke="none"/></svg>` : boardIllustration();
+    <rect x="36" y="12" width="168" height="106" rx="5" fill="var(--fs-raised)" stroke="var(--fs-muted)"/>
+    <rect x="43" y="19" width="154" height="89" rx="2" fill="var(--fs-bg)" stroke="var(--fs-success)"/>
+    <text x="120" y="71" text-anchor="middle" stroke="none" fill="var(--fs-text)" style="font-size:var(--fs-title)">${esc(osName)}</text>
+    <path d="M111 118h18v14h31v6H80v-6h31z" fill="var(--fs-muted)" stroke="none"/></svg>` : boardIllustration();
   const devices = project.devices || [];
   return `<section class="map-panel map-hardware" data-section="hardware" aria-label="Hardware"><header class="map-panel-head">${icon('cpu')}<h2>Hardware</h2></header>
     ${native || project.board ? `<button class="map-computer change-${native ? 'clean' : esc(state.workspace.changes?.board || 'clean')}" data-view="bench" data-inspect="board" title="Open hardware workbench">
       ${drawing}<strong>${native ? 'This computer' : esc(boardName)}</strong><small>${[osName, native && state.hardware?.native?.architecture].filter(Boolean).map(esc).join(' · ')}</small></button>` :
     '<div class="hardware-empty"><button data-choose-board>Select board</button></div>'}
-    ${!native && project.board ? `<section class="map-peripherals"><div class="map-group-head"><h3>Connections<small>${devices.length} ${devices.length===1?'sensor':'sensors'}</small></h3><button class="map-action" data-view="bench" data-inspect="board">${icon('circuit')}Hardware</button></div>
+    ${!native && project.board ? `<section class="map-peripherals"><div class="map-group-head"><h3>Connections<small>${devices.length} ${devices.length===1?'sensor':'sensors'}</small></h3>${Object.keys(missionBuses(state.workspace)).length?'<button class="map-action" data-create="device">'+icon('plus')+'Add sensor</button>':'<button class="map-action" data-add-bus>'+icon('plus')+'Add bus</button>'}</div>
       ${Object.entries(missionBuses(state.workspace)).map(([id,bus])=>`<div class="hardware-bus"><h4>${icon('link')}${esc(id)} <small>${esc(bus.device)}</small></h4>
       ${devices.filter(device=>device.bus===id).map(device => {
         const bound=(project.apps||[]).some(app=>Object.values(app.sensors||{}).includes(device.id));
