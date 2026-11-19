@@ -9,9 +9,12 @@ function stationState(state) {
 
 function stationCatalog(state) {
   const catalog = state.catalog || {}, app = state.groundApp || '';
-  const commands = (catalog.commands || []).filter(command => !app || command.app === app);
+  const allowed = new Set(['to_lab','sample_app',...state.workspace.project.apps.map(item=>item.name)]);
+  const all = state.allGroundApps || stationState(state).first_flight?.event;
+  const commands = (catalog.commands || []).filter(command => (!app || command.app === app) &&
+    (all || allowed.has(command.app) || command.id === state.groundSelection || command.app === app));
   const packets = (catalog.packets || []).filter(packet => !app || packet.app === app);
-  const appNames = [...new Set([...(catalog.apps || []).map(app => app.name), ...[...(catalog.commands || []), ...(catalog.packets || [])].map(item => item.app)].filter(Boolean))].sort();
+  const appNames = [...new Set((catalog.commands || []).map(item=>item.app).filter(name=>all || allowed.has(name) || name===app))].sort();
   return {commands, packets, appNames};
 }
 
@@ -19,9 +22,19 @@ const stationTime = seconds => seconds ? new Date(seconds * 1000).toLocaleTimeSt
 const eventPacket = packet => Object.hasOwn(packet.values || {}, 'Message') && Object.hasOwn(packet.values, 'PacketID.AppName');
 const commandLabel = command => command.id || command.name || '';
 
+export function waitingForBaseline(state, command) {
+ const flight=stationState(state).first_flight;
+ if(!flight || flight.event || !flight.telemetry || flight.noop_command!==command?.id)return false;
+ return (state.catalog?.packets||[]).some(p=>p.app===command.app && p.fields?.some(f=>f.name.split('.').at(-1)==='CommandCounter'))
+   && !flight.baseline_apps?.includes(command.app);
+}
+
 function selectedCommand(state, commands) {
  const managed=state.workspace.project.apps.map(app=>app.name);
+ const contact=stationState(state).first_flight;
  return commands.find(item=>item.id===state.groundSelection) ||
+   (!contact?.telemetry && !contact?.event && commands.find(item=>item.id===(contact?.enable_command||'TO_LAB_OUTPUT_ENABLE_CC'))) ||
+   (contact?.telemetry && !contact?.event && commands.find(item=>item.id===contact.noop_command)) ||
    commands.find(item=>managed.includes(item.app)&&/_NOOP_CC$/.test(item.id)) ||
    commands.find(item=>item.app==='sample_app'&&/_NOOP_CC$/.test(item.id)) ||
    commands.find(item=>/_NOOP_CC$/.test(item.id)) || commands[0];
@@ -56,19 +69,35 @@ function commandList(state, helpers) {
  const query=(state.groundQuery||'').trim().toLowerCase();
  const visible=filteredCommands(state,hex);
  const selected=selectedCommand(state,visible);
- if(!selected)return `<div class="gs-empty-list">${icon('search')}<span>${state.catalogLoading?'Reading flight definitions…':query?'No matching commands.':state.catalog?.errors?.length?'Command definitions are unavailable. Check the catalog issues above.':'No commands in this application.'}</span></div>`;
+ if(!selected)return `<div class="gs-empty-list">${icon('search')}<span>${state.catalogLoading?'Reading catalog…':query?'No matches':'No commands'}</span></div>`;
  const fields=(selected.fields||[]).filter(field=>!/^(padding|reserved|spare)/i.test(field.name.split('.').at(-1)));
  const draft=state.groundDrafts?.[selected.id]||{},connected=stationState(state).connected;
  const title=displayCommand(selected), plan=planFor(state,selected);
  const inputs=fields.map(field=>{
-  const name=esc(field.name),value=esc(draft[field.name]??'');
+  const destination=selected.id===stationState(state).first_flight?.enable_command && field.name==='dest_IP';
+  const name=esc(field.name),value=esc(draft[field.name]??(destination?stationState(state).first_flight.return_host:''));
   const input=field.format==='?'&&field.count===1?`<select name="${name}"><option value="true" ${value==='true'?'selected':''}>true</option><option value="false" ${value==='false'?'selected':''}>false</option></select>`:`<input name="${name}" value="${value}" required autocomplete="off" placeholder="${field.format==='raw'?'Hexadecimal bytes':field.count>1&&field.format!=='s'?'[0, 1, …]':field.format==='s'?'Text':'Value'}">`;
   return `<label><span>${name}<small>${esc(field.type||field.format)}${field.count>1?' ['+field.count+']':''}</small></span>${input}</label>`;
  }).join('');
  const locations=Object.keys(selected.locations||{}).filter(section=>['dispatch','identifier','packet'].includes(section));
  return `<section class="flight-selection"><div class="selected-command"><small>${esc(selected.app)} · ${selected.dispatch==='mid'?hex(selected.mid):'FC '+selected.code}</small><h2 title="${esc(title)}">${esc(title)}</h2></div><form id="gs-command-form" data-command-id="${esc(selected.id)}"><div class="ground-parameters">${inputs}</div>
  <details class="packet-wire"><summary>${Number(selected.size)} B</summary><div>${commandBytes(selected,esc,hex)}${locations.map(s=>`<button type="button" data-gs-source="${esc(selected.id)}" data-source-kind="command" data-source-section="${s}">${icon('code')}${esc(s)}</button>`).join('')}</div></details>
- <button type="submit" class="gs-send" ${state.groundBusy||state.groundSending||state.catalogLoading||stationState(state).runs?.some(run=>run.status==='waiting')?'disabled':''}>${icon('send')}${state.groundBusy?'Connecting…':state.groundSending?'Sending…':plan?'Run test':connected?'Send':'Connect & send'}</button></form></section>`;
+ ${!connected && selected.id==='TO_LAB_OUTPUT_ENABLE_CC' ? `<button type="button" data-ground="start" class="gs-send" ${state.groundBusy?'disabled':''}>${icon('antenna')} Connect</button>` :
+ `<button type="submit" class="gs-send" ${state.groundBusy||state.groundSending||state.catalogLoading||waitingForBaseline(state,selected)||stationState(state).runs?.some(run=>run.status==='waiting')?'disabled':''}>${icon('send')}${state.groundBusy?'Connecting…':state.groundSending?'Sending…':waitingForBaseline(state,selected)?'Waiting for HK':plan?'Run test':connected?'Send':'Connect & send'}</button>`}</form></section>`;
+}
+function contactCoach(state, esc, icon) {
+ const flight=stationState(state).first_flight || {};
+ if(flight.automatic || (flight.answer && state.coachDismissed))return '';
+ const commands=state.catalog?.commands||[];
+ const enable=commands.find(c=>c.id===(flight.enable_command||'TO_LAB_OUTPUT_ENABLE_CC'));
+ const noop=commands.find(c=>c.id===flight.noop_command)||commands.find(c=>c.app==='sample_app' && c.id.endsWith('_NOOP_CC'));
+ const steps=[
+   ['Telemetry on',enable?enable.app+' · ENABLE_OUTPUT':'to_lab',flight.telemetry,enable],
+   ['First command',noop?noop.app+' · NOOP':'NOOP',flight.event,noop],
+   ['Answer','INFO + CommandCounter ↑',flight.answer,null]
+ ];
+ return '<nav class="first-event-coach" aria-label="First event">'+steps.map(([label,detail,done,cmd],i)=>
+   `<${cmd?'button':'span'} ${cmd?'data-open-trip-command="'+esc(cmd.id)+'"':''} data-seen="${Boolean(done)}"><i>${done?icon('check'):i+1}</i><span><strong>${label}</strong><small>${esc(detail)}</small></span></${cmd?'button':'span'}>`).join('')+'</nav>';
 }
 export function renderGround(state,helpers){
   const {esc,icon,hex}=context(helpers), ground=stationState(state), catalog=stationCatalog(state);
@@ -79,13 +108,14 @@ export function renderGround(state,helpers){
   return `<section class="flight-ground" data-pane="${esc(narrow)}"><header class="ground-mobile-tabs">${['commands','route','telemetry'].map(key=>`<button data-ground-pane="${key}" aria-pressed="${key===narrow}">${esc(key)}</button>`).join('')}</header>
   <aside class="flight-library"><header>Commands<button data-ground="catalog" title="Refresh catalog">${icon('refresh')} From build</button></header>
   <label class="ground-search">${icon('search')}<input id="gs-search" type="search" aria-label="Search commands" placeholder="Search commands" value="${esc(state.groundQuery||'')}"></label>
-  <label class="ground-app-filter"><select id="ground-app" aria-label="Application"><option value="">All applications</option>${catalog.appNames.map(app=>`<option ${state.groundApp===app?'selected':''}>${esc(app)}</option>`).join('')}</select></label>
+  <label class="ground-app-filter"><select id="ground-app" aria-label="Application"><option value="">Applications</option>${catalog.appNames.map(app=>`<option ${state.groundApp===app?'selected':''}>${esc(app)}</option>`).join('')}</select></label>
   <nav class="gs-definition-list" aria-label="Commands">${selected?commandTree(visible,selected,state.groundQuery,managed,esc):''}</nav>
+  ${!ground.first_flight?.event?`<button class="ground-new-command" data-all-ground-apps aria-pressed="${!!state.allGroundApps}">${icon('layers')} All apps</button>`:''}
   ${managed.size?`<button class="ground-new-command" data-code-command="${esc([...managed].find(app=>app===state.groundApp)||[...managed][0])}">${icon('plus')} New command in code</button>`:''}
   <div class="ground-link"><span data-live="${!!ground.connected}">${ground.connected?'Connected':'Disconnected'}</span><button data-ground="${ground.connected?'stop':'start'}" ${state.groundBusy?'disabled':''}>${ground.connected?'Disconnect':'Connect'}</button></div></aside>
   <main class="flight-command-column">${state.groundError?`<div class="gs-error" role="alert">${esc(state.groundError)}</div>`:''}
   ${errors.length?`<details class="gs-catalog-errors" data-detail-key="issues"><summary>Catalog details · ${errors.length}</summary><pre>${esc(errors.join('\n'))}</pre></details>`:''}
-  ${commandList(state,helpers)}<div id="ground-route"></div></main><aside id="ground-live"></aside></section>`;
+  ${contactCoach(state,esc,icon)}${commandList(state,helpers)}<div id="ground-route"></div></main><aside id="ground-live"></aside></section>`;
 }
 
 function seriesChart(state, packet, field, helpers) {
@@ -124,7 +154,7 @@ function telemetryEvents(state, helpers) {
   const {esc} = context(helpers);
   const events = (stationState(state).events || (stationState(state).history || []).filter(eventPacket)).slice().reverse();
   return `<section class="gs-event-log"><h2>Telemetry events <small>${events.length} recent</small></h2><div class="gs-journal" role="log">
-    ${events.map(packet => `<article><time>${stationTime(packet.received_at)}</time><b>${esc(packet.values['PacketID.AppName'])}</b><span>${esc(packet.values.Message)}</span></article>`).join('') || '<p class="gs-hint">Waiting for an EVS telemetry packet.</p>'}
+    ${events.map(packet => `<article><time>${stationTime(packet.received_at)}</time><b>${esc(packet.values['PacketID.AppName'])}</b><span>${esc(packet.values.Message)}</span></article>`).join('') || '<span class="trip-empty-track"></span>'}
     </div></section>`;
 }
 
@@ -142,7 +172,28 @@ export function renderTelemetry(state, helpers) {
     visible.find(packet=>packet.app===app) || visible[0];
   const heading = '<section class="gs-desk"><h2>Received telemetry <small>Target → Ground</small></h2>';
   const footer = '</section>' + telemetryEvents(state,helpers);
-  if(!selected)return `${heading}${error}<div class="gs-empty-list">${icon('antenna')}<span>${state.catalogLoading?'Reading telemetry definitions…':'No telemetry in this application.'}</span></div>${footer}`;
+  if(!ground.received && !packets.length){
+    const enable=state.catalog?.commands?.find(c=>c.id==='TO_LAB_OUTPUT_ENABLE_CC');
+    return `${heading}${error}<div class="first-no-telemetry">${icon('antenna')}<strong>No telemetry</strong>${enable?`<button data-open-trip-command="${esc(enable.id)}">Select ENABLE_OUTPUT</button>`:''}</div></section>`;
+  }
+  if(state.groundPacket==null) {
+    const order=[...new Set(['ci_lab',app].filter(Boolean))];
+    const groups=order.map(owner=>{
+      const fields=(ground.packets||[]).filter(p=>p.app===owner && !p.errors?.length).flatMap(p=>{
+        const def=(state.catalog?.packets||[]).find(d=>d.mid===p.mid);
+        if(!def || !/HK/i.test(def.id||''))return [];
+        const previous=(ground.history||[]).findLast(q=>q.mid===p.mid && q.event_id<p.event_id && !q.errors?.length);
+        return Object.entries(p.values||{}).filter(([key,val])=>typeof val==='number' &&
+          (owner==='ci_lab'?/^(IngestPackets|IngestErrors)$/.test(key):!(/padding|reserved|spare/i.test(key)))).map(([key,val])=>{
+          const prior=previous?.values[key], delta=typeof prior==='number'?val-prior:0;
+          return `<button data-system-packet="${p.mid}" class="gs-field-card"><span><code>${esc(key)}</code><small>${esc(def.fields?.find(f=>f.name===key)?.type||'')}</small></span><span>${delta?`<small class="gs-delta">${delta>0?'+':''}${esc(delta)}</small>`:''}<b>${esc(val)}</b></span></button>`;
+        });
+      });
+      return fields.length?`<section class="gs-field-group"><h3>${esc(owner)}</h3>${fields.join('')}</section>`:'';
+    }).join('');
+    return `${heading}${error}<div class="gs-telemetry-inspector"><div class="gs-detail">${groups || '<span class="gs-hint">Waiting for housekeeping</span>'}</div>${selected?`<button data-system-packet="${selected.mid}">Packet inspector</button>`:''}</div>${footer}`;
+  }
+  if(!selected)return `${heading}${error}<div class="gs-empty-list">${icon('antenna')}<span>No packets</span></div>${footer}`;
   const counts=new Map(packets.map(packet=>[packet.mid,packet.count]));
-  return `${heading}${error}<div class="gs-telemetry-inspector"><label>Packet<select id="ground-packet">${visible.map(definition=>`<option value="${definition.mid}" ${selected===definition?'selected':''}>${esc(definition.id||definition.name||hex(definition.mid))}${counts.has(definition.mid)?' · '+counts.get(definition.mid):''}</option>`).join('')}</select></label><section class="gs-detail" aria-label="Selected telemetry"><div class="gs-detail-kicker">${esc(selected.app)} · ${hex(selected.mid)}</div>${packetDetail(state,packets.find(packet=>packet.mid===selected.mid),selected,helpers)}</section></div>${footer}`;
+  return `${heading}${error}<div class="gs-telemetry-inspector"><button data-ground-summary>Field overview</button><label>Packet<select id="ground-packet">${visible.map(definition=>`<option value="${definition.mid}" ${selected===definition?'selected':''}>${esc(definition.id||definition.name||hex(definition.mid))}${counts.has(definition.mid)?' · '+counts.get(definition.mid):''}</option>`).join('')}</select></label><section class="gs-detail" aria-label="Selected telemetry"><div class="gs-detail-kicker">${esc(selected.app)} · ${hex(selected.mid)}</div>${packetDetail(state,packets.find(packet=>packet.mid===selected.mid),selected,helpers)}</section></div>${footer}`;
 }

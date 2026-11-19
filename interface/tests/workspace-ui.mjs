@@ -51,7 +51,7 @@ test('Ground opens a mission NOOP and respects explicit selection, packet filter
  assert.match(search,/data-command-id="SAMPLE_APP_NOOP_CC"/);
  assert.doesNotMatch(search,/data-gs-select="SCIENCE_RESET_CC"/);
  const initial=renderTelemetry(state,helpers);
- assert.match(initial,/SCIENCE_HK/);assert.match(initial,/Waiting for telemetry/);
+ assert.match(initial,/No telemetry/);assert.doesNotMatch(initial,/SCIENCE_HK/);
  const comm=renderCommunication(state,helpers);
  assert.match(comm,/data-comm-app="sample_app"/);assert.match(comm,/Software Bus/);
  assert.doesNotMatch(comm,/data-module-action|data-create/);

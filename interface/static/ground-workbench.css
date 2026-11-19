@@ -186,3 +186,33 @@ body[data-view="ground"] .visual,body[data-view="ground"] #view {min-width:0;min
 .flight-ground .gs-desk h2 small{color:var(--fs-muted)}.flight-ground .gs-source-actions button{margin-bottom:5px}
 .flight-ground .trip-journal summary::before{display:none}
 .flight-library .ground-new-command{margin:6px 9px;flex:none;align-self:start;font-size:var(--fs-label);color:var(--fs-muted)}
+
+.first-event-coach {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;flex:none}
+.first-event-coach>* {display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--fs-line);border-radius:var(--fs-radius-card);background:var(--fs-panel);text-align:left;min-width:0}
+.first-event-coach i {display:grid;place-items:center;flex:none;height:24px;width:24px;border-radius:var(--fs-radius-pill);border:1px solid var(--fs-line);color:var(--fs-muted);font:500 var(--fs-caption) var(--fs-mono)}
+.first-event-coach [data-seen=true] i {border-color:var(--fs-success);color:var(--fs-success)}
+.first-event-coach strong,.first-event-coach small {display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.first-event-coach small {font:var(--fs-small) var(--fs-mono);color:var(--fs-muted)}
+.first-event-coach i svg {width:14px;height:14px}
+.first-test-menu {position:absolute;right:10px;top:8px;z-index:2}
+.first-test-menu summary {border:1px solid var(--fs-line);border-radius:var(--fs-radius-control);padding:2px 8px;cursor:pointer;list-style:none;color:var(--fs-muted)}
+.first-test-menu[open] .trip-test-picker {position:absolute;right:0;top:100%;border:1px solid var(--fs-line);border-radius:var(--fs-radius-card);background:var(--fs-panel);white-space:nowrap}
+.trip-card {position:relative}
+.trip-wires path,.trip-blocked {fill:none;stroke:var(--fs-line);stroke-width:1.8}
+.trip-blocked,.trip-node.off rect {stroke:var(--fs-danger)}
+.trip-node.off .node-meta {fill:var(--fs-danger)}
+.trip-packet {offset-distance:100%;animation:ground-datagram 780ms both}
+.trip-packet.sending {fill:var(--fs-accent)}
+.trip-packet.returning {fill:var(--fs-success)}
+@keyframes ground-datagram {0%{offset-distance:0%;opacity:0}12%,80%{opacity:1}100%{offset-distance:100%;opacity:0}}
+@media(prefers-reduced-motion:reduce){.trip-packet{animation:none;display:none}}
+.trip-empty-track {display:block;height:12px;border:1px dashed var(--fs-line);border-radius:var(--fs-radius-pill);margin:14px 8px}
+.first-no-telemetry {display:grid;place-content:center;justify-items:center;gap:12px;flex:1;color:var(--fs-muted)}
+.first-no-telemetry>svg {width:32px;height:32px}
+.first-no-telemetry button {color:var(--fs-accent)}
+.gs-field-group h3 {font:600 var(--fs-label) var(--fs-mono);margin:8px 0}
+.flight-ground .gs-field-card {display:flex;justify-content:space-between;width:100%;padding:8px;margin:4px 0;text-align:left;border-radius:var(--fs-radius-card)}
+.gs-field-card>span:last-child {display:flex;align-items:center;gap:6px}
+.gs-field-card>span:first-child small {display:block;color:var(--fs-muted)}
+.gs-field-card .gs-delta {color:var(--fs-success);border:1px solid currentColor;border-radius:var(--fs-radius-pill);padding:0 4px}
+@media(max-width:1050px){.first-event-coach>*{padding:5px;gap:3px}.first-event-coach small{white-space:normal}.first-event-coach i{width:20px;height:20px}}
