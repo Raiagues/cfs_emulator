@@ -7,7 +7,7 @@ import sys
 import tempfile
 import threading
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from urllib.error import HTTPError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -19,6 +19,27 @@ from project.flight_sources import prepare_mission
 ROOT = Path(__file__).resolve().parents[2]
 NASA = ROOT / "cFS"
 HAS_SAMPLE = (NASA / "apps/sample_app/fsw/src/sample_app.c").is_file()
+
+
+class WorkspaceRoutingTest(unittest.TestCase):
+    def test_deep_link_reaches_setup_before_checkout_and_workspace_afterwards(self):
+        with tempfile.TemporaryDirectory() as root, ThreadingHTTPServer(("127.0.0.1", 0), Handler) as server:
+            server.studio = Mock()
+            server.studio.workspace.root = Path(root)
+            worker = threading.Thread(target=server.serve_forever, daemon=True)
+            worker.start()
+            try:
+                base = f"http://127.0.0.1:{server.server_port}"
+                workspace = base + "/studio?target=qemu"
+                with urlopen(workspace) as setup:
+                    self.assertEqual(setup.geturl(), base + "/?target=qemu#target")
+                    self.assertIn(b'id="infrastructure-form"', setup.read())
+                with patch("hardware.infrastructure.sources_ready", return_value=True), urlopen(workspace) as studio:
+                    self.assertEqual(studio.geturl(), workspace)
+                    self.assertIn(b'id="studio"', studio.read())
+            finally:
+                server.shutdown()
+                worker.join()
 
 
 @unittest.skipUnless(HAS_SAMPLE, "Install NASA cFS from workspace setup to exercise the mission HTTP lifecycle")

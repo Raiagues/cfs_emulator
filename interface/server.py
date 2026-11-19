@@ -563,9 +563,17 @@ class Handler(BaseHTTPRequestHandler):
             }
             if url.path in routes:
                 return self.reply(routes[url.path]())
-            if url.path in {'/', '/infrastructure'} or (url.path in {'/studio', '/studio/'} and not infrastructure.sources_ready(app.workspace.root)):
+            if url.path in {'/', '/infrastructure'}:
                 name = 'infrastructure.html'
             elif url.path in {'/studio', '/studio/'}:
+                if not infrastructure.sources_ready(app.workspace.root):
+                    target = query.get('target')
+                    destination = '/?target=' + target if target in {'native', 'qemu', 'physical'} else '/'
+                    self.send_response(302)
+                    self.send_header('Location', destination + '#target')
+                    self.send_header('Cache-Control', 'no-store')
+                    self.end_headers()
+                    return
                 name = 'index.html'
             elif url.path == '/emulator-guide.html':
                 name = 'emulator-guide.html'
