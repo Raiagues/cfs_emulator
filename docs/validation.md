@@ -69,6 +69,10 @@ A missão da captura começou vazia na seção Your apps. Os nomes do restante d
 | 1366 × 768, escuro | [![Referência, Arquitetura e criação, escuro, 1366](images/first-flight/home-1366-dark-design.webp)](images/first-flight/home-1366-dark-design.webp) | [![Studio, Arquitetura e criação, escuro, 1366](images/first-flight/home-1366-dark-studio.webp)](images/first-flight/home-1366-dark-studio.webp) |
 | 1366 × 768, claro | [![Referência, Arquitetura e criação, claro, 1366](images/first-flight/home-1366-light-design.webp)](images/first-flight/home-1366-light-design.webp) | [![Studio, Arquitetura e criação, claro, 1366](images/first-flight/home-1366-light-studio.webp)](images/first-flight/home-1366-light-studio.webp) |
 
+No Chromium, a partir dessa missão, foi possível criar a app `orbit_reader`, adicionar o barramento `i2c-bus.1`, conectar um TMP105 em `0x48` e vincular seu leitor HAL. Selecionar a app em 3D destacou as dependências até o barramento e os quatro fios do sensor. Também foi possível alterar o zoom, girar o desenho e selecionar o sensor pelo teclado para consultar a pinagem. A indicação de seleção e os controles ficaram dentro da janela nos dois tamanhos e temas.
+
+[![Seleção da app orbit_reader com a conexão ao sensor em 3D](images/first-flight/home-linked-sensor.webp)](images/first-flight/home-linked-sensor.webp)
+
 </details>
 
 <details>

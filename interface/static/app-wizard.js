@@ -88,7 +88,7 @@ export function openAppWizard({initialName='',workspace,api,esc,refresh,onComman
     e.preventDefault();if(busy)return;
     if(written){modal.close();onCommand(name);return;}
     const form=e.target;
-    busy=true;form.querySelector('[type=submit]').disabled=true;
+    busy=true;form.inert=true;form.querySelector('[type=submit]').disabled=true;
     try {
       requireSaved();
       if(step===0){
