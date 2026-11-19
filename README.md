@@ -2,7 +2,7 @@
 
 O Flight Studio é uma bancada local para desenvolver missões com o **NASA core Flight System (cFS)**. Você escolhe um alvo Linux, vê o hardware e a arquitetura da missão, edita C, compila e conversa com a aplicação pela Ground Station. O projeto inicial mantém as aplicações da distribuição da NASA e começa sem sensores conectados ou apps criadas no Studio.
 
-![Configuração dos alvos no Flight Studio](docs/images/studio-setup.png)
+![Configuração dos alvos no Flight Studio](docs/images/first-flight/setup-1440-dark-studio.webp)
 
 ## Começar pelo computador
 
@@ -15,10 +15,12 @@ cd cfs_emulator
 ```
 
 1. Abra **http://127.0.0.1:8765** e escolha **Native** para a primeira execução.
-2. Na primeira instalação, clique em **Clone NASA cFS**. O Studio baixa o repositório oficial e os submódulos. Em instalações existentes, clique em **Source** para ver a revisão local.
-3. Clique em **Run all checks** para verificar as ferramentas, uma por vez. Clique no ícone de uma ferramenta para consultar o comando e o resultado. Se faltar uma dependência, use **Install native tools**, acompanhe a instalação no terminal inferior e clique em **Run all checks** para conferir. **Open workspace** abre a missão.
-4. No workspace, clique em **Build cFS**, aguarde a conclusão e selecione **Run cFS**. O log de inicialização mostra `CFE_ES_Main entering OPERATIONAL state`.
-5. Em **Ground station**, clique em **Connect**, abra o grupo **sample_app**, selecione **NOOP** (`SAMPLE_APP_NOOP_CC`) e clique em **Send**. A mensagem `SAMPLE: NOOP command` na telemetria confirma a resposta.
+2. Acompanhe **Compiler**, **Python** e **Source**. A seleção inicia os comandos em sequência. Clique em um grupo para ver a saída. Se faltar o checkout, clique no **+** de **Source** para baixar o cFS oficial e seus submódulos. O terminal inferior acompanha a instalação. O Studio repete a verificação ao terminar.
+3. Quando os três grupos passarem, clique em **Continue · first boot**. O Studio compila a missão e inicia o cFS. Na tela **First boot**, clique nas camadas para ver o que está carregando e abra o console para localizar `CFE_ES_Main entering OPERATIONAL state`.
+4. Em **Next → Ground Station**, clique em **Connect**. Envie o comando de **to_lab** para habilitar a saída de telemetria no endereço já preenchido. Aguarde o primeiro pacote e a amostra inicial do contador de **sample_app**. Envie **SAMPLE_APP_NOOP_CC**. O evento com a mensagem NOOP e o aumento de `CommandCounter` confirmam a resposta.
+5. Clique em **App** na barra **First flight** e em **Create your first app**. Dê um nome, confira os arquivos de C e as entradas de build e startup. Em **Create app**, a proposta é gravada. **Next → add a command** abre a atividade no editor dessa app.
+
+![Primeiro boot com as camadas da missão](docs/images/first-flight/boot-1440-dark-studio.webp)
 
 Para instalar pelo terminal, os mesmos passos de preparação são `./scripts/install-cfs.sh` e `./scripts/setup-native.sh`. O instalador nativo verifica os programas e módulos Python antes de solicitar pacotes. Tem rotas para APT, DNF, Pacman e Zypper. Em um Linux com outro gerenciador, instale Git, CMake, Make, compilador C/C++, Python, PyQt5 e pyzmq. Para usar Python em ambiente virtual, ative-o **antes** de executar o instalador e o Studio. Veja quais dependências faltam com `./scripts/setup-native.sh --check`.
 
@@ -29,6 +31,7 @@ O modo Native dispensa Docker e placa. Se a porta já estiver ocupada, por exemp
 | Tela | O que você faz ali |
 | --- | --- |
 | Configuração inicial | Escolher **Native**, **Emulator** (QEMU) ou **Board** (placa física), preparar ferramentas e gravar a conexão. O nome Flight Studio no workspace leva de volta à configuração. |
+| Primeiro boot | Acompanhar compilação, implantação e estados do cFE até OPERATIONAL. Selecionar uma camada revela sua função e as apps do startup local. |
 | Hardware | Inspecionar o CAD, alternar 3D/2D, consultar pinagem e conectar dispositivos. No modo Native o hardware de execução é o computador local. |
 | Arquitetura | Explorar apps, bibliotecas, Software Bus, serviços cFE, OSAL e PSP. Abrir um módulo leva às suas funções e ao código. Os controles da seção gerenciam a missão. |
 | Código | Navegar na árvore de arquivos e alterações Git, consultar declarações e saltar à linha de origem. Editar arquivos da missão e sincronizar o código que você controla. |
@@ -72,6 +75,16 @@ No terminal, a partir da raiz:
 
 Uma **nova compilação** é necessária quando os insumos da missão mudam depois de um build. O primeiro build aparece como **Build cFS**. Preferências visuais e valores transitórios da simulação não alteram o executável.
 
+### Do handler ao primeiro comando
+
+Ao entrar na atividade **Command**, escolha o nome e os campos. Os sete passos do editor levam ao código de função, à estrutura da mensagem, ao protótipo, ao despacho, aos eventos, ao handler e ao teste. Abra o handler, implemente o efeito esperado e salve o C. Um handler que emite um evento com um valor do payload permite verificar aquele valor pelo downlink. Você pode continuar explorando arquivos pelo ícone **Code** da barra lateral.
+
+![Atividade de comando em uma app criada no assistente](docs/images/first-flight/code-1366-light-studio.webp)
+
+Recompile e execute a nova versão com os controles do cabeçalho. Na Ground Station, abra o comando da app. Em **New test**, escolha as observações que confirmam a execução, por exemplo um evento da app e o aumento de um campo de housekeeping. Aguarde pelo menos uma amostra do campo antes de medir um aumento. Envie o comando com o teste selecionado. As observações recebidas aparecem no histórico da ida e volta.
+
+![Ground Station e o primeiro contato com a missão](docs/images/first-flight/ground-1440-dark-studio.webp)
+
 ### Ligar um sensor a uma app
 
 No alvo **Emulator**, abra **Hardware → Add bus** e selecione **I²C 1**. Clique em **Connect sensor**, escolha **TMP105** e dê à instância o nome `probe`. Use **Link HAL** para criar ou selecionar a app que lerá o sensor e dê ao leitor o nome `temperature`. A mesma operação pode ser repetida no terminal depois de criar `acquisition`:
@@ -90,6 +103,12 @@ Para acrescentar um chip, comece pelo modelo declarativo ou pelo template de dri
 
 As apps partem do `sample_app` do checkout instalado. Marcadores `@studio.begin` e `@studio.end` delimitam os trechos que o Studio redescobre quando você adiciona um leitor ou comando. Você pode mover esses trechos junto com seus marcadores. Alterações manuais fora deles são preservadas. Um conflito dentro de um trecho gerenciado interrompe o plano antes de sobrescrever o trabalho. Use `@brief`, `@unit`, `@range` e `@check` nos comentários C para navegar pela interface do módulo. Veja [o contrato das regiões, os arquivos de usuário e um exemplo comentado](project/appgen/README.md).
 
+### Experimentar um sinal localmente
+
+Em **Synthetic data**, selecione um dispositivo conectado. Para temperatura orbital, escolha o tamanho do satélite, a massa, as propriedades da superfície e a potência interna. A prévia calcula a temperatura ao longo da órbita, incluindo a passagem pela sombra. Em **Python → Dry run** você pode amostrar o sinal no computador. **Test** exercita uma órbita, a entrada no eclipse ou a perda e a recuperação do dispositivo. Quando houver um guest disponível, **Send to QEMU** escreve no modelo emulado. A aba **QEMU** permite comparar o valor enviado com a leitura que chegar da app pelo downlink.
+
+![Órbita e sensores no tema claro](docs/images/first-flight/sensors-1440-light-studio.webp)
+
 ## Emulador e Raspberry Pi física
 
 | Alvo | Preparar | Executar |
@@ -105,6 +124,7 @@ Para diagnóstico, `./start --no-ui status` mostra o alvo e os estados locais. S
 
 ```sh
 python3 -m unittest discover -s interface/tests -v
+node --experimental-default-type=module --test interface/tests/*.mjs
 ./scripts/setup-native.sh --check
 ```
 

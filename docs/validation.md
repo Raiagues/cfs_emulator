@@ -1,10 +1,127 @@
 # Validação do Flight Studio
 
-Verificações executadas em Ubuntu 24.04 x86-64, com Python 3.12, Chromium, Docker, QEMU e uma Raspberry Pi 4 Model B Rev 1.5 física. As missões de teste foram criadas em pastas temporárias. O projeto distribuído começa com a seleção de apps da NASA, sem a app `science` e sem os sensores das capturas abaixo.
+## Suítes automatizadas
 
-A suíte Python concluiu 41 testes, e a suíte JavaScript concluiu 10. Os testes de voo abaixo usaram processos cFS reais.
+| Ambiente | Python | JavaScript |
+| --- | --- | --- |
+| Cópia com o cFS oficial instalado | 59 de 59 passaram, inclusive os dois ciclos HTTP de missão e hardware. | 12 de 12 passaram na árvore da mesma versão. |
+| Projeto antes do clone | 57 passaram. Os dois ciclos HTTP que dependem dos fontes oficiais foram pulados. | 12 de 12 passaram. |
 
-## Cenários exercitados
+## Primeiro voo nativo
+
+Em 19 de novembro de 2026, o primeiro voo foi executado em cópias isoladas do projeto em Linux x86-64. A missão inicial continha as apps da NASA e nenhum barramento ou sensor cadastrado. Uma segunda cópia começou inclusive sem o diretório `cFS/` para verificar o reparo pelo navegador. O projeto de trabalho ficou disponível para repetir a instalação desde o início.
+
+| Ensaio | Observação |
+| --- | --- |
+| Setup e instalação | Com **Source** pendente, **Continue** ficou indisponível. Clicar em **+** executou o clone oficial com submódulos, exibiu a transferência no terminal e repetiu a verificação. O checkout usado no voo foi `a4d305dc06fb`. |
+| Boot | O build produziu `core-cpu1`. O processo imprimiu `CFE_ES_Main entering OPERATIONAL state`. As marcas das apps vieram das respectivas mensagens de inicialização. |
+| Primeiro contato | A conexão iniciou com **zero** comandos. **TO_LAB_OUTPUT_ENABLE_CC** transmitiu 24 bytes. O **NOOP** de **sample_app** devolveu o evento de informação nº 3, na nave 66, processador 1. O housekeeping registrou o aumento de `CommandCounter`. |
+| Assistente e editor | Em Chromium, **orbit_reader** gerou um plano com 78 arquivos. O salvamento apresentou os quatro MIDs do plano. A atividade **capture** começou em **0/7**. Os sete passos abriram, e retornar ao editor pela barra lateral fechou a atividade. |
+| Comando da missão | Em **orbit_demo**, foi criado o handler de **stamp** e gravado o C com a revisão esperada. Após recompilar, o catálogo dava MID **0x1A00**, FC **4**. O envio com `Value=17` transmitiu `1a00c0000005043511000000`. |
+| Ida e volta confirmada | O EVS nº **15** de **ORBIT_DEMO** retornou **Stamp 17 received**, sequência CCSDS **52**. Em outro pacote, sequência **3**, o contador da app passou de **0 para 1**. As duas observações concluíram o teste. |
+| Progresso entre sessões | Esse voo concluiu **Target, Boot, Event, App, Command e Send**. Uma nova conexão voltou a aguardar o evento da sessão. Reabrir o backend preservou o resultado comprovado de **Send**. |
+| Temperatura | Na órbita de teste, com 1U, 1,3 kg, α = ε = 0,7 e 1 W, a temperatura variou de **−9,27 a 8,58 °C**. Os equilíbrios sob iluminação e em sombra foram **33,49 °C** e **−82,81 °C**. |
+| Testes de sinais | Os três cenários foram executados pelo botão **Run**. A curva enviada foi comparada com a leitura do HAL C em um barramento de teste local. O cenário de desconexão verificou o erro e a recuperação do dispositivo. |
+
+A validação do novo percurso usou execução nativa e testes locais de sensores. Os ensaios em QEMU e placa física registrados no fim deste documento pertencem à bancada anterior.
+
+## Comparação das telas
+
+Cada linha traz o export interativo fornecido e a tela correspondente servida pelo Studio. As imagens abrem no tamanho original. O estado da missão varia entre os exemplos. As capturas do protótipo usam dados ilustrativos, e as do Studio consultam as missões de validação.
+
+<details>
+<summary>Escolha do alvo</summary>
+
+O reparo e a liberação de Continue dependem dos comandos do host. O tema claro da aplicação usa bege.
+
+| Janela e tema | Referência | Flight Studio |
+| --- | --- | --- |
+| 1440 × 900, escuro | [![Referência, Escolha do alvo, escuro, 1440](images/first-flight/setup-1440-dark-design.webp)](images/first-flight/setup-1440-dark-design.webp) | [![Studio, Escolha do alvo, escuro, 1440](images/first-flight/setup-1440-dark-studio.webp)](images/first-flight/setup-1440-dark-studio.webp) |
+| 1440 × 900, claro | [![Referência, Escolha do alvo, claro, 1440](images/first-flight/setup-1440-light-design.webp)](images/first-flight/setup-1440-light-design.webp) | [![Studio, Escolha do alvo, claro, 1440](images/first-flight/setup-1440-light-studio.webp)](images/first-flight/setup-1440-light-studio.webp) |
+| 1366 × 768, escuro | [![Referência, Escolha do alvo, escuro, 1366](images/first-flight/setup-1366-dark-design.webp)](images/first-flight/setup-1366-dark-design.webp) | [![Studio, Escolha do alvo, escuro, 1366](images/first-flight/setup-1366-dark-studio.webp)](images/first-flight/setup-1366-dark-studio.webp) |
+| 1366 × 768, claro | [![Referência, Escolha do alvo, claro, 1366](images/first-flight/setup-1366-light-design.webp)](images/first-flight/setup-1366-light-design.webp) | [![Studio, Escolha do alvo, claro, 1366](images/first-flight/setup-1366-light-studio.webp)](images/first-flight/setup-1366-light-studio.webp) |
+
+</details>
+
+<details>
+<summary>Primeiro boot</summary>
+
+O manifesto pode conter mais apps do que o desenho de exemplo. Uma app só recebe a marca de inicialização quando há evidência no log do voo.
+
+| Janela e tema | Referência | Flight Studio |
+| --- | --- | --- |
+| 1440 × 900, escuro | [![Referência, Primeiro boot, escuro, 1440](images/first-flight/boot-1440-dark-design.webp)](images/first-flight/boot-1440-dark-design.webp) | [![Studio, Primeiro boot, escuro, 1440](images/first-flight/boot-1440-dark-studio.webp)](images/first-flight/boot-1440-dark-studio.webp) |
+| 1440 × 900, claro | [![Referência, Primeiro boot, claro, 1440](images/first-flight/boot-1440-light-design.webp)](images/first-flight/boot-1440-light-design.webp) | [![Studio, Primeiro boot, claro, 1440](images/first-flight/boot-1440-light-studio.webp)](images/first-flight/boot-1440-light-studio.webp) |
+| 1366 × 768, escuro | [![Referência, Primeiro boot, escuro, 1366](images/first-flight/boot-1366-dark-design.webp)](images/first-flight/boot-1366-dark-design.webp) | [![Studio, Primeiro boot, escuro, 1366](images/first-flight/boot-1366-dark-studio.webp)](images/first-flight/boot-1366-dark-studio.webp) |
+| 1366 × 768, claro | [![Referência, Primeiro boot, claro, 1366](images/first-flight/boot-1366-light-design.webp)](images/first-flight/boot-1366-light-design.webp) | [![Studio, Primeiro boot, claro, 1366](images/first-flight/boot-1366-light-studio.webp)](images/first-flight/boot-1366-light-studio.webp) |
+
+</details>
+
+<details>
+<summary>Arquitetura e criação</summary>
+
+A missão da captura começou vazia na seção Your apps. Os nomes do restante da arquitetura vêm dos módulos incluídos no checkout.
+
+| Janela e tema | Referência | Flight Studio |
+| --- | --- | --- |
+| 1440 × 900, escuro | [![Referência, Arquitetura e criação, escuro, 1440](images/first-flight/home-1440-dark-design.webp)](images/first-flight/home-1440-dark-design.webp) | [![Studio, Arquitetura e criação, escuro, 1440](images/first-flight/home-1440-dark-studio.webp)](images/first-flight/home-1440-dark-studio.webp) |
+| 1440 × 900, claro | [![Referência, Arquitetura e criação, claro, 1440](images/first-flight/home-1440-light-design.webp)](images/first-flight/home-1440-light-design.webp) | [![Studio, Arquitetura e criação, claro, 1440](images/first-flight/home-1440-light-studio.webp)](images/first-flight/home-1440-light-studio.webp) |
+| 1366 × 768, escuro | [![Referência, Arquitetura e criação, escuro, 1366](images/first-flight/home-1366-dark-design.webp)](images/first-flight/home-1366-dark-design.webp) | [![Studio, Arquitetura e criação, escuro, 1366](images/first-flight/home-1366-dark-studio.webp)](images/first-flight/home-1366-dark-studio.webp) |
+| 1366 × 768, claro | [![Referência, Arquitetura e criação, claro, 1366](images/first-flight/home-1366-light-design.webp)](images/first-flight/home-1366-light-design.webp) | [![Studio, Arquitetura e criação, claro, 1366](images/first-flight/home-1366-light-studio.webp)](images/first-flight/home-1366-light-studio.webp) |
+
+</details>
+
+<details>
+<summary>Ground Station</summary>
+
+A captura foi feita no primeiro contato, antes da telemetria. O formulário mostra o destino IPv4 da conexão e o tamanho do pacote de habilitação do catálogo.
+
+| Janela e tema | Referência | Flight Studio |
+| --- | --- | --- |
+| 1440 × 900, escuro | [![Referência, Ground Station, escuro, 1440](images/first-flight/ground-1440-dark-design.webp)](images/first-flight/ground-1440-dark-design.webp) | [![Studio, Ground Station, escuro, 1440](images/first-flight/ground-1440-dark-studio.webp)](images/first-flight/ground-1440-dark-studio.webp) |
+| 1440 × 900, claro | [![Referência, Ground Station, claro, 1440](images/first-flight/ground-1440-light-design.webp)](images/first-flight/ground-1440-light-design.webp) | [![Studio, Ground Station, claro, 1440](images/first-flight/ground-1440-light-studio.webp)](images/first-flight/ground-1440-light-studio.webp) |
+| 1366 × 768, escuro | [![Referência, Ground Station, escuro, 1366](images/first-flight/ground-1366-dark-design.webp)](images/first-flight/ground-1366-dark-design.webp) | [![Studio, Ground Station, escuro, 1366](images/first-flight/ground-1366-dark-studio.webp)](images/first-flight/ground-1366-dark-studio.webp) |
+| 1366 × 768, claro | [![Referência, Ground Station, claro, 1366](images/first-flight/ground-1366-light-design.webp)](images/first-flight/ground-1366-light-design.webp) | [![Studio, Ground Station, claro, 1366](images/first-flight/ground-1366-light-studio.webp)](images/first-flight/ground-1366-light-studio.webp) |
+
+</details>
+
+<details>
+<summary>Atividade de código</summary>
+
+O símbolo, o caminho no projeto e o número de linha pertencem à app criada no teste. A atividade começa com zero etapas percorridas.
+
+| Janela e tema | Referência | Flight Studio |
+| --- | --- | --- |
+| 1440 × 900, escuro | [![Referência, Atividade de código, escuro, 1440](images/first-flight/code-1440-dark-design.webp)](images/first-flight/code-1440-dark-design.webp) | [![Studio, Atividade de código, escuro, 1440](images/first-flight/code-1440-dark-studio.webp)](images/first-flight/code-1440-dark-studio.webp) |
+| 1440 × 900, claro | [![Referência, Atividade de código, claro, 1440](images/first-flight/code-1440-light-design.webp)](images/first-flight/code-1440-light-design.webp) | [![Studio, Atividade de código, claro, 1440](images/first-flight/code-1440-light-studio.webp)](images/first-flight/code-1440-light-studio.webp) |
+| 1366 × 768, escuro | [![Referência, Atividade de código, escuro, 1366](images/first-flight/code-1366-dark-design.webp)](images/first-flight/code-1366-dark-design.webp) | [![Studio, Atividade de código, escuro, 1366](images/first-flight/code-1366-dark-studio.webp)](images/first-flight/code-1366-dark-studio.webp) |
+| 1366 × 768, claro | [![Referência, Atividade de código, claro, 1366](images/first-flight/code-1366-light-design.webp)](images/first-flight/code-1366-light-design.webp) | [![Studio, Atividade de código, claro, 1366](images/first-flight/code-1366-light-studio.webp)](images/first-flight/code-1366-light-studio.webp) |
+
+</details>
+
+<details>
+<summary>Sensores e órbita</summary>
+
+Os números e curvas vêm dos dispositivos configurados e do modelo de sinal. Os cenários locais identificam a leitura do HAL e a telemetria de voo tem origem no downlink.
+
+| Janela e tema | Referência | Flight Studio |
+| --- | --- | --- |
+| 1440 × 900, escuro | [![Referência, Sensores e órbita, escuro, 1440](images/first-flight/sensors-1440-dark-design.webp)](images/first-flight/sensors-1440-dark-design.webp) | [![Studio, Sensores e órbita, escuro, 1440](images/first-flight/sensors-1440-dark-studio.webp)](images/first-flight/sensors-1440-dark-studio.webp) |
+| 1440 × 900, claro | [![Referência, Sensores e órbita, claro, 1440](images/first-flight/sensors-1440-light-design.webp)](images/first-flight/sensors-1440-light-design.webp) | [![Studio, Sensores e órbita, claro, 1440](images/first-flight/sensors-1440-light-studio.webp)](images/first-flight/sensors-1440-light-studio.webp) |
+| 1366 × 768, escuro | [![Referência, Sensores e órbita, escuro, 1366](images/first-flight/sensors-1366-dark-design.webp)](images/first-flight/sensors-1366-dark-design.webp) | [![Studio, Sensores e órbita, escuro, 1366](images/first-flight/sensors-1366-dark-studio.webp)](images/first-flight/sensors-1366-dark-studio.webp) |
+| 1366 × 768, claro | [![Referência, Sensores e órbita, claro, 1366](images/first-flight/sensors-1366-light-design.webp)](images/first-flight/sensors-1366-light-design.webp) | [![Studio, Sensores e órbita, claro, 1366](images/first-flight/sensors-1366-light-studio.webp)](images/first-flight/sensors-1366-light-studio.webp) |
+
+</details>
+
+### Assistente de app
+
+| O que é | Arquivos da proposta | Gravação confirmada |
+| --- | --- | --- |
+| ![Nome](images/first-flight/wizard-name.webp) | ![Arquivos](images/first-flight/wizard-files.webp) | ![MIDs da app criada](images/first-flight/wizard-created.webp) |
+
+## Ensaios anteriores em bancada
+
+Registros da versão anterior cobrem o Raspberry Pi OS no emulador e uma Raspberry Pi 4 Model B Rev 1.5. Na placa física, a missão foi ensaiada com as apps padrão. A aquisição dos três sensores foi medida no QEMU.
 
 | Cenário | Resultado observado |
 | --- | --- |
@@ -21,35 +138,7 @@ A suíte Python concluiu 41 testes, e a suíte JavaScript concluiu 10. Os testes
 | Placa física por SSH e UDP | Em uma Raspberry Pi 4 Model B Rev 1.5 com Linux aarch64, a missão padrão ARM64 compilada contra `a4d305dc06fb` chegou a `OPERATIONAL`. A Ground Station enviou `SAMPLE_APP_NOOP_CC`, recebeu 26 pacotes e o evento da SAMPLE_APP. O journal do serviço registrou o mesmo evento. |
 | Edição e navegação | Criação, renomeação e remoção usando a API, ligação de leitores, edição C mantida após sincronização e rejeição de uma revisão antiga. No Chromium, o editor localizou o payload, o despacho, o handler e as anotações da app de teste. Para SAMPLE_APP_NOOP_CC, os seis saltos de código abriram as linhas do clone local, incluindo o protótipo e o evento EVS 3. As ferramentas Tags, Packet e Dispatch abriram no navegador e aceitaram fechamento com Escape. Em uma missão vazia, New mission app criou thermal_lab. Em seguida, com a fonte oficial de sample_app aberta, New command criou THERMAL_LAB_READ_PROBE_CC em thermal_lab. O editor coube em janelas de 1366 × 768, 390 × 844 e 844 × 390. |
 | Round trip com cFS nativo | Em missão isolada, as 12 apps de distribuição com NOOP, a app de missão `thermal_demo` e os cinco serviços cFE com NOOP emitiram os eventos EVS esperados. O teste de `sample_app` também exigiu aumento do `CommandCounter` em um pacote de housekeeping distinto. O `sch_lab` estava carregado e seu catálogo não expôs um NOOP. |
-| Interface | A configuração abriu primeiro. O workspace abriu na pilha 3D. As navegações 3D/2D, a folha de pinagem com 40 pinos, os dois temas, o terminal e o layout de 390 px foram exercitados. Os arquivos de fonte são servidos localmente. |
-| Verificação manual do setup | No Chromium, abrir a página, trocar de alvo, consultar os grupos e recarregar gerou zero pedidos de verificação. Um clique em **Run all checks** executou os 14 comandos do perfil Emulator em sequência, com no máximo um pedido em andamento. Em um ambiente de teste com CMake ausente, a etapa falhou e as demais foram executadas. A página coube em janelas de 1366×768, 1024×600, 390×844 e 844×390. |
 | Instalação e terminal | Uma instalação temporária exercitou os estados pendente, em execução, sucesso e falha, os códigos de saída 7 e 0 e a retomada do mesmo terminal após recarregar a página. |
-
-Os três sensores foram medidos no QEMU. Na placa física, o ensaio usou a missão inicial sem sensores adicionais. O serviço voltou ao estado inativo e o link para a instalação anterior foi restaurado ao final do teste.
-
-## Telas da aplicação
-
-A configuração reúne o destino de execução, o clone oficial e os checks. O terminal de preparação abre na parte inferior.
-
-![Configuração inicial](images/studio-setup.png)
-
-A pilha usa os módulos e dispositivos da missão. Selecionar a placa abre o CAD de hardware. O modo 2D oferece a pinagem física do conector.
-
-![Arquitetura em camadas da missão de teste](images/studio-mission.png)
-
-![Pinagem de três sensores no tema claro](images/studio-pinout.png)
-
-No editor, o navegador de arquivos acompanha a linha de origem. As anotações pertencem aos comentários C.
-
-![Editor com a árvore de fontes e o comando criado](images/studio-code.png)
-
-A estação exibe o comando selecionado, os bytes transmitidos e os pacotes recebidos do alvo. As contagens variam a cada execução.
-
-![Ground Station com o evento de NOOP e o contador de housekeeping do cFS nativo](images/studio-ground.png)
-
-A bancada de sinais mostra a trajetória em luz e eclipse, as séries por sensor e os parâmetros da sessão. A prévia e o gerador Python compartilham os elementos orbitais e o modelo de propagação escolhido. Os valores de teste local e os confirmados pelo QMP têm identificações próprias.
-
-![Dados sintéticos e configuração orbital](images/studio-signals.png)
 
 ## Repetir
 
