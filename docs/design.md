@@ -1,61 +1,57 @@
 # Design do Flight Studio
 
-O seletor de destino, a bancada de hardware, a arquitetura, o editor e a estação de solo compartilham a tipografia e a paleta do HTML de referência. A configuração abre antes do CAD 3D da missão. A camada de hardware abre a bancada. O fluxo principal tem duas decisões, escolher onde executar o cFS e abrir o workspace.
+Na primeira visita, a pessoa escolhe onde executar o cFS. O Studio verifica o destino, compila a missão e mostra a inicialização. A navegação lateral continua disponível para quem quer inspecionar a arquitetura, abrir um arquivo ou trabalhar diretamente na estação de solo.
 
-## Cores e tipografia
+## Tipografia e superfícies
 
-Os valores ficam em [design.css](../interface/static/design.css). Use os tokens CSS abaixo para que uma alteração alcance as duas aparências. O tema claro usa superfícies de papel bege. O tema escuro usa cinzas frios e a mesma hierarquia de contraste.
+As duas aparências usam as mesmas dimensões. Inter serve à interface. JetBrains Mono identifica arquivos, símbolos C, números, unidades e código. As fontes são distribuídas com o Studio. Use os pesos 400 para conteúdo, 500 para controles e 600 para ênfase. [Tokens](../interface/static/design.css) · [Licença das fontes](../interface/static/fonts/LICENSE.txt)
 
-| Elemento | Token | Uso |
+| Tamanho | Token | Uso |
 | --- | --- | --- |
-| Tela | `--fs-bg` | Área de trabalho e navegação |
-| Superfície | `--fs-surface`, `--fs-panel`, `--fs-raised` | Ilustrações, grupos de controles e hover |
-| Borda | `--fs-line` | Delimitar um painel ou separar grupos |
-| Texto | `--fs-text`, `--fs-muted` | Conteúdo principal e contexto secundário |
-| Ação principal | `--fs-accent`, `--fs-on-accent` | Botão principal, foco e destino selecionado |
-| Estado | `--fs-success`, `--fs-danger` | Resultado de uma operação acompanhado de ícone ou texto |
-| Interface | `--fs-sans` | Inter nos comandos e rótulos |
-| Código e valores | `--fs-mono` | JetBrains Mono nos nomes de símbolos e valores técnicos |
+| 10 px | `--fs-small` | Rótulo curto de seção, em mono, maiúsculas e espaçamento de 0,12 em |
+| 11 px | `--fs-caption` | Unidade, legenda, origem ou informação secundária |
+| 12 px | `--fs-label` | Texto da interface |
+| 13 px | `--fs-body` | Botão e conteúdo com ênfase |
+| 15 px | `--fs-heading` | Título de cartão ou painel |
+| 20 px | `--fs-title` | Título de página |
 
-Os arquivos de fonte são locais e têm [licença OFL](../interface/static/fonts/LICENSE.txt). A escala de texto usa 11 px para legendas, 12 px para rótulos, 13 px para conteúdo e 15 px para títulos de grupos. O título de entrada usa 22 px. Os pesos 500 e 600 dão hierarquia sem introduzir outra família.
+| Elemento | Regra |
+| --- | --- |
+| Janela | `--fs-bg` no fundo, `--fs-surface` em navegação e barras. O tema claro usa fundo bege. |
+| Cartão ou diálogo | `--fs-panel`, borda de 1 px em `--fs-line` e raio `--fs-radius-card` de 6 px. Reserve a faixa lateral de cor para o gutter do diff. |
+| Controle | Raio `--fs-radius-control` de 4 px. Uma ação primária por grupo, com `--fs-accent` e `--fs-on-accent`. |
+| Pílula ou ponto | Raio `--fs-radius-pill` de 99 px. Um ícone, número ou rótulo acompanha a cor. |
+| Foco e estados | `--fs-accent` para foco e seleção, `--fs-success` para confirmação, `--fs-danger` para erro. |
+| Texto | `--fs-text` para o conteúdo e `--fs-muted` para contexto. Use os tokens também nos componentes montados por JavaScript. |
 
-## Comportamento
+As telas de referência são 1440 × 900 e 1366 × 768. O cabeçalho, o guia e as ações principais cabem na janela. Listas extensas, código, inspeções e saída do terminal rolam em seus próprios painéis. Os desenhos se adaptam ao espaço disponível. A escolha de tema acompanha o usuário entre o setup e o workspace. [Tema](../interface/static/theme.js) · [Capturas e comparação](validation.md)
 
-- A seleção de destino persiste ao abrir o workspace ou executar uma operação que usa a configuração. O número de jobs aceita entrada direta e os botões de incremento respeitam os limites de 1 a 64.
-- O setup abre com os ícones das ferramentas em estado neutro. Os indicadores de grupo abrem seus detalhes. **Run all checks** inicia a sequência, com um comando em execução por vez. O anel destaca a etapa ativa e o selo indica o resultado. Clique no ícone para consultar o comando, a saída, a duração e o código de retorno quando disponível.
-- O clone oficial aparece na configuração quando a fonte precisa ser instalada. “Source” dá acesso à revisão instalada. Os detalhes de SSH e da imagem ficam junto ao destino no botão de configurações.
-- A configuração usa a altura disponível da janela. Quando o terminal abre na barra inferior, os cartões de destino se compactam. Os botões principais permanecem acessíveis. Em telas pequenas, os detalhes e o histórico do terminal têm rolagem própria.
-- As ações primárias têm preenchimento de destaque. As secundárias têm borda discreta e os botões de ícone expõem um nome acessível. Um grupo deve ter uma única ação primária.
-- As animações respondem a foco, seleção e passagem do ponteiro. A preferência do sistema por movimento reduzido desativa as transições. Em telas estreitas, os desenhos mantêm a ordem e os campos passam à linha seguinte.
-- O botão com o atributo `data-theme-toggle` usa [theme.js](../interface/static/theme.js). A escolha persiste entre o setup e o workspace, inclusive entre abas no mesmo endereço.
+## Guia First flight
 
-## Áreas do workspace
+A barra de 44 px fica sob o cabeçalho. Cada pílula abre uma área. O número à esquerda conta as etapas com evidência. O primeiro item pendente pulsa, e **Next** aparece quando é preciso mudar de área. O ícone de reinício permite repetir a jornada sem apagar os arquivos da missão. [Guia](../interface/static/journey.js) · [Critérios de conclusão](backend.md#evidência-do-guia)
 
-| Área | O que aparece | Origem |
-| --- | --- | --- |
-| Hardware | CAD do computador ou da placa. Em **2D → Pinout**, a Raspberry Pi mostra os números físicos do conector. | Perfil ativo, lista de dispositivos e atribuições de pinos. |
-| Arquitetura | As duas projeções mostram a mesma missão. No CAD, arraste para girar, use a roda para aproximar ou afaste com o botão −. Shift e arrastar desloca a câmera. O controle de enquadramento restaura a vista. Clique em uma peça para acender suas ligações, abrir o código ou passar à seção em 2D. | Apps, bibliotecas, serviços cFE, leitores associados e pinos físicos da missão. |
-| Código | Árvore de arquivos com as marcas **A** e **M**, abas de arquivos e navegação para linhas de origem. | Arquivos da missão e cópia do cFS, índice de símbolos e estado Git. |
-| Ground Station | Comandos por aplicação, parâmetros e tamanho do pacote, envio, telemetria e eventos. O histórico mostra os bytes enviados pelo transmissor. | Catálogo do build do alvo, datagramas recebidos e registro de envio. |
-| Ground Station → System overview | Apps da missão e serviços cFE agrupam os registros por direção. Um comando abre sua visão de round trip. | Configuração de startup, envios UDP e pacotes recebidos. |
-| Synthetic data | Prévia orbital, canais dos dispositivos, parâmetros de sinal, arquivos Python e resultados de testes locais. | Sessão de sensores e amostras dos jobs de teste ou de simulação. |
+```mermaid
+flowchart LR
+    T[Target] --> B[Boot] --> E[Event] --> A[App] --> C[Command] --> S[Send] --> H[Sensor] --> V[Test] --> P[Board]
+```
 
-A posição de cada nome em `header_pins` no catálogo da placa corresponde ao número físico do pino, começando em 1. **Pinout** usa esse catálogo para identificar a alimentação, GPIO e as conexões de cada sensor. [Diagrama do conector da Raspberry Pi](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#gpio)
+- Escreva rótulos em inglês, preferencialmente com até quatro palavras. Mostre a relação entre peças com o desenho, o estado pelo ícone e a unidade ao lado do valor. Nomes de arquivos, eventos recebidos e saída de processos preservam o texto de origem.
+- Ao iniciar uma operação, mostre o indicador em execução. Ao receber a confirmação, desenhe o check SVG com `pathLength="1"` e `stroke-dashoffset`, aplique escala 0,4 → 1,14 → 1 e um único pulso do anel. Uma linha recém-inserida pode surgir com fade.
+- Dê nome acessível aos ícones interativos. Preserve foco ao atualizar um painel e permita operação por teclado. Com `prefers-reduced-motion`, mostre o resultado final de cada transição diretamente.
 
-Em **Synthetic data → Orbit**, selecione um perfil ou configure o perigeu, o apogeu e os quatro ângulos. **TLE** importa os elementos médios e a época UTC de duas linhas com checksum válido. A prévia usa o propagador selecionado, **Two-body** ou **J2**. O segundo inclui as taxas seculares de precessão. A sombra usa um cilindro terrestre e a direção do Sol na época simulada. Clique na trajetória para parar naquele ponto ou use as setas do teclado. Arraste o globo para girar e use a roda do mouse para ampliar. [Formato TLE do CelesTrak](https://celestrak.org/NORAD/documentation/tle-fmt.php) · [Posição solar aproximada do USNO](https://aa.usno.navy.mil/faq/sun_approx)
+## Comportamento por tela
 
-**Save settings** grava a órbita no dicionário `SESSION` de `sensors/signals.py`. Para ligar uma grandeza à órbita, selecione o sensor, escolha **Orbit · sunlight** e salve o valor de sombra e o incremento sob luz solar. Para uma transição gradual, configure a constante de tempo em **Response time (s)**. A prévia, o teste Python e o envio por QMP consultam a mesma propagação em [orbit.py](../sensors/orbit.py). Durante o envio, o relógio segue o tempo das amostras. No gráfico, **local test** identifica uma amostra do teste Python e **sent to QEMU** identifica uma escrita que o monitor QMP confirmou.
+| Área | Ação e resposta |
+| --- | --- |
+| **Choose target** | As três ilustrações representam Native, Emulator e Board. Selecionar um destino verifica seus três grupos em sequência. Um grupo com **+** abre o reparo correspondente ou os ajustes de conexão. O terminal ocupa a faixa inferior. Clicar no grupo dá acesso aos comandos, resultados e códigos de saída. Os três grupos aprovados liberam **Continue · first boot**. |
+| **First boot** | Os cartões acompanham as etapas necessárias para o alvo. A pilha acende conforme o log do voo. Clique em uma camada para inspecionar seu desenho. O console e os estados ES ficam recolhidos. **Next** abre a estação quando o cFS está em OPERATIONAL. |
+| **Ground Station** | Na primeira conexão, **Select ENABLE_OUTPUT** prepara o comando com o endereço de retorno. O envio continua sendo uma ação do usuário. O primeiro contato usa `sample_app` ou uma app de missão. O coach distingue pacote recebido, evento do NOOP e incremento do contador. **All apps** abre o restante do catálogo. |
+| **Mission architecture** | 3D e 2D mostram a mesma missão. Gire, aproxime e selecione uma peça para ver as conexões e ações. Em **Your apps**, **Create your first app** abre **What it is → Its files → Create**. O nome ocupa o espaço tracejado no barramento. O usuário vê os arquivos, o registro de startup e o build antes de confirmar. A engrenagem reúne os parâmetros avançados. |
+| **Code** | Navegar pela árvore abre arquivos e linhas de origem. A atividade **New command** de uma app de missão abre o percurso **Code → Struct → Prototype → Dispatch → Events → Handler → Test**. Uma etapa de código recebe o check depois da visita e da identificação da referência. O handler exige implementação. A última confirmação vem do teste na estação. |
+| **Hardware** | O CAD mostra o computador em Native e a placa selecionada nos demais alvos. **2D → Pinout** mostra pinos físicos. O fluxo parte do barramento, passa pelo dispositivo e chega à associação do leitor HAL com a app. |
+| **Synthetic data** | Uma órbita alimenta os sensores selecionados. **Signals** mostra globo, trajetória e curvas. Em **Python**, **Dry run** usa o modelo local e **Send to QEMU** escreve nos dispositivos. **QEMU** separa valor calculado, escrita e leitura observada. **Test** compara o valor enviado e a leitura do HAL em cada cenário local. |
+| **Board** | A última pílula abre a configuração da placa física. O deploy e a inicialização são acompanhados pela mesma tela de boot. |
 
-## Editor
+Em **Code**, a árvore exibe **A** e **M** junto aos arquivos novos e modificados. **Tags** reúne anotações e regiões editáveis. Digitar `@` em um comentário abre as sugestões. **Packet** detalha o pacote a partir das fontes e do catálogo compilado. **Dispatch** leva às referências de inscrição, seleção do comando e handler. [Editor e navegação](../interface/static/source-guide.js)
 
-Ao abrir um arquivo C de uma app, o seletor acima do código lista os comandos encontrados no despacho. Escolha um deles ou clique na linha da definição. A árvore de arquivos acompanha o salto, com **A** para arquivos adicionados e **M** para modificados. A linha selecionada fica destacada.
-
-Os sete círculos percorrem **Code**, **Struct**, **Prototype**, **Dispatch**, **Events**, **Handler** e **Test**. Cada etapa de código leva à declaração, ao campo ou à chamada correspondente. O painel lateral mostra os números de linha e os códigos de função. IDs e chamadas do EVS aparecem quando o índice encontra uma emissão direta no handler. Um círculo tracejado indica uma etapa ainda sem referência. O círculo **Test** usa o resultado do último teste registrado para aquele comando no mesmo alvo e build.
-
-- **Tags** lista os comentários do arquivo e os pontos de edição `@studio.edit`. Digitar `@` em um comentário C abre as opções. Tab ou Enter completa a anotação e Escape fecha a lista.
-- **Packet** mostra MID, código de função e campos do payload. Com o catálogo compilado, também mostra os offsets e tamanhos em bytes. Com um envio registrado na sessão daquele build, os blocos exibem os bytes efetivamente enviados.
-- **Dispatch** permite seguir da inscrição do Software Bus no código da app até o handler. Clique em qualquer referência para abrir seu arquivo e linha.
-
-Em uma missão vazia, **New mission app** cria a primeira app. Depois, **New command** permite escolher uma app de missão inclusive enquanto você consulta o código oficial da NASA. O Studio abre os arquivos gerados. Complete o handler, compile o alvo e use **Test → Open Ground Station** para abrir esse comando na estação de solo.
-
-![Comando da app thermal_demo criado no editor. A trilha distingue as definições encontradas, a emissão EVS e o teste de solo.](images/studio-code.png)
+Em **Ground Station**, use a visão do sistema para percorrer apps e serviços ou selecione um comando para observar sua ida e volta. O teste associa passos a pacotes, campos e eventos do catálogo. Os passos aguardam os resultados da execução. [Estação](../interface/static/round-trip-view.js) · [Editor de testes](../interface/static/trip-editor.js)
