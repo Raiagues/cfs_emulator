@@ -5,6 +5,7 @@ from hardware.host_tools import package_manager
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
+import hashlib
 import json
 import platform
 from pathlib import Path
@@ -19,6 +20,7 @@ import time
 
 CODE_ROOT = Path(__file__).resolve().parents[1]
 _port_probe_lock = threading.Lock()
+_receipt_lock = threading.Lock()
 
 
 def sources_ready(root):
@@ -81,7 +83,7 @@ def snapshot(hardware, verify_source=False):
     source = source_status(hardware.root) if verify_source else _source_inventory(hardware.root)
     plans = {mode: [probe.describe() for probe in _check_plan(hardware, mode)]
              for mode in ("native", "qemu", "physical")}
-    return {"source": source, "check_plan": plans, "build_jobs": hardware._load("native-build-settings.json", {}).get("jobs", 4), "sources_ready": source["state"] in {"installed", "ready"}, "project": hardware.root.name, "target": hardware.default_target(),
+    return {"source": source, "target_saved": bool(hardware._load("target.json")), "check_plan": plans, "build_jobs": hardware._load("native-build-settings.json", {}).get("jobs", 4), "sources_ready": source["state"] in {"installed", "ready"}, "project": hardware.root.name, "target": hardware._load("target.json", {}).get("target", "native"),
             "board": config["board"], "os": config["os"], "profiles": hardware.profiles(),
             "host": {"os": platform.system(), "architecture": platform.machine(),
                      "package_manager": package_manager()},
@@ -118,7 +120,7 @@ def save(studio, body):
     emulator_changed = emulator is not None and emulator != emulator_config(hardware.root)
     if emulator_changed and not profile_changed:
         hardware.require_stopped_emulator_for_configuration()
-    if profile_changed:
+    if profile_changed and _source_inventory(hardware.root)["state"] == "installed":
         studio.workspace.select_profile(board, system, hardware=hardware)
     if emulator is not None:
         hardware._save("emulator.json", emulator)
@@ -230,9 +232,12 @@ def _check_plan(hardware, target):
                     partial(_version_at_least, (23, 0)))
         yield Probe("Docker Buildx ≥ 0.10", ("docker", "buildx", "version"), partial(_version_at_least, (0, 10)))
     if target == "physical":
-        key = hardware._load("connection.json", {}).get("identity_file")
+        connection = hardware._load("connection.json", {}) or {}
+        key = connection.get("identity_file")
         if key:
             yield Probe("Board SSH identity", ("ssh-keygen", "-lf", key))
+        for label, action in (("Board network", "network"), ("Board login", "login"), ("cFS service", "service")):
+            yield Probe(label, (*local, "check-board", action, str(hardware.root)))
     if target == "qemu":
         emulator = emulator_config(hardware.root)
         image = emulator["image"]
@@ -244,6 +249,38 @@ def _check_plan(hardware, target):
                 _source_result, "./scripts/install-cfs.sh")
 
 
+def _identity(hardware, target, plan=None):
+    # The board host, guest image and profile are inputs to the verified plan.
+    plan = [probe.describe() for probe in (plan or _check_plan(hardware, target))]
+    profile = hardware.root / "project/config.json"
+    config = json.loads(profile.read_text()) if profile.is_file() else {}
+    specific = hardware._load("connection.json") if target == "physical" else None
+    data = [target, plan, specific, [config.get("board"), config.get("os")] if target != "native" else None]
+    return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
+
+
+def _receipt(hardware, target, identity, row):
+    with _receipt_lock:
+        path = "checks-" + target + ".json"
+        if _identity(hardware, target) != identity:
+            return  # A concurrent settings change superseded this result.
+        receipt = hardware._load(path, {})
+        if receipt.get("identity") != identity:
+            receipt = {"identity": identity, "checks": {}}
+        receipt["checks"][row["label"]] = row["ready"]
+        hardware._save(path, receipt)
+
+
+def target_verified(hardware, target):
+    if target not in ("native", "qemu", "physical") or hardware._load("target.json", {}).get("target") != target:
+        return False
+    if _source_inventory(hardware.root)["state"] != "installed":
+        return False
+    receipt = hardware._load("checks-" + target + ".json", {})
+    return receipt.get("identity") == _identity(hardware, target) and all(
+        receipt.get("checks", {}).get(p.label) is True for p in _check_plan(hardware, target))
+
+
 def _run(probe):
     if probe.label == "Local SSH port":
         # Concurrent setup pages must not trip over each other's temporary bind.
@@ -253,15 +290,20 @@ def _run(probe):
 
 
 def check_one(hardware, target, label):
-    for probe in _check_plan(hardware, target):
+    plan = list(_check_plan(hardware, target))
+    for probe in plan:
         if probe.label == label:
-            return _run(probe)
+            identity = _identity(hardware, target, plan)
+            result = _run(probe)
+            _receipt(hardware, target, identity, result)
+            return result
     raise ValueError("Select a check for this target.")
 
 
 def check_progress(hardware, target):
     """Capture settings once, then publish each actual start and finish."""
     plan = list(_check_plan(hardware, target))
+    identity = _identity(hardware, target, plan)
     checks = [dict(probe.describe(), status="pending", ready=None, detail="", command=None,
                    exit_code=None, duration_ms=None) for probe in plan]
     started = time.monotonic_ns()
@@ -276,6 +318,7 @@ def check_progress(hardware, target):
         checks[index] = dict(checks[index], status="running")
         yield snapshot()
         checks[index] = _run(probe)
+        _receipt(hardware, target, identity, checks[index])
         yield snapshot(done=index == len(plan) - 1)
 
 
@@ -289,6 +332,37 @@ def check(hardware, target):
 
 
 def _cli(args):
+    if len(args) == 3 and args[0] == "check-board":
+        from hardware.manager import HardwareManager
+        hardware = HardwareManager(args[2])
+        argv = hardware.ssh_argv("physical")
+        if args[1] == "network":
+            # Honor OpenSSH's HostName and Port for saved aliases.
+            result = subprocess.run([*argv[:1], "-G", *argv[1:]], capture_output=True, text=True, check=True)
+            resolved = dict(line.split(" ", 1) for line in result.stdout.splitlines() if " " in line)
+            with socket.create_connection((resolved["hostname"], int(resolved["port"])), timeout=5):
+                print(resolved["hostname"], resolved["port"])
+            return 0
+        if args[1] == "login":
+            return subprocess.call([*argv, "id -un"])
+        if args[1] == "service":
+            board = hardware.probe(emit=print)
+            print("cFS service ready" if board["ready"] else "Service requires setup")
+            return 0 if board["ready"] else 1
+    if len(args) == 1 and args[0] in {"authorize-key", "prepare-service"}:
+        from hardware.manager import HardwareManager
+        hardware = HardwareManager(Path.cwd())
+        if args[0] == "prepare-service":
+            result = hardware.prepare_board()
+            if not result["setup_required"]:
+                return 0
+            return subprocess.call(shlex.split(result["setup_command"]))
+        commands = snapshot(hardware)["commands"]
+        if "create_key" in commands:
+            code = subprocess.call(shlex.split(commands["create_key"]))
+            if code:
+                return code
+        return subprocess.call(shlex.split(commands["authorize_key"]))
     if args == ["check-scp"]:
         return _scp_check()
     if args == ["check-emulator-key"]:
@@ -327,5 +401,5 @@ def _cli(args):
 if __name__ == "__main__":
     try:
         sys.exit(_cli(sys.argv[1:]))
-    except (OSError, ValueError, subprocess.TimeoutExpired) as error:
+    except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:
         sys.exit(str(error))

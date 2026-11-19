@@ -50,6 +50,8 @@ class SetupChecksTest(unittest.TestCase):
         run = subprocess.run
 
         def capture(command, **options):
+            if command[:2] == ('docker', 'buildx'):
+                return subprocess.CompletedProcess(command, 0, 'Buildx v0.30.0')
             if command[:2] == ('docker', 'version'):
                 running.set()
                 if not release.wait(5):

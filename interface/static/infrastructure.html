@@ -16,6 +16,7 @@
     <span class="brand"><strong>Flight</strong> studio <span class="brand-divider">/</span><span id="project-name"></span></span>
     <div class="header-actions"><span id="save-state" role="status"></span><button type="button" data-theme-toggle aria-label="Switch theme"></button></div>
   </header>
+  <nav id="flight-guide" aria-label="First flight"></nav>
   <main><form id="infrastructure-form">
     <h1>Choose target</h1>
     <div id="targets" role="group" aria-label="Execution target">
@@ -81,40 +82,29 @@
     <section class="setup-panel" aria-label="Target configuration">
       <div class="configuration-row">
         <div id="configuration"></div>
-        <div id="requirements" role="group" aria-label="Setup checks"></div>
+        <div class="group-summary"><span id="group-summary" role="status"></span><div id="requirements" role="group" aria-label="Setup checks"></div></div>
       </div>
       <div class="setup-details">
         <div id="advanced" hidden></div>
-        <div id="verification" hidden>
-          <div class="check-heading">
-            <h2 id="check-status"></h2>
-            <progress id="check-progress" hidden aria-label="Verification progress"></progress>
-            <div id="preparation" aria-label="Preparation commands"></div>
-            <button type="button" id="close-checks" aria-label="Close checks">×</button>
-          </div>
-          <div id="checks" role="group" aria-label="Verification pipeline"></div>
-          <output id="pipeline-detail" hidden></output>
-        </div>
-        <div class="source-setup" hidden>
-          <div><h2>NASA cFS</h2><a href="https://github.com/nasa/cFS" target="_blank" rel="noopener">github.com/nasa/cFS</a></div>
-          <span id="source-state"></span>
-          <button id="clone-source" type="button" hidden>Clone NASA cFS</button>
-        </div>
+        <section id="verification" hidden>
+          <header><h2 id="check-status"></h2><button id="check" type="button">Check again</button><button type="button" id="close-checks" aria-label="Close details">×</button></header>
+          <div id="checks"></div>
+        </section>
       </div>
     </section>
     <p id="feedback" role="status" aria-live="polite"></p>
     <footer class="setup-footer">
       <button type="button" id="show-terminal" hidden>Terminal</button>
-      <button id="check" type="button" disabled>Run all checks</button>
-      <button type="submit" class="primary" id="enter" disabled>Open workspace</button>
+      <span id="waiting">Checking…</span>
+      <button type="submit" class="primary" id="enter" hidden disabled>Continue · first boot</button>
     </footer>
   </form></main>
   <div class="output-dock">
-    <section id="job-output" class="output-panel" hidden><header><strong id="job-title">Connection</strong><span id="job-state"></span><button id="close-report" type="button" aria-label="Close report">×</button></header><pre id="job-log" role="log"></pre><div id="board-report"></div></section>
     <section id="setup-terminal" class="output-panel" hidden><header><strong id="terminal-title">Local terminal</strong><span id="terminal-state" role="status">Project directory</span><button type="button" id="close-terminal" aria-label="Close terminal">×</button></header><div id="shell-terminal" hidden></div></section>
   </div>
   <script src="/vendor/xterm.js"></script>
   <script src="/vendor/addon-fit.js"></script>
+  <script src="/journey.js" type="module"></script>
   <script src="/infrastructure.js" type="module"></script>
 </body>
 </html>
