@@ -7,7 +7,9 @@ AMPLITUDE_C = 5.0
 PERIOD_SECONDS = 30.0
 
 
-SIGNALS = {'temperature': {'initial': 23.5, 'function': 'sine', 'amplitude': 5.0, 'period': 30.0}}
+SIGNALS = {'temperature': {'function': 'orbit.thermal',
+                          'material': {'size': '1U', 'mass': 1.3, 'alpha': .7,
+                                       'emissivity': .7, 'power': 1.0}}}
 
 
 def configure(device):

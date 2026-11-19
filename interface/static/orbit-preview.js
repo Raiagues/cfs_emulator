@@ -39,6 +39,15 @@ export function orbitIllumination(time, responseTime=0) {
   const left=curve[Math.floor(u)],right=curve[Math.ceil(u)];
   return left+(u%1)*(right-left);
 }
+export const materialKey = m => JSON.stringify([m.size,m.mass,m.alpha,m.emissivity,m.power]);
+export function thermalCurve(material) { return material && track?.thermal?.get(materialKey(material)); }
+export function orbitTemperature(time,material) {
+  const curve=thermalCurve(material)?.values;
+  if(!curve)return null;
+  const u=Math.max(0,Math.min(1,time/track.period-track.cycle))*(curve.length-1);
+  const left=curve[Math.floor(u)], right=curve[Math.ceil(u)];
+  return left+(u%1)*(right-left);
+}
 function setText(selector,text) { const el=document.querySelector(selector); if(el && el.textContent!==text)el.textContent=text; }
 function presetName(el) {
   return Object.values(presets).find(p=>['perigee','apogee','inclination','argument'].every(k=>Math.abs(p[k]-el[k])<.001))?.label || 'Custom';
@@ -152,15 +161,17 @@ function drawScene(canvas,isMap,now,time){
   if(marker){ctx.fillStyle=now[3]?sun:night;ctx.strokeStyle=color('--fs-bg');ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(...marker,4.6,0,2*Math.PI);ctx.fill();ctx.stroke();}
 }
 
-async function loadTrack(el,cycle,key,responses){
+async function loadTrack(el,cycle,key,responses,materials){
   if(pendingKey===key || (failedKey===key && performance.now()<retryAt))return;
   const request=++requestNumber;pendingKey=key;
   try{
     const batches=[];
-    for(let i=0;i<responses.length;i+=32)batches.push(responses.slice(i,i+32));
-    if(!batches.length)batches.push([]);
-    const parts=await Promise.all(batches.map(batch=>context.api('simulation/orbit',{elements:el,cycle,responses:batch})));
+    for(let i=0;i<Math.max(1,responses.length,materials.length);i+=32)
+      batches.push({elements:el,cycle,responses:responses.slice(i,i+32),materials:materials.slice(i,i+32)});
+    const parts=await Promise.all(batches.map(batch=>context.api('simulation/orbit',batch)));
+    const thermal=new Map(parts.flatMap((part,i)=>(part.thermal||[]).map((curve,j)=>[materialKey(batches[i].materials[j]),curve])));
     const data=parts[0];
+    data.thermal=thermal;
     data.responses=new Map(parts.flatMap(part=>Object.entries(part.responses||{})).map(([tau,curve])=>[Number(tau),curve]));
     if(request!==requestNumber)return;
     track=data;signature=key;failedKey='';drawOrbit();
@@ -174,8 +185,10 @@ export function drawOrbit(){
   const time=orbitalTime(), period=track?.period||2*Math.PI*Math.sqrt((earth+(el.apogee+el.perigee)/2)**3/398600.4418);
   const sensors=context.state.simulation.settings.sensors;
   const responses=[...new Set(sensors.flatMap(sensor=>Object.values(sensor.signals).filter(s=>s.function==='orbit.sunlight'&&s.response_time>0).map(s=>s.response_time)))].sort((a,b)=>a-b);
-  const cycle=Math.floor(time/period),key=JSON.stringify([el,cycle,responses]);
-  if(signature!==key){if(!timer)loadTrack(el,cycle,key,responses);if(!track)return;}
+  const thermal=sensors.flatMap(sensor=>Object.values(sensor.signals).filter(s=>s.function==='orbit.thermal').map(s=>s.material));
+  const materials=[...new Map(thermal.map(m=>[materialKey(m),m])).values()];
+  const cycle=Math.floor(time/period),key=JSON.stringify([el,cycle,responses,materials]);
+  if(signature!==key){if(!timer)loadTrack(el,cycle,key,responses,materials);if(!track)return;}
   const now=orbitPoint(time);
   drawScene(globe,false,now,time);drawScene(document.querySelector('[data-orbit-map]'),true,now,time);
   const utc=new Date(Date.parse(el.epoch)+time*1000);

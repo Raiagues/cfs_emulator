@@ -1,5 +1,5 @@
 import {icon} from './ui.js';
-import {orbitCard, orbitControls, orbitData, orbitIllumination, orbitPoint, orbitSubtitle, orbitToolbar, orbitalTime} from './orbit-preview.js';
+import {orbitCard, orbitControls, orbitData, orbitIllumination, orbitTemperature, thermalCurve, orbitPoint, orbitSubtitle, orbitToolbar, orbitalTime} from './orbit-preview.js';
 
 const seriesSelection=new Map();
 const readings=new Map();
@@ -51,6 +51,7 @@ export function renderSimulationBoard(state,{esc}){
 const patterns=[['constant','Constant'],['sine','Sine wave'],['ramp','Linear ramp'],['orbit.sunlight','Orbit · sunlight'],['uniform','Uniform noise'],['gaussian','Gaussian noise']];
 
 function patternOf(signal){
+ if(signal.function==='orbit.thermal')return signal.function;
  if(signal.noise && signal.noise!=='none')return signal.function==='constant'?signal.noise:'model';
  return patterns.some(([key])=>key===signal.function)?signal.function:'model';
 }
@@ -59,6 +60,7 @@ export function changePattern(settings,pattern,saved){
  const base={initial:settings.initial,enabled:settings.enabled,noise:'none',function:'constant'};
  if(pattern==='model')return {...saved,initial:base.initial,enabled:base.enabled};
  if(pattern==='sine')return {...base,function:'sine',amplitude:settings.amplitude??1,period:settings.period??30};
+ if(pattern==='orbit.thermal')return {...base,function:pattern,material:settings.material||{size:'1U',mass:1.3,alpha:.7,emissivity:.7,power:1}};
  if(pattern==='orbit.sunlight')return {...base,function:'orbit.sunlight',amplitude:settings.amplitude??1,response_time:settings.response_time??0};
  if(pattern==='ramp')return {...base,function:'ramp',slope:settings.slope??1};
  if(pattern==='gaussian'||pattern==='uniform')return {...base,noise:pattern,noise_level:settings.noise_level||1};
@@ -76,12 +78,20 @@ export function renderSimulationSettings(state,{esc}){
  const outputs=Object.keys(sensor.signals);
  const key=outputs.includes(state.signalOutput)?state.signalOutput:outputs[0];
  const signal=sensor.signals[key],meta=device.properties[key],unit=meta.unit,prop=esc(key);
- const options=[...patterns];
+ const options=patterns.filter(([kind])=>unit!=='°C'||kind!=='orbit.sunlight'||signal.function===kind);
+ if(unit==='°C')options.unshift(['orbit.thermal','Orbit physics']);
  if(patternOf(device.defaults.signals[key])==='model')options.push(['model','Sensor model']);
  const numeric=(name,label,extra='')=>`<label>${esc(label)}<input type="number" step="any" required ${extra} data-signal-property="${prop}" name="${name}" value="${esc(signal[name]??0)}"></label>`;
+ const thermal=signal.function==='orbit.thermal',m=signal.material;
+ const materialField=(id,title,min,max,step,unit='')=>`<label class="thermal-range"><span>${title}<output>${m[id]} ${unit}</output></span><input type="range" min="${min}" max="${max}" step="${step}" value="${m[id]}" name="${id}" data-material-field data-signal-property="${prop}"></label>`;
+ const massLimits=thermal?{'1U':[.8,2],'3U':[2,6],'6U':[6,14]}[m.size]:[];
+ const thermalFields=thermal?`<div class="thermal-material"><label>Size<select data-material-field data-signal-property="${prop}" name="size">${['1U','3U','6U'].map(s=>`<option ${s===m.size?'selected':''}>${s}</option>`).join('')}</select></label>
+ ${materialField('mass','Mass',...massLimits,.1,'kg')}${materialField('alpha','Absorptivity α',.1,.95,.01)}${materialField('emissivity','Emissivity ε',.05,.95,.01)}${materialField('power','Internal heat',0,5,.1,'W')}
+ <div class="thermal-facts">${[['orbit','This orbit'],['steady_sun','Steady sun'],['steady_shadow','Steady shadow']].map(([key,title])=>`<span>${title}<output data-material-result="${key}">—</output></span>`).join('')}</div></div>`:'';
  return title+`<form id="simulation-form"><div class="signal-output-tabs" ${outputs.length===1?'hidden':''} role="group" aria-label="Sensor outputs">${outputs.map(name=>`<button type="button" data-signal-tab="${esc(name)}" aria-pressed="${name===key}">${esc(name)}</button>`).join('')}</div>
  <fieldset ${busy?'disabled':''}><legend>Signal settings</legend><label class="signal-check"><input type="checkbox" name="enabled" data-signal-property="${prop}" ${signal.enabled!==false?'checked':''}>Generate this output</label>
- <div class="signal-inputs">${numeric('initial','Baseline ('+unit+')',`min="${meta.min}" max="${meta.max}"`)}<label>Variation<select name="variation" data-signal-property="${prop}">${options.map(([id,label])=>`<option value="${id}" ${id===patternOf(signal)?'selected':''}>${label}</option>`).join('')}</select></label>
+ <div class="signal-inputs">${thermal?'':numeric('initial','Baseline ('+unit+')',`min="${meta.min}" max="${meta.max}"`)}<label>Variation<select name="variation" data-signal-property="${prop}">${options.map(([id,label])=>`<option value="${id}" ${id===patternOf(signal)?'selected':''}>${label}</option>`).join('')}</select></label>
+ ${thermalFields}
  ${signal.function==='sine'?numeric('amplitude','Amplitude ('+unit+')')+numeric('period','Period (s)','min="0.001"'):signal.function==='ramp'?numeric('slope','Rate ('+unit+'/s)'):signal.function==='orbit.sunlight'?numeric('amplitude','Sunlit offset ('+unit+')')+numeric('response_time','Response time (s)','min="0" max="7200"'):''}
  ${signal.noise&&signal.noise!=='none'?numeric('noise_level',(signal.noise==='uniform'?'Peak deviation':'Standard deviation')+' ('+unit+')','min="0"'):''}</div></fieldset>
  <fieldset class="signal-session" ${busy?'disabled':''}><legend>Simulation session</legend><label class="signal-check"><input type="checkbox" data-simulation-enable="${esc(device.id)}" ${sensor.enabled?'checked':''}>Include sensor</label><label>Sample interval (s)<input type="number" name="interval" step="any" min="0.001" value="${esc(session.settings.interval)}" required></label></fieldset></form>`;
@@ -94,6 +104,7 @@ export function selectSeries(id,channel){seriesSelection.set(id,channel);}
 function variate(i){const x=Math.sin(i*127.1+311.7)*43758.5453;return x-Math.floor(x);}
 function previewValue(signal,t,interval,limits){
   let result=signal.initial;
+  if(signal.function==='orbit.thermal')return orbitTemperature(t,signal.material);
   if(signal.function==='sine')result+=signal.amplitude*Math.sin(2*Math.PI*t/signal.period);
   else if(signal.function==='ramp')result+=signal.slope*t;
   else if(signal.function==='orbit.sunlight'){const amount=orbitIllumination(t,signal.response_time);if(amount==null)return null;result+=signal.amplitude*amount;}
@@ -141,6 +152,12 @@ export function updateSignalValues(state){
   const session=state.simulation,job=state.jobs.find(j=>['simulate','simulate-preview'].includes(j.action)&&j.status==='running');
   collectSamples(job);
   const now=orbitalTime(),track=orbitData();
+  const focus=session.settings.sensors.find(sensor=>sensor.device===state.selectedDevice);
+  const curve=focus&&thermalCurve((focus.signals[state.signalOutput]||Object.values(focus.signals)[0])?.material);
+  for(const el of document.querySelectorAll('[data-material-result]')){
+    const k=el.dataset.materialResult;
+    el.textContent=!curve?'—':(k==='orbit'?formatted(curve.minimum)+' … '+formatted(curve.maximum):formatted(curve[k]))+' °C';
+  }
   const present=new Map();
   for(const sensor of session.settings.sensors){
     const last=readings.get(sensor.device)?.at(-1), properties=session.available.find(d=>d.id===sensor.device)?.properties||{};
@@ -165,7 +182,7 @@ export function updateSignalValues(state){
     tag.textContent=!sensor.enabled?'off':job?.action==='simulate'&&measured?'sent to QEMU':job?.action==='simulate-preview'&&measured?'local test':job?(job.device&&job.device!==device.id?'not in test':'waiting'):'preview';
     const testButton=section.querySelector('[data-signal-preview-device]');if(testButton)testButton.hidden=Boolean(job);
     tag.classList.toggle('streaming',Boolean(job&&measured));section.classList.toggle('inactive',!sensor.enabled);
-    const points=job?measured||[]:[], orbital=keys.some(k=>sensor.signals[k].function==='orbit.sunlight')&&track;
+    const points=job?measured||[]:[], orbital=keys.some(k=>sensor.signals[k].function.startsWith('orbit.'))&&track;
     if(!job&&sensor.enabled&&keys.length){
       const periods=keys.filter(k=>sensor.signals[k].function==='sine').map(k=>sensor.signals[k].period);
       const span=orbital?track.period:periods.length?Math.max(...periods):Math.max(60,session.settings.interval*40);
@@ -178,7 +195,7 @@ export function updateSignalValues(state){
     const numbers=points.flatMap(p=>keys.map(k=>p[k]).filter(Number.isFinite));
     const empty=section.querySelector('.plot-empty');
     canvas.hidden=!numbers.length;empty.hidden=Boolean(numbers.length);
-    if(!numbers.length){empty.textContent=!sensor.enabled?'Excluded from session':!keys.length?'Outputs disabled':job?'Waiting for samples…':'Run a local test to sample the Python model.';continue;}
+    if(!numbers.length){empty.textContent=!sensor.enabled?'Excluded from session':!keys.length?'Outputs disabled':job?'Waiting for samples…':'Awaiting Python samples';continue;}
     chart(canvas,points,keys,Math.min(...numbers),Math.max(...numbers),now,Boolean(orbital&&!job));
   }
 }

@@ -11,13 +11,13 @@ import pprint
 from types import SimpleNamespace
 
 from project.model import board_catalog, board_catalogs, load_config
-from sensors.orbit import Orbit, default_elements, validate as orbital_elements
+from sensors.orbit import Orbit, ThermalMaterial, default_elements, validate as orbital_elements
 from sensors.runtime import ROOT
-from project.sensor_models import display_units
+from project.sensor_models import display_units, load as load_model, model_paths
 from sensors.simulator import configuration, load_waveform, sample_values, simulate, print_samples
 
 SOURCE = "sensors/signals.py"
-FUNCTIONS = ("script", "constant", "sine", "ramp", "orbit.sunlight")
+FUNCTIONS = ("script", "constant", "sine", "ramp", "orbit.sunlight", "orbit.thermal")
 
 
 def _source(path):
@@ -96,7 +96,7 @@ def _signal_settings(device, prop, limits, model, overrides=None):
         raw = overrides
     if not isinstance(raw, dict):
         raise ValueError(device["id"] + "." + prop + ": settings must be a dictionary")
-    if set(raw) - {"initial", "function", "amplitude", "period", "slope", "custom", "enabled", "noise", "noise_level", "response_time"}:
+    if set(raw) - {"initial", "function", "amplitude", "period", "slope", "custom", "enabled", "noise", "noise_level", "response_time", "material"}:
         raise ValueError(device["id"] + "." + prop + ": unknown waveform setting")
     kind = raw.get("function", "script")
     custom = raw.get("custom", "") if kind == "custom" else kind if kind not in FUNCTIONS else ""
@@ -115,6 +115,11 @@ def _signal_settings(device, prop, limits, model, overrides=None):
     if kind == "sine":
         settings.update(amplitude=_number(raw.get("amplitude", 1.0), prop + " amplitude"),
                         period=_number(raw.get("period", 30.0), prop + " period", True))
+    elif kind == "orbit.thermal":
+        if display_units(limits["unit"])[1] != "°C":
+            raise ValueError("Thermal signals require a Celsius output")
+        material = ThermalMaterial.from_settings(raw.get("material"))
+        settings["material"] = vars(material)
     elif kind == "orbit.sunlight":
         settings["amplitude"] = _number(raw.get("amplitude", 1.0), prop + " sunlit offset")
         settings["response_time"] = _number(raw.get("response_time", 0), prop + " response time")
@@ -158,6 +163,7 @@ def load_session(root=ROOT):
             or not all(isinstance(name, str) and type(enabled) is bool for name, enabled in saved["sensors"].items())):
         raise ValueError("SESSION sensors must be None or a dictionary of device IDs and True/False")
     models, sources = {}, {SOURCE: text}
+    paths = model_paths(root)
     available, selected = [], []
     for original in config["devices"]:
         device = copy.deepcopy(original)
@@ -166,16 +172,25 @@ def load_session(root=ROOT):
         script = "sensors/" + device["model"] + ".py"
         if device["model"] not in models:
             models[device["model"]] = _model_source(root, device["model"])
+            models[device["model"]]["spec"] = load_model(paths[device["model"]])
             sources[script] = models[device["model"]]["text"]
         model = models[device["model"]]
         signals = _device_settings(device, catalog, model)
+        spec = model["spec"]
+        fields = spec.get("abi", {}).get("fields")
+        scalar = spec.get("abi", {}).get("sample") == "int32"
+        channels = {}
+        for index, output in enumerate(spec["outputs"]):
+            field = "Value" if scalar else "Value." + (fields[index] if fields else "Value_" + output["name"].replace("-", "_"))
+            channels[output["name"]] = {"register": output.get("register"), "telemetry_field": field,
+                                        "scale": display_units(output["unit"])[0], "raw_unit": output["unit"]}
         entry = {"device": device["id"], "enabled": True, "signals": signals}
         available.append({"id": device["id"], "name": device["name"], "model": device["model"], "bus": device["bus"],
                           "address": device["address"], "qom_path": "/machine/peripheral/" + device["id"],
                           "script": script, "source_line": model["source_line"], "sample_line": model["sample_line"],
                           "functions": [{"name": name, "line": line} for name, line in model["functions"].items()],
                           "defaults": copy.deepcopy(entry),
-                          "properties": {name: {"unit": display_units(prop["unit"])[1],
+                          "properties": {name: {**channels[name], "unit": display_units(prop["unit"])[1],
                                                 "min": prop["min"] / display_units(prop["unit"])[0],
                                                 "max": prop["max"] / display_units(prop["unit"])[0]}
                                          for name, prop in definition["properties"].items()}})
@@ -201,6 +216,9 @@ def _compact(settings):
         result["function"] = settings["custom"]
     elif settings["function"] == "sine":
         result.update(amplitude=settings["amplitude"], period=settings["period"])
+    elif settings["function"] == "orbit.thermal":
+        result["material"] = settings["material"]
+        result.pop("initial", None)
     elif settings["function"] == "orbit.sunlight":
         result["amplitude"] = settings["amplitude"]
         if settings["response_time"]:
@@ -271,8 +289,9 @@ def waveform_for(root, device, settings, catalog=None, orbit=None):
     original = load_waveform(root, device["model"])
     sensor = configuration(original, device, root=root, catalog=catalog)
     signals = [settings["signals"][signal.property] for signal in sensor.signals]
-    use_sunlight = any(signal["function"] == "orbit.sunlight" for signal in signals)
-    if use_sunlight and orbit is None:
+    materials = {i: ThermalMaterial.from_settings(s["material"]) for i, s in enumerate(signals) if s["function"] == "orbit.thermal"}
+    orbital = bool(materials) or any(s["function"] == "orbit.sunlight" for s in signals)
+    if orbital and orbit is None:
         orbit = Orbit(load_session(root)["settings"]["orbit"])
 
     def sample(seconds, initial):
@@ -289,6 +308,7 @@ def waveform_for(root, device, settings, catalog=None, orbit=None):
             if kind == "script": value = base[index]
             elif kind == "sine": value += signal["amplitude"] * math.sin(2 * math.pi * seconds / signal["period"])
             elif kind == "ramp": value += signal["slope"] * seconds
+            elif kind == "orbit.thermal": value = orbit.temperature(seconds, materials[index])
             elif kind == "orbit.sunlight":
                 tau = signal.get("response_time", 0)
                 if tau not in illumination:

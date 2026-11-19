@@ -4,13 +4,63 @@ Distances in km, angles in degrees, and elapsed times in seconds from UTC epoch.
 The J2 option applies first-order secular rates to the mean orbital elements.
 """
 from datetime import datetime, timedelta, timezone
-from math import asin, atan2, cos, degrees, exp, floor, isfinite, pi, radians, sin, sqrt, tau
+from dataclasses import dataclass
+from math import asin, ceil, atan2, cos, degrees, exp, floor, isfinite, pi, radians, sin, sqrt, tau
 
 EARTH = 6378.137
 MU = 398600.4418
 J2 = 1.08262668e-3
 DAY = 86400
 SAMPLES = 360
+
+
+THERMAL_SIZES = {
+    # projected area, surface area (m²), mass bounds (kg), typical mass (kg)
+    '1U': (.015, .060, .8, 2., 1.3),
+    '3U': (.039, .156, 2., 6., 4.),
+    '6U': (.071, .284, 6., 14., 10.),
+}
+SOLAR_FLUX, EARTH_IR, SIGMA, SPECIFIC_HEAT = 1361., 239., 5.67e-8, 900.
+
+
+@dataclass(frozen=True)
+class ThermalMaterial:
+    size: str
+    mass: float
+    alpha: float
+    emissivity: float
+    power: float
+
+    @classmethod
+    def from_settings(cls, raw):
+        if not isinstance(raw, dict) or set(raw) != {'size', 'mass', 'alpha', 'emissivity', 'power'}:
+            raise ValueError('Set size, mass, absorptivity, emissivity and internal heat')
+        size = raw['size']
+        if not isinstance(size, str) or size not in THERMAL_SIZES:
+            raise ValueError('Choose 1U, 3U or 6U')
+        limits = {'mass': THERMAL_SIZES[size][2:4], 'alpha': (.10, .95),
+                  'emissivity': (.05, .95), 'power': (0., 5.)}
+        for field, (low, high) in limits.items():
+            value = raw[field]
+            if type(value) not in (int, float) or not isfinite(value) or not low <= value <= high:
+                raise ValueError(f'{field} must be between {low} and {high}')
+        return cls(**raw)
+
+    def equilibrium(self, factor, cosine, lit):
+        projected, area = THERMAL_SIZES[self.size][:2]
+        absorbed = self.alpha * projected * SOLAR_FLUX * (int(lit) + .3 * factor * max(0., cosine))
+        heat = absorbed + self.emissivity * projected * EARTH_IR * factor + self.power
+        return (heat / (self.emissivity * SIGMA * area)) ** .25
+
+    def advance(self, temperature, equilibrium, seconds):
+        # Factor T^4 - Teq^4, then use the midpoint conductance. The exponential
+        # stays between T and Teq even with long steps on eccentric orbits.
+        coefficient = self.emissivity * SIGMA * THERMAL_SIZES[self.size][1] / (self.mass * SPECIFIC_HEAT)
+        def rate(t):
+            return coefficient * (t + equilibrium) * (t*t + equilibrium*equilibrium)
+        delta = temperature - equilibrium
+        midpoint = equilibrium + delta * exp(-.5 * seconds * rate(temperature))
+        return equilibrium + delta * exp(-seconds * rate(midpoint))
 
 
 def sunlight(epoch_seconds):
@@ -100,6 +150,7 @@ class Orbit:
         self.motion = n + k * .5 * sqrt(1 - self.e ** 2) * (3 * cos(self.inc) ** 2 - 1)
         self.period = tau / self.motion
         self._responses = {}
+        self._thermal = {}
 
     def sample(self, seconds):
         e = self.e
@@ -126,6 +177,52 @@ class Orbit:
         beta = asin(max(-1, min(1, (sun[0] * sin(node) - sun[1] * cos(node)) * sin(self.inc) + sun[2] * cos(self.inc))))
         return lon, degrees(asin(z)), radius - EARTH, lit, solar_lon, degrees(asin(sun[2])), degrees(beta)
 
+
+    def thermal_curve(self, material, cycle):
+        """One revolution in Celsius, sampled on the same grid as the ground track."""
+        key = (material, cycle)
+        if key in self._thermal:
+            return self._thermal[key]
+        dt = self.period / SAMPLES
+        start = cycle * self.period
+        # Use the same warm-up and grid for random access, dry runs and live QMP.
+        # Perigee at noon and apogee in eclipse bound all possible steady states.
+        hot = material.equilibrium((EARTH / (EARTH + self.elements['perigee']))**2, 1., True)
+        cold = material.equilibrium((EARTH / (EARTH + self.elements['apogee']))**2, 0., False)
+        temp_span = ((hot**4 + cold**4) / 2) ** .25
+        prior = self._thermal.get((material, cycle-1))
+        if prior:
+            temperature, first = prior['values'][-1]+273.15, 0
+        else:
+            area = THERMAL_SIZES[material.size][1]
+            relaxation = material.mass * SPECIFIC_HEAT / (4*material.emissivity*SIGMA*area*cold**3)
+            # Forget the initial condition even for a random seek many orbits ahead.
+            first = -min(64, max(3, ceil(20*relaxation/self.period))) * SAMPLES
+            temperature = temp_span
+        values = []
+        for i in range(first, SAMPLES+1):
+            if i >= 0:
+                values.append(temperature - 273.15)
+            if i == SAMPLES:
+                break
+            lon, lat, altitude, lit, sunlon, sunlat, _ = self.sample(start + (i + .5)*dt)
+            cosine = (sin(radians(lat))*sin(radians(sunlat))
+                      + cos(radians(lat))*cos(radians(sunlat))*cos(radians(lon-sunlon)))
+            eq = material.equilibrium((EARTH/(EARTH+altitude))**2, cosine, lit)
+            temperature = material.advance(temperature, eq, dt)
+        result = dict(values=values, minimum=min(values), maximum=max(values),
+                      steady_sun=hot-273.15, steady_shadow=cold-273.15)
+        if len(self._thermal) >= 64:
+            self._thermal.pop(next(iter(self._thermal)))
+        self._thermal[key] = result
+        return result
+
+    def temperature(self, seconds, material):
+        cycle = floor(seconds / self.period)
+        curve = self.thermal_curve(material, cycle)['values']
+        sample = max(0., min(SAMPLES, (seconds/self.period-cycle)*SAMPLES))
+        i = min(floor(sample), SAMPLES-1)
+        return curve[i] + (sample-i)*(curve[i+1]-curve[i])
 
     def illumination(self, seconds, response_time=0):
         """First-order response to sunlight, with baseline at the session epoch.
@@ -165,8 +262,12 @@ def preview(body):
         raise ValueError("Use up to 32 response times between zero and 7200 seconds.")
     curves = {str(float(tau)).removesuffix('.0'): [round(orbit.illumination((cycle + i / SAMPLES) * orbit.period, tau), 7)
                                                   for i in range(SAMPLES + 1)] for tau in set(responses)}
+    materials = body.get('materials', [])
+    if not isinstance(materials, list) or len(materials) > 32:
+        raise ValueError('Use up to 32 thermal profiles per request')
+    thermal = [orbit.thermal_curve(ThermalMaterial.from_settings(raw), cycle) for raw in materials]
     shadow = sum(not point[3] for point in points[:-1]) / SAMPLES
     return dict(elements=orbit.elements, cycle=cycle, period=orbit.period, eccentricity=orbit.e,
-                drift=degrees(orbit.dnode) * DAY, eclipse=shadow, responses=curves,
+                drift=degrees(orbit.dnode) * DAY, eclipse=shadow, responses=curves, thermal=thermal,
                 points=[[round(lon, 5), round(lat, 5), round(height, 4), lit, round(sunlon, 5), round(sunlat, 5),
                          round(beta, 4)] for lon, lat, height, lit, sunlon, sunlat, beta in points])
