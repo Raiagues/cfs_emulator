@@ -192,7 +192,7 @@ function renderChecks() {
   $('#enter').hidden = !ready;
   $('#enter').disabled = !ready || busy;
   $('#waiting').hidden = ready;
-  $('#waiting').textContent = fixing?'Installing…':checking?'Checking…':missing?'Fix '+missing+' to continue':'Target checks';
+  $('#waiting').textContent = fixing?'Installing…':checking?'Checking…':missing?'Fix '+missing+' to continue':'Select to check';
 }
 function controls() {
   $('#save-state').textContent = busy ? 'Saving…' : !settings ? '' : dirty ? 'Unsaved' : 'Saved';
@@ -289,7 +289,7 @@ async function repair(group) {
 function showError(err){feedback(err.message,true);controls();}
 $('#targets').addEventListener('click',event=>{
   const mode=event.target.closest('[data-target]')?.dataset.target;if(!mode || !settings)return;
-  abortChecks(target);selectedVersion++;target=mode;dirty=true;advanced=false;activeGroup='';
+  abortChecks(target);selectedVersion++;dirty=dirty || mode!==settings.target;target=mode;advanced=false;activeGroup='';
   checksByTarget.delete(target);renderFields();
   verify().catch(showError);
 });
@@ -321,13 +321,14 @@ form.addEventListener('submit',event=>{
 (async()=>{
   token=(await api('session')).token;settings=await api('infrastructure');
   const requested=new URLSearchParams(location.search).get('target');
-  target=targets.includes(requested)?requested:settings.target;
+  const explicitSelection=targets.includes(requested);
+  target=explicitSelection?requested:settings.target;
   renderFields();
   const jobs=await api('jobs');
   const running=jobs.find(j=>j.setup_action && j.status==='running');
   if(running){
     const group=sets[running.target].find(([name])=>reportFor(running.target).some(row=>groupFor(running.target,row.label)===name && repairFor(running.target,row)===running.setup_action));
     await followInstaller(running,group?.[0]);
-    if(running.target!==target)await verify();
-  }else await verify();
+    if(explicitSelection && running.target!==target)await verify();
+  }else if(explicitSelection)await verify();
 })().catch(showError);
