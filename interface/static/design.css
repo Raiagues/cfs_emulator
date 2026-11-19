@@ -166,11 +166,10 @@
   animation:fs-pop .32s ease-out,fs-ring .52s ease-out}
 .flight-number .fs-tick {width:12px;height:12px;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 .flight-stops [aria-current] {background:var(--fs-accent-bg);color:var(--fs-accent)}
-.flight-stops [aria-current] .flight-number {border-color:var(--fs-accent);animation:flight-wait 2s ease-out infinite}
+.flight-stops [aria-current]:not(.done) .flight-number {border-color:var(--fs-accent);animation:flight-wait 2s ease-out infinite}
 @keyframes flight-wait {0%,75%,100% {box-shadow:0 0 0 0 transparent} 35% {box-shadow:0 0 0 3px color-mix(in srgb,var(--fs-accent) 18%,transparent)}}
-.flight-next {gap:6px;white-space:nowrap;height:28px;padding:0 10px;border-radius:var(--fs-radius-control);
-  background:var(--fs-accent);color:var(--fs-on-accent);font:400 var(--fs-label) var(--fs-sans);text-decoration:none}
-.flight-next b {font-weight:600}
+.flight-next {justify-content:center;white-space:nowrap;height:28px;padding:0 12px;border-radius:var(--fs-radius-control);
+  background:var(--fs-accent);color:var(--fs-on-accent);font:600 var(--fs-label) var(--fs-sans);text-decoration:none}
 .flight-guide-actions button {display:grid;place-items:center;width:28px;height:28px;min-height:0;padding:0;
   background:transparent;border:0;border-radius:var(--fs-radius-control);color:var(--fs-muted);cursor:pointer}
 .flight-guide-actions button:hover {background:var(--fs-raised);color:var(--fs-text)}
@@ -191,6 +190,5 @@
   .flight-number {width:18px;height:18px}
   .flight-stops a {padding:2px}
   .flight-guide-actions {gap:0}
-  .flight-next {gap:3px;padding:0 4px;font-size:var(--fs-caption)}
-  .flight-next svg {display:none}
+  .flight-next {padding:0 6px;font-size:var(--fs-caption)}
 }

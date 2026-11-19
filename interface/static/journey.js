@@ -1,91 +1,114 @@
-// Only the replay cutoff is local. Milestones are backed by observations from the Studio.
+// Completion is recorded by the Studio. Selection follows the screen the user opened.
+import {workspaceRoute} from './workspace-route.js';
+
 const stages = [
-  ['target', 'Target', 'Choose where cFS will run', 'setup'],
-  ['boot', 'Boot', 'Start cFS for the first time', 'boot'],
-  ['event', 'Event', 'Send a first message and get an answer', 'ground'],
-  ['app', 'App', 'Create your own app', 'architecture'],
-  ['command', 'Command', 'Teach your app a new command', 'code'],
-  ['send', 'Send', 'Send your new command', 'ground'],
-  ['sensor', 'Sensor', 'Give your app sensor data', 'simulation'],
-  ['test', 'Test', 'Check that everything works', 'simulation'],
-  ['board', 'Board', 'Run it on the real board', 'board']
+  ['target', 'Target', 'Choose where cFS will run'],
+  ['boot', 'Boot', 'Start cFS for the first time'],
+  ['event', 'Event', 'Send a first message and get an answer'],
+  ['app', 'App', 'Create your own app'],
+  ['command', 'Command', 'Teach your app a new command'],
+  ['send', 'Send', 'Send your new command'],
+  ['sensor', 'Sensor', 'Give your app sensor data'],
+  ['test', 'Test', 'Check that everything works'],
+  ['board', 'Board', 'Run it on the real board']
 ];
 
-export function stepUrl(step) {
-  if (step === 'target') return '/';
-  if (step === 'board') return '/?target=physical';
-  return '/studio#' + step;
+const railSteps = {architecture: 'app', bench: 'sensor', code: 'command', ground: 'event', simulation: 'sensor'};
+const isWorkspace = location => /^\/studio\/?$/.test(location.pathname);
+
+export function journeyNavigation(location, {target, steps, bootReadyTarget, since = 0, setup = !isWorkspace(location)} = {}) {
+  const board = location.hash !== '#target' && new URLSearchParams(location.search).get('target') === 'physical' &&
+    (!target || target === 'physical');
+  const {id} = workspaceRoute(location.hash);
+  const current = setup ? (board ? 'board' : 'target') : (railSteps[id] || id);
+  const done = stages.map(([step]) => Boolean(steps?.[step]?.done && steps[step].observed_at > since));
+  const index = stages.findIndex(([step]) => step === current);
+  // Setup has its own verified Continue action. Boot must refer to this live process, even during replay.
+  const canAdvance = current === 'boot' ? Boolean(target && bootReadyTarget === target) : done[index];
+  const next = !setup && canAdvance ? stages[index + 1]?.[0] : null;
+  return {current, next: next || null, done};
 }
 
-const bar = document.querySelector('#flight-guide');
+export function stepUrl(step, location, target, setup = !isWorkspace(location)) {
+  if (step === 'target') return target ? '/?target=' + encodeURIComponent(target) + '#target' : '/';
+  if (step === 'board') return '/?target=physical';
+  // A fragment keeps the workspace, its target and its live subscriptions mounted.
+  if (!setup) return '#' + step;
+  const search = target ? '?target=' + encodeURIComponent(target) : '';
+  return '/studio' + search + '#' + step;
+}
+
+const bar = globalThis.document?.querySelector('#flight-guide');
 const cutoffKey = 'fs-journey-reset';
 const tick = '<svg class="fs-tick" viewBox="0 0 16 16" aria-hidden="true"><path pathLength="1" d="m3 8 3 3 7-7"/></svg>';
-const arrow = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h11M8 3l5 5-5 5"/></svg>';
-let since = 0, observations, requestSequence = 0;
+let since = 0, observations, controller;
 try { since = Number(localStorage.getItem(cutoffKey)) || 0; } catch {}
 export function journeyResetAt() { return since; }
 
-function currentArea() {
-  if (document.body.classList.contains('code-only')) return 'code';
-  if (document.body.dataset.view) return document.body.dataset.view;
-  return document.querySelector('#targets [aria-pressed=true]')?.dataset.target === 'physical' ? 'board' : 'setup';
+function selectedTarget() {
+  return document.querySelector('#targets [aria-pressed=true]')?.dataset.target || document.body.dataset.flightTarget;
 }
 
 function update() {
-  if (!bar) return;
-  const done = stages.map(([id]) => {
-    const fact = observations?.steps[id];
-    return !!fact?.done && fact.observed_at > since;
+  const target = selectedTarget();
+  const setup = Boolean(document.getElementById('targets'));
+  const snapshot = target && observations?.target === target ? observations : null;
+  const {current, next, done} = journeyNavigation(location, {
+    target, steps: snapshot?.steps, since, setup, bootReadyTarget: document.body.dataset.bootReadyTarget
   });
-  const next = done.indexOf(false);
-  document.body.dataset.journeyStep = stages[next]?.[0] || 'complete';
-  bar.querySelector('output').textContent = done.filter(Boolean).length + '/9';
+  document.body.dataset.journeyStep = current;
+  bar.querySelector('output').textContent = (snapshot ? done.filter(Boolean).length : '–') + '/9';
 
   stages.forEach(([id,label], i) => {
     const link = bar.querySelector('[data-flight="' + id + '"]');
+    link.setAttribute('href', stepUrl(id, location, target, setup));
     if (link.classList.contains('done') !== done[i]) {
       link.classList.toggle('done', done[i]);
-      link.querySelector('.flight-number').innerHTML = done[i] ? tick : String(i+1);
+      link.querySelector('.flight-number').innerHTML = done[i] ? tick : String(i + 1);
     }
     link.setAttribute('aria-label', done[i] ? label + ', complete' : label);
-    if (next === i) link.setAttribute('aria-current','step');
+    if (current === id) link.setAttribute('aria-current', 'step');
     else link.removeAttribute('aria-current');
-    if (i) link.previousElementSibling.classList.toggle('complete', done[i-1] && done[i]);
+    if (i) link.previousElementSibling.classList.toggle('complete', done[i - 1] && done[i]);
   });
 
   const nextLink = bar.querySelector('.flight-next');
-  nextLink.hidden = next < 0 || stages[next][3] === currentArea();
-  if (next >= 0) {
-    const [id,label,title] = stages[next];
-    nextLink.href = stepUrl(id);
-    nextLink.title = title;
-    nextLink.querySelector('b').textContent = label;
+  nextLink.hidden = !next;
+  if (next) {
+    nextLink.setAttribute('href', stepUrl(next, location, target, setup));
+    nextLink.title = stages.find(([id]) => id === next)[2];
+  } else {
+    nextLink.removeAttribute('href');
+    nextLink.removeAttribute('title');
   }
 }
 
 export async function refreshJourney() {
   if (!bar) return;
-  const number = ++requestSequence;
-  const selector = '#targets [aria-pressed=true], .target-switch [aria-pressed=true]';
-  const target = document.querySelector(selector)?.dataset.target;
-  const query = target ? '?target=' + encodeURIComponent(target) : '';
+  const target = selectedTarget();
+  controller?.abort();
+  if (!target) return;
+  const request = new AbortController();
+  controller = request;
   try {
-    const response = await fetch('/api/journey' + query, {cache:'no-store'});
+    const response = await fetch('/api/journey?target=' + encodeURIComponent(target), {
+      cache: 'no-store', signal: request.signal
+    });
     if (!response.ok) return;
     const snapshot = await response.json();
-    if (number !== requestSequence) return;
+    if (request.signal.aborted || snapshot.target !== selectedTarget()) return;
     observations = snapshot;
     update();
   } catch { /* Retain the last observation while reconnecting. */ }
+  finally { if (controller === request) controller = null; }
 }
 
 if (bar) {
-  bar.setAttribute('aria-label','First flight');
-  bar.innerHTML = '<span class="flight-count">First flight <output>0/9</output></span><div class="flight-stops">' +
+  bar.innerHTML = '<span class="flight-count">First flight <output>–/9</output></span><div class="flight-stops">' +
     stages.map(([id,label,title], i) => (i ? '<span aria-hidden="true" class="flight-line"></span>' : '') +
-      '<a href="' + stepUrl(id) + '" data-flight="' + id + '" title="' + title + '"><span class="flight-number" aria-hidden="true">' +
+      '<a data-flight="' + id + '" title="' + title + '"><span class="flight-number" aria-hidden="true">' +
       (i+1) + '</span><span class="flight-label">' + label + '</span></a>').join('') +
-    '</div><div class="flight-guide-actions"><a class="flight-next" hidden>Next <b></b>' + arrow + '</a>' +
+    '</div><div class="flight-guide-actions"><a class="flight-next" hidden>Next</a>' +
     '<button type="button" data-flight="reset" title="Start over" aria-label="Start over"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10a8 8 0 1 1 1 7M4 4v6h6"/></svg></button></div>';
 
   bar.querySelector('[data-flight="reset"]').addEventListener('click', () => {
@@ -97,8 +120,26 @@ if (bar) {
     if (e.key === cutoffKey) { since = Number(e.newValue) || 0; update(); }
   });
   window.addEventListener('flight:updated', refreshJourney);
-  new MutationObserver(update).observe(document.body, {attributes:true, attributeFilter:['data-view','class']});
+  window.addEventListener('hashchange', update);
+  window.addEventListener('flight:navigate', update);
+  let lastTarget;
+  const targetChanged = () => {
+    const target = selectedTarget();
+    if (lastTarget === target) return;
+    lastTarget = target;
+    update();
+    refreshJourney();
+  };
+  new MutationObserver(targetChanged).observe(document.body, {attributes: true, attributeFilter: ['data-flight-target']});
+  new MutationObserver(() => {
+    update();
+    if (document.body.dataset.bootReadyTarget) refreshJourney();
+  }).observe(document.body, {attributes: true, attributeFilter: ['data-boot-ready-target']});
+  const targets = document.getElementById('targets');
+  if (targets) {
+    new MutationObserver(targetChanged).observe(targets, {attributes: true, subtree: true, attributeFilter: ['aria-pressed']});
+  }
   update();
-  refreshJourney();
-  setInterval(() => { if (!document.hidden) refreshJourney(); }, 3500);
+  targetChanged();
+  setInterval(() => { if (!document.hidden && !controller) refreshJourney(); }, 3500);
 }

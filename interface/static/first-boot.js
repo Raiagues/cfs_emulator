@@ -1,4 +1,5 @@
 import {targetDrawing} from './target-drawing.js';
+import {stepUrl} from './journey.js';
 import {icon} from './ui.js';
 
 const escape = value => String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -170,6 +171,11 @@ export function mountFirstBoot(container,{api,target}) {
   let disposed=false,timer=null,requested=false,data=null,pick='',pickKey='',lastCue='',consoleOpen=false,err='';
   let readError='';
   let live=null, pausedAt=null, pausedIndex=null, replayStart=null, replayTimer=null;
+  function publishRunning(running) {
+    const body = container.ownerDocument.body;
+    if (running && body.dataset.bootReadyTarget !== target) body.dataset.bootReadyTarget = target;
+    else if (!running && body.dataset.bootReadyTarget === target) delete body.dataset.bootReadyTarget;
+  }
   function elapsed() {
     if(pausedAt!=null) return pausedAt;
     if(replayStart!=null) return performance.now()-replayStart;
@@ -201,7 +207,7 @@ export function mountFirstBoot(container,{api,target}) {
     const title=[names[target],data.hardware,data.os].join(' · ');
     const fragment=document.createElement('template');
     fragment.innerHTML=`<section class="first-boot">
-      <header class="boot-title"><h1>First boot</h1><span>${icon(target==='native'?'monitor':'cpu')}${escape(title)}</span><a href="/">Change</a>
+      <header class="boot-title"><h1>First boot</h1><span>${icon(target==='native'?'monitor':'cpu')}${escape(title)}</span><a href="${stepUrl('target', location, target)}">Change</a>
       <time class="boot-clock" aria-label="Boot elapsed">${clock(elapsed())}</time>
       <button class="boot-control" data-pause data-boot-focus="pause" aria-label="${pausedAt==null?'Pause view':'Resume view'}" title="${pausedAt==null?'Pause view':'Resume view'}" ${!live.trace.length || (!replayStart && pausedAt==null && live.running)?'disabled':''}>${pausedAt==null?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14m8-14v14"/></svg>':icon('play')+'<span>Resume</span>'}</button>
       <button class="boot-control" data-replay data-boot-focus="replay" aria-label="Replay boot" title="Replay boot" ${live.trace.length<2?'disabled':''}>${icon('rotate')}</button></header>
@@ -225,7 +231,7 @@ export function mountFirstBoot(container,{api,target}) {
           <pre id="boot-console-output" aria-label="Boot log" tabindex="0" ${consoleOpen?'':'hidden'}>${consoleOpen?escape(data.lines.join('\n')):''}</pre>
         </div>
       </section>
-      <footer>${running?`<span class="boot-success">${drawnCheck}cFS is running</span>`:data!==live?'':(!live.verified||live.unverified)?'<a href="/">Check target</a>':failed||live.stopped||err?'<button data-retry data-boot-focus="retry">Retry first boot</button>':''}<output>${escape(readError||err||job.error||'')}</output></footer></section>`;
+      <footer>${running?`<span class="boot-success">${drawnCheck}cFS is running</span>`:data!==live?'':(!live.verified||live.unverified)?`<a href="${stepUrl('target', location, target)}">Check target</a>`:failed||live.stopped||err?'<button data-retry data-boot-focus="retry">Retry first boot</button>':''}<output>${escape(readError||err||job.error||'')}</output></footer></section>`;
     const next=fragment.content.firstElementChild, existing=container.firstElementChild;
     if(existing?.classList.contains('first-boot'))updateNode(existing,next);
     else container.replaceChildren(next);
@@ -247,10 +253,12 @@ export function mountFirstBoot(container,{api,target}) {
       const next=await api('first-boot?target='+encodeURIComponent(target));
       if(disposed)return;
       live=next;readError='';
+      publishRunning(next.running);
       draw();
       if(next.verified&&!requested&&!next.running&&!next.job.id&&!next.stopped&&!next.unverified){await start();draw();}
     }catch(error){
       if(disposed)return;
+      publishRunning(false);
       readError=error.message;
       if(data)draw();
       else {
@@ -299,6 +307,6 @@ export function mountFirstBoot(container,{api,target}) {
     }
   };
   container.addEventListener('click',click);
-  document.addEventListener('keydown',closeDetails);poll();
-  return ()=>{disposed=true;clearTimeout(timer);clearTimeout(replayTimer);container.removeEventListener('click',click);document.removeEventListener('keydown',closeDetails);};
+  document.addEventListener('keydown',closeDetails);publishRunning(false);poll();
+  return ()=>{disposed=true;publishRunning(false);clearTimeout(timer);clearTimeout(replayTimer);container.removeEventListener('click',click);document.removeEventListener('keydown',closeDetails);};
 }

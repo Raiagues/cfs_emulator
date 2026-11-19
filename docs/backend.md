@@ -54,7 +54,9 @@ O parser reconhece a identificação de espaçonave, processador, aplicação e 
 
 ## Evidência do guia
 
-`GET /api/journey` retorna o alvo e `steps`, indexado pelos identificadores abaixo. Cada entrada contém `done` e `observed_at` em segundos Unix. O navegador usa o instante do último **Start over** para reapresentar a jornada. A ação de reinício preserva a missão, os builds e os testes registrados. [Derivação da jornada](../interface/backend/journey.py)
+`GET /api/journey?target=qemu` consulta o voo do emulador. Os outros valores aceitos são `native` e `physical`. Quando o parâmetro é omitido, o Studio usa o alvo padrão do projeto. A resposta contém o alvo e um objeto `steps` com os identificadores abaixo. Cada etapa tem `done` e `observed_at` em segundos Unix. O navegador usa o instante do último **Start over** para reapresentar a jornada. A ação de reinício preserva a missão, os builds e os testes registrados. [Derivação da jornada](../interface/backend/journey.py)
+
+Ao escolher outro destino no Setup, o guia conserva a verificação do alvo que voou enquanto o checkout, a configuração e os resultados dos testes continuarem válidos. Para iniciar um novo primeiro boot, o destino precisa estar selecionado no Setup. Na tela Boot, **Next** abre a estação de solo quando a consulta de execução confirma o cFS ativo naquele alvo. [Validação do destino](../hardware/infrastructure.py) · [Consulta de execução](../interface/backend/first_boot.py)
 
 | Etapa | Observação necessária |
 | --- | --- |
