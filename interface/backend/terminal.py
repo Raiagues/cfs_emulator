@@ -36,7 +36,7 @@ class Shell:
         self.setup_action = setup_action
         self.target = target
         self.started = time.time()
-        self.progress = None
+        self.prompt_tail = b""
         self.lock = threading.RLock()
         self.input_lock = threading.Lock()
         self.chunks = deque()
@@ -82,8 +82,9 @@ class Shell:
                     break
                 with self.lock:
                     if self.setup_action:
-                        for match in re.finditer(rb"(?<![\d.])(100|[1-9]?\d)%", data):
-                            self.progress = int(match[1])
+                        # Interactive confirmations usually end without a newline.
+                        tail = (self.prompt_tail + data[-256:])[-256:]
+                        self.prompt_tail = re.split(rb"[\r\n]", tail)[-1]
                     self.chunks.append(data)
                     self.end += len(data)
                     while self.end - self.start > self.LIMIT:
@@ -93,11 +94,22 @@ class Shell:
         finally:
             self.exit_code = self.process.wait()
 
+    def waiting_for_input(self):
+        try:
+            if not (termios.tcgetattr(self.master)[3] & termios.ECHO):
+                return True  # sudo and SSH temporarily disable terminal echo.
+        except (OSError, termios.error):
+            return False
+        return bool(re.search(rb"(?:\(yes/no(?:/\[fingerprint\])?\)|\[y/n\])\??\s*$",
+                              self.prompt_tail, re.IGNORECASE))
+
     def snapshot(self):
         code = self.process.poll()
         return {'id': self.id, 'action': 'shell', 'target': self.target, 'kind': 'shell',
                 'name': self.name, 'started': self.started, 'streaming': True,
-                'setup_action': self.setup_action, 'progress': self.progress, 'operation_complete': not self.setup_action or code is not None,
+                'setup_action': self.setup_action, 'progress': None,
+                'input_required': bool(self.setup_action and code is None and self.waiting_for_input()),
+                'operation_complete': not self.setup_action or code is not None,
                 'status': 'running' if code is None else 'succeeded' if code == 0 else 'cancelled' if self.interrupted else 'failed',
                 'exit_code': code, 'lines': []}
 
