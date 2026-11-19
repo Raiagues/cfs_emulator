@@ -20,7 +20,7 @@
 <body class="no-terminal no-tree no-editor" data-view="architecture">
   <header class="topbar">
     <div class="workspace-identity">
-      <a class="brand" href="/infrastructure" title="Workspace setup" aria-label="Workspace setup"><span>Flight<span class="brand-studio">studio</span></span></a>
+      <a class="brand" href="/infrastructure" title="Workspace setup" aria-label="Workspace setup"><span>Flight <span class="brand-studio">studio</span></span></a>
       <div class="project-title"><span class="slash">/</span><span id="project-title"></span></div>
     </div>
     <div class="execution-toolbar">
@@ -37,7 +37,7 @@
       <div class="top-actions actions" aria-label="Linux and flight software actions">
         <button class="toolbar-action boot-action" data-job="boot" title="Boot QEMU Linux"><span class="icon" data-icon="cpu"></span><span class="action-label">Start emulator</span></button>
         <button class="toolbar-action shutdown-action" data-job="shutdown" title="Shut down QEMU"><span class="icon" data-icon="power"></span><span>Stop emulator</span></button>
-        <button class="toolbar-action synthetic-action" data-view="simulation" title="Open synthetic data" hidden><span class="icon" data-icon="wave"></span><span>Synthetic data</span></button>
+        <button class="toolbar-action synthetic-action" data-toggle-signals role="switch" aria-label="Synthetic data" aria-checked="false" hidden><span class="icon" data-icon="wave"></span><span>Synthetic data</span><i class="signal-toggle-track" aria-hidden="true"></i></button>
         <button class="toolbar-action build-action" data-job="build" title="Build for target"><span class="icon" data-icon="build"></span><span>Build cFS</span></button>
         <button class="toolbar-action run-action" data-job="run" title="Run on target"><span class="icon" data-icon="play"></span><span>Run cFS</span></button>
         <button class="toolbar-action stop-action" aria-label="Stop cFS" data-job="stop" title="Stop on target" disabled><span class="icon" data-icon="stop"></span><span>Stop cFS</span></button>

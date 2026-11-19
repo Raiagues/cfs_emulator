@@ -50,9 +50,9 @@ class Studio:
         self.ground_target = None
         self.closing = False
 
-    def exclusive(self, operation, *args, **kwargs):
-        if not self.operation.acquire(blocking=False):
-            raise ValueError('Wait for the terminal operation to finish before editing files.')
+    def exclusive(self, operation, *args, wait=0, **kwargs):
+        if not self.operation.acquire(timeout=wait):
+            raise ValueError('Operation in progress. Try again when it finishes.')
         try:
             return operation(*args, **kwargs)
         finally:
@@ -522,10 +522,10 @@ class Handler(BaseHTTPRequestHandler):
                 '/api/simulation': app.workspace.simulation_snapshot,
                 '/api/hardware/device': lambda: device_settings(app.workspace, query.get('id')),
                 '/api/jobs': app.jobs_snapshot,
-                '/api/ground/catalog': lambda: app.exclusive(app.ground_catalog, query.get('target')),
+                '/api/ground/catalog': lambda: app.exclusive(app.ground_catalog, query.get('target'), wait=3),
                 '/api/ground/tests': app.ground.plans.read,
                 '/api/ground': app.ground_snapshot,
-                '/api/ground/source': lambda: app.exclusive(app.ground_source, query),
+                '/api/ground/source': lambda: app.exclusive(app.ground_source, query, wait=3),
             }
             if url.path in routes:
                 return self.reply(routes[url.path]())
