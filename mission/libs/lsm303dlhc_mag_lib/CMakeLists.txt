@@ -1,5 +1,0 @@
-project(CFE_LSM303DLHC_MAG_LIB C)
-
-add_cfe_app(lsm303dlhc_mag_lib fsw/src/lsm303dlhc_mag_lib.c)
-target_include_directories(lsm303dlhc_mag_lib PUBLIC fsw/public_inc)
-add_cfe_app_dependency(lsm303dlhc_mag_lib hal_sensor linux_i2c_lib)

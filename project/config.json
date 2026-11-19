@@ -2,19 +2,7 @@
   "schema_version": 1,
   "board": "raspi4b",
   "os": "raspios",
-  "devices": [
-    {
-      "name": "lsm303dlhc_mag",
-      "id": "lsm303dlhc_mag",
-      "model": "lsm303dlhc_mag",
-      "bus": "i2c-bus.1",
-      "address": 30,
-      "values": {
-        "mag-x": 0,
-        "mag-y": 0,
-        "mag-z": 0
-      }
-    }
-  ],
-  "apps": []
+  "devices": [],
+  "apps": [],
+  "buses": []
 }

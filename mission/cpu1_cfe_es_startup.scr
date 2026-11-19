@@ -1,8 +1,5 @@
 CFE_LIB, cfe_assert,  CFE_Assert_LibInit, ASSERT_LIB,    0,   0,     0x0, 0;
 CFE_LIB, sample_lib,  SAMPLE_LIB_Init,    SAMPLE_LIB,    0,   0,     0x0, 0;
-CFE_LIB, linux_i2c_lib, LINUX_I2C_LIB_Init, LINUX_I2C_LIB, 0, 0, 0x0, 0;
-CFE_LIB, hal_sensor, HAL_SENSOR_LibInit, HAL_SENSOR, 0, 0, 0x0, 0;
-CFE_LIB, lsm303dlhc_mag_lib, LSM303DLHC_MAG_LIB_Init, LSM303DLHC_MAG_LIB, 0, 0, 0x0, 0;
 CFE_APP, sch_lab,     SCH_LAB_AppMain,    SCH_LAB,      35,   32768, 0x0, 0;
 CFE_APP, ci_lab,      CI_LAB_AppMain,     CI_LAB,       40,   32768, 0x0, 0;
 CFE_APP, to_lab,      TO_LAB_AppMain,     TO_LAB,       45,   32768, 0x0, 0;
