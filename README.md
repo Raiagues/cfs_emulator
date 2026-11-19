@@ -6,13 +6,13 @@ O Flight Studio é uma bancada local para desenvolver missões com o **NASA core
 
 ## Começar pelo computador
 
-Você precisa de Linux, Git e Python 3.10 ou superior para abrir a configuração. Execute como seu usuário normal.
+Você precisa de Linux, Git e Python 3.10 ou superior para abrir a configuração. Esta versão do primeiro voo está na branch `first-flight-flow`. Na raiz do checkout dessa branch, execute como seu usuário normal.
 
 ```sh
-git clone https://github.com/Raiagues/cfs_emulator.git
-cd cfs_emulator
 ./start
 ```
+
+A plataforma e o código de voo têm origens separadas. A configuração baixa o segundo dentro do projeto. [Repositório da plataforma](https://github.com/Raiagues/cfs_emulator) · [Repositório oficial do cFS](https://github.com/nasa/cFS)
 
 1. Abra **http://127.0.0.1:8765** e escolha **Native** para a primeira execução.
 2. Acompanhe **Compiler**, **Python** e **Source**. A seleção inicia os comandos em sequência. Clique em um grupo para ver a saída. Se faltar o checkout, clique no **+** de **Source** para baixar o cFS oficial e seus submódulos. O terminal inferior acompanha a instalação. O Studio repete a verificação ao terminar.
