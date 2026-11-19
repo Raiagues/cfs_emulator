@@ -1,64 +1,104 @@
-// The browser owns only the replay cutoff. Each check belongs to a backend observation.
+// Only the replay cutoff is local. Milestones are backed by observations from the Studio.
 const stages = [
-  ['target','Target','Choose where cFS will run'], ['boot','Boot','Start cFS for the first time'],
-  ['event','Event','Send a first message and get an answer'], ['app','App','Create your own app'],
-  ['command','Command','Teach your app a new command'], ['send','Send','Send your new command'],
-  ['sensor','Sensor','Give your app sensor data'], ['test','Test','Check that everything works'],
-  ['board','Board','Run it on the real board']
+  ['target', 'Target', 'Choose where cFS will run', 'setup'],
+  ['boot', 'Boot', 'Start cFS for the first time', 'boot'],
+  ['event', 'Event', 'Send a first message and get an answer', 'ground'],
+  ['app', 'App', 'Create your own app', 'architecture'],
+  ['command', 'Command', 'Teach your app a new command', 'code'],
+  ['send', 'Send', 'Send your new command', 'ground'],
+  ['sensor', 'Sensor', 'Give your app sensor data', 'simulation'],
+  ['test', 'Test', 'Check that everything works', 'simulation'],
+  ['board', 'Board', 'Run it on the real board', 'board']
 ];
-const area = {target:'setup',board:'board',boot:'boot',event:'ground',send:'ground',app:'architecture',
-              command:'code',sensor:'simulation',test:'simulation'};
+
 export function stepUrl(step) {
   if (step === 'target') return '/';
   if (step === 'board') return '/?target=physical';
-  return '/studio#'+step;
+  return '/studio#' + step;
 }
+
 const bar = document.querySelector('#flight-guide');
+const cutoffKey = 'fs-journey-reset';
 const tick = '<svg class="fs-tick" viewBox="0 0 16 16" aria-hidden="true"><path pathLength="1" d="m3 8 3 3 7-7"/></svg>';
-let signature='', data, requestNumber=0, since=0, previousDone=[];
-try {since=Number(localStorage.getItem('fs-journey-reset')) || 0;} catch {}
-export function journeyResetAt() {return since;}
-function render() {
+const arrow = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h11M8 3l5 5-5 5"/></svg>';
+let since = 0, observations, requestSequence = 0;
+try { since = Number(localStorage.getItem(cutoffKey)) || 0; } catch {}
+export function journeyResetAt() { return since; }
+
+function currentArea() {
+  if (document.body.classList.contains('code-only')) return 'code';
+  if (document.body.dataset.view) return document.body.dataset.view;
+  return document.querySelector('#targets [aria-pressed=true]')?.dataset.target === 'physical' ? 'board' : 'setup';
+}
+
+function update() {
   if (!bar) return;
-  const done = stages.map(([id]) => Boolean(data?.steps[id]?.done && data.steps[id].observed_at > since));
-  const count=done.filter(Boolean).length, next=stages.findIndex((_,i)=>!done[i]);
-  const view=document.body.classList.contains('code-only')?'code':document.body.dataset.view||
-    (new URLSearchParams(location.search).get('target')==='physical'?'board':'setup');
-  const key=JSON.stringify([done,view]);if(key===signature)return;
-  signature=key;
-  const focus=bar.contains(document.activeElement)?document.activeElement.dataset.flight:null;
-  document.body.dataset.journeyStep=stages[next]?.[0] || 'complete';
-  bar.innerHTML='<strong>First flight <output>'+count+'/9</output></strong><div class="flight-stops">'+stages.map(([id,label,tip],i)=>
-    (i ? '<span aria-hidden="true" class="flight-line'+(done[i-1] && done[i]?' complete':'')+'"></span>' : '')+
-    '<a href="'+stepUrl(id)+'" data-flight="'+id+'" title="'+tip+'" aria-label="'+label+(done[i]?', complete':'')+'" '+(i===next?'aria-current="step" ':'')+
-    'class="'+(done[i]?'done ':'')+(done[i] && !previousDone[i]?'confirmed':'')+'"><i>'+(done[i]?tick:i+1)+'</i><span>'+label+'</span></a>').join('')+
-    '</div><div class="flight-guide-actions">'+(next>=0&&area[stages[next][0]]!==view?'<a class="flight-next" href="'+stepUrl(stages[next][0])+'">Next '+stages[next][1]+' →</a>':'')+
-    '<button type="button" data-flight="reset" title="Start over" aria-label="Start over"><svg viewBox="0 0 24 24"><path d="M4 10a8 8 0 1 1 1 7M4 4v6h6"/></svg></button></div>';
-  previousDone=done;
-  if(focus)bar.querySelector('[data-flight="'+focus+'"]')?.focus({preventScroll:true});
-}
-export async function refreshJourney() {
-  if(!bar)return;
-  const request=++requestNumber;
-  const selected=document.querySelector('#targets .target-option[aria-pressed=true],.target-switch button[aria-pressed=true]')?.dataset.target;
-  try {
-    const result=await fetch('/api/journey'+(selected?'?target='+encodeURIComponent(selected):''),{cache:'no-store'});
-    if(!result.ok)return;
-    const next=await result.json();if(request!==requestNumber)return;
-    data=next;render();
-  } catch { /* Keep the last confirmed evidence while the server reconnects. */ }
-}
-if(bar){
-  bar.setAttribute('aria-label','First flight');
-  bar.addEventListener('click',event=>{
-    if(!event.target.closest('[data-flight="reset"]'))return;
-    since=Date.now()/1000;
-    try{localStorage.setItem('fs-journey-reset',String(since));}catch{}
-    location.assign('/');
+  const done = stages.map(([id]) => {
+    const fact = observations?.steps[id];
+    return !!fact?.done && fact.observed_at > since;
   });
-  window.addEventListener('storage',e=>{if(e.key==='fs-journey-reset'){since=Number(e.newValue)||0;render();}});
-  window.addEventListener('flight:updated',refreshJourney);
-  new MutationObserver(render).observe(document.body,{attributes:true,attributeFilter:['data-view','class']});
-  render();refreshJourney();
-  setInterval(()=>{if(!document.hidden)refreshJourney();},3500);
+  const next = done.indexOf(false);
+  document.body.dataset.journeyStep = stages[next]?.[0] || 'complete';
+  bar.querySelector('output').textContent = done.filter(Boolean).length + '/9';
+
+  stages.forEach(([id,label], i) => {
+    const link = bar.querySelector('[data-flight="' + id + '"]');
+    if (link.classList.contains('done') !== done[i]) {
+      link.classList.toggle('done', done[i]);
+      link.querySelector('.flight-number').innerHTML = done[i] ? tick : String(i+1);
+    }
+    link.setAttribute('aria-label', done[i] ? label + ', complete' : label);
+    if (next === i) link.setAttribute('aria-current','step');
+    else link.removeAttribute('aria-current');
+    if (i) link.previousElementSibling.classList.toggle('complete', done[i-1] && done[i]);
+  });
+
+  const nextLink = bar.querySelector('.flight-next');
+  nextLink.hidden = next < 0 || stages[next][3] === currentArea();
+  if (next >= 0) {
+    const [id,label,title] = stages[next];
+    nextLink.href = stepUrl(id);
+    nextLink.title = title;
+    nextLink.querySelector('b').textContent = label;
+  }
+}
+
+export async function refreshJourney() {
+  if (!bar) return;
+  const number = ++requestSequence;
+  const selector = '#targets [aria-pressed=true], .target-switch [aria-pressed=true]';
+  const target = document.querySelector(selector)?.dataset.target;
+  const query = target ? '?target=' + encodeURIComponent(target) : '';
+  try {
+    const response = await fetch('/api/journey' + query, {cache:'no-store'});
+    if (!response.ok) return;
+    const snapshot = await response.json();
+    if (number !== requestSequence) return;
+    observations = snapshot;
+    update();
+  } catch { /* Retain the last observation while reconnecting. */ }
+}
+
+if (bar) {
+  bar.setAttribute('aria-label','First flight');
+  bar.innerHTML = '<span class="flight-count">First flight <output>0/9</output></span><div class="flight-stops">' +
+    stages.map(([id,label,title], i) => (i ? '<span aria-hidden="true" class="flight-line"></span>' : '') +
+      '<a href="' + stepUrl(id) + '" data-flight="' + id + '" title="' + title + '"><span class="flight-number" aria-hidden="true">' +
+      (i+1) + '</span><span class="flight-label">' + label + '</span></a>').join('') +
+    '</div><div class="flight-guide-actions"><a class="flight-next" hidden>Next <b></b>' + arrow + '</a>' +
+    '<button type="button" data-flight="reset" title="Start over" aria-label="Start over"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10a8 8 0 1 1 1 7M4 4v6h6"/></svg></button></div>';
+
+  bar.querySelector('[data-flight="reset"]').addEventListener('click', () => {
+    since = Date.now()/1000;
+    try { localStorage.setItem(cutoffKey, String(since)); } catch {}
+    update();
+  });
+  window.addEventListener('storage', e => {
+    if (e.key === cutoffKey) { since = Number(e.newValue) || 0; update(); }
+  });
+  window.addEventListener('flight:updated', refreshJourney);
+  new MutationObserver(update).observe(document.body, {attributes:true, attributeFilter:['data-view','class']});
+  update();
+  refreshJourney();
+  setInterval(() => { if (!document.hidden) refreshJourney(); }, 3500);
 }

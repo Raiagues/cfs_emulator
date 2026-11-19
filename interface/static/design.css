@@ -144,20 +144,53 @@
   --orbit-night: #386699;
   --orbit-shadow: #d9e1e4;
 }
-#flight-guide {display:flex;align-items:center;gap:clamp(8px,1.2vw,20px);height:var(--fs-guide-height);min-height:var(--fs-guide-height);box-sizing:border-box;
-  padding:0 16px;margin:0;border-bottom:1px solid var(--fs-line);background:var(--fs-surface);color:var(--fs-text);font:500 var(--fs-label) var(--fs-sans)}
-#flight-guide strong {white-space:nowrap;font-weight:600}#flight-guide output {font:var(--fs-caption) var(--fs-mono);color:var(--fs-muted)}
-.flight-stops {display:flex;flex:1;align-items:center;min-width:0}
-.flight-line {flex:1;min-width:1px;height:1px;background:var(--fs-line)}
-.flight-line.complete {background:var(--fs-success)}
-.flight-stops a,.flight-next {color:var(--fs-muted);text-decoration:none}
-.flight-stops a {background:var(--fs-surface);border:1px solid var(--fs-line);border-radius:var(--fs-radius-pill);height:26px;box-sizing:border-box;padding:0 9px;display:flex;gap:5px;align-items:center}
-.flight-stops i {display:grid;place-items:center;font:var(--fs-small) var(--fs-mono)}
-.flight-stops a:not(.confirmed) .fs-tick path {animation:none}
-.flight-stops .done {color:var(--fs-success);border-color:color-mix(in srgb,var(--fs-success) 55%,var(--fs-line))}
-.flight-stops [aria-current] {color:var(--fs-accent);border-color:var(--fs-accent)}.flight-stops [aria-current] i{animation:fs-wait 1.8s ease-in-out infinite}
-.flight-guide-actions {margin-left:auto;display:flex;align-items:center;gap:8px}.flight-guide-actions a,.flight-guide-actions button {display:inline-flex;align-items:center;white-space:nowrap;background:var(--fs-panel);border:1px solid var(--fs-line);border-radius:var(--fs-radius-control);padding:4px 8px;color:var(--fs-text);font:500 var(--fs-caption) var(--fs-sans);cursor:pointer}
-.flight-guide-actions button {padding:4px;border-radius:var(--fs-radius-pill)}.flight-guide-actions svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6}
-@media(max-width:950px){.flight-stops a{padding:0 6px}}
-@media(max-width:810px){.flight-stops a:not([aria-current]) span{display:none}.flight-stops a{min-width:22px;justify-content:center}.flight-guide-actions .flight-next{font-size:var(--fs-small)}}
-@media(max-width:530px){#flight-guide{gap:4px;padding:0 5px}.flight-stops a{min-width:17px;height:22px;padding:1px 3px}.flight-stops a span{display:none}.flight-guide-actions{gap:2px}}
+/* The connectors fill the space between individually focusable milestones. */
+#flight-guide {
+  display:flex; align-items:center; flex:none; gap:16px;
+  height:var(--fs-guide-height); box-sizing:border-box; padding:0 20px;
+  border-bottom:1px solid var(--fs-line); background:var(--fs-surface);
+  color:var(--fs-text); font:500 var(--fs-label)/1 var(--fs-sans);
+}
+.flight-count,.flight-guide-actions,.flight-stops,.flight-stops a,.flight-next {display:flex;align-items:center}
+.flight-count,.flight-guide-actions {flex:none;gap:8px;white-space:nowrap}
+.flight-count output {font:400 var(--fs-caption) var(--fs-mono);color:var(--fs-muted)}
+.flight-stops {flex:1;min-width:0}
+.flight-line {height:2px;flex:1;min-width:4px;border-radius:var(--fs-radius-pill);background:var(--fs-line)}
+.flight-line.complete {background:color-mix(in srgb,var(--fs-success) 62%,var(--fs-line))}
+.flight-stops a {gap:6px;min-width:0;padding:3px 9px 3px 3px;border-radius:var(--fs-radius-pill);text-decoration:none;
+  font-size:var(--fs-caption);font-weight:400;color:var(--fs-muted)}
+.flight-stops a:hover {background:var(--fs-raised);color:var(--fs-text)}
+.flight-number {display:grid;place-items:center;flex:none;box-sizing:border-box;width:20px;height:20px;
+  border:1.5px solid var(--fs-line);border-radius:var(--fs-radius-pill);font:400 var(--fs-small) var(--fs-mono)}
+.flight-stops .done .flight-number {color:var(--fs-success);border-color:var(--fs-success);background:var(--fs-success-bg);
+  animation:fs-pop .32s ease-out,fs-ring .52s ease-out}
+.flight-number .fs-tick {width:12px;height:12px;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.flight-stops [aria-current] {background:var(--fs-accent-bg);color:var(--fs-accent)}
+.flight-stops [aria-current] .flight-number {border-color:var(--fs-accent);animation:flight-wait 2s ease-out infinite}
+@keyframes flight-wait {0%,75%,100% {box-shadow:0 0 0 0 transparent} 35% {box-shadow:0 0 0 3px color-mix(in srgb,var(--fs-accent) 18%,transparent)}}
+.flight-next {gap:6px;white-space:nowrap;height:28px;padding:0 10px;border-radius:var(--fs-radius-control);
+  background:var(--fs-accent);color:var(--fs-on-accent);font:400 var(--fs-label) var(--fs-sans);text-decoration:none}
+.flight-next b {font-weight:600}
+.flight-guide-actions button {display:grid;place-items:center;width:28px;height:28px;min-height:0;padding:0;
+  background:transparent;border:0;border-radius:var(--fs-radius-control);color:var(--fs-muted);cursor:pointer}
+.flight-guide-actions button:hover {background:var(--fs-raised);color:var(--fs-text)}
+.flight-guide-actions svg {width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+@media(max-width:950px) {
+  #flight-guide {gap:8px;padding-inline:10px}
+  .flight-stops a {gap:4px;padding-right:4px}
+}
+@media(max-width:805px) {
+  .flight-stops a:not([aria-current]) .flight-label {display:none}
+  .flight-stops a {padding:3px}
+}
+@media(max-width:550px) {
+  #flight-guide {gap:4px;padding-inline:5px}
+  .flight-count {flex-direction:column;align-items:flex-start;gap:2px}
+  .flight-line {min-width:1px}
+  .flight-stops .flight-label {display:none}
+  .flight-number {width:18px;height:18px}
+  .flight-stops a {padding:2px}
+  .flight-guide-actions {gap:0}
+  .flight-next {gap:3px;padding:0 4px;font-size:var(--fs-caption)}
+  .flight-next svg {display:none}
+}
