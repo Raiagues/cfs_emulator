@@ -144,7 +144,7 @@ export function mountFirstBoot(container,{api,target,onNext}) {
     const stage=steps.findIndex(([id])=>id===phase),job=data.job;
     const failed=job.status==='failed'||job.status==='cancelled',running=data.running;
     const focus=container.contains(document.activeElement)?document.activeElement.dataset.bootFocus:null;
-    const output=container.querySelector('.boot-console pre');
+    const output=container.querySelector('.boot-console pre:not([hidden])');
     const oldScroll=output?.scrollTop||0,atEnd=!output||output.scrollTop+output.clientHeight>=output.scrollHeight-4;
     const title=[names[target],data.hardware,data.os].join(' · ');
     const fragment=document.createElement('template');
@@ -168,13 +168,22 @@ export function mountFirstBoot(container,{api,target,onNext}) {
       ${layers.map(([id,name,glyph,chips,lit])=>`<button type="button" class="boot-layer" data-layer="${id}" data-boot-focus="${id}" title="${tooltips[id]}" aria-pressed="${id===(pick||auto)}" data-lit="${!!lit}"><span>${icon(glyph)}</span><strong>${escape(name)}</strong><span class="boot-chips">${chips.map(([text,on])=>chip(text,on)).join('')}</span></button>`).join('')}
       </section>
       <section class="boot-picture" data-kind="${pick||auto}" data-animating="${job.status==='running'&&!failed&&!running&&pausedAt==null}">${picture(pick||auto,data,layers)}</section></div>
-      <section class="boot-console"><button class="boot-disclosure" data-console data-boot-focus="console" aria-expanded="${consoleOpen}">${icon(consoleOpen?'chevron-down':'chevron-right')}Console <code>${escape(data.lines.at(-1)||'—')}</code></button>${consoleOpen?`<pre>${escape(data.lines.join('\n'))}</pre>`:''}</section>
+      <section class="boot-console" data-open="${consoleOpen}" aria-label="Boot console">
+        <div class="boot-console-sheet">
+          <div class="boot-console-heading">
+            <strong>${icon('terminal')}Console</strong>
+            <code aria-hidden="true">${consoleOpen?'':escape(data.lines.at(-1)||'')}</code>
+            <button class="boot-console-toggle" type="button" data-console data-boot-focus="console" aria-expanded="${consoleOpen}" aria-controls="boot-console-output">${icon(consoleOpen?'close':'expand')}${consoleOpen?'Close console':'Open console'}</button>
+          </div>
+          <pre id="boot-console-output" aria-label="Boot log" tabindex="0" ${consoleOpen?'':'hidden'}>${consoleOpen?escape(data.lines.join('\n')):''}</pre>
+        </div>
+      </section>
       <footer>${running?`<span class="boot-success">${drawnCheck}cFS is running</span><button class="primary" data-next data-boot-focus="next">Ground Station</button>`:(!data.verified||data.unverified)?'<a href="/">Check target</a>':failed||data.stopped||err?'<button data-retry data-boot-focus="retry">Retry first boot</button>':''}<output>${escape(err||job.error||'')}</output></footer></section>`;
     const next=fragment.content.firstElementChild, existing=container.firstElementChild;
     if(existing?.classList.contains('first-boot'))updateNode(existing,next);
     else container.replaceChildren(next);
     if(focus&&!container.contains(document.activeElement))container.querySelector(`[data-boot-focus="${CSS.escape(focus)}"]`)?.focus({preventScroll:true});
-    const nextOutput=container.querySelector('.boot-console pre');
+    const nextOutput=container.querySelector('.boot-console pre:not([hidden])');
     if(nextOutput)nextOutput.scrollTop=atEnd?nextOutput.scrollHeight:oldScroll;
     if(replayStart!=null&&pausedAt==null){
       const nextEvent=live.trace.find(event=>event.ms>ms);
@@ -217,7 +226,11 @@ export function mountFirstBoot(container,{api,target,onNext}) {
   };
   container.innerHTML='<section class="first-boot"><h1>First boot</h1></section>';
   const closeDetails=event=>{
-    if(event.key==='Escape' && (stateOpen||consoleOpen)){stateOpen=false;consoleOpen=false;draw();}
+    if(event.key==='Escape' && (stateOpen||consoleOpen)){
+      const fromConsole=consoleOpen&&event.target.closest('.boot-console');
+      stateOpen=false;consoleOpen=false;draw();
+      if(fromConsole)container.querySelector('[data-console]').focus({preventScroll:true});
+    }
   };
   container.addEventListener('click',click);
   container.addEventListener('keydown',closeDetails);poll();
