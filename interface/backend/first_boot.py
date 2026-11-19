@@ -27,35 +27,53 @@ def parse_boot_line(line):
     return None
 
 
+def _record(job, line="", **change):
+    """Only record transitions. Repeated compiler and EVS output stays in the console."""
+    now = time.time()
+    elapsed = round(1000 * max(0, now - job.get("started", now)))
+    trace = job.setdefault("boot_trace", [])
+    if trace and trace[-1].get("fact", {}).get("state") == "OPERATIONAL":
+        return
+    trace.append({"ms": max(elapsed, trace[-1]["ms"] if trace else 0), "line": line, **change})
+
+
 def observe(hardware, job, line):
     """Called under the job lock. Preserve observations as console scrollback rolls over."""
     if job["action"] not in {"first-boot", "run"}:
         return
     if job.get("phase") == "build":
         match = PERCENT.search(line)
-        if match:
-            job["build_percent"] = min(100, max(job.get("build_percent", 0), int(match[1])))
+        if match and min(100, int(match[1])) > job.get("build_percent", -1):
+            job["build_percent"] = min(100, int(match[1]))
+            _record(job, line, percent=job["build_percent"])
         return
     if job["action"] == "first-boot" and job.get("phase") not in ("copy", "run"):
         return
     if line == "[deploy] Release uploaded":
         job["phase"] = "run"
+        _record(job, line, phase="run")
         return
     fact = parse_boot_line(line)
     if not fact:
         return
     # Journal output is scoped to the new systemd invocation by HardwareManager.
     facts = job.setdefault("flight", {"states": [], "initialized": {}, "process_started": False})
+    changed = not facts["process_started"]
     facts["process_started"] = True
     if "app" in fact:
+        changed |= fact["app"] not in facts["initialized"]
         facts["initialized"].setdefault(fact["app"], fact)
-    if "state" in fact and fact["state"] not in facts["states"]:
+    new_state = "state" in fact and fact["state"] not in facts["states"]
+    if new_state:
         facts["states"].append(fact["state"])
-        if fact["state"] == "OPERATIONAL":
-            hardware._save("operational-" + job["target"] + ".json",
-                           {"run_id": job["id"], "time": time.time(), "target": job["target"],
-                            "connection": job.get("connection"), "instance": job.get("instance"),
-                            "apps": job.get("boot_apps"), "flight": facts})
+    if changed or new_state:
+        _record(job, line, fact=fact)
+    if new_state and fact["state"] == "OPERATIONAL":
+        hardware._save("operational-" + job["target"] + ".json",
+                       {"run_id": job["id"], "time": time.time(), "target": job["target"],
+                        "started": job.get("started"), "boot_trace": job["boot_trace"],
+                        "connection": job.get("connection"), "instance": job.get("instance"),
+                        "apps": job.get("boot_apps"), "flight": facts})
 
 
 def _app_records(startup):
@@ -76,7 +94,7 @@ def snapshot(studio, target):
     if target not in {"native", "physical", "qemu"}:
         raise ValueError("Invalid boot target")
     connection = hardware._load("connection.json") if target == "physical" else None
-    jobs = [j for j in studio.jobs_snapshot()
+    jobs = [j for j in studio.jobs_snapshot(boot_trace=True)
             if j["target"] == target and j["action"] in {"first-boot", "run"}
             and (target != "physical" or hardware.same_board(j.get("connection"), connection))]
     job = jobs[-1] if jobs else {}
@@ -121,6 +139,7 @@ def snapshot(studio, target):
             "services": [name for name in SERVICES if (hardware.root / "cFS/cfe/modules" / name.lower()).is_dir()], "es_states": STATES, "flight": flight, "stopped": stopped,
             "running": live, "unverified": bool(unknown),
             "job": {k: job[k] for k in ("id", "status", "action", "phase", "build_percent", "error", "started") if k in job},
+            "trace": (job or (receipt if matching_receipt else {})).get("boot_trace", []),
             "lines": lines[-300:]}
 
 
@@ -132,6 +151,7 @@ def execute(studio, record, options, emit):
     def phase(name):
         with studio.lock:
             record["phase"] = name
+            _record(record, phase=name)
     hardware.assert_can_start(target, record.get("connection"))
     studio.ground.stop()
     phase("build")

@@ -31,6 +31,22 @@ class BootTest(unittest.TestCase):
         self.assertEqual(self.job["flight"]["states"], ["EARLY_INIT", "OPERATIONAL"])
         self.assertTrue(boot_observed(self.hardware, "native"))
 
+    def test_replay_records_only_new_build_and_flight_observations(self):
+        self.job["started"] = 100
+        lines = ["[ 12%] Building demo", "[ 10%] Building other", "CFE_PSP: startup",
+                 "EVS Port1 2000-001 9/2/TEST 4: Initialized", "CFE_ES_Main entering OPERATIONAL state"]
+        with patch("interface.backend.first_boot.time.time", return_value=102):
+            for line in lines[:2]:
+                observe(self.hardware, self.job, line)
+            self.job["phase"] = "run"
+            for line in lines[2:]:
+                observe(self.hardware, self.job, line)
+                observe(self.hardware, self.job, line)
+        trace = self.hardware._load("operational-native.json")["boot_trace"]
+        self.assertEqual([event["line"] for event in trace], [lines[0], *lines[2:]])
+        self.assertTrue(all(event["ms"] == 2000 for event in trace))
+        self.assertEqual(trace[-2]["fact"]["spacecraft"], 9)
+
     def test_event_uses_packet_identity_without_assuming_spacecraft_or_application(self):
         self.job["phase"] = "run"
         observe(self.hardware, self.job, "EVS Port2 1980-012-14:03:20.55 89/2/LIGHTING 7: Lighting initialized.")
@@ -41,7 +57,7 @@ class BootTest(unittest.TestCase):
         self.assertIsNone(parse_boot_line("EVS Port1 1980-012 66/1/DEMO 4: NOOP"))
 
     def test_boot_page_before_the_first_clone(self):
-        studio = SimpleNamespace(hardware=self.hardware, jobs_snapshot=lambda: [])
+        studio = SimpleNamespace(hardware=self.hardware, jobs_snapshot=lambda **kwargs: [])
         with patch.object(self.hardware, "profiles", return_value=[]):
             state = snapshot(studio, "native")
         self.assertEqual(state["apps"], [])
@@ -50,7 +66,7 @@ class BootTest(unittest.TestCase):
 
     def test_running_and_stopped_snapshot_preserve_startup_modules(self):
         h = self.hardware
-        studio = SimpleNamespace(hardware=h, jobs_snapshot=lambda: [self.job])
+        studio = SimpleNamespace(hardware=h, jobs_snapshot=lambda **kwargs: [self.job])
         # Capture the installed manifest independently of edits to the next mission.
         self.job.update(phase="run", started=1, boot_apps=[{"name": "sample_app", "task": "SAMPLE_APP"}])
         observe(h, self.job, "CFE_ES_Main: CFE_ES_Main entering OPERATIONAL state")
@@ -80,7 +96,7 @@ class BootTest(unittest.TestCase):
                            boot_apps=[], target=target)
                 observe(h, job, "CFE_ES_Main: CFE_ES_Main entering OPERATIONAL state")
                 # Reopening the server leaves a flight receipt, but no in-memory job.
-                studio = SimpleNamespace(hardware=h, jobs_snapshot=lambda: [])
+                studio = SimpleNamespace(hardware=h, jobs_snapshot=lambda **kwargs: [])
                 with patch.object(h, "profiles", return_value=[]), patch.object(h, "_flight_state") as probe:
                     probe.return_value = {"running": True, "service": "active", "pids": [71], "instance": instances[0]}
                     self.assertTrue(snapshot(studio, target)["running"])

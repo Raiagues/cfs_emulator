@@ -311,11 +311,13 @@ class Studio:
                 record['cancel'].set()
             return {'id': ident, 'status': record['status'], 'cancel_requested': record['cancel'].is_set()}
 
-    def jobs_snapshot(self):
+    def jobs_snapshot(self, *, boot_trace=False):
         jobs = []
         with self.lock:
             for job in self.jobs.values():
-                public = {key: value for key, value in job.items() if key not in ('cancel', 'thread', 'key', 'lines')}
+                public = {key: value for key, value in job.items() if key not in ('cancel', 'thread', 'key', 'lines', 'boot_trace')}
+                if boot_trace and 'boot_trace' in job:
+                    public['boot_trace'] = list(job['boot_trace'])
                 if 'flight' in job:
                     public['flight'] = deepcopy(job['flight'])
                 public['lines'] = list(job['lines'])
