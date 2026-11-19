@@ -13,6 +13,26 @@ ES = re.compile(r"(?:^|\bCFE_ES_Main:\s*)CFE_ES_Main (?:in|entering) (" + "|".jo
 EVENT = re.compile(r"\bEVS Port\d+\s+\S+\s+(\d+)/(\d+)/([A-Za-z_]\w*)\s+(\d+):\s*(.*)")
 INITIALIZED = re.compile(r"\b(?:initialized|initialization complete)\b", re.I)
 PERCENT = re.compile(r"\[\s*(\d{1,3})%\]")
+CATALOG_ACTIVITY = "Preparing the communication catalog for this build..."
+# The guest writes terminal instructions (colour, cursor positioning, OSC) to its serial port.
+TERMINAL_ESCAPE = re.compile(r"\x1b(?:\][^\x07\x1b]*(?:\x07|\x1b\\|$)|\[[0-?]*[ -/]*[@-~]|.)")
+CONTROLS = re.compile(r"[\x00-\x08\x0b-\x1f\x7f]")
+
+
+def console_text(line):
+    return CONTROLS.sub("", TERMINAL_ESCAPE.sub("", line.replace("␛", "\x1b").replace("␇", "\x07")))
+
+
+def guest_milestone(line):
+    """Ordered milestones from the emulator driver and the guest's own serial log."""
+    if " login:" in line or ("Started" in line and "OpenBSD Secure Shell server" in line):
+        return 5
+    if "Booting Linux on physical CPU" in line or "Linux version " in line or "systemd[1]:" in line:
+        return 4
+    for index, marker in enumerate(("Image ready.", "Disk copied.", "Disk ready."), 1):
+        if line.startswith("[emulator] " + marker):
+            return index
+    return 0
 
 
 def parse_boot_line(line):
@@ -41,23 +61,42 @@ def observe(hardware, job, line):
     """Called under the job lock. Preserve observations as console scrollback rolls over."""
     if job["action"] not in {"first-boot", "run"}:
         return
+    line = console_text(line)
     if job.get("phase") == "build":
         match = PERCENT.search(line)
         activity = None
-        if line.startswith(("-- Configuring", "-- Generating", "-- The C compiler identification")):
+        if line == CATALOG_ACTIVITY:
+            activity = "Indexing catalog"
+        elif line.startswith("Build ready:"):
+            activity = "Build installed"
+        elif line.startswith(("-- Configuring", "-- Generating", "-- The C compiler identification")):
             activity = "Configuring"
         elif line.startswith(("-- Installing:", "-- Up-to-date:", "Install the project")):
             activity = "Installing"
-        elif match and job.get("build_activity") != "Installing":
+        elif match and job.get("build_activity") not in {"Installing", "Build installed", "Indexing catalog"}:
             activity = "Compiling"
         update = {}
         if activity and activity != job.get("build_activity"):
             job["build_activity"] = update["activity"] = activity
-        if match and min(100, int(match[1])) > job.get("build_percent", -1):
-            job["build_percent"] = update["percent"] = min(100, int(match[1]))
+            if job.get("build_percent") is not None:
+                job["build_percent"] = update["percent"] = None
+        # A make subtarget may print 100% before installation and catalog extraction.
+        # In those phases there is no measured fraction of the remaining work.
+        if match and activity == "Compiling":
+            percent = int(match[1])
+            if percent < 100 and percent > (job.get("build_percent") or 0):
+                job["build_percent"] = update["percent"] = percent
+            elif percent == 100 and job.get("build_percent") is not None:
+                job["build_percent"] = update["percent"] = None
         trace = job.get("boot_trace", [])
         if update or (line.strip() and (not trace or len(trace) == 1 and not trace[0]["line"])):
             _record(job, line, **update)
+        return
+    if job.get("phase") == "boot":
+        milestone = guest_milestone(line)
+        if milestone > job.get("guest_stage", 0):
+            job["guest_stage"] = milestone
+            _record(job, line, guest_stage=milestone)
         return
     if job["action"] == "first-boot" and job.get("phase") not in ("copy", "run"):
         return
@@ -142,7 +181,9 @@ def snapshot(studio, target):
         # Before the first checkout there is no mission script to evaluate.
         has_source = (hardware.root / "cFS/sample_defs/targets.cmake").is_file()
         apps = _app_records(studio.workspace.mission.startup_text()) if has_source else []
-    lines = job.get("lines", [])
+    trace = (job or (receipt if matching_receipt else {})).get("boot_trace", [])
+    output = job.get("lines") if job else [event["line"] for event in trace if event.get("line")]
+    lines = [clean for line in (output or [])[-300:] if (clean := console_text(line)).strip()]
     return {"target": target, "verified": infrastructure.target_verified(hardware, target),
             "hardware": "This computer" if target == "native" else profile.get("board_label", "Board"),
             "architecture": platform.machine() if target == "native" else profile.get("board", ""),
@@ -150,9 +191,9 @@ def snapshot(studio, target):
             "apps": apps,
             "services": [name for name in SERVICES if (hardware.root / "cFS/cfe/modules" / name.lower()).is_dir()], "es_states": STATES, "flight": flight, "stopped": stopped,
             "running": live, "unverified": bool(unknown),
-            "job": {k: job[k] for k in ("id", "status", "action", "phase", "build_percent", "build_activity", "error", "started") if k in job},
-            "trace": (job or (receipt if matching_receipt else {})).get("boot_trace", []),
-            "lines": lines[-300:]}
+            "job": {k: job[k] for k in ("id", "status", "action", "phase", "guest_stage", "build_percent", "build_activity", "error", "started") if k in job},
+            "trace": trace,
+            "lines": lines}
 
 
 def execute(studio, record, options, emit):
@@ -172,7 +213,7 @@ def execute(studio, record, options, emit):
     build = hardware.execute("build", emit, cancel=cancel, **options)
     if cancel.is_set():
         raise ValueError("Build cancelled")
-    emit("Preparing the communication catalog for this build...")
+    emit(CATALOG_ACTIVITY)
     sensorless = bool(options.get("sensorless"))
     studio.freeze_catalog(build, sensorless)
     build_root = hardware.runtime / "sensorless" if sensorless else hardware.root

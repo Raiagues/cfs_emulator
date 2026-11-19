@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
-from interface.backend.first_boot import boot_observed, observe, parse_boot_line, snapshot
+from interface.backend.first_boot import CATALOG_ACTIVITY, boot_observed, console_text, observe, parse_boot_line, snapshot
 from hardware.manager import HardwareManager
 from hardware import infrastructure
 
@@ -55,6 +55,36 @@ class BootTest(unittest.TestCase):
         self.assertIsNone(parse_boot_line("SCH Lab Initialized"))
         self.assertIsNone(parse_boot_line("EVS Port1 1980-012 66/1/DEMO 4: Not initialized"))
         self.assertIsNone(parse_boot_line("EVS Port1 1980-012 66/1/DEMO 4: NOOP"))
+
+    def test_make_percentage_does_not_carry_into_install_or_catalog(self):
+        for line in ("[ 86%] Building example.o", "[100%] Built target example",
+                     "-- Installing: /mission/core-cpu1", CATALOG_ACTIVITY):
+            observe(self.hardware, self.job, line)
+        phases = [(e.get("activity"), e.get("percent")) for e in self.job["boot_trace"]]
+        self.assertEqual(phases, [("Compiling", 86), (None, None), ("Installing", None), ("Indexing catalog", None)])
+        self.assertIsNone(self.job["build_percent"])
+        observe(self.hardware, self.job, "[100%] unrelated subprocess")
+        self.assertEqual(self.job["build_activity"], "Indexing catalog")
+        self.assertEqual(len(self.job["boot_trace"]), 4)
+
+    def test_serial_observations_and_console_strip_terminal_commands(self):
+        self.job.update(target="qemu", phase="boot")
+        dirty = "[\x1b[0;32m OK \x1b[0m] Started ssh.service - OpenBSD Secure Shell server."
+        lines = ["[emulator] Disk ready. Starting the guest kernel.", "Booting Linux on physical CPU",
+                 "[Boot: 222s] SSH check: Connection closed by 127.0.0.1 port 2222", dirty, dirty,
+                 "\x1b[!p\x1b]104\x07\x1b[?7h\x1b[6n\x1b[32766;32766H", " "]
+        for line in lines:
+            observe(self.hardware, self.job, line)
+        self.assertEqual([e["guest_stage"] for e in self.job["boot_trace"]], [3, 4, 5])
+        self.assertNotIn("flight", self.job)
+        self.assertEqual(console_text(lines[-2]), "")
+        self.assertEqual(console_text("␛]104␇␛[!pLinux"), "Linux")
+        self.job.update(lines=lines, boot_apps=[])
+        studio = SimpleNamespace(hardware=self.hardware, jobs_snapshot=lambda **kwargs: [self.job])
+        with patch.object(self.hardware, "profiles", return_value=[]):
+            boot = snapshot(studio, "qemu")
+        self.assertEqual(boot["lines"][-1], "[ OK ] Started ssh.service - OpenBSD Secure Shell server.")
+        self.assertEqual(self.job["lines"][-3], dirty)
 
     def test_boot_page_before_the_first_clone(self):
         studio = SimpleNamespace(hardware=self.hardware, jobs_snapshot=lambda **kwargs: [])
