@@ -8,12 +8,24 @@ const tooltips={apps:'Mission applications',cfe:'Core Flight Executive',osal:'Op
 const serviceIcons={ES:['play','apps'],EVS:['antenna','events'],SB:['workflow','messages'],TBL:['table','tables'],TIME:['clock','clock'],FS:['files','files']};
 const stagesFor=target=>target==='native'?[['build','Build cFS'],['run','Start cFS']]: target==='physical'?[['build','Cross-build'],['copy','Copy to board'],['run','Start cFS service']]:[['build','Build cFS'],['boot','Start emulator'],['run','Start cFS']];
 const chip=(name,lit)=>`<span class="boot-chip" data-lit="${!!lit}">${escape(name)}</span>`;
+const esLabels={EARLY_INIT:'Early init',CORE_STARTUP:'Starting core',CORE_READY:'Core ready',APPS_INIT:'Loading apps',OPERATIONAL:'Operational'};
+const guestLabels=['Starting emulator','Opening disk','Preparing SSH key','Starting kernel','Booting Linux','Waiting for SSH'];
+
+export function stageProgress(id,job,states) {
+  if(id==='build'){
+    const measured=job.build_activity==='Compiling' && Number.isFinite(job.build_percent) && job.build_percent<100;
+    return {label:job.build_activity||'Preparing build',percent:measured?job.build_percent:null};
+  }
+  const label=id==='boot'?guestLabels[job.guest_stage||0]:id==='copy'?'Transferring files':esLabels[states.at(-1)]||'Starting process';
+  return {label,percent:null};
+}
 
 function model(data) {
   const {flight,job}=data,initialized=flight.initialized||{},es=flight.states||[];
   const phase=job.phase||(job.action==='run' || es.length?'run':'build');
   const process=Boolean(flight.process_started);
   const machine=process || phase==='copy' || (phase==='run' && data.target!=='native');
+  const guest=phase==='boot'?job.guest_stage||0:0;
   const core=es.includes('CORE_READY');
   const apps=data.apps.map(app=>[app.name,Boolean(initialized[app.task])]);
   const svc=data.services.map(name=>[name,core || Boolean(initialized['CFE_'+name])]);
@@ -22,8 +34,8 @@ function model(data) {
     ['cfe','cFE','layers',svc,es.includes('CORE_STARTUP') || core],
     ['osal','OSAL','layers',['tasks','queues','files','timers'].map(x=>[x,process]),process],
     ['psp','PSP','cpu',[['pc-linux',process]],process],
-    ['os',data.os,'terminal',[['Linux',machine]],machine],
-    ['hw',data.hardware,data.target==='native'?'monitor':'circuit',[[data.architecture,machine]],machine]
+    ['os',data.os,'terminal',[['Linux',machine||guest>=4]],machine||guest>=4],
+    ['hw',data.hardware,data.target==='native'?'monitor':'circuit',[[data.architecture,machine||guest>=3]],machine||guest>=3]
   ];
   return {layers,phase,auto:layers.find(row=>row[4])?.[0]||'build',es};
 }
@@ -61,7 +73,29 @@ function picture(id,data,layers) {
       <div class="boot-app-bus"><div class="boot-app-row">${draw('ci_lab')}${draw('to_lab')}</div>
       <span class="boot-sb">Software Bus</span><div class="boot-app-row">${draw('sch_lab')}${draw('sample_app')}<span class="boot-slot">+ App</span></div></div></div>`;
   }
-  return `<header><span class="boot-picture-icon">${icon(layer?.[2]||'build')}</span><h2 title="${tooltips[id]}">${escape(name)}</h2><i class="boot-picture-dot" data-lit="${!!layer?.[4] || id==='build'}"></i></header><div class="boot-figure">${figure}</div>`;
+  return `<header><span class="boot-picture-icon">${icon(layer?.[2]||'build')}</span><h2 title="${tooltips[id]}">${escape(name)}</h2><i class="boot-picture-dot" data-lit="${!!layer?.[4] || id==='build'}"></i></header><div class="boot-figure" data-scene="${id}">${figure}</div>`;
+}
+
+// Keep live SVG strokes, focused buttons and scrolling console nodes across polls.
+function updateNode(current,next){
+  if(current.isEqualNode(next))return;
+  if(current.nodeName!==next.nodeName || current.getAttribute?.('data-scene')!==next.getAttribute?.('data-scene')){
+    current.replaceWith(next);
+    return;
+  }
+  if(current.nodeType===Node.TEXT_NODE){current.nodeValue=next.nodeValue;return;}
+  for(const attr of Array.from(current.attributes)){
+    if(!next.hasAttribute(attr.name))current.removeAttribute(attr.name);
+  }
+  for(const attr of next.attributes){
+    if(current.getAttribute(attr.name)!==attr.value)current.setAttribute(attr.name,attr.value);
+  }
+  const children=Array.from(next.childNodes);
+  children.forEach((child,i)=>{
+    if(current.childNodes[i])updateNode(current.childNodes[i],child);
+    else current.append(child);
+  });
+  while(current.childNodes.length>children.length)current.lastChild.remove();
 }
 
 // Replay only observations that the backend had received at this instant.
@@ -72,7 +106,8 @@ export function bootFrame(snapshot,milliseconds) {
     if(event.ms>milliseconds) break;
     if(event.line) lines.push(event.line);
     if(event.phase) job.phase=event.phase;
-    if(event.percent!=null) job.build_percent=event.percent;
+    if('percent' in event) job.build_percent=event.percent;
+    if(event.guest_stage) job.guest_stage=event.guest_stage;
     if(event.activity) job.build_activity=event.activity;
     if(event.fact) {
       flight.process_started=true;
@@ -88,7 +123,7 @@ function clock(milliseconds) {
 }
 export function mountFirstBoot(container,{api,target,onNext}) {
   let disposed=false,timer=null,requested=false,data=null,pick='',consoleOpen=false,stateOpen=false,err='';
-  let live=null, pausedAt=null, replayStart=null;
+  let live=null, pausedAt=null, replayStart=null, replayTimer=null;
   function elapsed() {
     if(pausedAt!=null) return pausedAt;
     if(replayStart!=null) return performance.now()-replayStart;
@@ -99,6 +134,7 @@ export function mountFirstBoot(container,{api,target,onNext}) {
     return Math.max(0,Date.now()-live.job.started*1000);
   }
   const draw=()=>{
+    clearTimeout(replayTimer);
     if(!live) return;
     const ms=elapsed();
     if(replayStart!=null && pausedAt==null && ms>=(live.trace.at(-1)?.ms||0)) replayStart=null;
@@ -119,24 +155,31 @@ export function mountFirstBoot(container,{api,target,onNext}) {
       <button class="boot-control" data-replay data-boot-focus="replay" aria-label="Replay boot" title="Replay boot" ${live.trace.length<2?'disabled':''}>${icon('rotate')}</button></header>
       <div class="boot-stages">${steps.map(([id,label],index)=>{
         const done=running || index<stage,active=!done&&index===stage&&Boolean(job.id||es.length),error=active&&(failed||data.stopped||data.unverified);
-        const percent=active&&id==='build'?job.build_percent:null;
-        return `<div class="boot-stage" data-state="${done?'done':error?'failed':active?'active':'waiting'}"><i>${done?drawnCheck:index+1}</i><div><header><strong>${label}</strong><small>${done?(id==='run'?'OPERATIONAL':'Ready'):error?(data.unverified?'Unverified':data.stopped?'Stopped':'Failed'):percent!=null?[job.build_activity,percent+'%'].filter(Boolean).join(' '):active?(id==='build'&&job.build_activity||'Running'):''}</small></header><div class="boot-meter"><b style="width:${done?100:percent||0}%"></b></div></div></div>`;
+        const {label:activity,percent}=stageProgress(id,job,es);
+        const status=done?(id==='run'?'Operational':'Ready'):error?(data.unverified?'Unverified':data.stopped?'Stopped':'Failed'):active?(percent==null?activity:activity+' '+percent+'%'):'';
+        const run=id==='run',state=done?'done':error?'failed':active?'active':'waiting';
+        const meter=run?`<span class="boot-segments" aria-hidden="true">${data.es_states.map(s=>`<b data-lit="${es.includes(s)}"></b>`).join('')}</span>`:
+          `<span class="boot-meter" data-indeterminate="${active&&!error&&percent==null}"><b style="width:${done?100:percent||0}%"></b></span>`;
+        const content=`<i>${done?drawnCheck:index+1}</i><span class="boot-stage-body"><span class="boot-stage-caption"><strong>${label}</strong><small>${escape(status)}</small>${run?icon(stateOpen?'chevron-down':'chevron-right'):''}</span>${meter}</span>`;
+        const details=run&&stateOpen?`<div class="boot-milestones" id="boot-milestones"><h2>Executive Services</h2>${data.es_states.map(s=>`<div data-lit="${es.includes(s)}" title="${s}"><i>${es.includes(s)?drawnCheck:''}</i>${escape(esLabels[s]||s)}</div>`).join('')}</div>`:'';
+        return `<div class="boot-stage" data-state="${state}" data-stage="${id}">${run?`<button data-states type="button" data-boot-focus="states" aria-expanded="${stateOpen}" title="Executive Services milestones">${content}</button>`:`<div class="boot-stage-content">${content}</div>`}${details}</div>`;
       }).join('')}</div>
       <div class="boot-layout"><section class="boot-stack"><h2>cFS · layer by layer</h2>
       ${layers.map(([id,name,glyph,chips,lit])=>`<button type="button" class="boot-layer" data-layer="${id}" data-boot-focus="${id}" title="${tooltips[id]}" aria-pressed="${id===(pick||auto)}" data-lit="${!!lit}"><span>${icon(glyph)}</span><strong>${escape(name)}</strong><span class="boot-chips">${chips.map(([text,on])=>chip(text,on)).join('')}</span></button>`).join('')}
-      <button class="boot-disclosure" data-states data-boot-focus="states" aria-expanded="${stateOpen}">${icon(stateOpen?'chevron-down':'chevron-right')}ES state <code>${escape(es.at(-1)||'—')}</code></button>
-      ${stateOpen?`<div class="boot-es">${data.es_states.map(x=>`<span data-lit="${es.includes(x)}">${x}</span>`).join('')}</div>`:''}</section>
-      <section class="boot-picture" data-kind="${pick||auto}">${picture(pick||auto,data,layers)}</section></div>
+      </section>
+      <section class="boot-picture" data-kind="${pick||auto}" data-animating="${job.status==='running'&&!failed&&!running&&pausedAt==null}">${picture(pick||auto,data,layers)}</section></div>
       <section class="boot-console"><button class="boot-disclosure" data-console data-boot-focus="console" aria-expanded="${consoleOpen}">${icon(consoleOpen?'chevron-down':'chevron-right')}Console <code>${escape(data.lines.at(-1)||'—')}</code></button>${consoleOpen?`<pre>${escape(data.lines.join('\n'))}</pre>`:''}</section>
-      <footer>${running?`<span class="boot-success">${drawnCheck}cFS is running</span><button class="primary" data-next data-boot-focus="next">Next · Ground Station</button>`:(!data.verified||data.unverified)?'<a href="/">Check target</a>':failed||data.stopped||err?'<button data-retry data-boot-focus="retry">Retry first boot</button>':''}<output>${escape(err||job.error||'')}</output></footer></section>`;
+      <footer>${running?`<span class="boot-success">${drawnCheck}cFS is running</span><button class="primary" data-next data-boot-focus="next">Ground Station</button>`:(!data.verified||data.unverified)?'<a href="/">Check target</a>':failed||data.stopped||err?'<button data-retry data-boot-focus="retry">Retry first boot</button>':''}<output>${escape(err||job.error||'')}</output></footer></section>`;
     const next=fragment.content.firstElementChild, existing=container.firstElementChild;
-    if(existing?.children.length!==next.children.length)container.replaceChildren(next);
-    else Array.from(next.children).forEach((node,i)=>{
-      const current=existing.children[i];if(!current.isEqualNode(node))current.replaceWith(node);
-    });
-    if(focus)container.querySelector(`[data-boot-focus="${CSS.escape(focus)}"]`)?.focus({preventScroll:true});
+    if(existing?.classList.contains('first-boot'))updateNode(existing,next);
+    else container.replaceChildren(next);
+    if(focus&&!container.contains(document.activeElement))container.querySelector(`[data-boot-focus="${CSS.escape(focus)}"]`)?.focus({preventScroll:true});
     const nextOutput=container.querySelector('.boot-console pre');
     if(nextOutput)nextOutput.scrollTop=atEnd?nextOutput.scrollHeight:oldScroll;
+    if(replayStart!=null&&pausedAt==null){
+      const nextEvent=live.trace.find(event=>event.ms>ms);
+      if(nextEvent)replayTimer=setTimeout(draw,Math.max(16,nextEvent.ms-ms));
+    }
   };
   async function start(){
     requested=true;err='';
@@ -154,7 +197,9 @@ export function mountFirstBoot(container,{api,target,onNext}) {
     if(!disposed)timer=setTimeout(poll,600);
   }
   const click=async event=>{
-    const button=event.target.closest('button');if(!button)return;
+    const button=event.target.closest('button');
+    if(!button){if(stateOpen&&!event.target.closest('.boot-milestones')){stateOpen=false;draw();}return;}
+    if(!button.hasAttribute('data-states'))stateOpen=false;
     if(button.dataset.layer)pick=pick===button.dataset.layer?'':button.dataset.layer;
     else if(button.hasAttribute('data-replay')){replayStart=performance.now();pausedAt=null;pick='';}
     else if(button.hasAttribute('data-pause')){
@@ -171,6 +216,10 @@ export function mountFirstBoot(container,{api,target,onNext}) {
     draw();
   };
   container.innerHTML='<section class="first-boot"><h1>First boot</h1></section>';
-  container.addEventListener('click',click);poll();
-  return ()=>{disposed=true;clearTimeout(timer);container.removeEventListener('click',click);};
+  const closeDetails=event=>{
+    if(event.key==='Escape' && (stateOpen||consoleOpen)){stateOpen=false;consoleOpen=false;draw();}
+  };
+  container.addEventListener('click',click);
+  container.addEventListener('keydown',closeDetails);poll();
+  return ()=>{disposed=true;clearTimeout(timer);clearTimeout(replayTimer);container.removeEventListener('click',click);container.removeEventListener('keydown',closeDetails);};
 }

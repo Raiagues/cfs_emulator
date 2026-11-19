@@ -13,7 +13,7 @@ body[data-view=boot] .execution-toolbar,body[data-view=boot] #operation-status,b
 .first-boot h2 {font:500 var(--fs-heading)/1.3 var(--fs-sans);}
 .boot-stage strong,.boot-layer strong {font:500 var(--fs-body)/1.3 var(--fs-sans);}
 .first-boot svg {width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
-.boot-title,.boot-stage header,.boot-picture header,.boot-disclosure,.first-boot footer,.boot-success {display:flex;align-items:center;gap:10px;}
+.boot-title,.boot-stage-caption,.boot-picture header,.boot-disclosure,.first-boot footer,.boot-success {display:flex;align-items:center;gap:10px;}
 .boot-title {gap:14px;}
 .boot-title>span {display:flex;align-items:center;gap:8px;color:var(--fs-text);font-size:var(--fs-label);background:var(--fs-panel);padding:6px 10px;border-radius:var(--fs-radius-control);}
 .boot-title>span svg {color:var(--fs-success);}
@@ -23,26 +23,31 @@ body[data-view=boot] .execution-toolbar,body[data-view=boot] #operation-status,b
 .boot-control:disabled {opacity:.45;}
 .boot-stages {display:flex;gap:clamp(15px,3vw,40px);}
 .boot-stage,.boot-stack,.boot-picture,.boot-console,.boot-layer {background:var(--fs-panel);border:1px solid var(--fs-line);border-radius:var(--fs-radius-card);}
-.boot-stage {flex:1;position:relative;min-width:0;padding:10px 14px;display:flex;align-items:center;gap:12px;}
+.boot-stage {flex:1;position:relative;min-width:0;padding:0;display:flex;align-items:stretch;}
+.boot-stage-content,.boot-stage>button {display:flex;align-items:center;gap:12px;width:100%;padding:10px 14px;}
+.boot-stage>button {text-align:left;border:0;background:transparent;color:inherit;border-radius:inherit;}
+.boot-stage-body {flex:1;min-width:0;}
+.boot-stage-caption>svg {width:12px;height:12px;color:var(--fs-muted);}
 .boot-stage:not(:last-child)::after {content:'';position:absolute;left:100%;top:50%;width:clamp(15px,3vw,40px);border-top:2px solid var(--fs-line);}
 .boot-stage[data-state=done]:not(:last-child)::after {border-color:var(--fs-success);}
-.boot-stage i {position:relative;display:grid;place-items:center;width:30px;height:30px;flex:none;border:1px solid var(--fs-line);border-radius:var(--fs-radius-pill);font:var(--fs-caption) var(--fs-mono);color:var(--fs-muted);}
+.boot-stage-content>i,.boot-stage>button>i {position:relative;display:grid;place-items:center;width:30px;height:30px;flex:none;border:1px solid var(--fs-line);border-radius:var(--fs-radius-pill);font:var(--fs-caption) var(--fs-mono);color:var(--fs-muted);}
 .boot-stage[data-state=active] {border-color:var(--fs-accent);}
-.boot-stage[data-state=active] i::after {content:'';position:absolute;inset:-1px;border:2px solid transparent;border-top-color:var(--fs-accent);border-radius:inherit;animation:boot-spin .75s linear infinite;}
-.boot-stage[data-state=done] i {color:var(--fs-success);border-color:var(--fs-success);background:color-mix(in srgb,var(--fs-success) 10%,var(--fs-panel));animation:fs-pop .32s ease-out both,fs-ring .52s ease-out;}
+.boot-stage[data-state=active] :is(.boot-stage-content,button)>i::after {content:'';position:absolute;inset:-1px;border:2px solid transparent;border-top-color:var(--fs-accent);border-radius:inherit;animation:boot-spin .75s linear infinite;}
+.boot-stage[data-state=done] :is(.boot-stage-content,button)>i {color:var(--fs-success);border-color:var(--fs-success);background:color-mix(in srgb,var(--fs-success) 10%,var(--fs-panel));animation:fs-pop .32s ease-out both,fs-ring .52s ease-out;}
 .boot-success svg {animation:fs-pop .32s ease-out both;}
-.boot-stage[data-state=waiting] i {animation:fs-wait 1.8s ease-in-out infinite;}
+.boot-stage[data-state=waiting] :is(.boot-stage-content,button)>i {animation:fs-wait 1.8s ease-in-out infinite;}
 .boot-stage[data-state=done] svg path,.boot-success svg path {stroke-dasharray:1;animation:fs-check .32s ease-out both;}
-.boot-stage[data-state=failed] i {color:var(--fs-danger);border-color:var(--fs-danger);}
-.boot-stage>div {flex:1;min-width:0;}
-.boot-stage header {justify-content:space-between;}
+.boot-stage[data-state=failed] :is(.boot-stage-content,button)>i {color:var(--fs-danger);border-color:var(--fs-danger);}
+
+.boot-stage-caption {gap:5px;}
+.boot-stage-caption small {margin-left:auto;text-align:right;}
 .boot-stage small,.boot-disclosure code,.boot-picture code {font:var(--fs-caption)/1.4 var(--fs-mono);color:var(--fs-muted);}
-.boot-meter {height:3px;margin-top:6px;background:var(--fs-line);overflow:hidden;border-radius:var(--fs-radius-pill);}
+.boot-meter {display:block;height:3px;margin-top:6px;background:var(--fs-line);overflow:hidden;border-radius:var(--fs-radius-pill);}
 .boot-meter b {display:block;height:100%;background:var(--fs-accent);transition:width .16s;}
 .boot-stage[data-state=done] .boot-meter b {background:var(--fs-success);}
 .boot-layout {display:grid;grid-template-columns:minmax(0,1fr) minmax(240px,34%);gap:16px;min-height:0;flex:0 1 auto;}
 .boot-stack,.boot-picture {padding:16px;min-width:0;min-height:0;}
-.boot-stack {display:flex;flex-direction:column;gap:8px;overflow:auto;}
+.boot-stack {display:flex;flex-direction:column;gap:8px;overflow:auto;scrollbar-width:thin;}
 .boot-stack h2,.boot-disclosure {font:500 var(--fs-small)/1.4 var(--fs-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--fs-muted);}
 .boot-stack h2 {margin:0 2px 6px;}
 .boot-layer,.boot-picture {--layer-tone:var(--fs-muted);--layer-fill:color-mix(in srgb,var(--layer-tone) 13%,var(--fs-panel));}
@@ -106,14 +111,33 @@ body[data-view=boot] .execution-toolbar,body[data-view=boot] #operation-status,b
 .boot-disclosure {width:100%;text-align:left;border:0;background:transparent;min-height:26px;padding:2px;}
 .boot-disclosure code {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:none;letter-spacing:normal;}
 .boot-console .boot-disclosure {padding:10px 14px;}
-.boot-console pre {max-height:17vh;overflow:auto;white-space:pre-wrap;font:var(--fs-caption)/1.45 var(--fs-mono);padding:8px 14px;border-top:1px solid var(--fs-line);}
-.boot-es {display:flex;gap:4px;}
-.boot-es span {flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;border-top:3px solid var(--fs-line);padding-top:4px;color:var(--fs-muted);font:var(--fs-small) var(--fs-mono);}
-.boot-es [data-lit=true] {border-color:var(--fs-success);color:var(--fs-success);}
+.boot-console {position:relative;}
+.boot-console pre {position:absolute;z-index:2;inset:auto -1px 100%;max-height:min(35vh,310px);overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font:var(--fs-caption)/1.45 var(--fs-mono);padding:10px 14px;border:1px solid var(--fs-line);border-radius:var(--fs-radius-card);background:var(--fs-surface);box-shadow:0 8px 24px var(--fs-shadow-3);}
+.boot-meter[data-indeterminate=true] b {width:36%!important;animation:boot-sweep 1.35s ease-in-out infinite;}
+.boot-segments {margin-top:6px;display:flex;gap:3px;}
+.boot-segments b {height:3px;flex:1;background:var(--fs-line);border-radius:var(--fs-radius-pill);}
+.boot-segments b[data-lit=true] {background:var(--fs-success);animation:fs-fade .32s ease-out both;}
+.boot-milestones {position:absolute;z-index:3;right:0;top:calc(100% + 6px);min-width:170px;padding:10px 14px;background:var(--fs-panel);border:1px solid var(--fs-line);border-radius:var(--fs-radius-card);box-shadow:0 8px 24px var(--fs-shadow-3);}
+.boot-milestones h2 {font:500 var(--fs-body) var(--fs-sans);margin:0 0 8px;}
+.boot-milestones>div {display:flex;align-items:center;gap:8px;font:var(--fs-label) var(--fs-sans);color:var(--fs-muted);padding-block:3px;}
+.boot-milestones i {display:grid;place-items:center;height:15px;width:15px;border:1px solid var(--fs-line);border-radius:var(--fs-radius-pill);}
+.boot-milestones>div[data-lit=true] {color:var(--fs-text);}
+.boot-milestones [data-lit=true] i {color:var(--fs-success);border-color:var(--fs-success);}
+.boot-milestones svg {width:12px;height:12px;}
+.boot-layer {transition:color .25s,border-color .25s,background-color .25s;}
+.boot-layer[data-lit=true]>span:first-child,.boot-chip[data-lit=true] {animation:fs-pop .48s ease-out;}
+.boot-figure,.boot-milestones,.boot-console pre {animation:boot-enter .32s ease-out;}
+.boot-picture[data-animating=true] .boot-compile-arrow path:first-child {animation:boot-dash .7s linear infinite;}
+.boot-picture[data-animating=true] .boot-picture-dot[data-lit=true] {animation:fs-wait 1.25s ease-in-out infinite;}
+.boot-stage[data-state=active]:not(:last-child)::after {border:0;height:2px;background:repeating-linear-gradient(90deg,var(--fs-accent) 0 4px,transparent 4px 8px);background-size:8px 2px;animation:boot-connect .8s linear infinite;}
 .first-boot footer {min-height:26px;justify-content:flex-end;}
 .boot-success {color:var(--fs-success);font-size:var(--fs-body);}
 .first-boot footer output {color:var(--fs-danger);font-size:var(--fs-caption);}
 .first-boot footer output:empty {display:none;}
+@keyframes boot-dash {to {stroke-dashoffset:-16;}}
+@keyframes boot-connect {to {background-position:8px;}}
+@keyframes boot-enter {from {transform:translateY(5px);opacity:0;} to {transform:translateY(0);opacity:1;}}
+@keyframes boot-sweep {from {transform:translateX(-100%);} to {transform:translateX(280%);}}
 @keyframes boot-spin {to {transform:rotate(1turn);}}
 @media(max-height:800px) {
   .first-boot {padding-block:14px 8px;gap:10px;}
@@ -133,9 +157,9 @@ body[data-view=boot] .execution-toolbar,body[data-view=boot] #operation-status,b
   .boot-title {gap:5px;flex-wrap:wrap;}
   .boot-title>span {font-size:var(--fs-small);}
   .boot-stages {gap:5px;}
-  .boot-stage {padding:5px;gap:5px;}
+  .boot-stage-content,.boot-stage>button {padding:5px;gap:5px;}
   .boot-stage::after {display:none;}
-  .boot-stage header {display:grid;gap:0;}
+  .boot-stage-caption {display:grid;gap:0;}
   .boot-layout {flex:1;grid-template-columns:minmax(0,1fr);grid-template-rows: minmax(125px,1.6fr) minmax(110px,1fr);}
   .boot-layer {grid-template-columns:20px 70px minmax(0,1fr);min-height:32px;padding:3px 6px;}
   .boot-layer>span:first-child {width:20px;height:20px;}
@@ -146,4 +170,4 @@ body[data-view=boot] .execution-toolbar,body[data-view=boot] #operation-status,b
   .boot-services>span {padding:4px 2px;}
   .boot-hardware {max-width:120px;}
 }
-@media(prefers-reduced-motion:reduce){.first-boot *,.first-boot *::after {animation:none!important;transition:none!important;}}
+@media(prefers-reduced-motion:reduce){.first-boot *,.first-boot *::before,.first-boot *::after {animation:none!important;transition:none!important;}}

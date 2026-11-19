@@ -1,6 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {bootFrame} from '../static/first-boot.js';
+import {bootFrame,stageProgress} from '../static/first-boot.js';
+
+test('replay clears measured compilation progress during installation and catalog extraction', () => {
+  const snapshot={job:{},trace:[{ms:1,phase:'build',percent:80,activity:'Compiling'},
+    {ms:2,percent:null,activity:'Installing'},{ms:3,activity:'Indexing catalog'},
+    {ms:4,phase:'boot',guest_stage:4},{ms:5,phase:'run',fact:{state:'APPS_INIT'}}]};
+  const read=ms=>{
+    const {job,flight}=bootFrame(snapshot,ms);
+    return stageProgress(job.phase,job,flight.states);
+  };
+  assert.deepEqual(read(1),{label:'Compiling',percent:80});
+  assert.deepEqual(read(2),{label:'Installing',percent:null});
+  assert.deepEqual(read(3),{label:'Indexing catalog',percent:null});
+  assert.deepEqual(read(4),{label:'Booting Linux',percent:null});
+  assert.deepEqual(read(5),{label:'Loading apps',percent:null});
+  // Older receipts can contain a 100% compiler reading carried into installation.
+  assert.deepEqual(stageProgress('build',{build_percent:100,build_activity:'Installing'},[]),
+    {label:'Installing',percent:null});
+});
 
 test('boot playback reveals compiler, process and EVS observations at their recorded times', () => {
   const snapshot = {
