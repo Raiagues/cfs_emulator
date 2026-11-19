@@ -16,6 +16,8 @@ class BootTest(unittest.TestCase):
         self.job = {"id": "run-1", "target": "native", "action": "first-boot", "phase": "build"}
 
     def test_make_progress_and_es_states(self):
+        self.assertEqual(parse_boot_line("CFE_ES_Main entering OPERATIONAL state"), {"state": "OPERATIONAL"})
+        self.assertIsNone(parse_boot_line("sample_app: waiting for CFE_ES_Main entering OPERATIONAL state"))
         observe(self.hardware, self.job, "[ 17%] Building C object kernel.o")
         observe(self.hardware, self.job, "[  8%] Building C object other.o")
         self.assertEqual(self.job["build_percent"], 17)

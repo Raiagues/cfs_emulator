@@ -9,7 +9,7 @@ from project.model import load_config
 
 STATES = ("EARLY_INIT", "CORE_STARTUP", "CORE_READY", "APPS_INIT", "OPERATIONAL")
 SERVICES = ("ES", "EVS", "SB", "TBL", "TIME", "FS")
-ES = re.compile(r"\bCFE_ES_Main:\s*CFE_ES_Main (?:in|entering) (" + "|".join(STATES) + r") state\b")
+ES = re.compile(r"(?:^|\bCFE_ES_Main:\s*)CFE_ES_Main (?:in|entering) (" + "|".join(STATES) + r") state\b")
 EVENT = re.compile(r"\bEVS Port\d+\s+\S+\s+(\d+)/(\d+)/([A-Za-z_]\w*)\s+(\d+):\s*(.*)")
 INITIALIZED = re.compile(r"\b(?:initialized|initialization complete)\b", re.I)
 PERCENT = re.compile(r"\[\s*(\d{1,3})%\]")
