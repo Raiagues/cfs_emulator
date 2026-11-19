@@ -6,9 +6,33 @@ const esc=value=>String(value??'');
 const helpers={esc,icon:()=>'',hex:value=>'0x'+value.toString(16)};
 const sample={id:'SAMPLE_APP_NOOP_CC',app:'sample_app',mid:0x1882,code:0,size:8};
 const enable={id:'TO_LAB_OUTPUT_ENABLE_CC',app:'to_lab',mid:0x1880,code:6,size:24,fields:[{name:'dest_IP',format:'s',count:16}]};
-const state={target:'native',workspace:{project:{apps:[]},mission:{core_services:[{name:'SB'}]}},
+const state={target:'native',catalogTarget:'native',workspace:{project:{apps:[]},mission:{core_services:[{name:'SB'}]}},
  catalog:{commands:[sample,enable,{...sample,id:'FM_NOOP_CC',app:'fm'}],packets:[],apps:[],transport:{}},
  ground:{target:'native',connected:true,first_flight:{telemetry:false,event:false,enable_command:enable.id,noop_command:sample.id,return_host:'127.0.0.1'}}};
+
+test('Event waits for its target catalog before displaying session state or connection controls',()=>{
+ for(const pending of [{catalog:null,catalogLoading:false},{catalog:null,catalogLoading:true},{catalogTarget:'qemu'}]){
+   const page=renderGround({...state,...pending},helpers);
+   assert.match(page,/role="status"/);
+   assert.match(page,/Reading catalog/);
+   assert.doesNotMatch(page,/No commands|Disconnected|No telemetry|data-command-id=|data-ground="start"|id="ground-route"/);
+ }
+ const error=renderGround({...state,catalog:null,groundError:'Catalog request failed'},helpers);
+ assert.match(error,/role="alert"/);
+ assert.match(error,/Catalog request failed/);
+ assert.match(error,/data-ground="catalog"/);
+ assert.doesNotMatch(error,/Reading catalog/);
+ const refreshed=renderGround({...state,catalogLoading:true},helpers);
+ assert.match(refreshed,/data-command-id="TO_LAB_OUTPUT_ENABLE_CC"/);
+});
+
+test('an Event received on the previous target cannot select a test on the new target',()=>{
+ const changing={...state,target:'qemu',catalogTarget:'qemu',groundSelection:sample.id,
+   ground:{...state.ground,first_flight:{event:true}},
+   testPlans:{plans:[{id:'sample-noop',name:'NOOP event',command:sample.id,steps:[]}]}};
+ assert.match(renderGroundRoute(changing,helpers),/class="first-test-menu"/);
+ assert.doesNotMatch(renderGround(changing,helpers),/>Run test</);
+});
 
 test('first contact selects the real output destination and limits the command list',()=>{
  const before=renderGround(state,helpers);

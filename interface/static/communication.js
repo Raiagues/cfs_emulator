@@ -1,7 +1,10 @@
 // Traffic totals are recorded by the UDP sender and decoder in this session.
 const services={SB:'Software Bus',ES:'Executive Services',EVS:'Event Services',TBL:'Table Services',TIME:'Time Services',FS:'File Services'};
+export function stationState(state) {
+  return state.ground?.target === state.target ? state.ground : {};
+}
 export function renderCommunication(state,{esc,icon}){
-  const ground=state.ground?.target===state.target?state.ground:{};
+  const ground=stationState(state);
   const catalog=state.catalog||{}, mission=state.workspace.mission;
   const traffic=new Map((ground.communication?.apps||[]).map(row=>[row.app,row]));
   const apps=[...(mission.included||mission.enabled||[])].sort();

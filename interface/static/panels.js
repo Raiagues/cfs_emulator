@@ -1,12 +1,9 @@
 import {tripPanel,planFor} from './round-trip-view.js';
+import {stationState} from './communication.js';
 /* Ground Station surfaces, fed by the deployed packet catalog. */
 export {renderArchitecture} from './architecture.js';
 const fallbackIcon=()=>'';
 const context=helpers=>({icon:fallbackIcon,...helpers});
-function stationState(state) {
-  return state.ground?.target === state.target ? state.ground : {};
-}
-
 function stationCatalog(state) {
   const catalog = state.catalog || {}, app = state.groundApp || '';
   const allowed = new Set(['to_lab','sample_app',...state.workspace.project.apps.map(item=>item.name)]);
@@ -105,10 +102,21 @@ function contactCoach(state, esc, icon) {
  ];
  const current=steps.findIndex(([, , done])=>!done);
  return '<nav class="first-event-coach" aria-label="First event">'+steps.map(([label,detail,done,cmd],i)=>
-   `<${cmd?'button':'span'} ${cmd?'data-open-trip-command="'+esc(cmd.id)+'"':''} ${i===current?'aria-current="step"':''} data-seen="${Boolean(done)}"><i>${done?icon('check'):i+1}</i><span><strong>${label}</strong><small>${esc(detail)}</small></span></${cmd?'button':'span'}>`).join('')+(flight.answer?'<a href="/studio#app">Next · create app '+icon('chevron-right')+'</a>':'')+'</nav>';
+   `<${cmd?'button':'span'} ${cmd?'data-open-trip-command="'+esc(cmd.id)+'"':''} ${i===current?'aria-current="step"':''} data-seen="${Boolean(done)}"><i>${done?icon('check'):i+1}</i><span><strong>${label}</strong><small>${esc(detail)}</small></span></${cmd?'button':'span'}>`).join('')+'</nav>';
 }
 export function renderGround(state,helpers){
-  const {esc,icon,hex}=context(helpers), ground=stationState(state), catalog=stationCatalog(state);
+  const {esc,icon,hex}=context(helpers);
+  if (!state.catalog || state.catalogTarget !== state.target) {
+    const status = state.groundError
+      ? `<div role="alert"><strong>Catalog unavailable</strong><p>${esc(state.groundError)}</p>
+           <button data-ground="catalog">${icon('refresh')} Retry</button></div>`
+      : '<div role="status"><i class="operation-spinner" aria-hidden="true"></i> Reading catalog…</div>';
+    return `<section class="flight-ground ground-catalog-pending" data-pane="route" aria-label="Ground Station">
+      <aside class="flight-library"><header>Commands</header></aside>
+      <main class="flight-command-column"><section class="ground-catalog-status"><h2>Ground Station</h2>${status}</section></main>
+      <aside class="gs-desk"><h2>Telemetry</h2></aside></section>`;
+  }
+  const ground=stationState(state), catalog=stationCatalog(state);
   const visible=filteredCommands(state,hex), selected=selectedCommand(state,visible);
   const managed=new Set(state.workspace.project.apps.map(app=>app.name));
   const firstContact=!ground.first_flight?.event && !state.allGroundApps;

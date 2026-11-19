@@ -162,6 +162,12 @@ body[data-view=communication] #view{overflow:auto;padding:clamp(10px,1.6vw,24px)
 body[data-view="ground"] .visual,body[data-view="ground"] #view {min-width:0;min-height:0;overflow:hidden;padding:0}
 .flight-ground {height:100%;min-height:0;min-width:0;display:grid;grid-template-columns:clamp(176px,15.5vw,250px) minmax(0,1fr) clamp(218px,19vw,304px);color:var(--fs-text);background:var(--fs-bg);font:var(--fs-body)/1.45 var(--fs-sans);container:ground / inline-size}
 .flight-ground *{box-sizing:border-box}
+.ground-catalog-pending .gs-desk{min-width:0;background:var(--fs-surface);border-left:1px solid var(--fs-line)}
+.ground-catalog-status{margin:auto;padding:16px;text-align:center}
+.ground-catalog-status h2{margin:0 0 8px;font:500 var(--fs-title) var(--fs-sans)}
+.ground-catalog-status [role=status]{display:inline-flex;align-items:center;gap:8px;color:var(--fs-muted)}
+.ground-catalog-status p{max-width:38ch;color:var(--fs-muted)}
+@media(max-width:760px){.ground-catalog-pending.flight-ground{grid-template: minmax(0,1fr) / minmax(0,1fr)}.ground-catalog-pending>.gs-desk{display:none}}
 .flight-ground button,.flight-ground select,.flight-ground input,.trip-editor button {font:inherit;color:inherit}
 .flight-ground button,.flight-ground select,.flight-ground input{border:1px solid var(--fs-line);background:var(--fs-panel);border-radius:var(--fs-radius-control);min-width:0}
 .flight-ground button {cursor:pointer;padding:5px 9px;display:inline-flex;align-items:center;gap:6px}
@@ -253,11 +259,8 @@ body[data-view="ground"] .visual,body[data-view="ground"] #view {min-width:0;min
 .gs-field-card .gs-delta {color:var(--fs-success);border:1px solid currentColor;border-radius:var(--fs-radius-pill);padding:0 4px}
 @media(max-width:1050px){.first-event-coach>*{padding:5px;gap:3px}.first-event-coach small{white-space:normal}.first-event-coach i{width:20px;height:20px}}
 
-.first-event-coach:has(>a){grid-template-columns:repeat(3,minmax(0,1fr)) auto}
 .first-event-coach [aria-current=step]{border-color:var(--fs-accent);background:var(--fs-accent-bg)}
 .first-event-coach [aria-current=step] i{color:var(--fs-accent);border-color:currentColor}
-.first-event-coach a{background:var(--fs-accent);color:var(--fs-on-accent);text-decoration:none;font-weight:600;justify-content:center}
-.first-event-coach a svg{width:14px}
 .flight-library .ground-new-command[data-all-ground-apps]{margin:8px 0;border:0;background:transparent}
 .flight-selection .ground-parameters>label,.command-no-fields,.packet-wire>summary{box-sizing:border-box;min-height:46px;border:1px solid var(--fs-line);border-radius:var(--fs-radius-control);padding:5px 10px;background:var(--fs-bg)}
 .command-no-fields{display:flex;align-items:center;flex:1;border-style:dashed;color:var(--fs-muted)}
@@ -280,4 +283,3 @@ body[data-view="ground"] .visual,body[data-view="ground"] #view {min-width:0;min
 .trip-idle-node text{text-anchor:middle;fill:var(--fs-muted);font:var(--fs-small) var(--fs-mono)}
 .trip-journal summary strong{font:500 var(--fs-label) var(--fs-mono);overflow-wrap:anywhere}
 .trip-journal details+details{border-top:1px solid var(--fs-line)}
-@media(max-width:980px){.first-event-coach:has(>a){grid-template-columns:repeat(3,minmax(0,1fr))}.first-event-coach a{grid-column:1/-1}}

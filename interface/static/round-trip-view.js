@@ -1,9 +1,9 @@
-import {renderCommunication} from './communication.js';
+import {renderCommunication,stationState} from './communication.js';
 
 export function planFor(state, command) {
   const choices=(state.testPlans?.plans||[]).filter(test=>test.command===command?.id);
   const id=state.selectedTests?.[command?.id];
-  if (!id && !state.ground?.first_flight?.event) return null;
+  if (!id && !stationState(state).first_flight?.event) return null;
   return id==='' ? null : choices.find(test=>test.id===id)||choices[0];
 }
 
@@ -14,7 +14,7 @@ export function testSelector(state, command, esc, icon) {
     tests.map(test=>'<option value="'+esc(test.id)+'" '+(selected?.id===test.id?'selected':'')+'>'+esc(test.name)+'</option>').join('')+
     '</select></label>'+(selected?'<button data-edit-trip="'+esc(command.id)+'" data-test-id="'+esc(selected.id)+'">'+icon('edit')+' Edit</button>':'')+
     '<button data-edit-trip="'+esc(command.id)+'">'+icon('plus')+' New test</button></div>';
-  return state.ground?.first_flight?.event?controls:
+  return stationState(state).first_flight?.event?controls:
     '<details class="first-test-menu" data-detail-key="ground-tests"><summary aria-label="Tests" title="Tests">···</summary>'+controls+'</details>';
 }
 
@@ -28,7 +28,7 @@ const names={waiting:'Waiting',passed:'Passed',timed_out:'Timed out',disconnecte
 const clip=(text,n)=>text.length<=n?text:text.slice(0,n-1)+'…';
 
 function outputOff(state) {
-  if(state.ground?.target===state.target && state.ground?.first_flight?.telemetry)return false;
+  if(stationState(state).first_flight?.telemetry)return false;
   const run=(state.jobs||[]).findLast(job=>job.target===state.target && ['run','first-boot','stop'].includes(job.action) && job.status!=='failed');
   if(!run || run.action==='stop')return false;
   const stateLine=run.lines.findLast(line=>/Tlm output suppressed|Awaiting enable command|TO telemetry output enabled/i.test(line));
@@ -42,7 +42,7 @@ function routeDiagram(state, command, steps, sent, esc, hex, icon) {
   const egress=apps.find(app=>app.name.toLowerCase()===transport.subscription_app?.toLowerCase())?.name;
   const target={native:'Native',qemu:'Emulator',physical:'Physical board'}[state.target];
   const addressed=command?.app;
-  const contact=state.ground?.target===state.target && state.ground.first_flight;
+  const contact=stationState(state).first_flight;
   const reply=sent && contact?.receipt?.send_id===sent.event_id && contact.receipt.reply;
   const downlink=sent && contact?.downlink_receipt?.send_id===sent.event_id;
   const returned=Boolean(reply||downlink||steps.some(step=>step.observation));
@@ -111,7 +111,7 @@ function journal(sent, runs, selected, contact, esc, hex){
 
 export function tripPanel(state,command,helpers){
   const {esc,hex,icon}=helpers;
-  const ground=state.ground?.target===state.target?state.ground:{};
+  const ground=stationState(state);
   const system=state.groundMode==='system';
   const history=(ground.commands||[]).filter(c=>!c.automatic).slice().reverse();
   const sent=history.filter(c=>c.id===command?.id);
