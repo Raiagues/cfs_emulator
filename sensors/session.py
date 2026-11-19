@@ -172,7 +172,8 @@ def load_session(root=ROOT):
         script = "sensors/" + device["model"] + ".py"
         if device["model"] not in models:
             models[device["model"]] = _model_source(root, device["model"])
-            models[device["model"]]["spec"] = load_model(paths[device["model"]])
+            profile = paths.get(device["model"])
+            models[device["model"]]["spec"] = load_model(profile) if profile else {}
             sources[script] = models[device["model"]]["text"]
         model = models[device["model"]]
         signals = _device_settings(device, catalog, model)
@@ -180,17 +181,17 @@ def load_session(root=ROOT):
         fields = spec.get("abi", {}).get("fields")
         scalar = spec.get("abi", {}).get("sample") == "int32"
         channels = {}
-        for index, output in enumerate(spec["outputs"]):
+        for index, output in enumerate(spec.get("outputs", [])):
             field = "Value" if scalar else "Value." + (fields[index] if fields else "Value_" + output["name"].replace("-", "_"))
-            channels[output["name"]] = {"register": output.get("register"), "telemetry_field": field,
-                                        "scale": display_units(output["unit"])[0], "raw_unit": output["unit"]}
+            channels[output["name"]] = {"register": output.get("register"), "telemetry_field": field}
         entry = {"device": device["id"], "enabled": True, "signals": signals}
         available.append({"id": device["id"], "name": device["name"], "model": device["model"], "bus": device["bus"],
                           "address": device["address"], "qom_path": "/machine/peripheral/" + device["id"],
                           "script": script, "source_line": model["source_line"], "sample_line": model["sample_line"],
                           "functions": [{"name": name, "line": line} for name, line in model["functions"].items()],
                           "defaults": copy.deepcopy(entry),
-                          "properties": {name: {**channels[name], "unit": display_units(prop["unit"])[1],
+                          "properties": {name: {**channels.get(name, {}), "unit": display_units(prop["unit"])[1],
+                                                "scale": display_units(prop["unit"])[0], "raw_unit": prop["unit"],
                                                 "min": prop["min"] / display_units(prop["unit"])[0],
                                                 "max": prop["max"] / display_units(prop["unit"])[0]}
                                          for name, prop in definition["properties"].items()}})

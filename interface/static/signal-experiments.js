@@ -48,7 +48,7 @@ export function qemuPanel(state,esc) {
       qmp.push(cell(Number.isFinite(value)?String(Math.round(value*prop.scale)):'—',prop.raw_unit));
       registers.push(cell(register==null?'—':'0x'+register.toString(16).padStart(2,'0'), key));
       const observed=matchingReads(state,device,key,last);
-      reads.push(observed.length?observed.map(x=>cell(number(x.value)+' '+prop.unit,x.app)).join(''):cell('—',prop.telemetry_field));
+      reads.push(observed.length?observed.map(x=>cell(number(x.value)+' '+prop.unit,x.app)).join(''):cell('—',prop.telemetry_field||key));
     }
     return `<section class="chain-device"><header><b>${esc(device.name||device.id)}</b><code>${esc(device.qom_path)}</code><small>${esc(device.bus)} · 0x${device.address.toString(16)}</small></header>
       <div class="value-chain">${[python,qmp,registers,reads].map(c=>'<div>'+c.join('')+'</div>').join('')}</div></section>`;

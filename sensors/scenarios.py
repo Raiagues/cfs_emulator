@@ -86,7 +86,10 @@ def run_scenario(root, device_id, name):
     device = next((dict(d) for d in config['devices'] if d['id'] == device_id), None)
     if not device:
         raise ValueError('Select a configured sensor')
-    model = load(model_paths(root)[device['model']])
+    profile = model_paths(root).get(device['model'])
+    if profile is None:
+        raise ValueError('Register profile required')
+    model = load(profile)
     sensor = next(d['defaults'] for d in session['available'] if d['id'] == device_id)
     device['values'] = {**catalog['models'][device['model']]['default_values'], **device['values']}
     orbit = Orbit(session['settings']['orbit'])

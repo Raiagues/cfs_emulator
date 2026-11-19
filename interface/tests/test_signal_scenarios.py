@@ -5,9 +5,31 @@ import tempfile
 import unittest
 
 from sensors.scenarios import run_scenario
+from sensors.session import load_session
+from project.sensor_models import board_model, load, model_paths
 
 
 class SignalScenarioTest(unittest.TestCase):
+    def test_board_defined_sensor_without_register_profile(self):
+        source = Path(__file__).resolve().parents[2]
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            for path in ('sensors', 'project/boards'):
+                shutil.copytree(source/path, root/path)
+            board = root/'project/boards/raspi4b.json'
+            catalog = json.loads(board.read_text())
+            catalog['models'] = {'thermal_probe': board_model(load(model_paths(source)['tmp105']))}
+            board.write_text(json.dumps(catalog))
+            shutil.copy(root/'sensors/tmp105.py',root/'sensors/thermal_probe.py')
+            device = dict(name='Cabin', id='cabin', model='thermal_probe', bus='i2c-bus.1', address=72, values={})
+            config = dict(schema_version=1, board='raspi4b', os='raspios', buses=['i2c-bus.1'], devices=[device], apps=[])
+            (root/'project/config.json').write_text(json.dumps(config))
+            channel = load_session(root)['available'][0]['properties']['temperature']
+            self.assertEqual(channel['scale'],1000)
+            self.assertNotIn('register',channel)
+            with self.assertRaisesRegex(ValueError, 'Register profile required'):
+                run_scenario(root,device['id'],'orbit')
+
     @unittest.skipUnless(shutil.which('cc'), 'Native compiler required for flight HAL')
     def test_local_register_reads_and_fault_recovery(self):
         source = Path(__file__).resolve().parents[2]
