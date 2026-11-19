@@ -152,7 +152,7 @@ def boot_observed(hardware, target):
         target != "physical" or hardware.same_board(receipt.get("connection"), hardware._load("connection.json")))
 
 
-def snapshot(studio, target):
+def snapshot(studio, target, *, journal=None):
     hardware = studio.hardware
     if target not in {"native", "physical", "qemu"}:
         raise ValueError("Invalid boot target")
@@ -211,6 +211,13 @@ def snapshot(studio, target):
         trace = [({k: v for k, v in entry.items() if k != "fact"} if i in invalid else entry)
                  for i, entry in enumerate(trace)]
     output = job.get("lines") if job else [event["line"] for event in trace if event.get("line")]
+    if journal and target != "native":
+        instance = receipt.get("instance") if live and not job else None
+        journal_lines, journal_apps = journal(target, connection, instance)
+        if journal_lines:
+            output = journal_lines
+        if journal_apps:
+            flight = dict(flight, initialized={**flight.get("initialized", {}), **journal_apps})
     lines = [clean for line in (output or [])[-300:] if (clean := console_text(line)).strip()]
     return {"target": target, "verified": infrastructure.target_verified(hardware, target),
             "hardware": "This computer" if target == "native" else profile.get("board_label", "Board"),

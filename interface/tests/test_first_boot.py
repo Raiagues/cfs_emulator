@@ -1,4 +1,5 @@
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -170,6 +171,70 @@ class BootTest(unittest.TestCase):
                         self.assertEqual((state["stopped"], state["unverified"]), (stopped, unknown))
                         self.assertTrue(boot_observed(h, target))
                         self.assertIn("OPERATIONAL", state["flight"]["states"])
+
+    def test_reopened_studio_follows_only_the_confirmed_invocation(self):
+        from interface.server import Studio
+
+        studio = Studio(self.hardware.root)
+        self.addCleanup(studio.close)
+        h = studio.hardware
+        instance = "a" * 32
+        h._save("target.json", {"target": "qemu"})
+        h._save("operational-qemu.json", {"time": 5, "target": "qemu", "instance": instance, "apps": [],
+                  "boot_trace": [], "flight": {"states": ["OPERATIONAL"], "initialized": {}}})
+        h._save("deployed.json", {"qemu": {"deployed_at": 3}})
+        confirmed = {"running": True, "service": "active", "pids": [71], "instance": instance}
+        received = threading.Event()
+        stopped = threading.Event()
+
+        def journal_only(action, emit, *, cancel, target, kind, on_start, on_invocation):
+            self.assertEqual((action, target, kind), ("logs", "qemu", "current-flight"))
+            on_invocation(instance)
+            emit("EVS Port1 1980-012 66/1/MD 1: MD Initialized.")
+            for i in range(400):
+                emit(f"journal row {i}")
+            received.set()
+            cancel.wait(5)
+            stopped.set()
+
+        def read():
+            return snapshot(studio, "qemu", journal=studio.follow_boot_journal)
+
+        with patch.object(h, "profiles", return_value=[]), patch.object(h, "observed_flight", return_value=confirmed) as probe, \
+             patch.object(h, "execute", side_effect=journal_only) as execute:
+            self.assertTrue(read()["running"])
+            self.assertTrue(received.wait(2))
+            for _ in range(3):
+                boot = read()
+                self.assertEqual(boot["flight"]["initialized"]["MD"]["eid"], 1)
+                self.assertEqual((len(boot["lines"]), boot["lines"][-1]), (300, "journal row 399"))
+                self.assertEqual(boot["trace"], [])
+            execute.assert_called_once()
+            probe.return_value = dict(confirmed, instance="b" * 32)
+            superseded = read()
+            self.assertFalse(superseded["running"])
+            self.assertEqual(superseded["lines"], [])
+            self.assertNotIn("MD", superseded["flight"]["initialized"])
+            self.assertTrue(stopped.wait(2))
+            execute.assert_called_once()
+
+    def test_journal_rechecks_invocation_after_the_live_probe(self):
+        from interface.server import Studio
+
+        studio = Studio(self.hardware.root)
+        self.addCleanup(studio.close)
+        h = studio.hardware
+        h._save("target.json", {"target": "qemu"})
+        with patch.object(h, "ssh_argv", return_value=["ssh", "guest"]), \
+             patch.object(h, "_capture", return_value=(0, "b" * 32)), patch.object(h, "_stream") as open_journal:
+            studio.follow_boot_journal("qemu", None, "a" * 32)
+            reader, = list(studio.jobs.values())
+            reader["thread"].join(2)
+            self.assertEqual(reader["status"], "failed")
+            self.assertIn("invocation changed", reader["error"])
+            studio.follow_boot_journal("qemu", None, "a" * 32)
+            self.assertEqual(len(studio.jobs), 1)
+            open_journal.assert_not_called()
 
     def test_saved_target_requires_verified_plan_and_an_installed_checkout(self):
         h = self.hardware

@@ -58,7 +58,7 @@ class Studio:
         finally:
             self.operation.release()
 
-    def job(self, action, options):
+    def job(self, action, options, *, journal_instance=None):
         options, kind, script, connection = self._job_request(action, options)
         target = options['target']
         exclusive = action not in self.BACKGROUND
@@ -66,7 +66,11 @@ class Studio:
             if self.closing:
                 raise ValueError('The server is shutting down.')
             destination = tuple(sorted(connection.items())) if connection else None
-            key = (action, target, kind, destination, options.get('device'), options.get('model'), options.get('scenario'))
+            key = (action, target, kind, destination, options.get('device'), options.get('model'), options.get('scenario'), journal_instance)
+            if journal_instance:
+                for prior in reversed(self.jobs.values()):
+                    if prior['key'] == key and (prior['status'] == 'running' or time.time() - prior.get('ended', 0) < 30):
+                        return {'id': prior['id'], 'existing': True}
             existing = None if exclusive else self._running_reader(action, key, target, kind, connection)
             if existing:
                 return {'id': existing['id'], 'existing': True}
@@ -79,6 +83,13 @@ class Studio:
                       'streaming': action in self.BACKGROUND, 'operation_complete': False,
                       'lines': deque(maxlen=3000), 'line_count': 0, 'started': time.time(), 'exit_code': None,
                       'cancel': threading.Event()}
+            if journal_instance:
+                record['journal_instance'] = journal_instance
+                record['journal_apps'] = {}
+                def check_invocation(current):
+                    if current != journal_instance:
+                        raise ValueError('The cFS service invocation changed.')
+                options.update(kind='current-flight', on_invocation=check_invocation)
             record['thread'] = threading.Thread(target=self._run_job, args=(record, options), daemon=True)
             self.jobs[ident] = record
             for old in list(self.jobs)[:-30]:
@@ -197,6 +208,10 @@ class Studio:
                 elif ' login:' in output or ('Started' in output and 'OpenBSD Secure Shell server' in output):
                     stage = 4
                 record['boot_stage'] = max(stage, record.get('boot_stage', 0))
+            if 'journal_apps' in record:
+                fact = first_boot.parse_boot_line(str(line))
+                if fact and 'app' in fact:
+                    record['journal_apps'].setdefault(fact['app'], fact)
             record['lines'].append(str(line))
             record['line_count'] += 1
 
@@ -302,6 +317,25 @@ class Studio:
         if not record['cancel'].is_set():
             self.hardware.execute('logs', emit, cancel=record['cancel'], **follow)
 
+    def follow_boot_journal(self, target, connection, instance):
+        """Share one bounded console buffer for the systemd invocation verified by the boot receipt."""
+        with self.lock:
+            for reader in self.jobs.values():
+                if (reader.get('journal_instance') and reader['target'] == target and
+                    (reader['journal_instance'] != instance or reader['connection'] != connection)):
+                    reader['cancel'].set()
+        if not instance:
+            return [], {}
+        options = {'target': target}
+        if connection:
+            options['connection'] = connection
+        follower = self.job('logs', options, journal_instance=instance)
+        with self.lock:
+            reader = self.jobs.get(follower['id'])
+            if not reader or reader.get('journal_instance') != instance:
+                return [], {}
+            return list(reader['lines'])[-300:], dict(reader['journal_apps'])
+
     def cancel(self, ident):
         with self.lock:
             record = self.jobs.get(ident)
@@ -315,7 +349,7 @@ class Studio:
         jobs = []
         with self.lock:
             for job in self.jobs.values():
-                public = {key: value for key, value in job.items() if key not in ('cancel', 'thread', 'key', 'lines', 'boot_trace')}
+                public = {key: value for key, value in job.items() if key not in ('cancel', 'thread', 'key', 'lines', 'boot_trace', 'journal_apps')}
                 if boot_trace and 'boot_trace' in job:
                     public['boot_trace'] = list(job['boot_trace'])
                 if 'flight' in job:
@@ -517,7 +551,7 @@ class Handler(BaseHTTPRequestHandler):
                 '/api/files/search': lambda: app.workspace.search_files(query.get('root', 'cFS'), query.get('q', '')),
                 '/api/file': lambda: app.workspace.read_file(query['path']),
                 '/api/hardware': app.hardware.status,
-                '/api/first-boot': lambda: first_boot.snapshot(app, query.get('target', app.hardware.default_target())),
+                '/api/first-boot': lambda: first_boot.snapshot(app, query.get('target', app.hardware.default_target()), journal=app.follow_boot_journal),
                 '/api/infrastructure': lambda: infrastructure.snapshot(app.hardware, verify_source=query.get('verify_source') == '1'),
                 '/api/simulation': app.workspace.simulation_snapshot,
                 '/api/hardware/device': lambda: device_settings(app.workspace, query.get('id')),
