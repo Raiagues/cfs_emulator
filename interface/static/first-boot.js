@@ -166,8 +166,9 @@ function clock(milliseconds) {
   const seconds=Math.floor(Math.max(0,milliseconds)/1000);
   return [Math.floor(seconds/60), seconds%60].map(x=>String(x).padStart(2,'0')).join(':');
 }
-export function mountFirstBoot(container,{api,target,onNext}) {
+export function mountFirstBoot(container,{api,target}) {
   let disposed=false,timer=null,requested=false,data=null,pick='',pickKey='',lastCue='',consoleOpen=false,err='';
+  let readError='';
   let live=null, pausedAt=null, pausedIndex=null, replayStart=null, replayTimer=null;
   function elapsed() {
     if(pausedAt!=null) return pausedAt;
@@ -224,7 +225,7 @@ export function mountFirstBoot(container,{api,target,onNext}) {
           <pre id="boot-console-output" aria-label="Boot log" tabindex="0" ${consoleOpen?'':'hidden'}>${consoleOpen?escape(data.lines.join('\n')):''}</pre>
         </div>
       </section>
-      <footer>${running?`<span class="boot-success">${drawnCheck}cFS is running</span><button class="primary" data-next data-boot-focus="next">Ground Station</button>`:(!data.verified||data.unverified)?'<a href="/">Check target</a>':failed||data.stopped||err?'<button data-retry data-boot-focus="retry">Retry first boot</button>':''}<output>${escape(err||job.error||'')}</output></footer></section>`;
+      <footer>${running?`<span class="boot-success">${drawnCheck}cFS is running</span>`:data!==live?'':(!live.verified||live.unverified)?'<a href="/">Check target</a>':failed||live.stopped||err?'<button data-retry data-boot-focus="retry">Retry first boot</button>':''}<output>${escape(readError||err||job.error||'')}</output></footer></section>`;
     const next=fragment.content.firstElementChild, existing=container.firstElementChild;
     if(existing?.classList.contains('first-boot'))updateNode(existing,next);
     else container.replaceChildren(next);
@@ -245,10 +246,19 @@ export function mountFirstBoot(container,{api,target,onNext}) {
     try{
       const next=await api('first-boot?target='+encodeURIComponent(target));
       if(disposed)return;
-      live=next;
+      live=next;readError='';
       draw();
       if(next.verified&&!requested&&!next.running&&!next.job.id&&!next.stopped&&!next.unverified){await start();draw();}
-    }catch(error){if(!disposed){err=error.message;if(data)draw();else container.textContent=err;}}
+    }catch(error){
+      if(disposed)return;
+      readError=error.message;
+      if(data)draw();
+      else {
+        const status=container.querySelector('.boot-load-status');
+        status.textContent=readError;
+        status.setAttribute('aria-busy','false');
+      }
+    }
     if(!disposed)timer=setTimeout(poll,600);
   }
   const click=async event=>{
@@ -277,11 +287,10 @@ export function mountFirstBoot(container,{api,target,onNext}) {
       }
     }
     else if(button.hasAttribute('data-console'))consoleOpen=!consoleOpen;
-    else if(button.hasAttribute('data-next')){onNext();return;}
     else if(button.hasAttribute('data-retry')){button.disabled=true;await start();}
     draw();
   };
-  container.innerHTML='<section class="first-boot"><h1>First boot</h1></section>';
+  container.innerHTML=`<section class="first-boot"><header class="boot-title"><h1>First boot</h1><span>${icon(target==='native'?'monitor':'cpu')}${escape(names[target])}</span></header><p class="boot-load-status" role="status" aria-busy="true">Reading boot status…</p></section>`;
   const closeDetails=event=>{
     if(event.key==='Escape' && consoleOpen && !event.defaultPrevented && !document.querySelector('dialog[open]')){
       const fromConsole=event.target.closest?.('.boot-console');

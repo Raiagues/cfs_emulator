@@ -15,6 +15,8 @@ body[data-view=boot] .execution-toolbar,body[data-view=boot] #operation-status,b
 .first-boot svg {width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
 .boot-title,.boot-stage-caption,.boot-picture header,.first-boot footer,.boot-success {display:flex;align-items:center;gap:10px;}
 .boot-title {gap:14px;}
+.boot-load-status {display:flex;align-items:center;gap:8px;margin:0;color:var(--fs-muted);font-size:var(--fs-label);}
+.boot-load-status[aria-busy=true]::before {content:'';width:12px;height:12px;border:2px solid var(--fs-line);border-top-color:var(--fs-accent);border-radius:var(--fs-radius-pill);animation:boot-spin .75s linear infinite;}
 .boot-title>span {display:flex;align-items:center;gap:8px;color:var(--fs-text);font-size:var(--fs-label);background:var(--fs-panel);padding:6px 10px;border-radius:var(--fs-radius-control);}
 .boot-title>span svg {color:var(--fs-success);}
 .boot-title a,.first-boot footer a {color:var(--fs-accent);font-size:var(--fs-label);text-decoration:none;}
