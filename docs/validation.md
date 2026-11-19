@@ -4,7 +4,7 @@
 
 | Ambiente | Python | JavaScript |
 | --- | --- | --- |
-| Checkout com o cFS oficial instalado, após o reparo do boot QEMU | 74 de 74 passaram, inclusive os dois ciclos HTTP de missão e hardware. | 24 de 24 passaram. |
+| Checkout com o cFS oficial instalado, após a revisão de configuração e primeiro boot | 77 de 77 passaram, inclusive os dois ciclos HTTP de missão e hardware. | 25 de 25 passaram. |
 | Projeto antes do clone, ensaio anterior | 61 passaram. Os dois ciclos HTTP que dependem dos fontes oficiais foram pulados. | 20 de 20 passaram. |
 
 ## Primeiro voo nativo
@@ -36,8 +36,9 @@ Em 19 de novembro de 2026, o Raspberry Pi OS emulado já havia chegado ao login,
 | --- | --- |
 | Binário e destino | cFS oficial `a4d305dc06fb`, build ARM64, guest `aarch64`. |
 | Processo e journal | `cfs.service` ativo, PID 1023. O journal dessa invocação registrou os cinco estados do ES, até `CFE_ES_Main entering OPERATIONAL state`. |
+| Retomada do console | Ao reiniciar o servidor do Studio, o mesmo serviço continuou em OPERATIONAL. Um leitor identificado pela invocação systemd recuperou o evento de inicialização **MD/1** e seguiu recebendo novas linhas. |
 | Apps | 13 entradas no startup. Doze apps emitiram seu evento EVS de inicialização. `sch_lab` confirmou a inicialização em texto no console. Seu chip aguarda um evento EVS identificado. |
-| Navegador | Os cartões passaram por build, emulador e início do cFS. Abrir o console preservou a posição da pilha. O botão **Ground Station** abriu a etapa Event. |
+| Navegador | A faixa exibiu o build, o emulador e os cinco marcos de início do cFS. Abrir o console preservou a posição da pilha. Na versão atual, o espaço entre o rodapé e o fim da janela ficou em 18 px a 1440 × 900 e 8 px a 1366 × 768. O botão **Ground Station** abriu a etapa Event. |
 
 [![Voo QEMU em OPERATIONAL na janela do Studio](images/first-flight/boot-qemu-running.webp)](images/first-flight/boot-qemu-running.webp)
 
@@ -48,7 +49,7 @@ Cada linha traz o export interativo fornecido e a tela correspondente servida pe
 <details>
 <summary>Escolha do alvo</summary>
 
-As capturas mostram o estado depois de verificar **Native** em uma cópia nova. **Compiler** e **Python** passaram. **Source** aguarda a instalação. Abrir os detalhes e o terminal manteve os cartões nas mesmas coordenadas em 1440 × 900, 1366 × 768 e 390 × 844. Em uma instalação de teste com PTY, **Input required** permitiu responder a uma solicitação de senha e acompanhar a verificação posterior. O tema claro da aplicação usa bege.
+As capturas mostram o estado depois de verificar **Native** em uma cópia nova. **Compiler** e **Python** passaram. **Source** aguarda a instalação. Na placa, confirmamos que **Save settings** persistiu o endereço pela API e que **Cancel** e Escape preservaram o valor anterior. Abrir os detalhes e o terminal manteve os cartões nas mesmas coordenadas em 1440 × 900, 1366 × 768 e 390 × 844. Em uma instalação de teste com PTY, **Input required** permitiu responder a uma solicitação de senha e acompanhar a verificação posterior. O tema claro da aplicação usa bege.
 
 | Janela e tema | Referência | Flight Studio |
 | --- | --- | --- |
@@ -62,7 +63,7 @@ As capturas mostram o estado depois de verificar **Native** em uma cópia nova. 
 <details>
 <summary>Primeiro boot</summary>
 
-As capturas mostram a reprodução de um voo nativo, pausado em **Starting core**, com os cinco marcos abertos pelo cartão **Start cFS**. As apps recebem a marca de inicialização conforme chegam suas mensagens no log. O console pôde ser aberto e fechado sem deslocar a pilha em ambas as resoluções.
+As capturas mostram o voo QEMU no registro **Starting core**. A faixa superior exibe cada um dos cinco estados do núcleo. No Chromium, selecionar **Loading apps** mostrou as apps confirmadas até aquele registro e manteve **Operational** pendente. **Resume** voltou ao voo em execução. **Open console**, **Close console** e Escape mantiveram a posição da pilha. A página coube em 1440 × 900, 1366 × 768 e 390 × 844 nos dois temas.
 
 | Janela e tema | Referência | Flight Studio |
 | --- | --- | --- |
