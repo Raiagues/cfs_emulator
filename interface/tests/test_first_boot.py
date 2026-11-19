@@ -88,6 +88,30 @@ class BootTest(unittest.TestCase):
         observe(self.hardware, self.job, "[emulator] Linux SSH ready.")
         self.assertEqual(self.job["guest_stage"], 6)
 
+    def test_platform_layers_and_app_receipts_use_the_reporting_component(self):
+        self.job["phase"] = "run"
+        for line in ("CFE_PSP: Default CPU ID = 1", "CFE_PSP: Default Reset SubType = 1",
+                     "OS_Posix_TaskAPI_Impl_Init():401:Selected policy 2"):
+            observe(self.hardware, self.job, line)
+        self.assertEqual(self.job["flight"]["platform_layers"], ["psp", "osal"])
+        self.assertEqual([e["fact"]["layer"] for e in self.job["boot_trace"]], ["psp", "osal"])
+        unrelated = "EVS Port1 1980-012-14:03:20.65432 66/1/MD 7: Dwell Tables Recovered: 0, Dwell Tables Initialized: 4"
+        confirmation = "EVS Port1 1980-012-14:03:20.65464 66/1/MD 1: MD Initialized."
+        for line in (unrelated, confirmation):
+            observe(self.hardware, self.job, line)
+        self.assertEqual(self.job["flight"]["initialized"]["MD"]["eid"], 1)
+
+        legacy = {**self.job, "boot_apps": [], "lines": [unrelated, confirmation],
+                  "boot_trace": [{"ms": 5, "line": unrelated, "fact": {"app": "MD", "eid": 7}}]}
+        studio = SimpleNamespace(hardware=self.hardware, jobs_snapshot=lambda **kwargs: [legacy])
+        with patch.object(self.hardware, "profiles", return_value=[]):
+            corrected = snapshot(studio, "native")
+            self.assertNotIn("fact", corrected["trace"][0])
+            self.assertEqual(corrected["flight"]["initialized"]["MD"]["eid"], 1)
+            legacy["lines"] = []
+            self.assertNotIn("MD", snapshot(studio, "native")["flight"]["initialized"])
+        self.assertEqual(legacy["boot_trace"][0]["fact"]["eid"], 7)
+
     def test_boot_page_before_the_first_clone(self):
         studio = SimpleNamespace(hardware=self.hardware, jobs_snapshot=lambda **kwargs: [])
         with patch.object(self.hardware, "profiles", return_value=[]):

@@ -11,7 +11,7 @@ STATES = ("EARLY_INIT", "CORE_STARTUP", "CORE_READY", "APPS_INIT", "OPERATIONAL"
 SERVICES = ("ES", "EVS", "SB", "TBL", "TIME", "FS")
 ES = re.compile(r"(?:^|\bCFE_ES_Main:\s*)CFE_ES_Main (?:in|entering) (" + "|".join(STATES) + r") state\b")
 EVENT = re.compile(r"\bEVS Port\d+\s+\S+\s+(\d+)/(\d+)/([A-Za-z_]\w*)\s+(\d+):\s*(.*)")
-INITIALIZED = re.compile(r"\b(?:initialized|initialization complete)\b", re.I)
+INITIALIZED = re.compile(r"^(?:(?P<subject>[\w ]+?)\s+)?(?:initialized|initialization complete)\b", re.I)
 PERCENT = re.compile(r"\[\s*(\d{1,3})%\]")
 CATALOG_ACTIVITY = "Preparing the communication catalog for this build..."
 # The guest writes terminal instructions (colour, cursor positioning, OSC) to its serial port.
@@ -42,10 +42,17 @@ def parse_boot_line(line):
     if match:
         return {"state": match[1]}
     match = EVENT.search(line)
-    if match and INITIALIZED.search(match[5]) and not re.search(r"\b(?:not|failed|error)\b", match[5], re.I):
-        return {"spacecraft": int(match[1]), "processor": int(match[2]), "app": match[3], "eid": int(match[4])}
-    if line.startswith(("OS_BSP_Initialize(", "CFE_PSP:")):
-        return {"process_started": True}
+    if match:
+        message = INITIALIZED.match(match[5])
+        if message and not re.search(r"\b(?:not|failed|errors?)\b", match[5], re.I):
+            subject = re.sub(r"[\s_]", "", message["subject"] or "").casefold()
+            app = match[3].replace("_", "").casefold()
+            if subject in {"", "app", "application", app, app + "app"}:
+                return {"spacecraft": int(match[1]), "processor": int(match[2]), "app": match[3], "eid": int(match[4])}
+    if line.startswith("CFE_PSP:"):
+        return {"process_started": True, "layer": "psp"}
+    if line.startswith(("OS_BSP_Initialize(", "OS_Posix_", "OS_API_Init(")):
+        return {"process_started": True, "layer": "osal"}
     return None
 
 
@@ -113,6 +120,9 @@ def observe(hardware, job, line):
     facts = job.setdefault("flight", {"states": [], "initialized": {}, "process_started": False})
     changed = not facts["process_started"]
     facts["process_started"] = True
+    if "layer" in fact and fact["layer"] not in facts.setdefault("platform_layers", []):
+        facts["platform_layers"].append(fact["layer"])
+        changed = True
     if "app" in fact:
         changed |= fact["app"] not in facts["initialized"]
         facts["initialized"].setdefault(fact["app"], fact)
@@ -184,6 +194,22 @@ def snapshot(studio, target):
         has_source = (hardware.root / "cFS/sample_defs/targets.cmake").is_file()
         apps = _app_records(studio.workspace.mission.startup_text()) if has_source else []
     trace = (job or (receipt if matching_receipt else {})).get("boot_trace", [])
+    # Older receipts accepted subsystem messages such as "Dwell Tables Initialized".
+    # Revalidate those EVS entries against their original line before replaying them.
+    invalid = {i for i, entry in enumerate(trace) if entry.get("fact", {}).get("app")
+               and entry.get("line") and not parse_boot_line(entry["line"])}
+    if invalid:
+        withdrawn = {trace[i]["fact"]["app"] for i in invalid}
+        initialized = dict(flight.get("initialized", {}))
+        for name in withdrawn:
+            initialized.pop(name, None)
+        for line in job.get("lines", []):
+            observed = parse_boot_line(line)
+            if observed and observed.get("app") in withdrawn:
+                initialized[observed["app"]] = observed
+        flight = dict(flight, initialized=initialized)
+        trace = [({k: v for k, v in entry.items() if k != "fact"} if i in invalid else entry)
+                 for i, entry in enumerate(trace)]
     output = job.get("lines") if job else [event["line"] for event in trace if event.get("line")]
     lines = [clean for line in (output or [])[-300:] if (clean := console_text(line)).strip()]
     return {"target": target, "verified": infrastructure.target_verified(hardware, target),
