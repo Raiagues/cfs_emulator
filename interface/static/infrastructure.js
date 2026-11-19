@@ -484,7 +484,7 @@ form.addEventListener('change', event => {
 });
 form.addEventListener('submit', event => {
   event.preventDefault();
-  if (!$('#enter').disabled && !$('#enter').hidden) location.href = '/studio#boot';
+  if (!$('#enter').disabled && !$('#enter').hidden) location.href = '/studio?target=' + encodeURIComponent(target) + '#boot';
 });
 (async () => {
   token = (await api('session')).token;

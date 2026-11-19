@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="/ground-workbench.css">
   <script src="/theme.js" defer></script>
 </head>
-<body class="no-terminal no-tree no-editor" data-view="architecture">
+<body class="workspace-loading no-terminal no-tree no-editor">
   <header class="topbar">
     <div class="workspace-identity">
       <a class="brand" href="/infrastructure" title="Workspace setup" aria-label="Workspace setup"><span>Flight <span class="brand-studio">studio</span></span></a>
@@ -25,7 +25,7 @@
     </div>
     <div class="execution-toolbar">
       <div class="target-switch" role="group" aria-label="Run cFS on">
-        <button data-target="native" aria-pressed="true" title="Run cFS on this computer"><span class="icon" data-icon="monitor"></span>Native</button>
+        <button data-target="native" aria-pressed="false" title="Run cFS on this computer"><span class="icon" data-icon="monitor"></span>Native</button>
         <button data-target="qemu" aria-pressed="false" title="Run in the QEMU emulator"><span class="icon" data-icon="cube"></span>Emulator</button>
         <button data-target="physical" aria-pressed="false" title="Run on the physical board"><span class="icon" data-icon="circuit"></span>Board</button>
       </div>
@@ -48,10 +48,11 @@
   </header>
   <nav id="flight-guide"></nav>
   <div id="feedback" class="workspace-feedback" role="status" aria-live="polite"></div>
+  <section id="workspace-opening" aria-live="polite"><span class="workspace-loader" aria-hidden="true"></span><strong>Opening workspace</strong><button type="button" hidden>Retry</button></section>
   <main class="studio" id="studio">
     <nav class="activity-rail rail" aria-label="Project areas">
       <div>
-        <button class="rail-button active" data-view="architecture" title="Architecture" aria-label="Architecture"><span class="icon" data-icon="workflow"></span></button>
+        <button class="rail-button" data-view="architecture" title="Architecture" aria-label="Architecture"><span class="icon" data-icon="workflow"></span></button>
         <button class="rail-button" data-view="bench" title="Hardware" aria-label="Hardware"><span class="icon" data-icon="circuit"></span></button>
         <button class="rail-button" data-view="code" title="Code" aria-label="Code"><span class="icon" data-icon="code"></span></button>
         <button class="rail-button" data-view="ground" title="Ground station" aria-label="Ground station"><span class="icon" data-icon="antenna"></span></button>

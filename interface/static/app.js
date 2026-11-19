@@ -1,3 +1,4 @@
+import {workspaceRoute,workspaceTarget} from './workspace-route.js';
 import {commandLaunchStep} from './command-launch.js';
 import {openAppWizard} from './app-wizard.js';
 import {mountFirstBoot} from './first-boot.js';
@@ -19,7 +20,7 @@ import {layoutArchitecture} from './architecture.js';
 import {renderSimulationBoard,renderSimulationSettings,chartPageForDevice,changePattern,updateSignalValues,selectSeries} from './simulation.js';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const state = {showLibraries:localStorage.getItem('mission.showLibraries')!=='false',token:'', workspace:null, hardware:null, ground:null, catalog:null, catalogTarget:null, catalogLoading:false, groundBusy:false, groundError:'', groundApp:'', mapMode:'3d', view:location.hash==='#boot'?'boot':'architecture', files:new Map(), path:null, target:'native', sensorless:false, jobs:[], selectedJob:null, selectedDevice:null, inspected:null, archApp:'', simulation:null,simulationDirty:false, groundTab:'commands', groundSelection:null, groundPacket:null, terminalStream:null, history:new Map()};
+const state = {showLibraries:localStorage.getItem('mission.showLibraries')!=='false',token:'', workspace:null, hardware:null, ground:null, catalog:null, catalogTarget:null, catalogLoading:false, groundBusy:false, groundError:'', groundApp:'', mapMode:'3d', view:workspaceRoute(location.hash).view, files:new Map(), path:null, target:null, sensorless:false, jobs:[], selectedJob:null, selectedDevice:null, inspected:null, archApp:'', simulation:null,simulationDirty:false, groundTab:'commands', groundSelection:null, groundPacket:null, terminalStream:null, history:new Map()};
 let boardRenderer=null;
 const treeStates=new Map(), lastFiles=new Map();
 let treeRequest=0;
@@ -64,7 +65,9 @@ async function refresh(tree=false) {
   const changed=JSON.stringify(snapshot)!==JSON.stringify(state.workspace);state.workspace=snapshot;state.coreServices=snapshot.core_modules||[];
  $('#project-title').textContent=state.workspace.name||'cFS';
   backendState(true);
-  renderToolbar();if(tree||changed||!document.body.classList.contains('no-tree'))await renderTree();if(changed||tree)renderView();
+  if(!workspaceReady)return;
+  renderToolbar();if(changed||tree)renderView();
+  if(!document.body.classList.contains('no-tree'))await renderTree();
 }
 async function renderTree() {
  const root=$('#tree'), path=fileRoot(), previous=root.dataset.root;
@@ -77,10 +80,11 @@ async function renderTree() {
  $('#explorer-title').textContent=state.view==='simulation'?'SYNTHETIC DATA':'FLIGHT SOFTWARE';
  root.setAttribute('aria-label',state.view==='simulation'?'Simulation files':'Flight software files');
  for(const path of saved.expanded){
+  if(request!==treeRequest)return;
   const folder=[...root.querySelectorAll('details')].find(folder=>folder.dataset.path===path);
   if(folder){folder.open=true;await folder._load();}
  }
- root.scrollTop=saved.scroll;markFiles();
+ if(request===treeRequest){root.scrollTop=saved.scroll;markFiles();}
 }
 function gitBadge(entry){
  const status={new:['A','New'],modified:['M','Modified']}[entry.change];
@@ -108,7 +112,7 @@ async function openFile(path, line, reveal=true, inspection=null) {
    if(!state.files.has(path)) {
     const data=await api('file?path='+encodeURIComponent(path));
     if(data.binary) throw Error(data.reason || 'Binary file · open externally');
-    state.files.set(path,{...data,saved:data.content});
+    if(!state.files.has(path))state.files.set(path,{...data,saved:data.content});
   }
   if(request!==fileOpenRequest)return;
   state.sourcePreview=inspection;
@@ -131,7 +135,18 @@ async function openFile(path, line, reveal=true, inspection=null) {
 function renderTabs() {
  $('#tabs').innerHTML=[...state.files].map(([p,f])=>`<div class="file-tab ${state.path===p?'active':''}"><button data-file="${esc(p)}" title="${esc(p)}"><span class="file-type">${fileType(p)}</span><span class="tab-label">${esc(p.split('/').pop())}</span>${f.content!==f.saved?'<i class="tab-dirty"></i>':''}</button><button data-close-file="${esc(p)}" title="Close file" aria-label="Close ${esc(p.split('/').pop())}">${icon('close')}</button></div>`).join('');
 }
-async function revealFile(path){const parts=path.split('/');for(let i=1;i<parts.length;i++){if(state.path!==path)return;const folder=[...document.querySelectorAll('#tree details')].find(d=>d.dataset.path===parts.slice(0,i).join('/'));if(folder){folder.open=true;await folder._load();}}markFiles();[...document.querySelectorAll('.file')].find(b=>b.dataset.file===path)?.scrollIntoView({block:'nearest'});}
+async function revealFile(path){
+ const request=fileOpenRequest,parts=path.split('/');
+ if($('#tree').dataset.root!==fileRoot())await renderTree();
+ for(let i=1;i<parts.length;i++){
+  if(request!==fileOpenRequest)return;
+  const folder=[...document.querySelectorAll('#tree details')].find(d=>d.dataset.path===parts.slice(0,i).join('/'));
+  if(folder){folder.open=true;await folder._load();}
+ }
+ if(request!==fileOpenRequest)return;
+ markFiles();
+ document.querySelector('.file.selected')?.scrollIntoView({block:'nearest'});
+}
 function markFiles(){document.querySelectorAll('.file').forEach(b=>b.classList.toggle('selected',b.dataset.file===state.path));}
 function syncScroll(){
  const code=$('#code'),layer=$('#highlight-layer'),marker=$('#source-line');
@@ -317,7 +332,7 @@ function renderProgress(){
 function renderToolbar(){
  const catalog=state.workspace?.catalog,project=state.workspace?.project;
  const profiles=state.hardware?.profiles||(catalog?.os||[]).map(os=>({board:catalog.board,board_label:catalog.name,os,os_label:catalog.os_labels?.[os]||os,targets:catalog.targets||[]}));
- if(!project)return;
+ if(!workspaceReady || !project)return;
  const synthetic=$('.synthetic-action');
  synthetic.hidden=state.target!=='qemu';
  const streaming=Boolean(simulationJob()),preview=state.jobs.some(job=>job.action==='simulate-preview' && job.status==='running');
@@ -494,7 +509,7 @@ async function advanceCommandLaunch(action){
   else if(action==='setup')location.href='/infrastructure?target='+encodeURIComponent(intent.target);
   else if(action==='active'){
    const active=state.hardware.execution.target;
-   if(active){await selectTarget(active);goToStep('boot');}
+   if(active){await selectTarget(active);await openFlightStep('boot');}
   }
   else if(action==='source')return resumeCommand(intent);
   else if(action==='check')await hardwareRefresh(true);
@@ -510,11 +525,23 @@ async function resumeCommand(intent){
  const ref=route?.handlers.find(h=>h.cc?.symbol===intent.id)?.cc?.source;
  if(state.commandTask?.id!==intent.id)state.commandTask={app:intent.app,id:intent.id,reviewed:[]};
  state.sourceCommand=intent.id+'/'+(route?.mid?.value??'');
- return selectView('code',ref?.path||app.entry,ref?.line);
+ return selectView('code',ref?.path||app.entry,ref?.line,null,'command');
 }
 let bootCleanup=null, bootTarget=null;
+function showFirstBoot(){
+ if(!bootCleanup || bootTarget!==state.target){
+  bootCleanup?.();bootTarget=state.target;
+  const pane=document.createElement('section');pane.className='first-boot-view';
+  $('#view').replaceChildren(pane);
+  bootCleanup=mountFirstBoot(pane,{api,target:bootTarget});
+ }
+ $('#visual-heading').hidden=true;syncNavigation();
+}
+function leaveBoot(){
+ bootCleanup?.();bootCleanup=null;bootTarget=null;
+}
 function renderView(){
- if(!state.workspace)return;
+ if(!workspaceReady)return;
  const detailState=new Map([...(state.view==='architecture'?Object.entries(state.archDetails||{}):[]),...(document.body.dataset.view===state.view?[...$('#view').querySelectorAll('details[data-detail-key]')].map(d=>[d.dataset.detailKey,d.open]):[])]);
  const groundScroll=$('.gs-definition-list')?.scrollTop||0;
  const previousCommand=$('#gs-command-form')?.dataset.commandId;
@@ -525,16 +552,8 @@ function renderView(){
  document.body.dataset.view=state.view;
  document.body.classList.toggle('simulation-mode',state.view==='simulation');
  document.body.classList.toggle('simulation-widgets',state.view==='simulation');
- if(state.view==='boot'){
-  if(!bootCleanup || bootTarget!==state.target){
-   bootCleanup?.();bootTarget=state.target;
-   const pane=document.createElement('section');pane.className='first-boot-view';
-   $('#view').replaceChildren(pane);
-   bootCleanup=mountFirstBoot(pane,{api,target:bootTarget,onNext:()=>goToStep('event')});
-  }
-  $('#visual-heading').hidden=true;syncNavigation();return;
- }
- if(bootCleanup){bootCleanup();bootCleanup=null;bootTarget=null;}
+ if(state.view==='boot'){showFirstBoot();return;}
+ if(bootCleanup)leaveBoot();
  const html=({architecture,bench,simulation:()=>renderSimulationBoard(state,{esc}),ground}[state.view])();
  if(oldBoard && html.includes('id="board-stage"')){
   // Keep the canvas connected while hardware status and sensor settings refresh.
@@ -641,7 +660,7 @@ async function chooseSourceCommand(command) {
 function newMissionApp(name=''){
  openAppWizard({initialName:name,workspace:state.workspace,api,esc,requireSaved:requireSavedMission,refresh:async(changed,deleted)=>{
   await reloadMissionFiles(changed,deleted);await refreshJourney();
- },onCommand:name=>guarded(async()=>{await selectView('code',state.workspace.apps.find(app=>app.name===name)?.entry);newCodeCommand(name);})()});
+ },onCommand:name=>guarded(async()=>{if(await selectView('code',state.workspace.apps.find(app=>app.name===name)?.entry,1,null,'command'))newCodeCommand(name);})()});
 }
 function newCodeCommand(preferred) {
  const revision=state.workspace.mission.source.hash;
@@ -662,7 +681,7 @@ function newCodeCommand(preferred) {
   state.sourceCommand=id+'/'+(route?.mid?.value ?? '');
   state.commandTask={app,id,reviewed:[],changes:result.source_changes};state.lastAuthoredCommand=id;
   state.catalogTarget=null;
-  await selectView('code',path,start?.line || 1);
+  await selectView('code',path,start?.line || 1,null,'command');
   refreshJourney();
  }, 'Create command');
 }
@@ -814,33 +833,32 @@ function updateGround(snapshot){
  if(!previous||['connected','target','error'].some(key=>previous[key]!==snapshot[key])||JSON.stringify(previous.subscription_errors)!==JSON.stringify(snapshot.subscription_errors))renderView();else updateTelemetry();
 }
 let catalogRequest=null;
-async function groundRefresh(){
+function groundRefresh(){
  const target=state.target;
- if(catalogRequest){
-  if(catalogRequest.target===target)return catalogRequest.promise;
-  await catalogRequest.promise.catch(()=>{});
-  if(state.target!==target)return;
-  return groundRefresh();
- }
+ if(catalogRequest?.target===target)return catalogRequest.promise;
  const request={target};
  catalogRequest=request;
- request.promise=loadGround(target).finally(()=>{if(catalogRequest===request)catalogRequest=null;});
+ request.promise=loadGround(request);
  return request.promise;
 }
-async function loadGround(target){
+async function loadGround(request){
+ const {target}=request;
  state.catalogLoading=true;state.groundError='';if(state.view==='ground')renderView();
  try{
   const [catalog,ground,plans]=await Promise.all([api('ground/catalog?target='+target),api('ground'),api('ground/tests')]);
-  if(target!==state.target)return;
+  if(catalogRequest!==request || target!==state.target)return;
   state.catalog=catalog;state.catalogTarget=target;state.ground=ground;state.testPlans=plans;
   const running=ground.target===target && ground.runs?.find(run=>run.status==='waiting');
   if(running && !state.groundSelection && !state.groundApp)state.groundSelection=running.command;
   const apps=new Set([...(catalog.apps||[]).map(app=>app.name),...[...catalog.commands,...catalog.packets].map(item=>item.app)]);
   if(state.groundApp&&!apps.has(state.groundApp))state.groundApp='';
- }catch(error){state.groundError=error.message;throw error;}
- finally{
-  state.catalogLoading=false;
-  if(state.view==='ground')renderView();
+ }catch(error){
+  if(catalogRequest===request && target===state.target){state.groundError=error.message;throw error;}
+ }finally{
+  if(catalogRequest===request){
+   catalogRequest=null;state.catalogLoading=false;
+   if(state.view==='ground')renderView();
+  }
  }
 }
 async function groundConnection(connect){
@@ -854,18 +872,22 @@ async function groundConnection(connect){
 }
 let groundPolling=false;
 document.addEventListener('visibilitychange',()=>{
- if(document.hidden || !state.workspace)return;
+ if(document.hidden || !workspaceReady)return;
  pollJobs().catch(error=>feedback(error.message,true));
  if(state.view==='ground')pollGround().catch(error=>feedback(error.message,true));
 });
 async function pollGround(){
  if(groundPolling)return;groundPolling=true;
- try{updateGround(await api('ground'));}finally{groundPolling=false;}
+ const target=state.target;
+ try{const snapshot=await api('ground');if(target===state.target)updateGround(snapshot);}
+ finally{groundPolling=false;}
 }
 async function sendGroundCommand(id,values){
  if(state.groundSending)return;
+ const target=state.target;
  if(state.catalogTarget!==state.target || state.catalog?.build_fingerprint!==state.workspace.builds?.[state.target]?.fingerprint)await groundRefresh();
- const cmd=state.catalog.commands.find(command=>command.id===id),target=state.target;
+ if(target!==state.target)throw Error('Target changed · reselect command');
+ const cmd=state.catalog?.commands.find(command=>command.id===id);
  if(!cmd)throw Error('Command unavailable · refresh catalog');
  const fields=(cmd.fields||[]).filter(f=>!/^(padding|reserved|spare)/i.test(f.name.split('.').at(-1)));
  for(const field of fields){
@@ -897,74 +919,113 @@ document.addEventListener('submit',async event=>{
  catch(error){state.groundError=error.message;renderView();}
 });
 
-// A guide link starts an activity. Opening the Code rail only browses files.
-async function openFlightStep(step){
- if(!state.workspace)return;
+// Rail views browse the project; a first-flight link may also start an activity.
+let workspaceReady=false, viewRequest=0;
+function recordRoute(route, extra={}) {
+ const url=new URL(location.href);
+ url.hash=route;
+ if(url.href!==location.href){
+  history.pushState(extra,'',url);
+ }else if(Object.keys(extra).length){
+  history.replaceState({...history.state,...extra},'',url);
+ }
+ window.dispatchEvent(new Event('flight:navigate'));
+}
+async function openFlightStep(step,entry={}){
+ if(!workspaceReady)return;
  state.commandLaunch=null;
  if(step==='app'){
   state.archApp='';state.archLibrary='';state.archOverview=true;state.mapMode=state.workspace.apps.some(app=>app.managed)?'3d':'2d';state.mapSection='mission';
-  return selectView('architecture');
  }
  if(step==='command'){
   const last=authoredCommand();
   if(last)return resumeCommand(last);
   const app=state.workspace.apps.find(a=>a.managed);
-  if(!app){await openFlightStep('app');return newMissionApp();}
-  await selectView('code',app.entry);return newCodeCommand(app.name);
+  if(!app){
+   // The wizard owns the App step. Its completion opens the Command activity.
+   if(location.hash==='#command'){const url=new URL(location.href);url.hash='app';history.replaceState(null,'',url);}
+   if(await openFlightStep('app'))newMissionApp();
+   return;
+  }
+  if(await selectView('code',app.entry,1,null,'command'))newCodeCommand(app.name);
+  return;
  }
  if(step==='send'){
   const last=authoredCommand();
   if(last)return openGroundRoute(last.app,last.id,true);
  }
- if(step==='event'||step==='send')return selectView('ground');
- if(step==='sensor'||step==='test'){state.signalView=step==='test'?'test':'signals';return selectView('simulation');}
- if(step==='boot')return selectView('boot');
+ if(step==='code')state.commandTask=null;
+ if(step==='sensor'||step==='test'||step==='simulation')state.signalView=step==='test'?'test':entry.signalTab||'signals';
+ return selectView(workspaceRoute(step).view,undefined,undefined,null,step);
 }
 function authoredCommand(){
  const commands=state.workspace.apps.filter(app=>app.managed).flatMap(app=>(app.manifest?.commands||[]).map(cmd=>({app:app.name,id:(app.name+'_'+cmd.name+'_CC').toUpperCase()})));
  return commands.find(c=>c.id===state.commandTask?.id) || commands.find(c=>c.id===state.lastAuthoredCommand) ||
   commands.find(c=>c.id===history.state?.flightCommand) || commands.at(-1);
 }
-function goToStep(step){location.hash=step;}
-window.addEventListener('hashchange',guarded(()=>openFlightStep(location.hash.slice(1))));
+function followLocation(){
+ const route=workspaceRoute(location.hash);
+ if(location.hash!=='#'+route.id){const url=new URL(location.href);url.hash=route.id;history.replaceState(history.state,'',url);}
+ if(!workspaceReady)return openWorkspace();
+ const target=workspaceTarget(new URLSearchParams(location.search).get('target'),state.hardware.execution);
+ if(target && target!==state.target)adoptTarget(target);
+ return openFlightStep(route.id,history.state || {});
+}
+window.addEventListener('popstate',guarded(followLocation));
 document.addEventListener('click',e=>{
- const a=e.target.closest('#flight-guide a');
- if(!a?.hash || a.href!==location.href || e.defaultPrevented || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey)return;
- e.preventDefault();guarded(()=>openFlightStep(a.hash.slice(1)))();
+ const a=e.target.closest('a[href]');
+ if(!a || e.defaultPrevented || e.button!==0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || a.target || a.hasAttribute('download'))return;
+ const dest=new URL(a.href);
+ if(dest.origin!==location.origin || dest.pathname.replace(/\/$/,'')!=='/studio' || !dest.hash)return;
+ e.preventDefault();
+ // The current document owns editor buffers, terminal sessions and the selected target.
+ if(!workspaceReady){recordRoute(workspaceRoute(dest.hash).id);openWorkspace();return;}
+ guarded(()=>openFlightStep(workspaceRoute(dest.hash).id))();
 });
-async function selectView(view,sourceFile,sourceLine,inspection=null){
- if(view==='communication'){view='ground';state.groundMode='system';}
+async function selectView(view,sourceFile,sourceLine,inspection=null,route=view){
+ const request=++viewRequest;
+ ++fileOpenRequest;++treeRequest;
+ if(view==='communication'){view='ground';route='ground';state.groundMode='system';}
  if(view!=='ground' && state.view==='ground' && state.ground?.first_flight?.answer)state.coachDismissed=true;
  if(view!==state.view && state.groundError){state.groundError='';feedback('');}
  const codeOnly=view==='code',next=codeOnly?'architecture':view,previous=state.view;
- const changedRoot=(previous==='simulation')!==(next==='simulation');
  document.body.classList.toggle('code-only',codeOnly);state.view=next;state.inspected=null;
  state.archFollowSource=false;
  document.body.classList.toggle('no-editor',!codeOnly);
  document.body.classList.toggle('no-tree',!codeOnly);
- if(next==='simulation'){
-  if(state.signalSidebar==null)state.signalSidebar=window.innerWidth>760;
-  state.selectedDevice=null;
-  if(!state.simulation||!state.simulationDirty)await refreshSimulation();
- }else if(codeOnly){
-  await renderTree();
-  const first = state.workspace.apps.find(app => app.managed) || state.workspace.apps.find(app => app.name === 'sample_app');
-  await openFile(sourceFile || lastFiles.get('flight') || first?.entry || state.workspace.mission.source.path,sourceLine,true,inspection);
- }
+ if(next==='simulation' && state.signalSidebar==null)state.signalSidebar=window.innerWidth>760;
+ recordRoute(route);
+ if(next==='ground' && !state.commandLaunch && state.catalogTarget!==state.target)state.catalogLoading=true;
+ renderToolbar();renderView();
+ document.body.classList.remove('workspace-loading');
  if(next==='simulation'){
   terminal.selectContext('simulation',{reveal:false});
   if(previous!==next)terminal.show(false);
- }else terminal.selectContext('flight',{reveal:previous==='simulation'});
- renderView();renderToolbar();
+ }else terminal.selectContext('flight',{reveal:false});
+ if(codeOnly){
+  const first=state.workspace.apps.find(app=>app.managed)||state.workspace.apps.find(app=>app.name==='sample_app');
+  const path=sourceFile || lastFiles.get('flight') || first?.entry || state.workspace.mission.source.path;
+  await renderTree();
+  if(request!==viewRequest)return false;
+  await openFile(path,sourceLine,true,inspection);
+ }else if(next==='simulation'){
+  if(!state.simulationDirty)await refreshSimulation();
+  if(request!==viewRequest)return false;
+  renderView();
+ }
+ if(request!==viewRequest)return false;
  if(isWorkbench())await hardwareRefresh();
- if(next==='ground' && (!state.commandLaunch || commandLaunchStep(state,state.commandLaunch)?.action==='catalog'))await groundRefresh();
+ if(next==='ground' && (!state.commandLaunch || commandLaunchStep(state,state.commandLaunch)?.action==='catalog')){
+  try{await groundRefresh();}catch(error){if(request===viewRequest && state.groundError!==error.message)throw error;}
+ }
+ return request===viewRequest;
 }
 function openGroundRoute(app,command=null,prepare=false){
  state.commandLaunch=prepare?{app,id:command,target:state.target}:null;
- if(prepare)history.replaceState({...history.state,flightCommand:command},'',location.pathname+'#send');
+ if(prepare)recordRoute('send',{flightCommand:command});
  Object.assign(state,{groundApp:app,groundSelection:command,groundQuery:'',groundTab:'commands',
                       groundMode:'trip',groundPane:'route',groundPacket:null,inspectedSend:null});
- return selectView('ground');
+ return selectView('ground',undefined,undefined,null,prepare?'send':'ground');
 }
 attachTagPicker($('#code'), () => state.path || '');
 let guideTimer;
@@ -1131,9 +1192,16 @@ async function configureProfile(){
  }catch(error){state.board=state.workspace.project.board;state.os=state.workspace.project.os;throw error;}
  finally{state.profileBusy=false;renderToolbar();}
 }
+function adoptTarget(target){
+ catalogRequest=null;
+ Object.assign(state,{target,catalog:null,catalogTarget:null,catalogLoading:false,groundError:'',groundApp:'',
+  groundSelection:null,groundPacket:null,commandLaunch:null,groundQuery:'',groundDrafts:{},selectedTests:{},inspectedSend:null});
+ document.body.dataset.flightTarget=target;
+}
 async function selectTarget(target){
  await api('hardware/target',{target});
- state.target=target;state.catalog=null;state.catalogTarget=null;state.groundError='';state.groundSelection=null;state.groundPacket=null;state.commandLaunch=null;
+ adoptTarget(target);
+ const url=new URL(location.href);url.searchParams.set('target',target);history.replaceState(history.state,'',url);
  if(target==='qemu' && !state.simulationDirty)await refreshSimulation();
  renderToolbar();selectTargetTerminal();await hardwareRefresh();renderView();if(state.view==='ground')await groundRefresh();
 }
@@ -1187,7 +1255,7 @@ document.addEventListener('click',guarded(async e=>{
  else if('chooseBoard' in d){$('#board-select').click();}
  else if(d.modelDefinition){await selectView('code',d.modelDefinition);}
  else if(d.file){state.inspected=null;$('#dialog').close();await openFile(d.file,Number(d.line)||undefined);}
- else if(d.view){state.commandLaunch=null;if(d.view==='code')state.commandTask=null;history.replaceState(null,'',location.pathname);if($('#dialog').open)$('#dialog').close();await selectView(d.view);if(d.device)state.selectedDevice=d.device;if(d.inspect){state.inspected=d.inspect;renderView();}}
+ else if(d.view){state.commandLaunch=null;if(d.view==='code')state.commandTask=null;if($('#dialog').open)$('#dialog').close();if(!await selectView(d.view))return;if(d.device)state.selectedDevice=d.device;if(d.inspect){state.inspected=d.inspect;renderView();}}
  else if(d.closeFile){await saveFile(d.closeFile);state.files.delete(d.closeFile);if(state.path===d.closeFile){const next=[...state.files.keys()].at(-1);state.path=null;if(next)await openFile(next);else{$('#code').value='';$('#code').disabled=true;lineNumbers();}}renderTabs();}
  else if(d.archApp||d.archLibrary||d.archTab){
   if(d.archApp||d.archLibrary){
@@ -1206,7 +1274,7 @@ document.addEventListener('click',guarded(async e=>{
  else if('signalPage' in d){state.signalPage=Math.max(0,Number(d.signalPage));renderView();}
  else if('seriesChannel' in d){selectSeries(d.seriesId,d.seriesChannel);renderView();}
  else if(d.signalView){
-  state.signalView=d.signalView;renderView();
+  state.signalView=d.signalView;recordRoute(d.signalView==='test'?'test':'sensor',{signalTab:d.signalView});renderView();
   if(d.signalView==='python')await showSignalScript(state.simulation?.available.find(d=>d.id===state.selectedDevice)?.script||state.simulation?.source);
   if(d.signalView==='qemu'){await pollGround();renderView();}
  }
@@ -1222,15 +1290,14 @@ document.addEventListener('click',guarded(async e=>{
    terminal.selectContext('simulation',{reveal:false});
   }finally{state.scenarioStarting=false;if(state.view==='simulation')renderView();}
  }
- else if('signalOrbit' in d){state.signalView='signals';state.selectedDevice=null;state.signalSidebar=true;renderView();}
+ else if('signalOrbit' in d){state.signalView='signals';recordRoute('sensor');state.selectedDevice=null;state.signalSidebar=true;renderView();}
  else if(d.signalSource){await selectView('code',d.signalSource);}
  else if('runSignalTest' in d){await testSimulation();}
  else if(d.signalTab){state.signalOutput=d.signalTab;renderSimulationPanel(true);updateSignalValues(state);}
  else if('signalSidebar' in d){state.signalSidebar=state.signalSidebar===false;renderView();}
  else if(d.signalDevice){await selectSimulationDevice(d.signalDevice);}
  else if('signalHardware' in d){
-  await selectView('bench');
-  if(state.target==='native')return;
+  if(!await selectView('bench')||state.target==='native')return;
   if(state.workspace.project.board){if(Object.keys(state.workspace.catalog.buses||{}).length)create('device');else document.querySelector('[data-add-bus]')?.click();}
   else location.href='/infrastructure?target=qemu';
  }
@@ -1245,7 +1312,7 @@ document.addEventListener('click',guarded(async e=>{
  else if(d.simulationRemove){if(!simulationJob()){state.simulation.settings.sensors=state.simulation.settings.sensors.filter(sensor=>sensor.device!==d.simulationRemove);state.simulationDirty=true;renderView();}}
  else if('commandBack' in d && state.commandLaunch)await resumeCommand(state.commandLaunch);
  else if(d.commandLaunch)await advanceCommandLaunch(d.commandLaunch);
- else if ('dismissCommand' in d) {state.commandTask=null;renderView();}
+ else if ('dismissCommand' in d) {state.commandTask=null;recordRoute('code');renderView();}
  else if ('commandTest' in d) {
   const ctx=commandContext(state);if(!ctx)return;
   const app=ctx.app.name,id=ctx.selected.id;
@@ -1347,11 +1414,11 @@ document.addEventListener('click',guarded(async e=>{
  else if(d.gsSelect){state.groundSelection=d.gsSelect;state.groundMode='trip';state.groundPane='route';state.groundPacket=null;renderView();}
  else if(d.gsPacket){state.groundPacket=Number(d.gsPacket);updateTelemetry();}
  else if(d.device){state.selectedDevice=d.device;renderView();}
- else if(d.simulationFile){await selectView('simulation');await openFile(d.simulationFile);}
+ else if(d.simulationFile){if(await selectView('simulation'))await openFile(d.simulationFile);}
  else if('sensorMenu' in d)sensorMenu();
  else if('addBus' in d || d.linkHal){
   if(state.target==='native')return;
-  if(state.view!=='bench')await selectView('bench');
+  if(state.view!=='bench'&&!await selectView('bench'))return;
   if(d.linkHal){state.selectedDevice=d.linkHal;state.inspected=d.linkHal;renderView();halDialog(state.workspace,d.linkHal,hardwareActions());}
   else busDialog(state.workspace,hardwareActions());
  }
@@ -1381,20 +1448,53 @@ document.addEventListener('click',guarded(async e=>{
  else if(d.ground){if(d.ground==='catalog')await groundRefresh();else await groundConnection(d.ground==='start');}
 
 }));
-(async()=>{try{
- state.token=(await api('session')).token;
- // A job that finishes meanwhile replaces this request; wait for the newer state.
- while(!state.hardware)await hardwareRefresh();
- if(state.hardware.execution?.preferred_target){
-  state.target=state.hardware.execution.preferred_target;
+function showOpening(view,error){
+ const label={boot:'First boot',ground:'Ground Station',architecture:'Architecture',simulation:'Synthetic data',bench:'Hardware',code:'Code'}[view];
+ const panel=$('#workspace-opening');
+ panel.querySelector('strong').textContent=error || label;
+ panel.querySelector('button').hidden=!error;
+ panel.querySelector('.workspace-loader').hidden=Boolean(error);
+}
+let sessionRequest, initialSnapshot, openingRequest=0;
+function prepareWorkspace(){
+ initialSnapshot??=Promise.all([state.hardware || hardwareRefresh(),refresh()]).catch(error=>{initialSnapshot=null;throw error;});
+ return initialSnapshot;
+}
+async function openWorkspace(){
+ const request=++openingRequest;
+ const route=workspaceRoute(location.hash);
+ const requested=new URLSearchParams(location.search).get('target');
+ if(bootCleanup && route.view!=='boot')leaveBoot();
+ if(!bootCleanup){document.body.classList.add('workspace-loading');showOpening(route.view);}
+ try{
+  sessionRequest??=api('session').then(session=>{state.token=session.token;}).catch(error=>{sessionRequest=null;throw error;});
+  const target=workspaceTarget(requested,{});
+  await Promise.all([sessionRequest, route.view==='boot' ? target || hardwareRefresh() : prepareWorkspace()]);
+  if(request!==openingRequest)return;
+  const resolved=target || workspaceTarget(null,state.hardware?.execution || {});
+  if(!resolved)throw Error('Target unavailable');
+  adoptTarget(resolved);
+  const url=new URL(location.href);url.searchParams.set('target',state.target);history.replaceState(history.state,'',url);
+  // Boot only needs its target and session. Load the mission snapshot for the next screen independently.
+  if(route.view==='boot'){
+   state.view='boot';document.body.dataset.view='boot';showFirstBoot();document.body.classList.remove('workspace-loading');
+   await prepareWorkspace();
+  }
+  if(request!==openingRequest)return;
+  workspaceReady=true;
+  selectTargetTerminal();
+  await followLocation();
+ }catch(error){
+  if(request!==openingRequest)return;
+  if(document.body.classList.contains('workspace-loading')){
+   workspaceReady=false;showOpening(route.view,error.message);
+  }else feedback(error.message,true);
  }
- await refresh(true);
- if(state.target==='qemu')await refreshSimulation();
- selectTargetTerminal();
- await openFlightStep(location.hash.slice(1));
-}catch(e){feedback(e.message,true);}})();
-setInterval(()=>{if(document.hidden||!state.workspace)return;pollJobs().catch(e=>feedback(e.message,true));if(state.view==='ground'||(state.view==='simulation'&&state.signalView==='qemu'))pollGround().catch(e=>feedback(e.message,true));},1500);
-setInterval(()=>{if(!document.hidden){if(state.workspace&&!state.missionBusy&&!state.profileBusy)refresh().catch(e=>feedback(e.message,true));if(isWorkbench())hardwareRefresh().catch(e=>feedback(e.message,true));}},15000);
+}
+$('#workspace-opening button').onclick=openWorkspace;
+openWorkspace();
+setInterval(()=>{if(document.hidden||!workspaceReady)return;pollJobs().catch(e=>feedback(e.message,true));if(state.view==='ground'||(state.view==='simulation'&&state.signalView==='qemu'))pollGround().catch(e=>feedback(e.message,true));},1500);
+setInterval(()=>{if(!document.hidden&&workspaceReady){if(!state.missionBusy&&!state.profileBusy)refresh().catch(e=>feedback(e.message,true));if(isWorkbench())hardwareRefresh().catch(e=>feedback(e.message,true));}},15000);
 
 function syncNavigation(){
  const onlyCode=document.body.classList.contains('code-only');
@@ -1403,7 +1503,11 @@ function syncNavigation(){
 }
 new MutationObserver(syncNavigation).observe(document.body,{attributes:true,attributeFilter:['class']});
 function mountSidebar(){
- const setVisible=visible=>{document.body.classList.toggle('no-tree',!visible);document.body.classList.toggle('mobile-tree',visible&&window.innerWidth<=760);layout.apply();};
+ const setVisible=visible=>{
+  document.body.classList.toggle('no-tree',!visible);document.body.classList.toggle('mobile-tree',visible&&window.innerWidth<=760);
+  if(visible && workspaceReady && $('#tree').dataset.root!==fileRoot())guarded(renderTree)();
+  layout.apply();
+ };
  $('#hide-explorer').onclick=()=>setVisible(false);$('#show-explorer').onclick=()=>setVisible(true);
  let request=0,timer;
  const search=async()=>{
