@@ -4,8 +4,8 @@
 
 | Ambiente | Python | JavaScript |
 | --- | --- | --- |
-| Cópia com o cFS oficial instalado | 63 de 63 passaram, inclusive os dois ciclos HTTP de missão e hardware. | 20 de 20 passaram na árvore da mesma versão. |
-| Projeto antes do clone | 61 passaram. Os dois ciclos HTTP que dependem dos fontes oficiais foram pulados. | 20 de 20 passaram. |
+| Checkout com o cFS oficial instalado, após o reparo do boot QEMU | 74 de 74 passaram, inclusive os dois ciclos HTTP de missão e hardware. | 24 de 24 passaram. |
+| Projeto antes do clone, ensaio anterior | 61 passaram. Os dois ciclos HTTP que dependem dos fontes oficiais foram pulados. | 20 de 20 passaram. |
 
 ## Primeiro voo nativo
 
@@ -28,7 +28,18 @@ Em 19 de novembro de 2026, o primeiro voo foi executado em cópias isoladas do p
 
 ![Teste Stamp concluído com os dois recibos da app](images/first-flight/command-receipt.webp)
 
-A validação do novo percurso usou execução nativa e testes locais de sensores. Os ensaios em QEMU e placa física registrados no fim deste documento pertencem à bancada anterior.
+## Retomada no emulador
+
+Em 19 de novembro de 2026, o Raspberry Pi OS emulado já havia chegado ao login, mas a tentativa de boot do Studio terminou em `Host key verification failed`. O disco recriado tinha outra chave. Conferimos a identidade ED25519 no contêiner que montava o disco do projeto, exigimos essa chave na porta 2222 e retomamos o primeiro voo no mesmo contêiner.
+
+| Verificação | Resultado observado |
+| --- | --- |
+| Binário e destino | cFS oficial `a4d305dc06fb`, build ARM64, guest `aarch64`. |
+| Processo e journal | `cfs.service` ativo, PID 1023. O journal dessa invocação registrou os cinco estados do ES, até `CFE_ES_Main entering OPERATIONAL state`. |
+| Apps | 13 entradas no startup. Doze apps emitiram seu evento EVS de inicialização. `sch_lab` confirmou a inicialização em texto no console. Seu chip aguarda um evento EVS identificado. |
+| Navegador | Os cartões passaram por build, emulador e início do cFS. Abrir o console preservou a posição da pilha. O botão **Ground Station** abriu a etapa Event. |
+
+[![Voo QEMU em OPERATIONAL na janela do Studio](images/first-flight/boot-qemu-running.webp)](images/first-flight/boot-qemu-running.webp)
 
 ## Comparação das telas
 
@@ -37,7 +48,7 @@ Cada linha traz o export interativo fornecido e a tela correspondente servida pe
 <details>
 <summary>Escolha do alvo</summary>
 
-O cartão Native aparece após a verificação manual. A captura do Studio mostra os três resultados aprovados. O reparo e a liberação de Continue dependem dos comandos do host. O tema claro da aplicação usa bege.
+As capturas mostram o estado depois de verificar **Native** em uma cópia nova. **Compiler** e **Python** passaram. **Source** aguarda a instalação. Abrir os detalhes e o terminal manteve os cartões nas mesmas coordenadas em 1440 × 900, 1366 × 768 e 390 × 844. Em uma instalação de teste com PTY, **Input required** permitiu responder a uma solicitação de senha e acompanhar a verificação posterior. O tema claro da aplicação usa bege.
 
 | Janela e tema | Referência | Flight Studio |
 | --- | --- | --- |
@@ -51,7 +62,7 @@ O cartão Native aparece após a verificação manual. A captura do Studio mostr
 <details>
 <summary>Primeiro boot</summary>
 
-O manifesto pode conter mais apps do que o desenho de exemplo. Uma app só recebe a marca de inicialização quando há evidência no log do voo.
+As capturas mostram a reprodução de um voo nativo, pausado em **Starting core**, com os cinco marcos abertos pelo cartão **Start cFS**. As apps recebem a marca de inicialização conforme chegam suas mensagens no log. O console pôde ser aberto e fechado sem deslocar a pilha em ambas as resoluções.
 
 | Janela e tema | Referência | Flight Studio |
 | --- | --- | --- |
