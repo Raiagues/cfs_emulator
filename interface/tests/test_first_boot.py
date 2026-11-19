@@ -38,12 +38,19 @@ class BootTest(unittest.TestCase):
         self.assertIsNone(parse_boot_line("EVS Port1 1980-012 66/1/DEMO 4: Not initialized"))
         self.assertIsNone(parse_boot_line("EVS Port1 1980-012 66/1/DEMO 4: NOOP"))
 
+    def test_boot_page_before_the_first_clone(self):
+        studio = SimpleNamespace(hardware=self.hardware, jobs_snapshot=lambda: [])
+        with patch.object(self.hardware, "profiles", return_value=[]):
+            state = snapshot(studio, "native")
+        self.assertEqual(state["apps"], [])
+        self.assertFalse(state["verified"])
+        self.assertFalse(state["running"])
+
     def test_running_and_stopped_snapshot_preserve_startup_modules(self):
         h = self.hardware
-        startup = "CFE_APP, /cf/sample_app.so, SAMPLE_APP_Main, SAMPLE_APP, 50, 8192, 0, 0;"
-        mission = SimpleNamespace(startup_text=lambda: startup)
-        studio = SimpleNamespace(hardware=h, workspace=SimpleNamespace(mission=mission), jobs_snapshot=lambda: [self.job])
-        self.job.update(phase="run", started=1)
+        studio = SimpleNamespace(hardware=h, jobs_snapshot=lambda: [self.job])
+        # Capture the installed manifest independently of edits to the next mission.
+        self.job.update(phase="run", started=1, boot_apps=[{"name": "sample_app", "task": "SAMPLE_APP"}])
         observe(h, self.job, "CFE_ES_Main: CFE_ES_Main entering OPERATIONAL state")
         h._save("deployed.json", {"native": {"pid": 42, "deployed_at": 1}})
         with patch.object(h, "profiles", return_value=[]), patch.object(h, "_local_flight_state", return_value={"pids": [42]}) as processes:

@@ -54,7 +54,12 @@ def observe(hardware, job, line):
         if fact["state"] == "OPERATIONAL":
             hardware._save("operational-" + job["target"] + ".json",
                            {"run_id": job["id"], "time": time.time(), "target": job["target"],
-                            "connection": job.get("connection"), "flight": facts})
+                            "connection": job.get("connection"), "apps": job.get("boot_apps"), "flight": facts})
+
+
+def _app_records(startup):
+    active, _ = parse_startup(startup)
+    return [{"name": entry.name, "task": entry.fields[3]} for entry in active if entry.kind == "CFE_APP"]
 
 
 def boot_observed(hardware, target):
@@ -71,8 +76,6 @@ def snapshot(studio, target):
         raise ValueError("Invalid boot target")
     jobs = [j for j in studio.jobs_snapshot() if j["target"] == target and j["action"] in {"first-boot", "run"}]
     job = jobs[-1] if jobs else {}
-    config = studio.workspace.mission
-    startup_entries, _ = parse_startup(config.startup_text())
     config_data = load_config(hardware.root)
     profile = next((p for p in hardware.profiles() if target in p["targets"]
                     and (p["board"], p["os"]) == (config_data.get("board"), config_data.get("os"))), {})
@@ -89,12 +92,17 @@ def snapshot(studio, target):
         local_state = hardware._local_flight_state()
         live = deployed.get("pid") in local_state["pids"]
         stopped = not live
+    apps = job.get("boot_apps") if job else receipt.get("apps")
+    if apps is None:
+        # Before the first checkout there is no mission script to evaluate.
+        has_source = (hardware.root / "cFS/sample_defs/targets.cmake").is_file()
+        apps = _app_records(studio.workspace.mission.startup_text()) if has_source else []
     lines = job.get("lines", [])
     return {"target": target, "verified": infrastructure.target_verified(hardware, target),
             "hardware": "This computer" if target == "native" else profile.get("board_label", "Board"),
             "architecture": platform.machine() if target == "native" else profile.get("board", ""),
             "os": platform.system() if target == "native" else profile.get("os_label", "Linux"),
-            "apps": [{"name": a.name, "task": a.fields[3]} for a in startup_entries if a.kind == "CFE_APP"],
+            "apps": apps,
             "services": [name for name in SERVICES if (hardware.root / "cFS/cfe/modules" / name.lower()).is_dir()], "es_states": STATES, "flight": flight, "stopped": stopped,
             "running": live,
             "job": {k: job[k] for k in ("id", "status", "action", "phase", "build_percent", "error", "started") if k in job},
@@ -116,7 +124,12 @@ def execute(studio, record, options, emit):
     if cancel.is_set():
         raise ValueError("Build cancelled")
     emit("Preparing the communication catalog for this build...")
-    studio.freeze_catalog(build)
+    sensorless = bool(options.get("sensorless"))
+    studio.freeze_catalog(build, sensorless)
+    build_root = hardware.runtime / "sensorless" if sensorless else hardware.root
+    installed = build_root / hardware.build_directory(target) / "exe/cpu1/cf/cfe_es_startup.scr"
+    with studio.lock:
+        record["boot_apps"] = _app_records(installed.read_text())
     if target == "qemu":
         phase("boot")
         if not hardware._qemu_running():
