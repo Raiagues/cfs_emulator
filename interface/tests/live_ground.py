@@ -24,9 +24,12 @@ def check(port, target, timeout=40):
     if before["connected"] and before.get("target") != target:
         raise RuntimeError("A different target owns the Ground Station session.")
     opened = not before["connected"]
-    if opened:
-        api("ground/start", {"target": target})
+    session = api("ground/start", {"target": target}) if opened else before
     try:
+        contact = session["first_flight"]
+        if not contact["automatic"] and not contact["telemetry"]:
+            api("ground/send", {"target": target, "command_id": contact["enable_command"],
+                                "values": {"dest_IP": contact["return_host"]}})
         # Wait for the downlink before sending. A successful send alone is not an acknowledgement.
         deadline = time.monotonic() + timeout
         while not api("ground")["receiving"]:

@@ -19,7 +19,7 @@ from ground_station.discovery import command_mappings, telemetry_mappings, raw_t
 from ground_station.tables import table_packets
 from ground_station.subscriptions import subscription_metadata
 
-CATALOG_VERSION = 12
+CATALOG_VERSION = 13
 
 TYPES = {'uint8': 'B', 'uint16': 'H', 'uint32': 'I', 'uint64': 'Q',
          'int8': 'b', 'int16': 'h', 'int32': 'i', 'int64': 'q',
@@ -330,7 +330,8 @@ def _build_catalog(root, overrides_root=None, container=None, temp_root=None, bu
                            'offsetof(CFE_MSG_CommandHeader_t,Sec.FunctionCode)',
                            'offsetof(CFE_MSG_CommandHeader_t,Sec.Checksum)']
             if app == 'to_lab':
-                expressions += ['CI_LAB_MISSION_BASE_UDP_PORT', 'TO_LAB_MISSION_TLM_PORT']
+                expressions += ['CI_LAB_MISSION_BASE_UDP_PORT', 'TO_LAB_MISSION_TLM_PORT',
+                                'CFE_EVS_EventType_INFORMATION']
             for packet in packets + commands:
                 packet['_index'] = len(expressions)
                 expressions += [packet['mid_expr'], packet.get('size_expr') or 'sizeof(' + packet['struct'] + ')', packet.get('code_expr', packet.get('repeat_expr', '1'))]
@@ -345,6 +346,7 @@ def _build_catalog(root, overrides_root=None, container=None, temp_root=None, bu
                 raise ValueError('Unsupported CCSDS layout; commands will not be sent.')
             if app == 'to_lab':
                 result['transport'] = {'command_port': values[4], 'telemetry_port': values[5],
+                                       'evs_information': values[6],
                                        'command_header_size': values[0], 'telemetry_header_size': values[1]}
             for packet in packets + commands:
                 i = packet.pop('_index')

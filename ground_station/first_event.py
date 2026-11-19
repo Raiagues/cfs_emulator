@@ -1,0 +1,68 @@
+"""First-contact receipts for one ground receiver and its compiled flight catalog."""
+import re
+
+
+class FirstEvent:
+    def __init__(self, catalog=None, destination=None):
+        catalog = catalog or {}
+        self.noops = {}
+        self.enable = None
+        self.destination = destination
+        self.information = catalog.get('transport', {}).get('evs_information')
+        self.downlink = self.event = self.answer = None
+        self.pending = None
+        self.counter = {}
+        self.hk_fields = {}
+        for command in catalog.get('commands', []):
+            if command['app'] == 'to_lab' and command['id'].endswith('_OUTPUT_ENABLE_CC'):
+                self.enable = command['id']
+            if not command['id'].endswith('_NOOP_CC'):
+                continue
+            if command['app'] == 'sample_app' or command.get('source', '').startswith('mission/apps/'):
+                self.noops[command['id']] = command['app']
+        for packet in catalog.get('packets', []):
+            if packet['app'] not in self.noops.values() or 'HK' not in packet['id'].upper():
+                continue
+            for field in packet['fields']:
+                if field['name'].split('.')[-1] == 'CommandCounter':
+                    self.hk_fields[packet['mid']] = field['name']
+
+    def sent(self, command):
+        app = self.noops.get(command['id'])
+        if app and not command.get('automatic') and not self.answer:
+            self.pending = {'app': app, 'send_id': command['event_id'], 'baseline': self.counter.get(app),
+                            'reply': None, 'increase': None}
+
+    def received(self, packet):
+        if packet['errors'] or not packet['app']:
+            return
+        values = packet['values']
+        if not self.downlink:
+            self.downlink = packet['received_at']
+        field = self.hk_fields.get(packet['mid'])
+        count = values.get(field)
+        if field and type(count) is int:
+            self.counter[packet['app']] = count
+        attempt = self.pending
+        if self.answer is not None or not attempt or packet['event_id'] <= attempt['send_id']:
+            return
+        if (packet['app'] == 'cfe_evs' and values.get('PacketID.EventID') is not None
+                and self.information is not None and values.get('PacketID.EventType') == self.information
+                and str(values.get('PacketID.AppName', '')).casefold() == attempt['app'].casefold()
+                and re.search(r'\bno[ -]?op\b', str(values.get('Message', '')), re.I)):
+            attempt['reply'] = packet['event_id']
+            self.event = self.event or packet['received_at']
+        if (packet['app'] == attempt['app'] and field and type(count) is int
+                and attempt['baseline'] is not None and count > attempt['baseline']):
+            attempt['increase'] = packet['event_id']
+        if attempt['reply'] and attempt['increase']:
+            self.answer = packet['received_at']
+
+    def snapshot(self, automatic=False):
+        standard = next((key for key, app in self.noops.items() if app == 'sample_app'), None)
+        return {'telemetry': bool(self.downlink), 'event': bool(self.event), 'answer': bool(self.answer),
+                'event_at': self.event, 'answer_at': self.answer, 'return_host': self.destination,
+                'enable_command': self.enable, 'noop_command': standard or next(iter(self.noops), None),
+                'baseline_apps': sorted(self.counter),
+                'app': self.pending['app'] if self.pending else self.noops.get(standard),
+                'automatic': automatic, 'receipt': dict(self.pending) if self.pending else None}

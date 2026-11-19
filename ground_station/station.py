@@ -11,6 +11,7 @@ from collections import deque
 from pathlib import Path
 
 from .catalog import build_catalog, apply_overrides
+from .first_event import FirstEvent
 from .round_trip import RoundTrips, TestPlans
 
 
@@ -46,6 +47,11 @@ class GroundStation:
         self._received = 0
         self._malformed = 0
         self._last_received = None
+        self.first_contact = FirstEvent()
+        self._learned_targets = set()
+        self._target = None
+        self._auto_enable = False
+        self._subscriptions_due = self._subscription_thread = None
         self._subscription_errors = []
         self._subscription_cache = {}
         self._subscription_file = self.root / 'ground_station/.runtime/subscriptions.json'
@@ -106,6 +112,10 @@ class GroundStation:
                 self._last_received = None
                 self._error = self._failure = None
                 self._subscription_errors = []
+                self._target = (catalog.get('build_target'), target_ip, ports['command_port'])
+                self._auto_enable = self._target in self._learned_targets
+                self.first_contact = FirstEvent(catalog, return_host or listen_host)
+                self._subscriptions_due = ([target_ip, ports['command_port']], service_instance)
                 self._stop = threading.Event()
                 self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 self._socket.bind((listen_host, 0))
@@ -119,8 +129,8 @@ class GroundStation:
                     raise ValueError(self._failure or 'The official telemetry receiver did not become ready.')
             if not self._connected():
                 raise ValueError(self._failure or 'The telemetry receiver stopped.')
-            self._enable_downlink(enable['id'], return_host or listen_host)
-            self._subscribe_catalog([target_ip, ports['command_port']], service_instance)
+            if self._auto_enable:
+                self._enable_downlink(enable['id'], return_host or listen_host)
         except Exception:
             self.stop()
             raise
@@ -159,6 +169,8 @@ class GroundStation:
             return
         defaults = config['subscription_defaults']
         for mid in sorted(desired - baseline - confirmed):
+            if self._stop.is_set():
+                return
             try:
                 fields = {'Stream': mid, 'Stream.Value': mid, 'Flags.Priority': defaults['priority'],
                           'Flags.Reliability': defaults['reliability'], 'BufLimit': defaults['buffer_limit']}
@@ -246,9 +258,20 @@ class GroundStation:
             packet['count'] = (previous['count'] if previous else 0) + 1
             packet['event_id'] = self._record_communication(packet['app'], 'telemetry', len(data), packet['received_at'])
             self._latest[mid] = packet
-            if self.trips.active and not any(p['mid'] == mid and p['sequence'] == packet['sequence'] and
-                                             p['hex'] == packet['hex'] for p in reversed(self._history)):
-                self.trips.observe(packet)
+            if not any(p['mid'] == mid and p['sequence'] == packet['sequence'] and
+                       p['hex'] == packet['hex'] for p in reversed(self._history)):
+                self.first_contact.received(packet)
+                if self.first_contact.event:
+                    self._learned_targets.add(self._target)
+                if self.trips.active:
+                    self.trips.observe(packet)
+            if self.first_contact.downlink and self._subscriptions_due and not self._stop.is_set():
+                # An EVS acknowledgment cannot arrive on a closed downlink. Complete
+                # subscriptions from a worker so the receiver can deliver the reply.
+                self._subscription_thread = threading.Thread(target=self._subscribe_catalog,
+                                                            args=self._subscriptions_due, daemon=True)
+                self._subscriptions_due = None
+                self._subscription_thread.start()
             self._history.append(packet)
             if "Message" in values and "PacketID.AppName" in values:
                 self._events.append(packet)
@@ -283,6 +306,7 @@ class GroundStation:
                      'automatic': automatic}
             event['event_id'] = self._record_communication(event['app'], 'command', size, event['sent_at'])
             self._commands.append(event)
+            self.first_contact.sent(event)
             if prepared:
                 self.trips.start(prepared, event, test_id)
             return event
@@ -301,6 +325,9 @@ class GroundStation:
             self._updates.notify_all()
         if self._receiver:
             self._receiver.stop()
+        if self._subscription_thread:
+            self._subscription_thread.join()
+        self._subscriptions_due = self._subscription_thread = None
         if self._socket:
             self._socket.close()
         self._receiver = self._socket = None
@@ -316,6 +343,7 @@ class GroundStation:
                                   'receiving': connected and self._last_received is not None and time.time() - self._last_received < 10,
                                   'transport': self._transport, 'backend': 'cFS-GroundSystem', 'error': self._error,
                                   'subscription_errors': list(self._subscription_errors),
+                                  'first_flight': self.first_contact.snapshot(self._auto_enable),
                                   'received': self._received, 'malformed': self._malformed,
                                   'last_received': self._last_received,
                                   'communication': {'since': self._session_started,

@@ -7,7 +7,7 @@ A estação envia comandos ao cFS em execução e decodifica a telemetria recebi
 ## Enviar um comando e confirmar a resposta
 
 1. No workspace, selecione o destino, compile a missão e execute **Run cFS**. Para **Emulator**, inicie o emulador antes de executar o cFS.
-2. Abra **Ground station** e clique em **Connect**. A estação carrega o catálogo do build instalado, abre o receptor UDP e habilita o downlink via TO_LAB.
+2. Abra **Ground station** e clique em **Connect**. No primeiro contato, a estação abre o receptor UDP e seleciona `TO_LAB_OUTPUT_ENABLE_CC`. Confira o endereço de retorno em `dest_IP` e clique em **Send**. O indicador **Telemetry on** acende com o primeiro pacote decodificado.
 3. Selecione `sample_app` e o comando `SAMPLE_APP_NOOP_CC`. Confira MID, código e tamanho do pacote e envie o comando. A seção **Sent** mostra os bytes transmitidos.
 4. Em **Telemetry events**, procure o evento `SAMPLE: NOOP command`. O housekeeping seguinte de `SAMPLE_APP` informa o novo `CommandCounter`. Esses dois registros permitem verificar que a app processou o NOOP.
 
@@ -25,7 +25,7 @@ sequenceDiagram
     TO-)UI: Pacotes UDP para o receptor
 ```
 
-Na conexão, o Studio envia `TO_LAB_OUTPUT_ENABLE_CC` com o endereço de retorno. Para um pacote ausente da tabela compilada, envia `TO_LAB_ADD_PKT_CC` e aguarda até oito segundos pelo evento de confirmação. **Partial reception** identifica uma sessão com inscrições pendentes. Pacotes restritos ao Software Bus ficam fora dos contadores do receptor.
+Depois do primeiro evento de NOOP confirmado, o Studio habilita a saída automaticamente nas reconexões ao mesmo destino durante a execução do Studio. As confirmações do painel pertencem à conexão ativa. Com o downlink aberto, a estação inscreve os pacotes ausentes da tabela compilada via `TO_LAB_ADD_PKT_CC` e espera até oito segundos por cada confirmação. As falhas ficam em **Catalog details**.
 
 ## Montar um teste de ida e volta
 
