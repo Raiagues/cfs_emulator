@@ -17,7 +17,7 @@ export function renderCommunication(state,{esc,icon}){
   const defs=(commands?catalog.commands:catalog.packets)||[];
   const relevant=defs.filter(d=>d.app===selected);
   const browser=selected?'<article class="system-detail"><header><strong>'+esc(selected)+'</strong><button data-comm-app="'+esc(selected)+'" aria-label="Close application">×</button></header>'+
-    (recent.length?'<ol>'+recent.map(r=>'<li><time>'+new Date((r.received_at||r.sent_at)*1000).toLocaleTimeString()+'</time> '+esc(r.name||r.id)+' · '+r.bytes+' B</li>').join('')+'</ol>':'<p>No observations in this session.</p>')+
+    (recent.length?'<ol>'+recent.map(r=>'<li><time>'+new Date((r.received_at||r.sent_at)*1000).toLocaleTimeString()+'</time> '+esc(r.name||r.id)+' · '+r.bytes+' B</li>').join('')+'</ol>':'<p>No session traffic</p>')+
     '<div class="comm-source-links">'+relevant.map(d=>commands?'<button data-open-trip-command="'+esc(d.id)+'">'+icon('antenna')+esc(d.id)+'</button>':'<button data-system-packet="'+d.mid+'">'+icon('wave')+esc(d.id)+'</button>').join('')+'</div></article>':'';
   return '<section class="system-traffic"><header class="system-title"><strong>NASA cFS</strong><div role="group" aria-label="Traffic direction">'+
     ['commands','telemetry'].map(v=>'<button data-system-traffic="'+v+'" aria-pressed="'+((commands?'commands':'telemetry')===v)+'">'+(v==='commands'?'Commands':'Telemetry')+'</button>').join('')+'</div></header>'+

@@ -38,12 +38,12 @@
       </div>
       <span id="native-host" class="native-host" hidden></span>
       <div class="top-actions actions" aria-label="Linux and flight software actions">
-        <button class="toolbar-action boot-action" data-job="boot" title="Start the QEMU emulator and boot Linux"><span class="icon" data-icon="cpu"></span><span class="action-label">Start emulator</span></button>
-        <button class="toolbar-action shutdown-action" data-job="shutdown" title="Stop the QEMU emulator and its Linux system"><span class="icon" data-icon="power"></span><span>Stop emulator</span></button>
+        <button class="toolbar-action boot-action" data-job="boot" title="Boot QEMU Linux"><span class="icon" data-icon="cpu"></span><span class="action-label">Start emulator</span></button>
+        <button class="toolbar-action shutdown-action" data-job="shutdown" title="Shut down QEMU"><span class="icon" data-icon="power"></span><span>Stop emulator</span></button>
         <button class="toolbar-action synthetic-action" data-view="simulation" title="Open synthetic data" hidden><span class="icon" data-icon="wave"></span><span>Synthetic data</span></button>
-        <button class="toolbar-action build-action" data-job="build" title="Compile cFS for the selected board and system"><span class="icon" data-icon="build"></span><span>Build cFS</span></button>
-        <button class="toolbar-action run-action" data-job="run" title="Run cFS on the selected target"><span class="icon" data-icon="play"></span><span>Run cFS</span></button>
-        <button class="toolbar-action stop-action" aria-label="Stop cFS" data-job="stop" title="Stop cFS on the selected target" disabled><span class="icon" data-icon="stop"></span><span>Stop cFS</span></button>
+        <button class="toolbar-action build-action" data-job="build" title="Build for target"><span class="icon" data-icon="build"></span><span>Build cFS</span></button>
+        <button class="toolbar-action run-action" data-job="run" title="Run on target"><span class="icon" data-icon="play"></span><span>Run cFS</span></button>
+        <button class="toolbar-action stop-action" aria-label="Stop cFS" data-job="stop" title="Stop on target" disabled><span class="icon" data-icon="stop"></span><span>Stop cFS</span></button>
       </div>
     </div>
     <button type="button" class="workspace-theme" data-theme-toggle aria-label="Switch theme"></button>
@@ -94,7 +94,7 @@
       <div id="terminal-splitter" class="splitter horizontal" role="separator" aria-label="Terminal height" aria-orientation="horizontal" tabindex="0" title="Drag to resize · double-click to reset"></div>
       <section class="terminal console" id="terminal-panel" aria-label="Terminal">
         <header class="console-heading"><span>TERMINAL</span><span id="terminal-title"></span><span id="job-status"></span><button class="icon-button" id="minimize-terminal" title="Minimize terminal · Ctrl+`" aria-label="Minimize terminal"><span class="icon" data-icon="minus"></span></button></header>
-        <div class="terminal-body"><pre id="logs" role="log" aria-live="off" tabindex="0">Run cFS to see flight output here.</pre><div id="shell-terminal" hidden></div><nav id="terminal-sessions" aria-label="Terminal sessions"></nav></div>
+        <div class="terminal-body"><pre id="logs" role="log" aria-live="off" tabindex="0">No open terminal</pre><div id="shell-terminal" hidden></div><nav id="terminal-sessions" aria-label="Terminal sessions"></nav></div>
       </section>
     </section>
   </main>

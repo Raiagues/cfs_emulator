@@ -43,7 +43,7 @@ async function api(path,body,retry=true){
  try{response=await fetch('/api/'+path,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-Studio-Token':state.token},body:JSON.stringify(body)});}
  catch{
   backendState(false);$('#feedback').dataset.network='true';
-  throw Error(body===undefined?'Local server disconnected. Reconnecting…':'Connection interrupted. Check the terminal before retrying the operation.');
+  throw Error(body===undefined?'Server disconnected · reconnecting…':'Connection interrupted · check terminal before retry');
  }
  backendState(true);
  const data=await response.json();
@@ -106,7 +106,7 @@ async function openFile(path, line, reveal=true, inspection=null) {
   if(state.view==='simulation'&&state.simulationDirty)await saveSimulation();
    if(!state.files.has(path)) {
     const data=await api('file?path='+encodeURIComponent(path));
-    if(data.binary) throw Error(data.reason || 'Binary file; open the artifacts on disk.');
+    if(data.binary) throw Error(data.reason || 'Binary file · open externally');
     state.files.set(path,{...data,saved:data.content});
   }
   if(request!==fileOpenRequest)return;
@@ -188,12 +188,12 @@ function saveSimulation(){
  return pendingSimulationSave;
 }
 async function commitSimulationSettings(){
- if(simulationJob())throw Error('Stop synthetic data before changing its session settings');
- if($('#simulation-form')&&!$('#simulation-form').reportValidity())throw Error('Complete the signal settings before saving');
+ if(simulationJob())throw Error('Stop synthetic data first');
+ if($('#simulation-form')&&!$('#simulation-form').reportValidity())throw Error('Incomplete signal settings');
  state.simulationSaving=true;renderSimulationPanel();
  try{
    const dirty=[...state.files.values()].find(file=>file.path.startsWith('sensors/')&&file.content!==file.saved);
-   if(dirty)throw Error('Save '+dirty.path.split('/').at(-1)+' before saving signal settings');
+   if(dirty)throw Error('Save '+dirty.path.split('/').at(-1)+' first');
    state.simulation=await api('simulation',{settings:state.simulation.settings,expected_hash:state.simulation.hash});
    state.simulationDirty=false;
    for(const path of state.simulation.sources){if(!state.files.has(path))continue;const file=await api('file?path='+encodeURIComponent(path));state.files.set(path,{...file,saved:file.content});if(state.path===path){$('#code').value=file.content;lineNumbers();renderTabs();}}
@@ -222,7 +222,7 @@ function addSimulationSensor(id){
 }
 async function startSimulation(){
  if(state.view!=='simulation')await selectView('simulation');
- if(state.target!=='qemu'||!state.hardware?.qemu?.running)throw Error('Start the emulator before sending synthetic data');
+ if(state.target!=='qemu'||!state.hardware?.qemu?.running)throw Error('Start the emulator first');
  if(state.simulationDirty)await saveSimulation();
  for(const path of state.files.keys())if(path.startsWith('sensors/'))await saveFile(path);
  await startJob('simulate');terminal.selectContext('simulation',{reveal:false});
@@ -296,7 +296,6 @@ function renderProgress(){
  const physical=job.target==='physical',label=job.action==='boot'?(physical?'Connecting to board':job.operation_complete?'Emulator ready':job.retry?'Checking emulator SSH':'Starting emulator'):job.action==='shutdown'?(physical?'Shutting down board':'Stopping emulator'):job.action==='setup'?(physical?'Preparing board':'Setting up QEMU'):progressLabels[job.action]||'Working';
  $('#operation-label').textContent=label+' · '+(job.target==='native'?'Native':physical?'Board':'Emulator');
  $('#operation-time').textContent=Math.max(0,Math.floor(Date.now()/1000-job.started))+'s';
- status.title='Execution controls become available when this operation finishes.';
 }
 function renderToolbar(){
  const catalog=state.workspace?.catalog,project=state.workspace?.project;
@@ -323,7 +322,7 @@ function renderToolbar(){
  boot.querySelector('.action-label').textContent=actionLabel(boot.dataset.job,state.target);
  if(!physical&&!native&&!needsSetup&&state.hardware?.qemu?.can_retry_boot)boot.querySelector('.action-label').textContent='Retry QEMU connection';
  boot.classList.toggle('connected',physical&&!!state.hardware?.physical?.last_probe?.connected);
- boot.title=physical?'Connect to the powered-on board over SSH':needsSetup?'Prepare QEMU and its Linux image':'Start the QEMU emulator and boot Linux';
+ boot.title=physical?'Connect through SSH':needsSetup?'Prepare QEMU image':'Boot QEMU Linux';
  $('.shutdown-action').hidden=physical||native;
  for(const button of document.querySelectorAll('.top-actions [data-job]')){
   button.disabled=busy||!targets.includes(state.target);
@@ -331,8 +330,8 @@ function renderToolbar(){
   button.classList.toggle('is-running',active);button.setAttribute('aria-busy',String(active));
  }
  if(state.target==='qemu'&&!needsSetup&&state.hardware)boot.disabled=busy||!(state.hardware.qemu.can_boot||state.hardware.qemu.can_retry_boot);
- if(state.target==='qemu'&&state.hardware?.qemu?.linux_ready)boot.title='QEMU is already running. Stop QEMU before starting again.';
- else if(state.target==='qemu'&&state.hardware?.qemu?.can_retry_boot)boot.title='Retry the Linux connection in the existing QEMU instance';
+ if(state.target==='qemu'&&state.hardware?.qemu?.linux_ready)boot.title='QEMU already running';
+ else if(state.target==='qemu'&&state.hardware?.qemu?.can_retry_boot)boot.title='Retry emulator SSH';
  $('.shutdown-action').disabled=busy||!state.hardware?.qemu?.running;
  const active=native?state.hardware?.native?.running:physical?state.hardware?.physical?.last_probe?.flight_running:state.hardware?.qemu?.flight_running;
  const runningTarget=state.hardware?.execution?.target;
@@ -344,8 +343,8 @@ function renderToolbar(){
  buildButton.classList.toggle('needs-build',!!stale);
  buildButton.lastElementChild.textContent=stale?'Rebuild cFS':'Build cFS';
  $('.run-action').disabled=!build?.exists||!build.current||busy||!targets.includes(state.target)||state.hardware?.execution?.can_start!==true;
- $('.run-action').title=!build?.exists||!build.current?'Build cFS for this target first':state.hardware?.execution?.block_reason||(native?'Run cFS on this computer':'Run cFS on the selected target');
- buildButton.title=stale?'Mission sources have changed since the last build for this target':native?'Compile cFS for this computer':'Compile cFS for the configured board and OS';
+ $('.run-action').title=!build?.exists||!build.current?'Build this target first':state.hardware?.execution?.block_reason||(native?'Run on this computer':'Run on target');
+ buildButton.title=stale?'Mission sources changed':native?'Build for this computer':'Build for selected target';
  syncBenchActions();
  renderProgress();
  renderSimulationPanel();
@@ -354,7 +353,7 @@ function architecture(){return renderArchitecture(state,{esc,hex,icon});}
 function bench() {
  const w=state.workspace,h=state.hardware,physical=state.target==='physical';
  if(state.target==='native')return `<div class="bench-shell native-bench"><div class="board-title"><div class="board-identity">${icon('monitor')}<div><h1>This computer</h1><span class="board-status"><i class="${h?.native?.running?'active':''}"></i>${h?.native?.running?'cFS running':'Native execution'} · ${esc(h?.native?.os||'Host OS')} · ${esc(h?.native?.architecture||'')}</span></div></div></div><div class="bench-canvas"><div id="board-stage" class="board-stage"></div></div></div>`;
- if(!w.project.board)return `<div class="hardware-empty">${icon('cpu')}<h2>Select a board and OS</h2>${button('Select board','data-choose-board')}</div>`;
+ if(!w.project.board)return `<div class="hardware-empty">${icon('cpu')}<h2>Select board and OS</h2>${button('Select board','data-choose-board')}</div>`;
  const probe=h?.physical?.last_probe,connection=h?.physical?.connection;
  const selected=w.project.devices.find(d=>d.id===state.selectedDevice)||w.project.devices[0];
  state.selectedDevice=selected?.id||null;
@@ -379,7 +378,7 @@ function hardwareDetails(){
  const title=board?profile?.board_label||w.project.board:device.name;
  const fields=board?[['Board',w.project.board],['System',profile?.os_label||w.project.os]]:
   [['Bus',device.bus],['I²C address',hex(device.address).replace('0x00','0x')],['Linux device',binding?.linux_device||'—'],['Model driver',model.cfs_driver||'Not available']];
- return `<section class="cad-details" aria-label="${board?'Board':'Sensor'} details"><header><div><strong>${esc(title)}</strong>${device?`<span>${esc(device.model)}</span>`:''}</div>${!board?button(icon('pencil'),`class="icon-button" data-hardware-settings="${esc(device.id)}" title="Configure bus and address" aria-label="Configure bus and address"`)+button(icon('more'),'class="icon-button" data-sensor-menu title="Sensor options" aria-label="Sensor options"'):''}${button(icon('close'),'class="icon-button" data-close-inspection title="Close details" aria-label="Close details"')}</header><dl>${fields.map(([label,value])=>`<div><dt>${label}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl>${board?busInventory(w,esc):halDetails(w,device,esc)}${device?`<div class="sensor-test-actions">${model.definition?button('Model definition',`data-model-definition="${esc(model.definition)}" title="Edit the register map and output units"`):''}${button('Test sensor',`data-test-device="${esc(device.id)}" ${model.register_probe===false?'disabled title="Read this protocol through the flight app."':state.target==='native'?'disabled title="Select a board or emulator to read I²C."':''}`)}${model.register_model?button('Validate model',`data-test-model="${esc(device.id)}" title="Check the compiled QEMU model on a separate emulated board"`):''}</div>${sensorReadings(device)}`:''}</section>`;
+ return `<section class="cad-details" aria-label="${board?'Board':'Sensor'} details"><header><div><strong>${esc(title)}</strong>${device?`<span>${esc(device.model)}</span>`:''}</div>${!board?button(icon('pencil'),`class="icon-button" data-hardware-settings="${esc(device.id)}" title="Configure bus and address" aria-label="Configure bus and address"`)+button(icon('more'),'class="icon-button" data-sensor-menu title="Sensor options" aria-label="Sensor options"'):''}${button(icon('close'),'class="icon-button" data-close-inspection title="Close details" aria-label="Close details"')}</header><dl>${fields.map(([label,value])=>`<div><dt>${label}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl>${board?busInventory(w,esc):halDetails(w,device,esc)}${device?`<div class="sensor-test-actions">${model.definition?button('Model definition',`data-model-definition="${esc(model.definition)}" title="Register map and units"`):''}${button('Test sensor',`data-test-device="${esc(device.id)}" ${model.register_probe===false?'disabled title="Flight app reader required"':state.target==='native'?'disabled title="I²C requires board/emulator"':''}`)}${model.register_model?button('Validate model',`data-test-model="${esc(device.id)}" title="Isolated QEMU model test"`):''}</div>${sensorReadings(device)}`:''}</section>`;
 }
 function sensorReadings(device){
  const readings={};
@@ -389,7 +388,7 @@ function sensorReadings(device){
  }
  const names=[...new Set(Object.values(readings).flatMap(job=>Object.keys(job.result.values)))];
  const sleepNotice=Object.entries(readings).filter(([,job])=>job.result.asleep).map(([target,job])=>
-  `<p class="sensor-sleep">${target==='qemu'?'Emulator':'Board'} · ID ${esc(hex(job.result.identity))} verified. Start the flight reader to wake this sensor.</p>`).join('');
+  `<p class="sensor-sleep">${target==='qemu'?'Emulator':'Board'} · ID ${esc(hex(job.result.identity))} verified · asleep · start flight reader</p>`).join('');
  if(!names.length)return sleepNotice;
  const value=(job,name)=>{const sample=job?.result.values[name];return sample?esc(sample.value.toFixed(3)+' '+sample.unit):'—';};
  const stamp=job=>job?`<small>${esc(new Date(job.ended*1000).toLocaleTimeString())}</small>`:'';
@@ -443,7 +442,7 @@ async function hardwareSettings(id){
   wiring[id]={bend:Number(values.bend)};localStorage.setItem(wireStorageKey(),JSON.stringify(wiring));
   await reloadMissionFiles(result.changed,result.deleted);
   const restart=state.target==='qemu'&&state.hardware?.qemu?.running&&(device.bus!==values.bus||device.address!==Number(values.address));
-  feedback(restart?'Sensor connection saved · restart the emulator to apply':'Sensor connection saved');
+  feedback(restart?'Wiring saved · restart emulator':'Sensor connection saved');
  });
  const form=$('#dialog-form');
  form.elements.bus.onchange=()=>{form.querySelector('[data-pin-inputs]').innerHTML=pinInputs(form.elements.bus.value,Object.fromEntries(new FormData(form)));};
@@ -451,7 +450,7 @@ async function hardwareSettings(id){
 function sensorMenu(){
  const d=state.workspace.project.devices.find(d=>d.id===state.selectedDevice);if(!d)return;
  const readers=state.workspace.project.apps.flatMap(app=>Object.entries(app.sensors).filter(([,device])=>device===d.id).map(([name])=>({app:app.name,name,telemetry:Object.entries(app.telemetry_bindings).filter(([,sensor])=>sensor===name).map(([name])=>name)})));
- dialog(d.name,`<p>${esc(d.model)} · ${esc(d.bus)} · ${hex(d.address)}</p>${readers.length?`<p>Detach app readers before removing this device.</p>${readers.map(reader=>`<div class="settings-actions"><code>${esc(reader.app)} / ${esc(reader.name)}</code>${reader.telemetry.map(name=>button(icon('trash')+' Remove '+esc(name)+' telemetry',`data-remove="telemetry" data-app="${esc(reader.app)}" data-name="${esc(name)}"`)).join('')}${button(icon('trash')+' Remove reader',`data-remove="sensor" data-app="${esc(reader.app)}" data-name="${esc(reader.name)}" ${reader.telemetry.length?'disabled':''}`)}</div>`).join('')}`:''}<div class="settings-actions">${button('Open settings','data-file="project/config.json"')}${state.target==='qemu'?button('Reset all signals',`data-job="values" ${!state.hardware?.qemu?.running||state.jobs.some(job=>job.action==='simulate'&&job.status==='running')?'disabled title="Stop Python signals before resetting"':''}`):''}${button(icon('trash')+' Remove sensor',`data-remove="device" data-name="${esc(d.id)}" ${readers.length?'disabled':''}`)}</div>`);
+ dialog(d.name,`<p>${esc(d.model)} · ${esc(d.bus)} · ${hex(d.address)}</p>${readers.length?`<p>Detach linked readers first</p>${readers.map(reader=>`<div class="settings-actions"><code>${esc(reader.app)} / ${esc(reader.name)}</code>${reader.telemetry.map(name=>button(icon('trash')+' Remove '+esc(name)+' telemetry',`data-remove="telemetry" data-app="${esc(reader.app)}" data-name="${esc(name)}"`)).join('')}${button(icon('trash')+' Remove reader',`data-remove="sensor" data-app="${esc(reader.app)}" data-name="${esc(reader.name)}" ${reader.telemetry.length?'disabled':''}`)}</div>`).join('')}`:''}<div class="settings-actions">${button('Open settings','data-file="project/config.json"')}${state.target==='qemu'?button('Reset all signals',`data-job="values" ${!state.hardware?.qemu?.running||state.jobs.some(job=>job.action==='simulate'&&job.status==='running')?'disabled title="Stop Python signals before resetting"':''}`):''}${button(icon('trash')+' Remove sensor',`data-remove="device" data-name="${esc(d.id)}" ${readers.length?'disabled':''}`)}</div>`);
 }
 function ground(){return renderGround(state,{esc,hex,icon});}
 let bootCleanup=null, bootTarget=null;
@@ -617,28 +616,28 @@ function create(kind,app,preferredBus) {
   busDialog(w,hardwareActions());return;
  }
  const labels={app:'app',device:'sensor',sensor:'sensor reader',command:'command',telemetry:'telemetry'};
- let body=kind==='device'?field('model','Model',Object.entries(w.catalog.models).map(([id,d])=>({value:id,label:id+(d.cfs_driver?'':' · no cFS driver')+(!d.can_add?' · configuration not validated':''),disabled:!d.can_add})))+field('id','Device ID')+field('bus','Bus',Object.entries(w.catalog.buses).map(([value,bus])=>({value,label:value+' · '+bus.device})))+'<label>I²C address<input name="address" required pattern="(0[xX][0-9a-fA-F]+|[0-9]+)"></label>':kind==='sensor'?'':field('name','Name');
+ let body=kind==='device'?field('model','Model',Object.entries(w.catalog.models).map(([id,d])=>({value:id,label:id+(d.cfs_driver?'':' · no cFS driver')+(!d.can_add?' · no default address':''),disabled:!d.can_add})))+field('id','Device ID')+field('bus','Bus',Object.entries(w.catalog.buses).map(([value,bus])=>({value,label:value+' · '+bus.device})))+'<label>I²C address<input name="address" required pattern="(0[xX][0-9a-fA-F]+|[0-9]+)"></label>':kind==='sensor'?'':field('name','Name');
  if(kind==='sensor'){
   const attached=w.project.apps.find(item=>item.name===app)?.sensors||{};
   const devices=w.project.devices.filter(device=>w.catalog.models[device.model]?.cfs_driver&&!Object.values(attached).includes(device.id));
   if(!devices.length){
-   dialog('Add sensor to '+app,'<p>Add a device with a flight driver in Hardware to attach another sensor.</p><button type="button" data-view="bench">Open hardware</button>',null);return;
+   dialog('Add sensor to '+app,'<p>Hardware sensor + flight driver required</p><button type="button" data-view="bench">Open hardware</button>',null);return;
   }
   body=field('device','Hardware sensor',devices.map(d=>({value:d.id,label:d.id+' · '+hex(d.address)})))+field('name','Reader name');
  }
  if(kind==='telemetry') body+=field('sensor','Source',[{value:'',label:'Custom payload'},...(m?.sensors||[]).map(s=>({value:s.name,label:s.name}))]);
  if(kind==='device'&&!Object.values(w.catalog.models).some(entry=>entry.can_add)){
-  dialog('Add sensor','<p>All configured I²C addresses are in use. You can define a model at another available address.</p><button type="button" data-design-sensor>Create a new I²C model</button>',null);
+  dialog('Add sensor','<p>No addressable I²C models</p><button type="button" data-design-sensor>New I²C model</button>',null);
   return;
  }
- if(kind==='device')body+='<button type="button" data-design-sensor>Create a new I²C model</button>';
+ if(kind==='device')body+='<button type="button" data-design-sensor>New I²C model</button>';
  dialog(kind==='sensor'?'Add sensor to '+app:'Add '+labels[kind],body,async values=>{requireSavedMission();const result=await api('mutate',{expected_hash:revision,action:'add-'+kind,payload:{...values,...(app?{app}:{})}});if(kind==='device'){state.selectedDevice=values.id;state.inspected=values.id;}
  await reloadMissionFiles(result.changed,result.deleted);
  if(kind==='app' && document.body.classList.contains('code-only')){
   const module=state.workspace.apps.find(item=>item.name===values.name && item.managed);
   if(module?.entry)await openFile(module.entry);
  }
- if(kind!=='device')feedback('Files created · build to apply');});
+ if(kind!=='device')feedback('Files created · rebuild required');});
  if(kind==='sensor'){
   const select=$('#dialog-body [name=device]'),reader=$('#dialog-body [name=name]');
   const setReaderName=()=>{reader.value=select.value;};
@@ -650,7 +649,7 @@ function create(kind,app,preferredBus) {
   const bus=$('#dialog-body [name=bus]'),address=$('#dialog-body [name=address]');
   if(preferredBus && Object.hasOwn(w.catalog.buses,preferredBus))bus.value=preferredBus;
   const occupied=value=>w.project.devices.some(device=>device.bus===bus.value && device.address===Number(value));
-  const checkAddress=()=>address.setCustomValidity(occupied(address.value)?'This address is in use on the selected bus. Choose the address configured on your sensor.':'');
+  const checkAddress=()=>address.setCustomValidity(occupied(address.value)?'Address occupied · check sensor configuration':'');
   const unused=Object.entries(w.catalog.models).find(([,details])=>details.can_add&&!occupied(details.default_address));
   if(unused)model.value=unused[0];
   model.onchange=()=>{defaults();checkAddress();};bus.onchange=address.oninput=checkAddress;
@@ -659,17 +658,18 @@ function create(kind,app,preferredBus) {
 }
 function remove(kind,app,name) {
  const revision=state.workspace.mission.source.hash;
- dialog('Remove '+(name||app),`<p>Remove ${kind==='device'?'the device and its unused generated drivers':'the source files for'} <strong>${esc(name||app)}</strong>? Build and run to apply.</p>`,async()=>{requireSavedMission();const result=await api('mutate',{expected_hash:revision,action:'remove-'+kind,payload:kind==='device'?{id:name}:{app,name}});await reloadMissionFiles(result.changed,result.deleted);feedback('Removed from project');});
+ const items=kind==='device'?['Device configuration','Unused generated drivers']:['Source files'];
+ dialog('Remove '+(name||app),`<dl><dt>Delete from project</dt>${items.map(item=>`<dd>${item}</dd>`).join('')}<dt>Apply to flight</dt><dd>Build → Run</dd></dl>`,async()=>{requireSavedMission();const result=await api('mutate',{expected_hash:revision,action:'remove-'+kind,payload:kind==='device'?{id:name}:{app,name}});await reloadMissionFiles(result.changed,result.deleted);feedback('Removed from project');},'Remove');
 }
 function connect() {
  const current=state.hardware?.physical?.connection||{};
- dialog('Check board connection',`<p>Power on the board, enable SSH and connect it to this network.</p><p><a href="/infrastructure?target=physical">Configure SSH host and key ↗</a></p>${current.host?`<p>${esc(current.user||'SSH')} @ ${esc(current.host)}</p>`:''}`,current.host?()=>startJob('probe'):null);
+ dialog('Check board connection',`<p>Power on · SSH enabled · same network</p><p><a href="/infrastructure?target=physical">SSH host and key</a></p>${current.host?`<p>${esc(current.user||'SSH')} @ ${esc(current.host)}</p>`:''}`,current.host?()=>startJob('probe'):null);
 
 }
 async function startJob(action, extra={}) {
  if(action==='setup'&&state.target==='qemu'){location.href='/infrastructure?target=qemu';return;}
- if(launchPending)throw Error('Wait for the current operation to start.');
- if(['build','run'].includes(action)&&state.missionDraft)throw Error('Save or cancel the architecture draft before building.');
+ if(launchPending)throw Error('Operation starting');
+ if(['build','run'].includes(action)&&state.missionDraft)throw Error('Mission draft · save or cancel');
  const options={target:action==='stop'?state.hardware?.execution?.target||state.target:state.target,...(['boot','build','run'].includes(action)&&state.target!=='native'?{board:state.board,os:state.os}:{}),...(action==='boot'&&state.target==='qemu'&&state.hardware?.qemu?.can_retry_boot?{retry:true}:{}),...(state.target==='physical'&&['build','run'].includes(action)?{sensorless:state.sensorless}:{}),...extra};
  launchPending={action,target:options.target,retry:!!options.retry,started:Date.now()/1000};renderToolbar();
  try{
@@ -705,8 +705,8 @@ async function pollJobs() {
       if(isWorkbench())renderView();
      }
      hardwareRefresh(true).catch(e=>feedback(e.message,true));refresh(true).catch(e=>feedback(e.message,true));
-     if(job.status==='failed')feedback(job.error||'Operation failed. Check the terminal.',true);
-     else if(job.target===state.target)feedback(job.result?.shutdown_requested?'Board accepted the shutdown request':job.operation_complete?(job.action==='boot'?(job.target==='qemu'?'Emulator ready':'Board connected'):'cFS running'):job.action==='connect'?'Board connected':actionLabel(job.action,job.target)+' completed');
+     if(job.status==='failed')feedback(job.error||'Operation failed · check terminal',true);
+     else if(job.target===state.target)feedback(job.result?.shutdown_requested?'Shutdown request accepted':job.operation_complete?(job.action==='boot'?(job.target==='qemu'?'Emulator ready':'Board connected'):'cFS running'):job.action==='connect'?'Board connected':actionLabel(job.action,job.target)+' completed');
     }
    }
   }
@@ -759,7 +759,7 @@ async function groundRefresh(){
  }
 }
 async function groundConnection(connect){
- if(state.groundBusy)throw Error('Wait for the connection to complete.');
+ if(state.groundBusy)throw Error('Connection in progress');
  state.groundBusy=true;state.groundError='';renderView();
  try{
   const snapshot=await api(connect?'ground/start':'ground/stop',connect?{target:state.target,journey_reset_at:journeyResetAt()}:{});
@@ -779,21 +779,21 @@ async function sendGroundCommand(id,values){
  if(state.groundSending)return;
  if(state.catalogTarget!==state.target)await groundRefresh();
  const cmd=state.catalog.commands.find(command=>command.id===id),target=state.target;
- if(!cmd)throw Error('Command not found in this target build. Refresh the catalog.');
+ if(!cmd)throw Error('Command unavailable · refresh catalog');
  const fields=(cmd.fields||[]).filter(f=>!/^(padding|reserved|spare)/i.test(f.name.split('.').at(-1)));
  for(const field of fields){
   if(field.format==='s'||field.format==='raw'||(['Q','q'].includes(field.format)&&field.count===1))continue;
   if(field.count>1){
    values[field.name]=JSON.parse(values[field.name]);
    if(!Array.isArray(values[field.name])||values[field.name].length!==field.count)throw Error(field.name+': enter '+field.count+' elements.');
-   if(['Q','q'].includes(field.format)&&values[field.name].some(v=>typeof v==='number'&&!Number.isSafeInteger(v)))throw Error(field.name+': quote 64-bit integers to preserve precision.');
+   if(['Q','q'].includes(field.format)&&values[field.name].some(v=>typeof v==='number'&&!Number.isSafeInteger(v)))throw Error(field.name+': quote 64-bit integers');
   }else if(field.format==='?')values[field.name]=JSON.parse(values[field.name]);
   else{const value=Number(values[field.name]);if(!Number.isFinite(value))throw Error(field.name+': invalid number');values[field.name]=value;}
  }
  state.groundSending=true;state.groundError='';renderView();
  try{
   if(!state.ground?.connected||state.ground.target!==target)await groundConnection(true);
-  if(target!==state.target)throw Error('Target changed before sending. Select the command again.');
+  if(target!==state.target)throw Error('Target changed · reselect command');
   const test=planFor(state,cmd);
   state.inspectedSend=null;
   await api('ground/send',{command_id:cmd.id,values,target,test_id:test?.id});
@@ -932,7 +932,7 @@ document.addEventListener('submit',event=>{
 document.addEventListener('input',event=>{if(event.target.closest('#mission-draft-form')&&event.target.name&&state.missionDraft)state.missionDraft.draft.settings[event.target.name]=Number(event.target.value);});
 function requireSavedMission(){
  const dirty=[...state.files.values()].find(file=>file.content!==file.saved&&(file.path.startsWith('mission/')||file.path.startsWith('project/')));
- if(dirty)throw Error('Save '+dirty.path.split('/').at(-1)+' before changing the mission.');
+ if(dirty)throw Error('Save '+dirty.path.split('/').at(-1)+' first');
 }
 async function prepareMissionDraft(kind,name,mode='create',revision=state.workspace.mission.source.hash){
  if(kind==='app' && mode==='create')return newMissionApp(name);
@@ -979,7 +979,7 @@ async function saveMissionDraft(){
   if(result.app)state.archApp=result.app.name;
   if(result.library)state.archLibrary=result.library.name;
   document.body.classList.add('no-editor');state.archFollowSource=false;
-  feedback(payload.name+' saved · build to apply');
+  feedback(payload.name+' saved · rebuild required');
  }catch(error){state.missionError=error.message;feedback(error.message,true);}
  finally{state.missionBusy=null;renderTabs();renderView();}
 }
@@ -1003,8 +1003,8 @@ async function missionAction(action,name,kind='app',revision=state.workspace.mis
   if(!(saved.included||saved.enabled).includes(state.archApp))state.archApp='';
   try{
    await reloadMissionFiles(result.changed||[source],result.deleted);
-   feedback(name+' '+({add:'added',enable:'enabled',disable:'disabled',remove:'removed from mission',delete:'deleted'}[action])+' · build to apply');
-  }catch(error){state.missionError='Mission updated; could not refresh: '+error.message;feedback(state.missionError,true);}
+   feedback(name+' '+({add:'added',enable:'enabled',disable:'disabled',remove:'removed from mission',delete:'deleted'}[action])+' · rebuild required');
+  }catch(error){state.missionError='Mission updated · refresh failed: '+error.message;feedback(state.missionError,true);}
  }
  state.missionBusy=null;renderTabs();renderView();
  if(state.missionError&&/changed|Reload/i.test(state.missionError)){try{await refresh();}catch{}}
@@ -1021,8 +1021,8 @@ async function renameModule(kind,name,newName,revision){
   for(const key of ['archApp','archLibrary','groundApp','commApp'])if(state[key]===name)state[key]=newName;
   try{
    await reloadMissionFiles(result.changed,result.deleted,result.moved);
-   feedback(name+' renamed to '+newName+' · build to apply');
-  }catch(error){state.missionError='Renamed to '+newName+'. Workspace refresh failed: '+error.message;feedback(state.missionError,true);}
+   feedback(name+' renamed to '+newName+' · rebuild required');
+  }catch(error){state.missionError='Renamed to '+newName+' · refresh failed: '+error.message;feedback(state.missionError,true);}
  }finally{state.missionBusy=null;renderTabs();renderView();}
 }
 
@@ -1148,13 +1148,13 @@ document.addEventListener('click',guarded(async e=>{
   const app=ctx.app.name,id=ctx.selected.id;
   const target=state.target;
   if (!state.workspace.builds?.[target]?.current) {
-   feedback('Build cFS to load '+id+' in Ground Station.');
+   feedback(id+' · build required');
    return;
   }
   await groundRefresh();
   if (state.target!==target) return;
   if (state.catalogTarget!==target || !state.catalog?.commands?.some(command=>command.app===app&&command.id===id)) {
-   feedback(id+' is missing from the compiled command catalog.',true);
+   feedback(id+' · absent from build',true);
    return;
   }
   await openGroundRoute(app,id);
@@ -1306,7 +1306,7 @@ function mountSidebar(){
    const result=await api('files/search?root='+encodeURIComponent(root)+'&q='+encodeURIComponent(q));
    if(id!==request||root!==fileRoot())return;
    $('#file-results').innerHTML=result.files.map(path=>`<button class="file-result" data-file="${esc(path)}"><span>${esc(path.split('/').at(-1))}</span><small>${esc(path.slice(0,path.lastIndexOf('/')))}</small></button>`).join('')||'No matching files';
-   if(result.limited)$('#file-results').insertAdjacentHTML('beforeend','<small>First 100 matches. Refine your search.</small>');
+   if(result.limited)$('#file-results').insertAdjacentHTML('beforeend','<small>First 100 matches</small>');
   }catch(error){if(id===request)$('#file-results').textContent=error.message;}
  };
  const openSearch=()=>{setVisible(true);$('#file-search').hidden=false;$('#tree').hidden=true;$('#search-files').setAttribute('aria-expanded','true');$('#file-query').focus();search();};

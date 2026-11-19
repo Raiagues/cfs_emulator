@@ -19,7 +19,7 @@ export function openModuleAction(groupKey, action, workspace, {dialog, esc, prep
     const selected = choices.find(item => item.name === name);
     let fields = '', submit = 'Apply';
     if (action === 'remove') {
-      fields = '<p>The module will leave the CPU1 build and startup. Its source files stay in the project.</p>';
+      fields = '<dl><dt>CPU1 build and startup</dt><dd>Remove module</dd><dt>Source files</dt><dd>Keep in project</dd></dl>';
       submit = 'Remove from mission';
     } else if (action === 'new') {
       if (create && (!name || name === '@create')) {
@@ -31,10 +31,10 @@ export function openModuleAction(groupKey, action, workspace, {dialog, esc, prep
     } else if (selected) {
       const actions = [];
       if (selected.managed || selected.renamable) actions.push(option('rename', 'Rename module'));
-      if (selected.managed) actions.push(option('configure', 'Configure startup and schedule'));
+      if (selected.managed) actions.push(option('configure', 'Startup and schedule'));
       if (kind === 'app' && !selected.required) actions.push(option(selected.enabled ? 'disable' : 'enable', selected.enabled ? 'Disable startup' : 'Enable startup'));
       fields = `<label>Change<select name="operation">${actions.join('')}</select></label><div data-rename-fields></div>`;
-      if (groupKey === 'cfs') fields += '<p>NASA modules use their original flight identifiers.</p>';
+      if (groupKey === 'cfs') fields += '<p>Original NASA identifiers</p>';
       submit = 'Save change';
     }
     body.querySelector('[data-module-fields]').innerHTML = fields;
@@ -42,7 +42,7 @@ export function openModuleAction(groupKey, action, workspace, {dialog, esc, prep
     if (operation) {
       const updateOperation = () => {
         body.querySelector('[data-rename-fields]').innerHTML = operation.value === 'rename'
-          ? nameField('New module name', name) + '<p>Renaming updates the source files, native symbols and mission references.</p>' : '';
+          ? nameField('New module name', name) + '<dl><dt>Rename across</dt><dd>Source files</dd><dd>Compiled symbols</dd><dd>Mission references</dd></dl>' : '';
         form.querySelector('[type="submit"]').textContent = operation.value === 'configure' ? 'Configure app' : submit;
       };
       operation.onchange = updateOperation;
