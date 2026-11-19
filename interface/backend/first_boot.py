@@ -164,6 +164,8 @@ def execute(studio, record, options, emit):
         with studio.lock:
             record["phase"] = name
             _record(record, phase=name)
+    if target == "qemu" and hardware._qemu_running():
+        hardware.verify_running_emulator(emit, cancel)
     hardware.assert_can_start(target, record.get("connection"))
     studio.ground.stop()
     phase("build")

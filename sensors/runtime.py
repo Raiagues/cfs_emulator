@@ -139,12 +139,10 @@ def prepare_guest(config, root=ROOT):
         return
     commands = ["modprobe i2c-dev"]
     commands.extend(f"test -c {shlex.quote(path)}" for path in paths)
+    from hardware.emulator_ssh import ssh_options
     from hardware.infrastructure import emulator_config
-    subprocess.run([
-        "ssh", "-F", str(Path.home() / ".ssh/cfs-emulator/config"),
-        "-p", str(emulator_config(root)["ssh_port"]),
-        "pi4-cfs", " && ".join(commands),
-    ], check=True)
+    subprocess.run(["ssh", *ssh_options(root, emulator_config(root)["ssh_port"]),
+                    " && ".join(commands)], check=True)
 
 
 def list_devices():

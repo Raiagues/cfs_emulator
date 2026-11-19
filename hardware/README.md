@@ -52,7 +52,9 @@ Na configuração do emulador, escolha a imagem e a porta SSH local. Depois que 
 ./start --no-ui shutdown --target qemu
 ```
 
-**Start emulator** inicia o contêiner `pi4-cfs`. O QEMU usa a máquina `raspi4b` e o disco persistente `board/raspios.qcow2`. A porta SSH configurada fica publicada no loopback do host e chega à porta 22 do guest por meio da porta 2222 do contêiner. O setup configura a identidade do emulador em `~/.ssh/cfs-emulator/`.
+**Start emulator** inicia o contêiner `pi4-cfs`. O QEMU usa a máquina `raspi4b` e o disco persistente `board/raspios.qcow2`. A porta SSH configurada fica publicada no loopback do host e chega à porta 22 do guest por meio da porta 2222 do contêiner.
+
+O setup guarda a chave do cliente em `~/.ssh/cfs-emulator/`. Ao iniciar ou retomar o emulador, o Studio confere a montagem do disco e a porta publicada pelo Docker. Então lê a chave pública do guest pela porta interna do contêiner e a grava em `board/known_hosts`. Na conexão SSH, o guest deve apresentar essa mesma chave. Um disco recém-criado recebe uma nova identidade nesse arquivo do workspace.
 
 O projeto começa com a lista `buses` vazia. No boot do QEMU, o Studio gera `board/mission.dtb` a partir do device tree do kernel e habilita os barramentos selecionados em `project/config.json`. Na placa física, os nós disponíveis dependem do Linux instalado. Após trocar dispositivos, barramentos ou endereços, desligue o emulador e inicie novamente. Uma alteração de placa, sistema ou infraestrutura do emulador requer que o QEMU esteja parado. Se o guest já iniciou, a opção de tentar a conexão novamente repete o teste SSH. Os logs do boot ficam em `logs/latest.log` e podem ser acompanhados com `./start --no-ui logs --target qemu --kind boot`. Um contêiner encerrado conserva a saída para inspeção até o próximo boot.
 

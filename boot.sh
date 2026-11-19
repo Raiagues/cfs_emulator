@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 MODE=(-d)
 case "${1:-}" in
     "") ;;
-    --interactive) MODE=(-it) ;;
+    --interactive) MODE=(-dit) ;;
     *) echo "Usage: ./boot.sh [--interactive]" >&2; exit 2 ;;
 esac
 
@@ -53,7 +53,10 @@ docker run "${MODE[@]}" --name pi4-cfs \
     "$IMAGE" "/work/$LOG_FILE"
 
 if [[ "${1:-}" == --interactive ]]; then
-    exit 0
+    # Keep the serial console interactive while this disk's sshd starts.
+    nohup python3 -m hardware.emulator_ssh wait "$BOOT_TIMEOUT" \
+        </dev/null >"${LOG_FILE%.log}-ssh.log" 2>&1 &
+    exec docker attach pi4-cfs
 fi
 
 # Follow the boot output while checking that Linux accepts this machine's SSH key.
@@ -67,26 +70,7 @@ trap stop_logs EXIT
 trap 'echo "Boot continues in the background. Use ./logs.sh to follow it."; exit 130' INT
 trap 'exit 143' TERM
 
-SSH_DEADLINE=$((SECONDS + BOOT_TIMEOUT))
-NEXT_STATUS=0
-until SSH_ERROR="$(LC_ALL=C ssh -F "$SSH_DIR/config" -p "$EMULATOR_SSH_PORT" -o ConnectTimeout=3 pi4-cfs true 2>&1)"; do
-    case "$SSH_ERROR" in
-        *"Permission denied"*|*"Host key verification failed"*)
-            printf '%s\n' "$SSH_ERROR" >&2
-            exit 1 ;;
-    esac
-    if ((SECONDS >= SSH_DEADLINE)) || \
-        [[ "$(docker inspect --format '{{.State.Running}}' pi4-cfs 2>/dev/null)" != true ]]; then
-        printf '%s\n' "$SSH_ERROR" >&2
-        echo "Linux did not become ready. Check ./logs.sh and logs/latest.log." >&2
-        exit 1
-    fi
-    if ((SECONDS >= NEXT_STATUS)); then
-        printf '\n[Boot: %ss] SSH check: %s\n' "$SECONDS" "${SSH_ERROR##*$'\n'}"
-        NEXT_STATUS=$((SECONDS + 10))
-    fi
-    sleep 1
-done
+python3 -m hardware.emulator_ssh wait "$BOOT_TIMEOUT"
 stop_logs
 trap - EXIT
 python3 sensors/runtime.py values

@@ -3,5 +3,4 @@ set -e
 cd "$(dirname "$0")"
 
 # Ask Linux to flush the persistent disk and power off normally.
-exec ssh -T -o BatchMode=yes -o ConnectTimeout=8 -o ServerAliveInterval=5 -o ServerAliveCountMax=2 \
-    -F "$HOME/.ssh/cfs-emulator/config" -p "$(python3 -m hardware.infrastructure ssh_port)" pi4-cfs systemctl poweroff --no-block
+exec python3 -m hardware.emulator_ssh ssh systemctl poweroff --no-block

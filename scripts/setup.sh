@@ -98,7 +98,6 @@ fi
 # Keep this machine's SSH credentials outside the repository.
 echo "Configuring the local SSH identity..."
 SSH_DIR="$HOME/.ssh/cfs-emulator"
-EMULATOR_SSH_PORT="$(python3 -m hardware.infrastructure ssh_port)"
 mkdir -p "$SSH_DIR"
 chmod 0700 "$SSH_DIR"
 if [[ ! -f "$SSH_DIR/id_ed25519" ]]; then
@@ -109,18 +108,11 @@ if [[ ! -f "$SSH_DIR/id_ed25519" ]]; then
     ssh-keygen -q -t ed25519 -N "" -C cfs-emulator -f "$SSH_DIR/id_ed25519"
 fi
 ssh-keygen -y -f "$SSH_DIR/id_ed25519" > "$SSH_DIR/id_ed25519.pub"
-cat > "$SSH_DIR/config" <<EOF
-Host pi4-cfs
-    HostName 127.0.0.1
-    Port $EMULATOR_SSH_PORT
-    User root
-    IdentityFile ~/.ssh/cfs-emulator/id_ed25519
-    IdentitiesOnly yes
-    UserKnownHostsFile ~/.ssh/cfs-emulator/known_hosts
-    StrictHostKeyChecking accept-new
-    BatchMode yes
-    ConnectTimeout 5
-EOF
+config_tmp="$(mktemp "$SSH_DIR/config.XXXXXX")"
+trap 'rm -f "$config_tmp"' EXIT
+python3 -m hardware.emulator_ssh config > "$config_tmp"
+mv "$config_tmp" "$SSH_DIR/config"
+trap - EXIT
 chmod 0600 "$SSH_DIR/config" "$SSH_DIR/id_ed25519"
 
 # Reuse the image, download it, or build locally if no published image is available.

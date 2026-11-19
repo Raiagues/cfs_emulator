@@ -11,7 +11,7 @@ FROM debian:trixie-slim AS base
 RUN echo "deb http://deb.debian.org/debian trixie-backports main" > /etc/apt/sources.list.d/backports.list && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
-    qemu-utils python3 curl ca-certificates xz-utils mtools \
+    qemu-utils openssh-client python3 curl ca-certificates xz-utils mtools \
     device-tree-compiler guestfish "linux-image-$(dpkg --print-architecture)" && \
     apt-get install -y --no-install-recommends -t trixie-backports qemu-system-arm && \
     rm -rf /var/lib/apt/lists/*

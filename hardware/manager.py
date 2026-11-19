@@ -269,8 +269,8 @@ class HardwareManager:
             argv += ["-o", "BatchMode=yes"]
         if target == "qemu":
             from hardware.infrastructure import emulator_config
-            return argv + ["-F", str(Path.home() / ".ssh/cfs-emulator/config"),
-                           "-p", str(emulator_config(self.root)["ssh_port"]), "pi4-cfs"]
+            from hardware.emulator_ssh import ssh_options
+            return argv + ssh_options(self.root, emulator_config(self.root)["ssh_port"])
         if target != "physical":
             raise HardwareError("Invalid target.")
         config = self.connection(connection)
@@ -461,6 +461,11 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
     def require_stopped_emulator_for_configuration(self):
         if self._qemu_running() is True:
             raise HardwareError("Stop QEMU before changing its infrastructure.")
+
+    def verify_running_emulator(self, emit, cancel):
+        # Re-enrol the disk even if its previous incarnation used this same port.
+        self._stream([sys.executable, "-m", "hardware.emulator_ssh", "wait", "600"], emit, cancel, timeout=620)
+        self._invalidate_observation("qemu")
 
     def assert_can_boot(self, retry=False):
         """True when QEMU runs and boot only retries its SSH connection; raise when boot is not possible."""
@@ -1008,7 +1013,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
             emit("Linux is already booted and reachable over SSH. Use Run cFS to start the flight software.")
             result = dict(self._last_probe, linux_ready=True)
         elif qemu_retry:
-            self._stream(self.ssh_argv() + ["true"], emit, cancel, timeout=20)
+            self.verify_running_emulator(emit, cancel)
             emit("QEMU Linux connection restored.")
             result = {"linux_ready": True}
         else:
