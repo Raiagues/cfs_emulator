@@ -65,6 +65,11 @@
   --fs-cyan: #17686d;
   --fs-console-selection: #78552c44;
 }
+/* xterm's native scroll viewport paints independently of its text renderer. */
+#shell-terminal .xterm .xterm-viewport {
+  background-color:var(--fs-surface);
+  scrollbar-color:var(--fs-muted) var(--fs-surface);
+}
 [data-theme-toggle] {
   width: 32px; height: 32px; padding: 0; display: inline-grid;
   place-items: center; background: transparent; border: 1px solid var(--fs-line);
