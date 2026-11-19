@@ -11,6 +11,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -119,10 +120,13 @@ def connect_board(root):
         raise ValueError(f"Cannot connect to the board QMP socket: {error}. {REBOOT}") from error
 
 
-def apply_values(config, qmp):
+def apply_values(config, qmp, report=False):
     for device in config["devices"]:
         for name, value in device.get("values", {}).items():
             set_property(qmp, f"/machine/peripheral/{device['id']}", name, value)
+            if report:
+                receipt = {"device": device["id"], "property": name, "value": value, "confirmed_at": time.time()}
+                print("@qmp-write " + json.dumps(receipt), flush=True)
 
 
 def prepare_guest(config, root=ROOT):
@@ -186,7 +190,7 @@ def main():
             with connect_board(args.root) as qmp:
                 check_live(config, qmp)
                 if args.command in ("values", "prepare"):
-                    apply_values(config, qmp)
+                    apply_values(config, qmp, report=args.command == "values")
             print("Board hardware verified." if args.command == "check" else "Sensor values applied.")
     except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
         parser.exit(1, f"Error: {error}\n")

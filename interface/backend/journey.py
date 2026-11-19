@@ -50,6 +50,10 @@ def derive(target, verified, operational, apps, commands, linked, ground, jobs, 
     facts["sensor"] = max((when for device, when in history.get("devices", {}).items() if device in linked), default=None)
     facts["test"] = history.get("tested")
     for job in jobs:
+        if job.get("action") == "values":
+            for device, when in job.get("qmp_writes", {}).items():
+                if device in linked:
+                    facts["sensor"] = max(facts["sensor"] or 0, when)
         if job.get("action") == "simulate":
             samples = job.get("samples") or {}
             if any(d.get("id") in linked for d in samples.get("devices", [])):
@@ -60,6 +64,15 @@ def derive(target, verified, operational, apps, commands, linked, ground, jobs, 
                                         for step, when in facts.items()}}
 
 
+def record_device_writes(hardware, writes):
+    """Persist the most recent confirmed QMP write per device, under the job lock."""
+    history = hardware._load("signal-observations.json", {})
+    devices = history.setdefault("devices", {})
+    for device, when in writes.items():
+        devices[device] = max(devices.get(device, 0), when)
+    hardware._save("signal-observations.json", history)
+
+
 def record_signal(hardware, job):
     """Under the job lock, write each confirmed QMP device once per sending session."""
     action = job["action"]
@@ -68,15 +81,12 @@ def record_signal(hardware, job):
         observed = sorted(d["id"] for d in samples.get("devices", []) if d.get("id"))
         if not observed or job.get("confirmed_devices") == observed:
             return
-        history = hardware._load("signal-observations.json", {})
-        history.setdefault("devices", {}).update(dict.fromkeys(observed, samples["received_at"]))
+        record_device_writes(hardware, dict.fromkeys(observed, samples["received_at"]))
         job["confirmed_devices"] = observed
-    elif action == "simulate-preview" and job.get("status") == "succeeded" and job.get("scenario_result"):
+    if action == "simulate-preview" and job.get("status") == "succeeded" and job.get("scenario_result"):
         history = hardware._load("signal-observations.json", {})
         history["tested"] = job["ended"]
-    else:
-        return
-    hardware._save("signal-observations.json", history)
+        hardware._save("signal-observations.json", history)
 
 
 def snapshot(studio, target=None):

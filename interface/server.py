@@ -167,6 +167,12 @@ class Studio:
     def _emit(self, record, line):
         with self.lock:
             first_boot.observe(self.hardware, record, str(line))
+            if record['action'] == 'values' and str(line).startswith('@qmp-write '):
+                receipt = json.loads(line[len('@qmp-write '):])
+                write = {receipt['device']: receipt['confirmed_at']}
+                record['qmp_writes'] = {**record.get('qmp_writes', {}), **write}
+                journey.record_device_writes(self.hardware, write)
+                line = f"qom-set {receipt['device']}.{receipt['property']} = {receipt['value']} · OK"
             if record.get('scenario') and str(line).startswith('@scenario '):
                 record['scenario_result'] = json.loads(line[len('@scenario '):])
                 return
@@ -287,7 +293,10 @@ class Studio:
         if record['connection']:
             follow['connection'] = record['connection']
         if record['action'] in {'first-boot', 'run'}:
-            follow['kind'] = 'current-flight'
+            def remember_invocation(instance):
+                with self.lock:
+                    record['instance'] = instance
+            follow.update(kind='current-flight', on_invocation=remember_invocation)
         if record['action'] == 'boot' and record['target'] == 'qemu':
             follow['tail'] = 0  # boot.sh already printed the serial history.
         if not record['cancel'].is_set():
