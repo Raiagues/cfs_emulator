@@ -85,6 +85,8 @@ class BootTest(unittest.TestCase):
             boot = snapshot(studio, "qemu")
         self.assertEqual(boot["lines"][-1], "[ OK ] Started ssh.service - OpenBSD Secure Shell server.")
         self.assertEqual(self.job["lines"][-3], dirty)
+        observe(self.hardware, self.job, "[emulator] Linux SSH ready.")
+        self.assertEqual(self.job["guest_stage"], 6)
 
     def test_boot_page_before_the_first_clone(self):
         studio = SimpleNamespace(hardware=self.hardware, jobs_snapshot=lambda **kwargs: [])

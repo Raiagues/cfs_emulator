@@ -9,7 +9,7 @@ const serviceIcons={ES:['play','apps'],EVS:['antenna','events'],SB:['workflow','
 const stagesFor=target=>target==='native'?[['build','Build cFS'],['run','Start cFS']]: target==='physical'?[['build','Cross-build'],['copy','Copy to board'],['run','Start cFS service']]:[['build','Build cFS'],['boot','Start emulator'],['run','Start cFS']];
 const chip=(name,lit)=>`<span class="boot-chip" data-lit="${!!lit}">${escape(name)}</span>`;
 const esLabels={EARLY_INIT:'Early init',CORE_STARTUP:'Starting core',CORE_READY:'Core ready',APPS_INIT:'Loading apps',OPERATIONAL:'Operational'};
-const guestLabels=['Starting emulator','Opening disk','Preparing SSH key','Starting kernel','Booting Linux','Waiting for SSH'];
+const guestLabels=['Starting emulator','Opening disk','Preparing SSH key','Starting kernel','Booting Linux','Waiting for SSH','SSH connected'];
 
 export function stageProgress(id,job,states) {
   if(id==='build'){

@@ -91,8 +91,8 @@ body[data-view=boot] .execution-toolbar,body[data-view=boot] #operation-status,b
 .boot-options {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;width:100%;}
 .boot-options .boot-chip[data-lit=true] {color:var(--fs-success);background:color-mix(in srgb,var(--fs-success) 12%,var(--fs-panel));}
 .boot-services {grid-template-columns:repeat(3,1fr);}
-.boot-services>span {display:grid;place-items:center;gap:5px;padding:13px 4px;background:var(--layer-fill);border:1px solid var(--fs-line);border-radius:var(--fs-radius-card);color:var(--layer-tone);}
-.boot-services span[data-lit=true] {border-color:color-mix(in srgb,var(--layer-tone) 42%,var(--fs-line));}
+.boot-services>span {display:grid;place-items:center;gap:5px;padding:13px 4px;background:var(--fs-surface);border:1px dashed var(--fs-line);border-radius:var(--fs-radius-card);color:var(--fs-muted);}
+.boot-services span[data-lit=true] {background:var(--layer-fill);color:var(--layer-tone);border:1px solid color-mix(in srgb,var(--layer-tone) 42%,var(--fs-line));animation:fs-pop .48s ease-out;}
 .boot-services strong {font:500 var(--fs-body) var(--fs-mono);}
 .boot-services small {color:var(--fs-muted);font-size:var(--fs-caption);}
 .boot-app-diagram {width:100%;display:flex;align-items:center;gap:10px;}

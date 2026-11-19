@@ -25,6 +25,8 @@ def console_text(line):
 
 def guest_milestone(line):
     """Ordered milestones from the emulator driver and the guest's own serial log."""
+    if line == "[emulator] Linux SSH ready.":
+        return 6
     if " login:" in line or ("Started" in line and "OpenBSD Secure Shell server" in line):
         return 5
     if "Booting Linux on physical CPU" in line or "Linux version " in line or "systemd[1]:" in line:
