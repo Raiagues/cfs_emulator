@@ -40,24 +40,25 @@
         <div id="configuration"></div>
         <div class="group-summary"><span id="group-summary" role="status"></span><div id="requirements" role="group" aria-label="Setup checks"></div></div>
       </div>
-      <div class="setup-details">
-        <div id="advanced" hidden></div>
-        <section id="verification" hidden>
-          <header><h2 id="check-status"></h2><button id="fix-group" type="button" hidden></button><button id="check" type="button">Check again</button><button type="button" id="close-checks" aria-label="Close details">×</button></header>
-          <div id="checks"></div>
-        </section>
-      </div>
     </section>
-    <p id="feedback" role="status" aria-live="polite"></p>
     <footer class="setup-footer">
-      <button type="button" id="show-terminal" hidden>Terminal</button>
-      <span id="waiting">Select to check</span>
-      <button type="submit" class="primary" id="enter" hidden disabled>Continue · first boot</button>
+      <button type="button" id="install" class="primary" disabled>Install requirements</button>
+      <button type="submit" class="primary" id="enter" hidden disabled>Continue to boot</button>
+      <button type="button" id="inspect" class="quiet" disabled>Details</button>
     </footer>
+    <p id="feedback" role="status" aria-live="polite"></p>
+    <dialog id="settings-sheet" aria-labelledby="settings-title"><header><h2 id="settings-title">Target settings</h2><button type="button" class="close-dialog" aria-label="Close settings">×</button></header><div id="advanced"></div></dialog>
   </form></main>
-  <div class="output-dock">
-    <section id="setup-terminal" class="output-panel" hidden><header><strong id="terminal-title">Local terminal</strong><span id="terminal-state" role="status">Project directory</span><button type="button" id="close-terminal" aria-label="Close terminal">×</button></header><div id="shell-terminal" hidden></div></section>
-  </div>
+  <dialog id="verification" aria-labelledby="check-status">
+    <header><h2 id="check-status">Setup details</h2><button type="button" class="close-dialog" aria-label="Close details">×</button></header>
+    <div id="check-groups" role="group" aria-label="Check group"></div>
+    <div id="checks"></div>
+    <footer><button id="show-terminal" class="quiet" type="button" hidden>Installer log</button><button id="check" type="button">Check again</button><button id="fix-group" class="primary" type="button" hidden></button></footer>
+  </dialog>
+  <dialog id="setup-terminal" class="output-panel" aria-labelledby="terminal-title">
+    <header><strong id="terminal-title">Installer terminal</strong><span id="terminal-state" role="status"></span><button type="button" class="close-dialog" aria-label="Close terminal">×</button></header>
+    <div id="shell-terminal" hidden></div>
+  </dialog>
   <script src="/vendor/xterm.js"></script>
   <script src="/vendor/addon-fit.js"></script>
   <script src="/journey.js" type="module"></script>

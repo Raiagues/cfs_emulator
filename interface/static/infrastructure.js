@@ -1,6 +1,7 @@
 import {targetDrawing} from './target-drawing.js';
 import {icon} from './ui.js';
 import {mountShells} from './shell.js';
+import {groupsByTarget, groupFor, repairFor, nextRepair} from './setup-plan.js';
 
 for (const art of document.querySelectorAll('[data-art]')) art.innerHTML = targetDrawing(art.dataset.art);
 const $ = selector => document.querySelector(selector);
@@ -10,7 +11,8 @@ const targets = ['native','qemu','physical'];
 const checksByTarget = new Map();
 const checkRequests = new Map();
 let token = '', settings = null, target = 'native', busy = false, dirty = false;
-let activeGroup = '', advanced = false, installation = null, selectedVersion = 0;
+let activeGroup = '', installation = null, selectedVersion = 0;
+let verification = null;
 let saving = Promise.resolve();
 function feedback(message = '', error = false) {
   $('#feedback').textContent = message;
@@ -75,7 +77,7 @@ function profileFields() {
 
 function renderFields() {
   const data = settings.connection || {};
-  const more = `<button type="button" class="settings-button" id="advanced-toggle" aria-label="Target settings" title="Target settings" aria-controls="advanced" aria-expanded="${advanced}">${icon('settings')}</button>`;
+  const more = `<button type="button" class="settings-button" id="advanced-toggle" aria-label="Target settings" title="Target settings" aria-haspopup="dialog" aria-controls="settings-sheet">${icon('settings')}</button>`;
   let fields, details = '';
   if (target === 'native') {
     fields = `<div class="stepper-field"><label for="build-jobs">Jobs</label><div class="stepper">
@@ -96,34 +98,11 @@ function renderFields() {
   }
   $('#configuration').innerHTML = fields;
   $('#advanced').innerHTML = details;
-  $('#advanced').hidden = !advanced || !details;
   $('#project-name').textContent = settings.project;
   renderChecks();
   controls();
 }
 
-const sets = {
-  native:[['Compiler','code'],['Python','terminal'],['Source','folder']],
-  qemu:[['Docker','container'],['Image','cube'],['Toolchain','cpu']],
-  physical:[['Network','antenna'],['SSH key','key'],['Service','power']]
-};
-function groupFor(mode,label) {
-  if (mode === 'native') return label === 'NASA cFS source' ? 'Source' : label.includes('Python') ? 'Python' : 'Compiler';
-  if (mode === 'qemu') {
-    if (/docker/i.test(label)) return 'Docker';
-    return /Emulator|Local SSH/.test(label) ? 'Image' : 'Toolchain';
-  }
-  if (label === 'Board network') return 'Network';
-  return /SSH identity|Board login|^ssh$|^scp$/.test(label) ? 'SSH key' : 'Service';
-}
-function repairFor(mode,item) {
-  if (item.label === 'NASA cFS source') return 'clone-cfs';
-  if (item.label === 'Board network' || item.label === 'Local SSH port') return 'settings';
-  if (item.label === 'Board login' || item.label === 'Board SSH identity') return 'board-key';
-  if (item.label === 'cFS service') return 'board-service';
-  if (item.label.startsWith('Emulator')) return 'emulator-image';
-  return mode === 'native' ? 'native-tools' : 'dependencies';
-}
 function reportFor(mode) {
   if (!checksByTarget.has(mode)) {
     checksByTarget.set(mode,(settings.check_plan[mode]||[]).map(entry => ({...entry,status:'pending'})));
@@ -132,7 +111,7 @@ function reportFor(mode) {
 }
 function groups(mode) {
   const rows = reportFor(mode);
-  return sets[mode].map(([name,glyph]) => {
+  return groupsByTarget[mode].map(([name,glyph]) => {
     const entries = rows.filter(x=>groupFor(mode,x.label) === name);
     const failed = entries.find(x=>x.status === 'failed');
     const action = failed && repairFor(mode,failed);
@@ -145,65 +124,100 @@ function groups(mode) {
   });
 }
 const tick = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10" pathLength="1"/></svg>';
+const spin = '<svg class="spin-arc" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" pathLength="100"/></svg>';
+const download = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/></svg>';
+const installerLabels = {
+  'clone-cfs':'NASA cFS', 'native-tools':'Native tools', dependencies:'Toolchain',
+  'emulator-image':'Emulator image', 'board-service':'cFS service', 'board-key':'SSH key'
+};
+
+function updateDetails(plans) {
+  const dialog = $('#verification');
+  if (!dialog.open) return;
+  const group = plans.find(item => item.name === activeGroup) || plans[0];
+  const tabs = $('#check-groups');
+  if (tabs.dataset.target !== target) {
+    tabs.dataset.target = target;
+    tabs.replaceChildren(...plans.map(item => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = button.dataset.group = item.name;
+      return button;
+    }));
+  }
+  for (const button of tabs.children) button.setAttribute('aria-pressed', String(button.dataset.group === group.name));
+  const locked = busy || checkRequests.has(target);
+  $('#check').disabled = locked;
+  $('#fix-group').hidden = group.state !== 'missing';
+  $('#fix-group').disabled = locked;
+  $('#fix-group').textContent = group.action === 'settings' ? 'Target settings' : 'Install';
+  const list = $('#checks');
+  const openRows = new Set([...list.querySelectorAll('details[open]')].map(row => row.dataset.label));
+  const statusIcon = {passed:'✓', failed:'!', pending:'○', running:'◌'};
+  const content = group.entries.map(row => {
+    const label = escapeHtml(row.label);
+    const duration = row.duration_ms == null ? '' : row.duration_ms + ' ms';
+    const outcome = row.exit_code == null ? row.status : 'Exit ' + row.exit_code;
+    return '<details data-outcome="' + row.status + '" data-label="' + label + '"><summary><span aria-label="' + row.status + '">' + statusIcon[row.status] + '</span><span>' + label + '</span><small>' + duration + '</small></summary><pre>' + escapeHtml([row.probe,row.detail,outcome].filter(Boolean).join('\n')) + '</pre></details>';
+  }).join('');
+  if (list.dataset.content !== content) {
+    list.innerHTML = content;
+    list.dataset.content = content;
+    for (const row of list.children) row.open = openRows.has(row.dataset.label);
+  }
+}
+
 function renderChecks() {
   if (!settings) return;
   const plans = groups(target);
   const checking = checkRequests.has(target);
-  const missing = plans.filter(x=>x.state==='missing').length;
-  const fixing = installation?.target === target && installation.status==='running';
-  const ready = !dirty && !checking && !fixing && plans.every(x=>x.state==='ready');
-  for (const card of document.querySelectorAll('.target-option[data-target]')) {
-    const mode = card.dataset.target;
-    card.setAttribute('aria-pressed',String(mode === target));
-    const statuses = groups(mode).map(group=>group.state);
-    const count = statuses.filter(status=>status==='missing').length;
-    const status = checkRequests.has(mode) ? 'checking' : statuses.includes('installing') ? 'installing' :
-      count ? 'missing' : statuses.every(s=>s==='ready') ? 'ready' : 'unchecked';
-    const caption = card.querySelector('small');
-    caption.dataset.status = status;
-    caption.textContent = status === 'missing' ? count+' missing' : status;
-  }
-  const probe = reportFor(target).find(item=>item.status==='running');
-  $('#group-summary').textContent = fixing ? 'Installing '+installation.group : probe ? 'Checking · '+probe.label : checking ? 'Checking target' : missing ? missing+' to fix' : ready ? 'Everything is ready' : '';
+  const missing = plans.filter(x => x.state === 'missing').length;
+  const fixing = installation?.target === target && installation.status === 'running';
+  const ready = !dirty && !checking && !busy && plans.every(x => x.state === 'ready');
+  const probe = reportFor(target).find(row => row.status === 'running');
+  const note = fixing ? 'Installing ' + installerLabels[installation.setup_action] :
+    probe ? 'Checking ' + probe.label : missing ? missing + ' to fix' : '';
+  $('#group-summary').textContent = note;
   const parent = $('#requirements');
   if (parent.dataset.target !== target) {
     parent.dataset.target = target;
-    parent.innerHTML = plans.map(group=>`<button type="button" class="requirement" data-group="${group.name}" aria-controls="verification"><span class="ring"><span class="tool-glyph">${icon(group.glyph)}</span><span class="check-badge">${tick}</span><span class="repair-badge">+</span></span><span>${group.name}</span></button>`).join('');
+    parent.innerHTML = plans.map(group => '<button type="button" class="requirement" data-group="' + group.name + '"><span class="ring">' + spin + '<span class="tool-glyph"></span><span class="badge check-badge">' + tick + '</span><span class="badge repair-badge">+</span></span><span>' + group.name + '</span></button>').join('');
   }
-  plans.forEach((group,index)=>{
+  plans.forEach((group, index) => {
     const button = parent.children[index];
-    button.dataset.state = group.state;
-    button.setAttribute('aria-expanded',String(activeGroup===group.name));
-    const repair = group.state === 'missing';
-    button.title = (repair ? 'Fix or inspect ' : 'Inspect ')+group.name;
-    button.setAttribute('aria-label',button.title);
-    const percent = fixing && group.state==='installing' ? installation.progress : null;
-    const glyph = button.querySelector('.tool-glyph');
-    const text = percent==null ? icon(group.glyph) : Math.min(100,percent)+'%';
-    if (glyph.dataset.content!==text) { glyph.dataset.content=text; glyph.innerHTML=text; }
-    button.style.setProperty('--progress',(percent??0)+'%');
+    if (button.dataset.state !== group.state) {
+      button.dataset.state = group.state;
+      button.querySelector('.tool-glyph').innerHTML = group.state === 'missing' ? download : icon(group.glyph);
+    }
+    const repair = group.state === 'missing' && !checking && !busy;
+    button.title = repair ? (group.action === 'settings' ? 'Configure ' : 'Install ') + group.name : 'Inspect ' + group.name;
+    button.setAttribute('aria-label', button.title);
   });
-  const group = plans.find(x=>x.name===activeGroup);
-  $('#verification').hidden = !group;
-  if (group) {
-    $('#check-status').textContent = group.name;
-    $('#fix-group').hidden = group.state!=='missing';
-    $('#fix-group').disabled = checking || fixing || busy;
-    $('#fix-group').textContent = group.action==='settings' ? 'Settings' : 'Fix '+group.name;
-    $('#check').disabled = checking || fixing || busy;
-    const list=$('#checks');
-    const details=group.entries.map(row=>`<div data-outcome="${row.status}"><code title="${escapeHtml(row.probe)}">${escapeHtml(row.probe)}</code><span>${escapeHtml(row.detail||row.status)}</span><small>${row.exit_code!=null?'Exit '+row.exit_code:''}${row.duration_ms!=null?' · '+row.duration_ms+' ms':''}</small></div>`).join('');
-    if(list.dataset.content!==details){list.innerHTML=details;list.dataset.content=details;}
-  }
+  updateDetails(plans);
   $('#enter').hidden = !ready;
-  $('#enter').disabled = !ready || busy;
-  $('#waiting').hidden = ready;
-  $('#waiting').textContent = fixing?'Installing…':checking?'Checking…':missing?'Fix '+missing+' to continue':'Select to check';
+  $('#enter').disabled = !ready;
+  const install = $('#install');
+  install.hidden = ready;
+  install.disabled = busy;
+  install.textContent = busy ? (fixing ? 'Installing' : 'Checking') : 'Install requirements';
+  const terminal = $('#show-terminal');
+  terminal.hidden = !installation || installation.target !== target;
+  const details = $('#inspect');
+  details.dataset.input = String(fixing && Boolean(installation.input_required));
+  details.textContent = details.dataset.input === 'true' ? 'Input required' : 'Details';
 }
+
 function controls() {
-  $('#save-state').textContent = busy ? 'Saving…' : !settings ? '' : dirty ? 'Unsaved' : 'Saved';
-  $('#save-state').dataset.state = dirty || busy ? 'dirty' : 'saved';
-  for(const card of document.querySelectorAll('.target-option')) card.disabled = !settings;
+  for (const card of document.querySelectorAll('.target-option')) {
+    card.disabled = !settings || busy;
+    card.setAttribute('aria-pressed', String(card.dataset.target === target));
+  }
+  for (const field of form.querySelectorAll('#configuration :is(input,select,button), #advanced :is(input,select)')) {
+    field.disabled = busy;
+  }
+  $('#inspect').disabled = !settings;
+  $('#save-state').textContent = dirty ? 'Unsaved' : '';
+  $('#save-state').dataset.state = dirty ? 'dirty' : '';
   renderChecks();
 }
 async function saveForm() {
@@ -221,7 +235,7 @@ function abortChecks(mode) {
   checkRequests.get(mode)?.abort();
   checkRequests.delete(mode);
 }
-async function verify(groupName) {
+async function runChecks(groupName) {
   if (!settings || !form.reportValidity()) return;
   const mode=target,version=selectedVersion;
   abortChecks(mode);
@@ -234,7 +248,7 @@ async function verify(groupName) {
     if(controller.signal.aborted || version!==selectedVersion)return;
     if (mode!=='native') { settings.board=form.elements.board.value; settings.os=form.elements.os.value; }
     const report=reportFor(mode);
-    const batch=sets[mode].filter(([name])=>!groupName || name===groupName)
+    const batch=groupsByTarget[mode].filter(([name])=>!groupName || name===groupName)
       .flatMap(([name])=>report.filter(row=>groupFor(mode,row.label)===name));
     for(const stage of batch) Object.assign(stage,{status:'pending',detail:'',duration_ms:null,exit_code:null});
     for(const stage of batch){
@@ -249,103 +263,195 @@ async function verify(groupName) {
       renderChecks();
     }
     window.dispatchEvent(new Event('flight:updated'));
+    return true;
   }catch(error){if(!controller.signal.aborted)feedback(error.message,true);}
   finally{if(checkRequests.get(mode)===controller){checkRequests.delete(mode);controls();}}
 }
-const installerLabels={'clone-cfs':'NASA cFS','native-tools':'Native tools','dependencies':'Toolchain','emulator-image':'Emulator image','board-service':'cFS service','board-key':'SSH key'};
-const shells=mountShells({api,onError:e=>feedback(e.message,true),onExit:()=>true});
-function showTerminal(session) {
-  $('#setup-terminal').hidden=false;$('#show-terminal').hidden=true;
-  shells.select(session);shells.focus();
+function verify(groupName) {
+  verification = runChecks(groupName);
+  return verification;
 }
-async function followInstaller(session,groupName) {
-  installation={...session,group:groupName};
-  $('#terminal-title').textContent=installerLabels[session.setup_action];
-  $('#terminal-state').textContent='Installing…';
-  showTerminal(session);
-  do{
+
+const shells = mountShells({api, onError: showError, onExit: () => true});
+function showDialog(id) {
+  const dialog = $(id);
+  if (!dialog.open) dialog.showModal();
+}
+function inspect(name) {
+  activeGroup = name || groups(target)[0].name;
+  showDialog('#verification');
+  renderChecks();
+}
+
+async function followInstaller(session, groupName) {
+  installation = {...session, group: groupName};
+  $('#terminal-title').textContent = installerLabels[session.setup_action];
+  if ($('#setup-terminal').open) shells.select(session);
+  while (installation.status === 'running') {
+    $('#terminal-state').textContent = installation.input_required ? 'Input required' : 'Installing';
     controls();
-    const jobs=await api('jobs'), current=jobs.find(j=>j.id===session.id);
-    if(!current)throw Error('Installer exited');
+    await new Promise(resolve => setTimeout(resolve,400));
+    const jobs = await api('jobs');
+    const current = jobs.find(job => job.id === session.id);
+    if (!current) throw Error('Installer unavailable');
     Object.assign(installation,current);
-    if(current.status==='running')await new Promise(resolve=>setTimeout(resolve,400));
-  }while(installation.status==='running');
-  $('#terminal-state').textContent=installation.status==='succeeded'?'Completed':'Exit '+installation.exit_code;
-  if(session.target===target){
-    const preferred={board:settings.board,os:settings.os};
-    settings=await api('infrastructure');
-    if(session.setup_action==='clone-cfs' && target!=='native'){Object.assign(settings,preferred);dirty=true;}
-    // Repairs may install shared prerequisites. Reuse other completed groups.
-    await verify(session.setup_action==='clone-cfs' || reportFor(target).some(row=>row.status==='pending')?null:groupName);
   }
-  controls();
+  const success = installation.status === 'succeeded';
+  $('#terminal-state').textContent = success ? 'Completed' : 'Exit ' + installation.exit_code;
+  // Cloning can change the active mission profile. Keep the user's selected board.
+  const preferred = {board:settings.board, os:settings.os};
+  settings = await api('infrastructure');
+  if (session.setup_action === 'clone-cfs' && target !== 'native') {
+    Object.assign(settings,preferred);
+    dirty = true;
+  }
+  // A missing dependency can affect several groups. Keep already verified rings steady.
+  const pending = groups(target).filter(group => group.state !== 'ready');
+  let checked = true;
+  if (dirty || !pending.length) checked = await verify();
+  else for (const group of pending) {
+    checked = await verify(group.name);
+    if (!checked) break;
+  }
+  if (!success) feedback(installerLabels[session.setup_action] + ' · exit ' + installation.exit_code, true);
+  return success && checked;
 }
-async function repair(group) {
-  activeGroup=group.name;renderChecks();
-  if(checkRequests.has(target) || installation?.status==='running' || busy)return;
-  if(group.action==='settings'){
-    advanced=true;renderFields();
-    (form.elements.host||form.elements.ssh_port)?.focus();
-    return;
+
+function openSettings() {
+  if ($('#verification').open) $('#verification').close();
+  if (target === 'physical') form.elements.host.focus();
+  else {
+    showDialog('#settings-sheet');
+    form.elements.ssh_port?.focus();
   }
-  const mode=target;
-  busy=true;
-  let session;
+}
+
+async function installRequirements(groupName) {
+  if (!settings || busy || !form.reportValidity()) return;
+  busy = true;
+  const mode = target;
   try {
-    if(installation){await api('terminal/close',{id:installation.id});shells.dispose(installation.id);installation=null;}
-    session=await api('terminal/create',{target:mode,setup_action:group.action});
+    controls();
+    if (checkRequests.has(mode)) {
+      if (!await verification) return;
+    }
+    if (dirty || reportFor(mode).some(row => row.status === 'pending')) {
+      if (!await verify()) return;
+    }
+    const attempted = new Set();
+    for (;;) {
+      const repair = nextRepair(mode,reportFor(mode),groupName);
+      if (!repair) break;
+      const {action,group,label} = repair;
+      if (action === 'settings') {
+        busy = false;
+        controls();
+        openSettings();
+        break;
+      }
+      if (attempted.has(action)) {
+        feedback('Check ' + label, true);
+        break;
+      }
+      attempted.add(action);
+      const session = await api('terminal/create',{target:mode,setup_action:action});
+      if (!await followInstaller(session,group)) break;
+    }
   } finally {
-    busy=false;
+    busy = false;
+    controls();
   }
-  await followInstaller(session,group.name);
 }
-function showError(err){feedback(err.message,true);controls();}
-$('#targets').addEventListener('click',event=>{
-  const mode=event.target.closest('[data-target]')?.dataset.target;if(!mode || !settings)return;
-  abortChecks(target);selectedVersion++;dirty=dirty || mode!==settings.target;target=mode;advanced=false;activeGroup='';
-  checksByTarget.delete(target);renderFields();
-  verify().catch(showError);
-});
-$('#requirements').addEventListener('click',event=>{
-  const name=event.target.closest('[data-group]')?.dataset.group,group=groups(target).find(g=>g.name===name);
-  if(!group)return;
-  if(group.state==='missing' && !checkRequests.has(target) && event.target.closest('.ring'))repair(group).catch(showError);
-  else {activeGroup=activeGroup===name?'':name;renderChecks();}
-});
-$('#fix-group').addEventListener('click',()=>{
-  const group=groups(target).find(item=>item.name===activeGroup);
-  if(group?.state==='missing')repair(group).catch(showError);
-});
-$('#check').addEventListener('click',()=>verify(activeGroup).catch(showError));
-$('#close-checks').addEventListener('click',()=>{activeGroup='';renderChecks();});
-$('#close-terminal').addEventListener('click',()=>{$('#setup-terminal').hidden=true;$('#show-terminal').hidden=false;});
-$('#show-terminal').addEventListener('click',()=>{if(installation)showTerminal(installation);});
-form.addEventListener('click',event=>{
-  const button=event.target.closest('button');if(!button)return;
-  if(button.id==='advanced-toggle'){advanced=!advanced;$('#advanced').hidden=!advanced;button.setAttribute('aria-expanded',String(advanced));}
-  if(button.dataset.step){const input=form.elements.build_jobs;button.dataset.step==='-1'?input.stepDown():input.stepUp();input.dispatchEvent(new Event('change',{bubbles:true}));}
-});
-form.addEventListener('input',()=>{abortChecks(target);selectedVersion++;dirty=true;checksByTarget.delete(target);controls();});
-form.addEventListener('change',e=>{
-  dirty=true;
-  if(e.target.name==='board'){readForm();renderFields();}
-  verify().catch(showError);
-});
-form.addEventListener('submit',event=>{
-  event.preventDefault();
-  if(!$('#enter').disabled && !$('#enter').hidden)location.href='/studio#boot';
-});
-(async()=>{
-  token=(await api('session')).token;settings=await api('infrastructure');
-  const requested=new URLSearchParams(location.search).get('target');
-  const explicitSelection=targets.includes(requested);
-  target=explicitSelection?requested:settings.target;
+
+function showError(error) { feedback(error.message,true); controls(); }
+$('#targets').addEventListener('click', event => {
+  const mode = event.target.closest('[data-target]')?.dataset.target;
+  if (!mode || !settings || busy) return;
+  abortChecks(target);
+  selectedVersion++;
+  dirty = dirty || mode !== settings.target;
+  target = mode;
+  checksByTarget.delete(mode);
   renderFields();
-  const jobs=await api('jobs');
-  const running=jobs.find(j=>j.setup_action && j.status==='running');
-  if(running){
-    const group=sets[running.target].find(([name])=>reportFor(running.target).some(row=>groupFor(running.target,row.label)===name && repairFor(running.target,row)===running.setup_action));
-    await followInstaller(running,group?.[0]);
-    if(explicitSelection && running.target!==target)await verify();
-  }else if(explicitSelection)await verify();
+  verify().catch(showError);
+});
+$('#install').addEventListener('click', () => installRequirements().catch(showError));
+$('#inspect').addEventListener('click', () => {
+  if (installation?.target === target && installation.status === 'running') showTerminal();
+  else inspect(groups(target).find(group => group.state === 'missing')?.name);
+});
+$('#requirements').addEventListener('click', event => {
+  const name = event.target.closest('[data-group]')?.dataset.group;
+  const group = groups(target).find(item => item.name === name);
+  if (!group) return;
+  if (group.state === 'missing' && !checkRequests.has(target) && !busy) installRequirements(name).catch(showError);
+  else inspect(name);
+});
+$('#check-groups').addEventListener('click', event => {
+  const name = event.target.closest('[data-group]')?.dataset.group;
+  if (name) inspect(name);
+});
+$('#fix-group').addEventListener('click', () => installRequirements(activeGroup).catch(showError));
+$('#check').addEventListener('click', () => verify(activeGroup).catch(showError));
+for (const dialog of document.querySelectorAll('dialog')) {
+  dialog.querySelector('.close-dialog').addEventListener('click', () => dialog.close());
+  dialog.addEventListener('click', event => {
+    if (event.target !== dialog) return;
+    const bounds = dialog.getBoundingClientRect();
+    if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) dialog.close();
+  });
+}
+function showTerminal() {
+  if (!installation) return;
+  showDialog('#setup-terminal');
+  shells.select(installation);
+  shells.focus();
+}
+$('#show-terminal').addEventListener('click', showTerminal);
+$('#setup-terminal').addEventListener('close', () => { if (!$('#setup-terminal').open) shells.select(null); });
+form.addEventListener('click', event => {
+  const button = event.target.closest('button');
+  if (!button) return;
+  if (button.id === 'advanced-toggle') showDialog('#settings-sheet');
+  if (button.dataset.step) {
+    const input = form.elements.build_jobs;
+    if (button.dataset.step === '-1') input.stepDown(); else input.stepUp();
+    input.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+});
+form.addEventListener('input', () => {
+  abortChecks(target);
+  selectedVersion++;
+  dirty = true;
+  checksByTarget.delete(target);
+  controls();
+});
+form.addEventListener('change', event => {
+  dirty = true;
+  if (event.target.name === 'board') { readForm(); renderFields(); }
+  verify().catch(showError);
+});
+form.addEventListener('submit', event => {
+  event.preventDefault();
+  if (!$('#enter').disabled && !$('#enter').hidden) location.href = '/studio#boot';
+});
+(async () => {
+  token = (await api('session')).token;
+  settings = await api('infrastructure');
+  const requested = new URLSearchParams(location.search).get('target');
+  const explicitSelection = targets.includes(requested);
+  target = explicitSelection ? requested : settings.target;
+  const jobs = await api('jobs');
+  const running = jobs.find(job => job.setup_action && job.status === 'running');
+  if (running) {
+    target = running.target;
+    busy = true;
+    renderFields();
+    const row = reportFor(target).find(item => repairFor(target,item) === running.setup_action);
+    try { await followInstaller(running, row && groupFor(target,row.label)); }
+    finally { busy = false; controls(); }
+  } else {
+    renderFields();
+    if (explicitSelection) await verify();
+  }
 })().catch(showError);
