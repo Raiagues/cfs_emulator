@@ -19,7 +19,7 @@ from hardware.targets import selected_target
 from jobs.service import Laboratory
 from jobs.monitor import HardwareMonitor
 from interface.access import authenticated, loopback_listener
-from project.defaults import loopback, port
+from project.defaults import http_port, loopback
 from journey import first_boot
 from sensors.orbit import preview as orbit_preview
 
@@ -317,7 +317,7 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--port', type=int, default=port('HTTP_PORT', 8765))
+    parser.add_argument('--port', type=int, default=http_port())
     args = parser.parse_args()
     server = ThreadingHTTPServer((loopback(), args.port), Handler)
     server.daemon_threads = True

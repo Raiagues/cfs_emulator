@@ -48,6 +48,10 @@ def port(key, default):
     return value
 
 
+def http_port():
+    return port('HTTP_PORT', 8765)
+
+
 def loopback():
     value = os.environ.get('FLIGHT_STUDIO_LOOPBACK', '127.0.0.1')
     if not ipaddress.IPv4Address(value).is_loopback:

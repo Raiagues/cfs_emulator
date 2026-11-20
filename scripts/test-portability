@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+"""Run the README from a clean Linux login at the current local commit."""
+import os
+from pathlib import Path
+import subprocess
+import tempfile
+
+ROOT = Path(__file__).resolve().parents[1]
+IMAGE = "flight-studio-portability:first-flight"
+SESSION = r"""
+set -eu
+sudo apt-get update
+sudo apt-get install -y python3 git
+git config --global --add safe.directory /reference.git
+git config --global url.file:///reference.git.insteadOf https://github.com/Raiagues/cfs_emulator.git
+git clone -b first-flight-flow https://github.com/Raiagues/cfs_emulator.git
+cd cfs_emulator
+git rev-parse --short HEAD
+./start &
+server=$!
+trap 'kill "$server" 2>/dev/null || true' EXIT
+read -r browser
+test "$browser" = passed
+kill "$server"
+wait "$server" || test "$?" = 143
+trap - EXIT
+./start --no-ui stop --target native
+python3 interface/tests/browser/readme.py
+"""
+
+
+def run():
+    uid = os.getuid() or 1000
+    subprocess.run(["docker", "build", "--network=host", "-f", "scripts/portability.Dockerfile",
+                    "--build-arg", f"LEARNER_UID={uid}", "-t", IMAGE, "."], cwd=ROOT, check=True)
+    with tempfile.TemporaryDirectory(prefix=".prepare-portability-", dir=ROOT / "mission") as tmp:
+        tmp = Path(tmp)
+        reference = tmp / "reference.git"
+        home = tmp / "login"
+        home.mkdir()
+        if not os.getuid():
+            os.chown(home, uid, -1)
+        subprocess.run(["git", "clone", "--bare", "--local", str(ROOT), str(reference)], check=True)
+        revision = subprocess.check_output(["git", "-C", str(ROOT), "rev-parse", "HEAD"], text=True).strip()
+        subprocess.run(["git", "-C", str(reference), "update-ref", "refs/heads/first-flight-flow", revision], check=True)
+        command = ["docker", "run", "--rm", "--interactive", "--network", "host",
+                   "-v", f"{home}:/home/learner", "-v", f"{reference}:/reference.git:ro", IMAGE, "bash", "-c", SESSION]
+        with subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                              text=True, bufsize=1) as container:
+            try:
+                for line in container.stdout:
+                    if not line.startswith("Flight Studio: http://"):
+                        print(line, end="", flush=True)
+                        continue
+                    url = line.split(" ", 2)[-1].strip()
+                    subprocess.run(["node", "interface/tests/browser/clean-start.mjs"], cwd=ROOT, check=True,
+                                   env={**os.environ, "FLIGHT_TEST_URL": url})
+                    container.stdin.write("passed\n")
+                    container.stdin.flush()
+            finally:
+                container.stdin.close()
+            if container.wait():
+                raise SystemExit("Clean-login README verification failed")
+
+
+if __name__ == "__main__":
+    run()

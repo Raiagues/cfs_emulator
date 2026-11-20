@@ -174,7 +174,7 @@ export function mountSignalLesson(root, { state, startJob, advanceDeployment, re
             ? './start --no-ui ground connect --target ' + target
             : !downlink
               ? './start --no-ui ground send to_lab ENABLE_OUTPUT --arg dest_IP=' + (address || '<address>')
-              : './start --no-ui simulate --device ' + device.id + ' --target ' + target;
+              : './start --no-ui simulate ' + device.id + ' --target ' + target;
     paint(
       root,
       `<section class="signal-lesson fs-in">${sidebar}<div class="signal-content"><nav class="signal-tabs">${tabs}</nav>
