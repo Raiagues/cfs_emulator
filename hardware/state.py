@@ -1,6 +1,7 @@
 """Versioned runtime records shared by the CLI, jobs and HTTP adapter."""
 from contextlib import closing, contextmanager
 from dataclasses import asdict, dataclass
+import fcntl
 import json
 from pathlib import Path
 import re
@@ -82,10 +83,12 @@ class RuntimeState:
     @contextmanager
     def writer(self):
         self.directory.mkdir(parents=True, exist_ok=True)
-        with closing(sqlite3.connect(self.database, timeout=15)) as db, db:
-            db.execute('BEGIN IMMEDIATE')
-            db.execute('CREATE TABLE IF NOT EXISTS records(name TEXT PRIMARY KEY, version INTEGER NOT NULL, value TEXT)')
-            yield db
+        with self.database.with_suffix('.lock').open('a') as writer:
+            fcntl.flock(writer, fcntl.LOCK_EX)
+            with closing(sqlite3.connect(self.database)) as db, db:
+                db.execute('BEGIN IMMEDIATE')
+                db.execute('CREATE TABLE IF NOT EXISTS records(name TEXT PRIMARY KEY, version INTEGER NOT NULL, value TEXT)')
+                yield db
 
     def store(self, db, name, value):
         if value is not None and not isinstance(value, dict):
