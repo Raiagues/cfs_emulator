@@ -1,5 +1,5 @@
 import {targetDrawing} from './target-drawing.js';
-import {stepUrl} from './journey.js';
+import {stepUrl} from './router.js';
 import {icon} from './ui.js';
 
 const escape = value => String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

@@ -85,7 +85,10 @@ class Store:
             return [Observation(step, target_id, at, json.loads(ref)) for step, target_id, at, ref in rows]
 
     def snapshot(self, target):
-        return derive(target, self.events(target))
+        state = derive(target, self.events(target))
+        state["optional_board"] = (state["current"] == "board" and target != "physical"
+                                   and not self.references("physical", "target"))
+        return state
 
     def reset(self, target):
         if target is not None:

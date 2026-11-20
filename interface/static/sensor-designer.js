@@ -1,3 +1,4 @@
+import {stepUrl} from './router.js';
 // The register editor supports the I²C transactions implemented by the Pi backend.
 export function designSensor({dialog,api,refresh,feedback}){
  const num=(name,label,value,max=255,min=0)=>`<label>${label}<input required type="number" name="${name}" value="${value}" min="${min}" max="${max}"></label>`;
@@ -8,7 +9,7 @@ export function designSensor({dialog,api,refresh,feedback}){
   <div class="sensor-pcb"><div class="sensor-pads"><span>VCC</span><span>GND</span><span>SDA</span><span>SCL</span></div><div class="sensor-package"><strong data-preview="name"></strong><small data-preview="address"></small></div></div>
   <h3>Register map</h3><div class="register-map"></div>
   <h3>Model definition</h3><code data-preview="definition"></code>
- </aside></div><p>After saving, install the updated emulator image in <a href="/infrastructure?target=qemu">workspace setup</a>, then add the device and test it on the workbench.</p>`,async values=>{
+ </aside></div><p>After saving, install the updated emulator image in <a href="${stepUrl('target', location, 'qemu')}">workspace setup</a>, then add the device and test it on the workbench.</p>`,async values=>{
   const parse=node=>Object.fromEntries([...node.querySelectorAll('input,select')].map(el=>[el.name,el.type==='number'?(el.value===''?null:Number(el.value)):el.value]));
   const outputs=[...document.querySelectorAll('[data-output]')].map(node=>{const {signal,...values}=parse(node);if(values.range_register===null){delete values.range_register;delete values.range_shift;}return {name:signal,...values};});
   const controls=[...document.querySelectorAll('[data-control]')].map(parse);

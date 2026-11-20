@@ -407,7 +407,7 @@ class Studio:
         return apply_overrides(self.freeze_catalog(dict(state, target=target), sensorless, persist=False), self.workspace.root)
 
     def ground_start(self, options):
-        if set(options) - {'target', 'connection', 'journey_reset_at'}:
+        if set(options) - {'target', 'connection'}:
             raise ValueError('Invalid ground station configuration')
         if 'connection' in options and not isinstance(options['connection'], dict):
             raise ValueError('Invalid connection')
@@ -442,7 +442,7 @@ class Studio:
                 instance = None
         link = resolve_ground_link(self.hardware, target, catalog, options.get('connection'))
         result = self.ground.start(**link, catalog=catalog, service_instance=instance,
-                                   journey_reset_at=options.get('journey_reset_at', 0))
+                                   journey_reset_at=self.hardware.journey.snapshot(target)['reset_at'])
         self.ground_target = target
         return dict(result, target=target)
 
@@ -571,7 +571,7 @@ class Handler(BaseHTTPRequestHandler):
             }
             if url.path in routes:
                 return self.reply(routes[url.path]())
-            if url.path in {'/', '/infrastructure'}:
+            if url.path == '/':
                 name = 'infrastructure.html'
             elif url.path in {'/studio', '/studio/'}:
                 if not infrastructure.sources_ready(app.workspace.root):

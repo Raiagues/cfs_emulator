@@ -151,13 +151,13 @@
   border-bottom:1px solid var(--fs-line); background:var(--fs-surface);
   color:var(--fs-text); font:500 var(--fs-label)/1 var(--fs-sans);
 }
-.flight-count,.flight-guide-actions,.flight-stops,.flight-stops a,.flight-next {display:flex;align-items:center}
+.flight-count,.flight-guide-actions,.flight-stops,.flight-stops [data-flight],.flight-next {display:flex;align-items:center}
 .flight-count,.flight-guide-actions {flex:none;gap:8px;white-space:nowrap}
 .flight-count output {font:400 var(--fs-caption) var(--fs-mono);color:var(--fs-muted)}
 .flight-stops {flex:1;min-width:0}
 .flight-line {height:2px;flex:1;min-width:4px;border-radius:var(--fs-radius-pill);background:var(--fs-line)}
 .flight-line.complete {background:color-mix(in srgb,var(--fs-success) 62%,var(--fs-line))}
-.flight-stops a {gap:6px;min-width:0;padding:3px 9px 3px 3px;border-radius:var(--fs-radius-pill);text-decoration:none;
+.flight-stops [data-flight] {gap:6px;min-width:0;padding:3px 9px 3px 3px;border-radius:var(--fs-radius-pill);text-decoration:none;
   font-size:var(--fs-caption);font-weight:400;color:var(--fs-muted)}
 .flight-stops a:hover {background:var(--fs-raised);color:var(--fs-text)}
 .flight-number {display:grid;place-items:center;flex:none;box-sizing:border-box;width:20px;height:20px;
@@ -176,11 +176,11 @@
 .flight-guide-actions svg {width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 @media(max-width:950px) {
   #flight-guide {gap:8px;padding-inline:10px}
-  .flight-stops a {gap:4px;padding-right:4px}
+  .flight-stops [data-flight] {gap:4px;padding-right:4px}
 }
 @media(max-width:805px) {
-  .flight-stops a:not([aria-current]) .flight-label {display:none}
-  .flight-stops a {padding:3px}
+  .flight-stops [data-flight]:not([aria-current]) .flight-label {display:none}
+  .flight-stops [data-flight] {padding:3px}
 }
 @media(max-width:550px) {
   #flight-guide {gap:4px;padding-inline:5px}
@@ -188,7 +188,7 @@
   .flight-line {min-width:1px}
   .flight-stops .flight-label {display:none}
   .flight-number {width:18px;height:18px}
-  .flight-stops a {padding:2px}
+  .flight-stops [data-flight] {padding:2px}
   .flight-guide-actions {gap:0}
   .flight-next {padding:0 6px;font-size:var(--fs-caption)}
 }

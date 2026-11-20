@@ -1,8 +1,10 @@
-import {workspaceRoute,workspaceTarget} from './workspace-route.js';
+import {bindWorkspace, displayTarget, historyEntry, navigate, recordRoute, redirectForStep, requestedTarget,
+        stepUrl, workspaceRoute, workspaceTarget} from './router.js';
+import {api, readJourney} from './api.js';
 import {commandLaunchStep} from './command-launch.js';
 import {openAppWizard} from './app-wizard.js';
 import {mountFirstBoot} from './first-boot.js';
-import {journeyResetAt, refreshJourney} from './journey.js';
+import {refreshJourney} from './journey.js';
 import {drawOrbit,mountOrbit} from './orbit-preview.js';
 import {renderSourceGuide, renderCommandTrail, renderCommandTest, renderSourceTools, renderInspectorDialog, commandContext, syncCommandToFile, attachTagPicker} from './source-guide.js';
 import {openModuleAction} from './module-actions.js';
@@ -20,7 +22,7 @@ import {layoutArchitecture} from './architecture.js';
 import {renderSimulationBoard,renderSimulationSettings,chartPageForDevice,changePattern,updateSignalValues,selectSeries} from './simulation.js';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const state = {showLibraries:localStorage.getItem('mission.showLibraries')!=='false',token:'', workspace:null, hardware:null, ground:null, catalog:null, catalogTarget:null, catalogLoading:false, groundBusy:false, groundError:'', groundApp:'', mapMode:'3d', view:workspaceRoute(location.hash).view, files:new Map(), path:null, target:null, sensorless:false, jobs:[], selectedJob:null, selectedDevice:null, inspected:null, archApp:'', simulation:null,simulationDirty:false, groundTab:'commands', groundSelection:null, groundPacket:null, terminalStream:null, history:new Map()};
+const state = {showLibraries:localStorage.getItem('mission.showLibraries')!=='false',workspace:null, hardware:null, ground:null, catalog:null, catalogTarget:null, catalogLoading:false, groundBusy:false, groundError:'', groundApp:'', mapMode:'3d', view:workspaceRoute().view, files:new Map(), path:null, target:null, sensorless:false, jobs:[], selectedJob:null, selectedDevice:null, inspected:null, archApp:'', simulation:null,simulationDirty:false, groundTab:'commands', groundSelection:null, groundPacket:null, terminalStream:null, history:new Map()};
 let boardRenderer=null;
 const treeStates=new Map(), lastFiles=new Map();
 let treeRequest=0;
@@ -40,19 +42,7 @@ function backendState(connected){
  if(!connected)$('#job-status').textContent='Disconnected from server';
  if(connected&&wasOffline&&$('#feedback').dataset.network==='true'){feedback('Connection restored');delete $('#feedback').dataset.network;}
 }
-async function api(path,body,retry=true){
- let response;
- try{response=await fetch('/api/'+path,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-Studio-Token':state.token},body:JSON.stringify(body)});}
- catch{
-  backendState(false);$('#feedback').dataset.network='true';
-  throw Error(body===undefined?'Server disconnected · reconnecting…':'Connection interrupted · check terminal before retry');
- }
- backendState(true);
- const data=await response.json();
- if(response.status===403&&body!==undefined&&retry){state.token=(await api('session')).token;return api(path,body,false);}
- if(!response.ok)throw Error(data.error||response.statusText);
- return data;
-}
+window.addEventListener('flight:connection', event => backendState(event.detail));
 function guarded(fn) { return (...args) => Promise.resolve().then(()=>fn(...args)).catch(e=>feedback(e.message,true)); }
 let workspaceRequest=0, snapshotSequence=0, appliedSnapshot=0;
 async function refresh(tree=false) {
@@ -505,7 +495,7 @@ async function advanceCommandLaunch(action){
  intent.error='';
  try{
   if(action==='catalog')await groundRefresh();
-  else if(action==='setup')location.href='/infrastructure?target='+encodeURIComponent(intent.target);
+  else if(action==='setup')navigate(stepUrl('target', location, intent.target));
   else if(action==='active'){
    const active=state.hardware.execution.target;
    if(active){await selectTarget(active);await openFlightStep('boot');}
@@ -663,7 +653,7 @@ function newMissionApp(name=''){
 }
 function newCodeCommand(preferred) {
  const revision=state.workspace.mission.source.hash;
- const apps = state.workspace.apps.filter(app => app.managed);
+ const apps = state.workspace.apps.filter(app => app.managed && !app.example);
  if (!apps.length) return;
  const choices = apps.map(app => `<option value="${esc(app.name)}" ${app.name===preferred?'selected':''}>${esc(app.name)}</option>`).join('');
  const body = '<label>Mission app<select name="app" required>'+choices+'</select></label>'+field('name','Command name');
@@ -681,7 +671,7 @@ function newCodeCommand(preferred) {
   state.commandTask={app,id,reviewed:[],changes:result.source_changes};state.lastAuthoredCommand=id;
   state.catalogTarget=null;
   await selectView('code',path,start?.line || 1,null,'command');
-  refreshJourney();
+  await refreshJourney();
  }, 'Create command');
 }
 function create(kind,app,preferredBus) {
@@ -740,11 +730,11 @@ function remove(kind,app,name) {
 }
 function connect() {
  const current=state.hardware?.physical?.connection||{};
- dialog('Check board connection',`<p>Power on · SSH enabled · same network</p><p><a href="/infrastructure?target=physical">SSH host and key</a></p>${current.host?`<p>${esc(current.user||'SSH')} @ ${esc(current.host)}</p>`:''}`,current.host?()=>startJob('probe'):null);
+ dialog('Check board connection',`<p>Power on · SSH enabled · same network</p><p><a href="${stepUrl('target', location, 'physical')}">SSH host and key</a></p>${current.host?`<p>${esc(current.user||'SSH')} @ ${esc(current.host)}</p>`:''}`,current.host?()=>startJob('probe'):null);
 
 }
 async function startJob(action, extra={}, showOutput=true) {
- if(action==='setup'&&state.target==='qemu'){location.href='/infrastructure?target=qemu';return;}
+ if(action==='setup'&&state.target==='qemu'){navigate(stepUrl('target', location, 'qemu'));return;}
  if(launchPending)throw Error('Operation starting');
  if(['build','run'].includes(action)&&state.missionDraft)throw Error('Mission draft · save or cancel');
  const options={target:action==='stop'?state.hardware?.execution?.target||state.target:state.target,...(['boot','build','run'].includes(action)&&state.target!=='native'?{board:state.board,os:state.os}:{}),...(action==='boot'&&state.target==='qemu'&&state.hardware?.qemu?.can_retry_boot?{retry:true}:{}),...(state.target==='physical'&&['build','run'].includes(action)?{sensorless:state.sensorless}:{}),...extra};
@@ -864,7 +854,7 @@ async function groundConnection(connect){
  if(state.groundBusy)throw Error('Connection in progress');
  state.groundBusy=true;state.groundError='';renderView();
  try{
-  const snapshot=await api(connect?'ground/start':'ground/stop',connect?{target:state.target,journey_reset_at:journeyResetAt()}:{});
+  const snapshot=await api(connect?'ground/start':'ground/stop',connect?{target:state.target}:{});
   updateGround(connect?snapshot:{...snapshot,target:state.ground?.target});
  }catch(error){state.groundError=error.message;throw error;}
  finally{state.groundBusy=false;if(state.view==='ground')renderView();}
@@ -920,21 +910,11 @@ document.addEventListener('submit',async event=>{
 
 // Rail views browse the project; a first-flight link may also start an activity.
 let workspaceReady=false, viewRequest=0;
-function recordRoute(route, extra={}) {
- const url=new URL(location.href);
- url.hash=route;
- if(url.href!==location.href){
-  history.pushState(extra,'',url);
- }else if(Object.keys(extra).length){
-  history.replaceState({...history.state,...extra},'',url);
- }
- window.dispatchEvent(new Event('flight:navigate'));
-}
 async function openFlightStep(step,entry={}){
  if(!workspaceReady)return;
  state.commandLaunch=null;
  if(step==='app'){
-  state.archApp='';state.archLibrary='';state.archOverview=true;state.mapMode=state.workspace.apps.some(app=>app.managed)?'3d':'2d';state.mapSection='mission';
+  state.archApp='';state.archLibrary='';state.archOverview=true;state.mapMode=state.workspace.apps.some(app=>app.managed&&!app.example)?'3d':'2d';state.mapSection='mission';
  }
  if(step==='command'){
   const last=authoredCommand();
@@ -950,30 +930,25 @@ async function openFlightStep(step,entry={}){
  return selectView(workspaceRoute(step).view,undefined,undefined,null,step);
 }
 function authoredCommand(){
- const commands=state.workspace.apps.filter(app=>app.managed).flatMap(app=>(app.manifest?.commands||[]).map(cmd=>({app:app.name,id:(app.name+'_'+cmd.name+'_CC').toUpperCase()})));
+ const commands=state.workspace.apps.filter(app=>app.managed&&!app.example).flatMap(app=>(app.manifest?.commands||[]).map(cmd=>({app:app.name,id:(app.name+'_'+cmd.name+'_CC').toUpperCase()})));
  return commands.find(c=>c.id===state.commandTask?.id) || commands.find(c=>c.id===state.lastAuthoredCommand) ||
-  commands.find(c=>c.id===history.state?.flightCommand) || commands.at(-1);
+  commands.find(c=>c.id===historyEntry().flightCommand) || commands.at(-1);
 }
-function followLocation(){
+let navigationRequest = 0;
+async function followLocation(){
+ const request = ++navigationRequest;
  for (const dialog of document.querySelectorAll('dialog[open]')) dialog.close();
- const route=workspaceRoute(location.hash);
- if(location.hash!=='#'+route.id){const url=new URL(location.href);url.hash=route.id;history.replaceState(history.state,'',url);}
  if(!workspaceReady)return openWorkspace();
- const target=workspaceTarget(new URLSearchParams(location.search).get('target'),state.hardware.execution);
+ const target=workspaceTarget(requestedTarget(),state.hardware.execution);
  if(target && target!==state.target)adoptTarget(target);
- return openFlightStep(route.id,history.state || {});
+ const route=workspaceRoute(), snapshot=await readJourney(state.target);
+ if(request!==navigationRequest)return;
+ const redirect=redirectForStep(route.id,snapshot);
+ if(redirect){navigate(redirect,true);return;}
+ recordRoute(route.id,historyEntry(),true);
+ return openFlightStep(route.id,historyEntry());
 }
-window.addEventListener('popstate',guarded(followLocation));
-document.addEventListener('click',e=>{
- const a=e.target.closest('a[href]');
- if(!a || e.defaultPrevented || e.button!==0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || a.target || a.hasAttribute('download'))return;
- const dest=new URL(a.href);
- if(dest.origin!==location.origin || dest.pathname.replace(/\/$/,'')!=='/studio' || !dest.hash)return;
- e.preventDefault();
- // The current document owns editor buffers, terminal sessions and the selected target.
- if(!workspaceReady){recordRoute(workspaceRoute(dest.hash).id);openWorkspace();return;}
- guarded(()=>openFlightStep(workspaceRoute(dest.hash).id))();
-});
+bindWorkspace(followLocation, error => feedback(error.message,true));
 async function selectView(view,sourceFile,sourceLine,inspection=null,route=view){
  const request=++viewRequest;
  ++fileOpenRequest;++treeRequest;
@@ -1193,7 +1168,7 @@ function adoptTarget(target){
 async function selectTarget(target){
  await api('hardware/target',{target});
  adoptTarget(target);
- const url=new URL(location.href);url.searchParams.set('target',target);history.replaceState(history.state,'',url);
+ displayTarget(target);
  if(target==='qemu' && !state.simulationDirty)await refreshSimulation();
  renderToolbar();selectTargetTerminal();await hardwareRefresh();renderView();if(state.view==='ground')await groundRefresh();
 }
@@ -1291,7 +1266,7 @@ document.addEventListener('click',guarded(async e=>{
  else if('signalHardware' in d){
   if(!await selectView('bench')||state.target==='native')return;
   if(state.workspace.project.board){if(Object.keys(state.workspace.catalog.buses||{}).length)create('device');else document.querySelector('[data-add-bus]')?.click();}
-  else location.href='/infrastructure?target=qemu';
+  else navigate(stepUrl('target', location, 'qemu'));
  }
  else if('backSensors' in d){state.selectedDevice=null;renderView();}
  else if('simulationSave' in d)await saveSimulation();
@@ -1447,26 +1422,29 @@ function showOpening(view,error){
  panel.querySelector('button').hidden=!error;
  panel.querySelector('.workspace-loader').hidden=Boolean(error);
 }
-let sessionRequest, initialSnapshot, openingRequest=0;
+let initialSnapshot, openingRequest=0;
 function prepareWorkspace(){
  initialSnapshot??=Promise.all([state.hardware || hardwareRefresh(),refresh()]).catch(error=>{initialSnapshot=null;throw error;});
  return initialSnapshot;
 }
 async function openWorkspace(){
  const request=++openingRequest;
- const route=workspaceRoute(location.hash);
- const requested=new URLSearchParams(location.search).get('target');
+ const route=workspaceRoute();
+ const requested=requestedTarget();
  if(bootCleanup && route.view!=='boot')leaveBoot();
  if(!bootCleanup){document.body.classList.add('workspace-loading');showOpening(route.view);}
  try{
-  sessionRequest??=api('session').then(session=>{state.token=session.token;}).catch(error=>{sessionRequest=null;throw error;});
   const target=workspaceTarget(requested,{});
-  await Promise.all([sessionRequest, route.view==='boot' ? target || hardwareRefresh() : prepareWorkspace()]);
+  if(route.view!=='boot' || !target)await prepareWorkspace();
   if(request!==openingRequest)return;
   const resolved=target || workspaceTarget(null,state.hardware?.execution || {});
-  if(!resolved)throw Error('Target unavailable');
+  const journey=await readJourney(resolved);
+  if(request!==openingRequest)return;
+  const redirect=redirectForStep(route.id,journey);
+  if(redirect){navigate(redirect,true);return;}
+  if(!resolved && journey.steps[route.id]){navigate(stepUrl('target'),true);return;}
   adoptTarget(resolved);
-  const url=new URL(location.href);url.searchParams.set('target',state.target);history.replaceState(history.state,'',url);
+  displayTarget(state.target);
   // Boot only needs its target and session. Load the mission snapshot for the next screen independently.
   if(route.view==='boot'){
    state.view='boot';document.body.dataset.view='boot';showFirstBoot();document.body.classList.remove('workspace-loading');

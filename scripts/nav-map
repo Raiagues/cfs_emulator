@@ -132,8 +132,11 @@ def main():
     else:
         sys.path.insert(0, str(ROOT))
         from interface.tests.browser.lab import lab
-        with lab(ROOT) as instance:
-            observations = js_report([instance, *flags])
+        if args.verify_routes:
+            with lab(ROOT) as fresh:
+                js_report([fresh, '--verify-locked'])
+        with lab(ROOT, completed=True) as instance:
+            observations = js_report([instance, *flags, *(['--exercise-reset'] if args.verify_routes else [])])
     if args.verify_routes:
         print('Direct routes, step navigation and browser history passed.')
         return

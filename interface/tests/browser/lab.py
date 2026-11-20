@@ -11,7 +11,7 @@ from project.flight_sources import prepare_mission
 
 
 @contextmanager
-def lab(root):
+def lab(root, *, completed=False):
     if not (root / 'cFS/cfe/CMakeLists.txt').is_file():
         raise RuntimeError('Install NASA cFS before running the browser inventory')
     with tempfile.TemporaryDirectory(prefix='flight-browser-') as temp:
@@ -22,8 +22,13 @@ def lab(root):
         shutil.copy2(root / 'Dockerfile', mission_root)
         prepare_mission(mission_root)
         with ThreadingHTTPServer(('127.0.0.1', 0), Handler) as server:
-            server.daemon_threads = True
+            server.daemon_threads = False
             server.studio = Studio(mission_root)
+            if completed:
+                from journey import STEPS
+                server.studio.hardware.select_target('native')
+                for index, step in enumerate(STEPS[:-1], 1):
+                    server.studio.hardware.journey.observe('native', step, {'fixture': step}, index)
             worker = threading.Thread(target=server.serve_forever)
             worker.start()
             try:
@@ -31,4 +36,5 @@ def lab(root):
             finally:
                 server.shutdown()
                 worker.join()
+                server.server_close()
                 server.studio.close()

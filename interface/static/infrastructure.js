@@ -1,4 +1,6 @@
 import {targetDrawing} from './target-drawing.js';
+import {api, readJourney, request} from './api.js';
+import {navigate, pageStep, redirectForStep, requestedTarget, stepUrl} from './router.js';
 import {icon} from './ui.js';
 import {mountShells} from './shell.js';
 import {groupsByTarget, groupFor, repairFor, nextRepair} from './setup-plan.js';
@@ -12,36 +14,13 @@ const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'
 const targets = ['native','qemu','physical'];
 const checksByTarget = new Map();
 const checkRequests = new Map();
-let token = '', settings = null, target = 'native', busy = false, dirty = false;
+let settings = null, target = 'native', busy = false, dirty = false;
 let activeGroup = '', installation = null, selectedVersion = 0;
 let verification = null;
 let saving = Promise.resolve();
 function feedback(message = '', error = false) {
   $('#feedback').textContent = message;
   $('#feedback').classList.toggle('error', error);
-}
-
-async function request(path, body, options = {}, retry = true) {
-  const init = {...options, headers:{...options.headers}};
-  if (body !== undefined) {
-    init.method = 'POST';
-    Object.assign(init.headers, {'Content-Type':'application/json','X-Studio-Token':token});
-    init.body = JSON.stringify(body);
-  }
-  const response = await fetch('/api/' + path, init);
-  if (response.status === 403 && retry && path !== 'session') {
-    token = (await api('session')).token;
-    return request(path, body, options, false);
-  }
-  if (!response.ok) {
-    const error = await response.json();
-    throw Error(error.error || response.statusText);
-  }
-  return response;
-}
-
-async function api(path, body) {
-  return (await request(path, body)).json();
 }
 
 function selectField(name, label, options, selected) {
@@ -71,6 +50,8 @@ function connectionButton(field, glyph, label, value) {
 }
 
 function renderFields() {
+  if (target) document.body.dataset.flightTarget = target;
+  else delete document.body.dataset.flightTarget;
   const configure = `<button type="button" class="settings-button" id="advanced-toggle" aria-haspopup="dialog" aria-controls="settings-sheet">${icon('sliders')}Configure</button>`;
   let fields;
   if (target === 'native') {
@@ -492,12 +473,16 @@ form.addEventListener('change', event => {
 });
 form.addEventListener('submit', event => {
   event.preventDefault();
-  if (!$('#enter').disabled && !$('#enter').hidden) location.href = '/studio?target=' + encodeURIComponent(target) + '#boot';
+  if (!$('#enter').disabled && !$('#enter').hidden) navigate(stepUrl('boot', location, target));
 });
 (async () => {
-  token = (await api('session')).token;
   settings = await api('infrastructure');
-  const requested = new URLSearchParams(location.search).get('target');
+  const requested = requestedTarget();
+  if (pageStep() === 'board') {
+    const state = await readJourney(null, true);
+    const redirect = redirectForStep('board', state);
+    if (redirect) {navigate(redirect, true); return;}
+  }
   const explicitSelection = targets.includes(requested);
   target = explicitSelection ? requested : settings.target;
   const jobs = await api('jobs');

@@ -161,7 +161,7 @@ async function crawl(url, verifyRoutes) {
     const context = await browser.newContext({viewport:{width:1440,height:900}});
     const page = await context.newPage();
     // Inventory visits never install software or deploy the lab being inspected.
-    let visiting = '';
+    let visiting = '', resetting = false;
     page.on('pageerror', e => faults.push(visiting + ' ' + e.message));
     page.on('response', async response => {
       if (response.status() >= 400 && response.request().method() === 'GET') {
@@ -170,7 +170,7 @@ async function crawl(url, verifyRoutes) {
     });
     await context.route('**/api/**', route => {
       const request = route.request();
-      if (request.method() === 'GET') return route.continue();
+      if (request.method() === 'GET' || resetting && new URL(request.url()).pathname === '/api/journey/reset') return route.continue();
       rows.push([visiting, 'Route entry', request.method() + ' ' + new URL(request.url()).pathname]);
       return route.fulfill({status:409, contentType:'application/json',body:'{"error":"Inventory captured this action"}'});
     });
@@ -180,8 +180,20 @@ async function crawl(url, verifyRoutes) {
       return [setup.target_saved, setup.target, setup.board, setup.os, setup.check_results, jobs.map(job => job.id)];
     };
     const before = verifyRoutes && await saved();
+    if (process.argv.includes('--verify-locked')) {
+      for (const route of ['/studio?target=native#boot', '/studio?target=native#command', '/?target=physical#board']) {
+        await page.goto(new URL(route, base).href);
+        await page.waitForURL(url => url.pathname === '/' && url.hash === '#target');
+        await page.locator('#flight-guide [data-flight=target][href]').waitFor();
+        assert.equal(await page.locator('#flight-guide [data-flight=boot][href]').count(), 0);
+        assert.equal(await page.locator('#flight-guide [aria-current=step]').getAttribute('data-flight'), 'target');
+      }
+      assert.deepEqual(faults, []);
+      assert.deepEqual(rows, []);
+      return rows;
+    }
     async function ready() {
-      await page.waitForFunction(() => document.querySelector('#targets button:not(:disabled),body:not(.workspace-loading) #studio') ||
+      await page.waitForFunction(() => document.querySelector('#flight-guide [aria-current=step]') && document.querySelector('#targets button:not(:disabled),body:not(.workspace-loading) #studio') ||
         document.querySelector('#feedback')?.innerText || document.querySelector('#workspace-opening button:not([hidden])'));
       assert.equal(await page.locator('dialog[open]').count(), 0, visiting);
     }
@@ -209,6 +221,19 @@ async function crawl(url, verifyRoutes) {
       await ready();
       assert.deepEqual(rows.filter(([, label]) => label === 'Route entry' || label === 'Page feedback'), []);
       assert.deepEqual(await saved(), before, 'a passive view changed the target, checks, profile, or jobs');
+      if (process.argv.includes('--exercise-reset')) {
+        resetting = true;
+        const second = await context.newPage();
+        await second.goto(new URL('/studio?target=native#ground', base).href);
+        await second.locator('[data-flight=board][aria-current=step]').waitFor();
+        await page.locator('[data-flight=reset]').click();
+        await page.waitForURL(url => url.hash === '#target');
+        await second.reload();
+        await second.locator('[data-flight=target][aria-current=step]').waitFor();
+        assert.equal(await second.locator('[data-flight=boot][href]').count(), 0);
+        assert.equal(new URL(second.url()).hash, '#ground');
+        await second.close();
+      }
       assert.deepEqual(faults, []);
     } else if (faults.length) {
       for (const fault of faults) rows.push(['Browser', 'Page error', fault]);

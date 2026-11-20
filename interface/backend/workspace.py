@@ -9,6 +9,7 @@ import json
 import math
 import os
 from pathlib import Path
+from journey import SHIPPED_APPS
 import re
 import subprocess
 import sys
@@ -245,7 +246,7 @@ class Workspace:
                 paths = sorted(directory.glob("fsw/src/*_user.c")) or sorted(directory.glob("fsw/src/*app.c"))
                 entry = paths[0] if paths else directory / "CMakeLists.txt"
                 app = {"name": name, "path": directory.relative_to(self.root).as_posix(),
-                       "entry": entry.relative_to(self.root).as_posix(), "managed": bool(manifest),
+                       "entry": entry.relative_to(self.root).as_posix(), "managed": bool(manifest), "example": name in SHIPPED_APPS,
                        "built": name in installed, "enabled": name in enabled,
                        "manifest": manifest, "locations": []}
                 if not manifest:

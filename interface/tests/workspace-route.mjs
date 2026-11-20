@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {workspaceRoute, workspaceTarget} from '../static/workspace-route.js';
+import {workspaceRoute, workspaceTarget} from '../static/router.js';
 
 test('a first-flight deep link opens its own screen during hydration', () => {
   for (const [id, view] of Object.entries({
