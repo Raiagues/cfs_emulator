@@ -146,8 +146,8 @@ export function mountGroundLesson(root, {state}) {
   root.addEventListener('click',click);root.addEventListener('submit',submit);root.addEventListener('input',input);
   const unsubscribe=onUpdate(['ground','jobs'],()=>read().catch(fail));
   draw();read().catch(fail);
-  return () => {
+  return {close() {
     disposed=true;unsubscribe();stopWait();flights.forEach(cancel=>cancel());
     root.removeEventListener('click',click);root.removeEventListener('submit',submit);root.removeEventListener('input',input);
-  };
+  }};
 }

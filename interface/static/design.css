@@ -802,3 +802,12 @@
 .lesson-track .fs-dash {stroke:var(--fs-success)}
 .lesson-packet {background:var(--fs-accent-bg);border-color:var(--fs-accent);color:var(--fs-accent);font:var(--fs-small) var(--fs-mono);border-radius:var(--fs-radius-pill)}
 .lesson-packet.answer {color:var(--fs-blue);border-color:var(--fs-blue);background:var(--fs-panel)}
+
+.mission-level.own,.mission-target {--tone:var(--fs-success)}
+.mission-level.libraries {--tone:var(--fs-accent)}
+.mission-level.core {--tone:var(--fs-code)}
+.mission-level.platform {--tone:var(--fs-blue)}
+.mission-level,.mission-target {border-color:color-mix(in srgb,var(--tone,var(--fs-muted)) 30%,var(--fs-line));background:color-mix(in srgb,var(--tone,var(--fs-muted)) 7%,var(--fs-panel))}
+.mission-level code,.mission-route code {font:var(--fs-label) var(--fs-mono);border:1px solid var(--fs-line);border-radius:var(--fs-radius-control);background:var(--fs-surface)}
+.mission-route[data-empty=true] {opacity:.5}
+.wizard-name small {color:var(--fs-danger)}

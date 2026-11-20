@@ -4,6 +4,7 @@ import {bindWorkspace, displayTarget, historyEntry, navigate, recordRoute, redir
 import {api, readJourney} from './api.js';
 import {commandLaunchStep} from './command-launch.js';
 import {openAppWizard} from './app-wizard.js';
+import {mountMissionLesson} from './mission-lesson.js';
 import {mountGroundLesson} from './ground-lesson.js';
 import {mountFirstBoot} from './first-boot.js';
 import {refreshJourney} from './journey.js';
@@ -531,7 +532,7 @@ function showFirstBoot(){
 function leaveBoot(){
  bootCleanup?.();bootCleanup=null;bootTarget=null;
 }
-const activities = {event: mountGroundLesson};
+const activities = {event: mountGroundLesson, app: mountMissionLesson};
 let activity;
 function guidedView() {
  const mount = activities[state.activity];
@@ -543,8 +544,9 @@ function guidedView() {
   const pane = document.createElement('section');
   pane.className = 'activity-view';
   $('#view').replaceChildren(pane);
-  activity = {step:state.activity, target:state.target, close:mount(pane,{state})};
- }
+  const controller = mount(pane, {state,openApp:done=>newMissionApp('',done)});
+  activity = {step:state.activity, target:state.target, ...controller};
+ } else activity.update?.();
  $('#visual-heading').hidden=true;
  syncNavigation();
  return true;
@@ -667,10 +669,10 @@ async function chooseSourceCommand(command) {
  else renderView();
 }
 
-function newMissionApp(name=''){
- openAppWizard({initialName:name,workspace:state.workspace,api,esc,requireSaved:requireSavedMission,refresh:async(changed,deleted)=>{
+function newMissionApp(name='',onClose){
+ return openAppWizard({initialName:name,workspace:state.workspace,api,esc,requireSaved:requireSavedMission,refresh:async(changed,deleted)=>{
   await reloadMissionFiles(changed,deleted);await refreshJourney();
- },onCommand:name=>guarded(async()=>{if(await selectView('code',state.workspace.apps.find(app=>app.name===name)?.entry,1,null,'command'))newCodeCommand(name);})()});
+ },onClose});
 }
 function newCodeCommand(preferred) {
  const revision=state.workspace.mission.source.hash;
