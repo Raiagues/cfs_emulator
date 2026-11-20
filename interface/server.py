@@ -16,7 +16,9 @@ from urllib.parse import parse_qs, urlparse
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from interface.backend.workspace import Workspace
-from interface.backend import first_boot, journey
+from interface.backend import first_boot
+from hardware.targets import selected_target
+from journey import mission as evidence
 from interface.backend.terminal import Shells
 from interface.backend.hardware_settings import device_settings, update_device
 from hardware.manager import HardwareManager
@@ -192,7 +194,7 @@ class Studio:
                 receipt = json.loads(line[len('@qmp-write '):])
                 write = {receipt['device']: receipt['confirmed_at']}
                 record['qmp_writes'] = {**record.get('qmp_writes', {}), **write}
-                journey.record_device_writes(self.hardware, write)
+                evidence.record_writes(self.hardware.root, record['target'], write)
                 line = f"qom-set {receipt['device']}.{receipt['property']} = {receipt['value']} · OK"
             if record.get('scenario') and str(line).startswith('@scenario '):
                 record['scenario_result'] = json.loads(line[len('@scenario '):])
@@ -204,7 +206,7 @@ class Studio:
                     samples = None
                 if isinstance(samples, dict):
                     record['samples'] = dict(samples, received_at=time.time())
-                    journey.record_signal(self.hardware, record)
+                    evidence.record_signal(self.hardware.root, record)
                     return
             if record['action'] == 'boot' and record['target'] == 'qemu':
                 output = str(line)
@@ -274,7 +276,7 @@ class Studio:
                     record['status'] = 'cancelled'
                 record['ended'] = time.time()
                 if record['action'] == 'simulate-preview':
-                    journey.record_signal(self.hardware, record)
+                    evidence.record_signal(self.hardware.root, record)
             if owns_operation:
                 self.operation.release()
 
@@ -547,7 +549,9 @@ class Handler(BaseHTTPRequestHandler):
             query = {k: v[0] for k, v in parse_qs(url.query).items()}
             app = self.server.studio
             routes = {
-                '/api/journey': lambda: journey.snapshot(app, query.get('target')),
+                '/api/journey': lambda: app.hardware.journey.snapshot(
+                    (app.hardware._load('target.json', {}).get('journey_origin') if query.get('view') == 'board' else None)
+                    or query.get('target') or selected_target(app.hardware.root)),
                 '/api/session': lambda: {'token': app.token},
                 '/api/workspace': lambda: {**app.workspace.snapshot(), 'builds': app.hardware.builds_status()},
                 '/api/tree': lambda: app.workspace.tree(query.get('path', '')),
@@ -626,7 +630,9 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(body, dict):
                 raise ValueError('Request body must be an object')
             path = urlparse(self.path).path
-            if path == '/api/file':
+            if path == '/api/journey/reset':
+                result = app.ground.reset_journey(body.get('target') or selected_target(app.hardware.root))
+            elif path == '/api/file':
                 result = app.exclusive(app.workspace.write_file, body['path'], body['content'], body.get('expected_hash'))
             elif path == '/api/infrastructure':
                 result = app.exclusive(infrastructure.save, app, body)
@@ -664,7 +670,7 @@ class Handler(BaseHTTPRequestHandler):
                     raise ValueError('Stop synthetic data before changing its session settings')
                 result = app.exclusive(app.workspace.save_simulation, body.get('settings'), body.get('expected_hash'))
             elif path == '/api/hardware/target':
-                result = app.exclusive(app.hardware.select_target, body.get('target'))
+                result = app.exclusive(app.hardware.select_target, body.get('target'), board_visit=body.get('use_board') is True)
             elif path == '/api/hardware/model':
                 from project.sensor_models import register
                 result = app.exclusive(register, app.workspace.root, body)

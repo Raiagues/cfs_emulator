@@ -27,6 +27,11 @@ import threading
 import time
 
 
+from hardware.targets import selected_target
+from journey import Store
+from journey import mission as evidence
+
+
 # Every field hardware/board_probe.py reports, with its JSON type.
 PROBE_FIELDS = {"arch": str, "model": str, "home": str, "hostname": str, "i2c": list, "sudo": bool,
                 "authorized": bool, "shutdown_authorized": bool, "service_installed": bool,
@@ -46,11 +51,25 @@ class HardwareManager:
         self.root = Path(root).resolve()
         self.runtime = self.root / "hardware/.runtime"
         self.runtime.mkdir(parents=True, exist_ok=True)
+        self.journey = Store(self.root)
+        self._import_boot_receipts()
         self._lock = threading.Lock()
         self._fingerprint_cache = None
         self._last_probe = self._load("probe.json")
         self._observation_lock = threading.Lock()
         self._flight_observations = {}
+
+    def _import_boot_receipts(self):
+        """Older releases retained boot observations with time and invocation, before the event log."""
+        for target in ("native", "qemu", "physical"):
+            receipt = self._load("operational-" + target + ".json", {})
+            stamp, run = receipt.get("time"), receipt.get("run_id")
+            if not run or not stamp or "OPERATIONAL" not in receipt.get("flight", {}).get("states", []):
+                continue
+            if not any(event.ref.get("run") == run for event in self.journey.events(target)):
+                self.journey.observe(target, "boot", {"run": run}, stamp)
+                if target == "physical":
+                    self.journey.observe(target, "board", {"run": run}, stamp)
 
     def _load(self, name, fallback=None):
         try:
@@ -65,16 +84,23 @@ class HardwareManager:
         temp.replace(self.runtime / name)
 
     def default_target(self):
-        selected = self._load("target.json", {}).get("target")
-        if selected in {"native", "qemu", "physical"}:
+        selected = selected_target(self.root)
+        if selected:
             return selected
         config = json.loads((self.root / "project/config.json").read_text())
         return "native" if config.get("board") is None and config.get("os") is None else "qemu"
 
-    def select_target(self, target):
+    def select_target(self, target, *, board_visit=False):
         if not isinstance(target, str) or target not in {"native", "qemu", "physical"}:
             raise HardwareError("Invalid execution target.")
-        self._save("target.json", {"target": target})
+        saved = {"target": target}
+        if board_visit:
+            from hardware.infrastructure import checks_verified
+            if target != "physical" or not checks_verified(self, target, self._load("checks-physical.json", {})):
+                raise HardwareError("Check the board connection before using this board.")
+            previous = self._load("target.json", {})
+            saved["journey_origin"] = previous.get("journey_origin") or previous.get("target") or target
+        self._save("target.json", saved)
         return {"target": target}
 
     @staticmethod
@@ -1031,6 +1057,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
         state = {"fingerprint": source, "built_at": time.time(), "sensorless": sensorless, "target": target,
                  "build_dir": self.build_directory(target), "installed_sha256": self._installed_digest(root, target)}
         self._save(self.build_state_file(target, sensorless), state)
+        evidence.built(root, state)
         return state
 
     def _boot(self, target, connection, retry, emit, cancel):

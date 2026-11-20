@@ -73,6 +73,10 @@ def main(argv=None):
     parser = argparse.ArgumentParser(prog='./start --no-ui', description='Flight Studio command-line tools.')
     commands = parser.add_subparsers(dest='command')
     commands.add_parser('status', help='Show workspace and target status')
+    journey = commands.add_parser('journey', help='Show or reset first-flight observations')
+    journey.add_argument('--target', choices=('native', 'qemu', 'physical'))
+    journey.add_argument('--reset', action='store_true')
+    journey.add_argument('--json', action='store_true')
     profile = commands.add_parser('profile', help='Show or select the native or board/OS profile')
     selection = profile.add_mutually_exclusive_group()
     selection.add_argument('--native', action='store_true', help='Use this computer without a board')
@@ -120,6 +124,18 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if not args.command:
         parser.print_help()
+        return 0
+    if args.command == 'journey':
+        from hardware.targets import selected_target
+        from journey import Store
+        store = Store(ROOT)
+        target = args.target or selected_target(ROOT)
+        result = store.reset(target) if args.reset else store.snapshot(target)
+        if args.json:
+            print(json.dumps(result, indent=2))
+        else:
+            for step, state in result['steps'].items():
+                print(f"{step:8} {'done' if state['done'] else 'available' if state['reachable'] else 'locked'}")
         return 0
     if args.command == 'emulator':
         from hardware.infrastructure import emulator_config, save_emulator

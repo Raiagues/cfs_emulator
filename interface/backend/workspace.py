@@ -485,8 +485,13 @@ class Workspace:
             if not isinstance(plan_hash, str) or plan_hash != public["plan_hash"]:
                 raise ValueError("The draft or source has changed. Preview the updated configuration before saving.")
             self._assert_inputs(inputs, "Project source changed. Preview the draft again before saving.")
+            from hardware.targets import selected_target
+            from journey.mission import created
+            target = selected_target(self.root)
             libraries = [name] if kind == "library" else []
             changed = commit(self.root, plan, library_names=libraries)
+            if kind == "app" and mode == "create":
+                created(self.root, target, name)
             deleted = [path for path, content in plan.items() if content is None]
             return {"mission": self.mission.snapshot(), "changed": changed, "deleted": deleted, kind: module}
 

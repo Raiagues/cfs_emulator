@@ -3,8 +3,9 @@ import re
 
 
 class FirstEvent:
-    def __init__(self, catalog=None, destination=None):
+    def __init__(self, catalog=None, destination=None, authored=None):
         catalog = catalog or {}
+        self.authored = authored
         self.noops = {}
         self.enable = None
         self.destination = destination
@@ -22,18 +23,19 @@ class FirstEvent:
             if command['app'] == 'sample_app' or command.get('source', '').startswith('mission/apps/'):
                 self.noops[command['id']] = command['app']
         for packet in catalog.get('packets', []):
-            if packet['app'] not in self.noops.values() or 'HK' not in packet['id'].upper():
+            if packet['app'] not in (authored if authored is not None else self.noops).values() or 'HK' not in packet['id'].upper():
                 continue
             for field in packet['fields']:
                 if field['name'].split('.')[-1] == 'CommandCounter':
                     self.hk_fields[packet['mid']] = field['name']
 
     def sent(self, command):
-        if self.enable and command['id'] == self.enable and not self.downlink:
+        if command['id'] == self.enable and not command.get('automatic') and self.downlink_receipt is None:
             self.enable_send = command['event_id']
-        app = self.noops.get(command['id'])
+        watched = self.noops if self.authored is None else self.authored
+        app = watched.get(command['id'])
         if app and not command.get('automatic') and not self.answer:
-            self.pending = {'app': app, 'send_id': command['event_id'], 'baseline': self.counter.get(app),
+            self.pending = {'app': app, 'send_id': command['event_id'], 'sent_at': command.get('sent_at'), 'baseline': self.counter.get(app), 'command': command['id'],
                             'reply': None, 'increase': None}
 
     def received(self, packet):
@@ -42,9 +44,9 @@ class FirstEvent:
         values = packet['values']
         if not self.downlink:
             self.downlink = packet['received_at']
-            if self.enable_send is not None and packet['event_id'] > self.enable_send:
-                self.downlink_receipt = {'send_id': self.enable_send, 'mid': packet['mid'],
-                                         'sequence': packet.get('sequence'), 'received_at': self.downlink}
+        if self.enable_send is not None and not self.downlink_receipt and packet['event_id'] > self.enable_send:
+            self.downlink_receipt = {'send_id': self.enable_send, 'mid': packet['mid'],
+                                         'sequence': packet.get('sequence'), 'received_at': packet['received_at']}
         field = self.hk_fields.get(packet['mid'])
         count = values.get(field)
         if field and type(count) is int:
@@ -55,12 +57,12 @@ class FirstEvent:
         if (packet['app'] == 'cfe_evs' and values.get('PacketID.EventID') is not None
                 and self.information is not None and values.get('PacketID.EventType') == self.information
                 and str(values.get('PacketID.AppName', '')).casefold() == attempt['app'].casefold()
-                and re.search(r'\bno[ -]?op\b', str(values.get('Message', '')), re.I)):
+                and (self.authored is not None or re.search(r'\bno[ -]?op\b', str(values.get('Message', '')), re.I))):
             if not attempt['reply']:
                 attempt.update(reply=packet['event_id'], message=values['Message'], event_mid=packet['mid'])
             self.event = self.event or packet['received_at']
         if (packet['app'] == attempt['app'] and field and type(count) is int
-                and attempt['baseline'] is not None and count > attempt['baseline']):
+                and attempt['baseline'] is not None and count == attempt['baseline'] + 1):
             if not attempt['increase']:
                 attempt.update(increase=packet['event_id'], count=count)
         if attempt['reply'] and attempt['increase']:

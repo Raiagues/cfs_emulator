@@ -142,7 +142,8 @@ function compare() {
   ];
   const results = [];
   for (const [file, text, difference] of checks) {
-    const contents = files.get(file)?.text || fs.readFileSync(file.includes('/') ? file : path.join(directory, file), 'utf8');
+    const filename = file.includes('/') ? file : path.join(directory, file);
+    const contents = files.get(file)?.text || (fs.existsSync(filename) ? fs.readFileSync(filename, 'utf8') : '');
     const at = contents.indexOf(text);
     if (at >= 0) results.push(difference + ' `' + file + ':' + contents.slice(0, at).split('\n').length + '`');
   }

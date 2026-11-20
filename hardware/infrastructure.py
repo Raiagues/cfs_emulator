@@ -282,6 +282,8 @@ def _receipt(hardware, target, identity, row):
         if hardware._load("target.json", {}).get("target") == target:
             receipt["selected"] = True
         hardware._save(path, receipt)
+        if row["ready"] and receipt.get("selected") and target_verified(hardware, target):
+            hardware.journey.observe(target, "target", {"checks": identity})
 
 
 def checks_verified(hardware, target, receipt):

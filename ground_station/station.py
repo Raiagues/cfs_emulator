@@ -13,6 +13,7 @@ from pathlib import Path
 
 from .catalog import build_catalog, apply_overrides
 from .first_event import FirstEvent
+from journey import Store
 from .round_trip import PassedTests, RoundTrips, TestPlans
 
 
@@ -49,7 +50,9 @@ class GroundStation:
         self._received = 0
         self._malformed = 0
         self._last_received = None
+        self.journey = Store(self.root)
         self.first_contact = FirstEvent()
+        self.command_reply = FirstEvent(authored={})
         self._learned_targets = {}
         self._target = None
         self._auto_enable = False
@@ -124,7 +127,7 @@ class GroundStation:
                 self._subscription_errors = []
                 self._target = (catalog.get('build_target'), target_ip, ports['command_port'])
                 self._auto_enable = self._learned_targets.get(self._target, 0) > journey_reset_at
-                self.first_contact = FirstEvent(catalog, return_host or listen_host)
+                self._start_observations(catalog, return_host or listen_host)
                 self._subscriptions_due = ([target_ip, ports['command_port']], service_instance)
                 self._stop = threading.Event()
                 self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -145,6 +148,30 @@ class GroundStation:
             self.stop()
             raise
         return self.snapshot()
+
+    def _start_observations(self, catalog, destination):
+        target = catalog.get('build_target')
+        self._journey_cutoff = self.journey.snapshot(target)['reset_at']
+        commands = {ref['command']: ref['app'] for ref in self.journey.references(target, 'command')
+                    if ref['build'] == catalog.get('build_fingerprint')}
+        self.first_contact = FirstEvent(catalog, destination)
+        self.command_reply = FirstEvent(catalog, destination, authored=commands)
+
+    def reset_journey(self, target):
+        with self._lock:
+            state = self.journey.reset(target)
+            if self._target and self._target[0] == target:
+                self._start_observations(self._active_catalog, self.first_contact.destination)
+            return state
+
+    def _observe_reply(self, packet, tracker, step):
+        previous = tracker.answer
+        tracker.received(packet)
+        if not previous and tracker.answer and self._target and self._target[0]:
+            ref = tracker.pending
+            if step == 'event' and (ref['app'] != 'sample_app' or not tracker.downlink_receipt):
+                return
+            self.journey.observe(self._target[0], step, dict(ref, session=self._session_started), tracker.answer)
 
     def _enable_downlink(self, command, destination):
         """CI_LAB can start after the OS process. The output destination is safe to reapply."""
@@ -270,7 +297,8 @@ class GroundStation:
             self._latest[mid] = packet
             if not any(p['mid'] == mid and p['sequence'] == packet['sequence'] and
                        p['hex'] == packet['hex'] for p in reversed(self._history)):
-                self.first_contact.received(packet)
+                self._observe_reply(packet, self.first_contact, 'event')
+                self._observe_reply(packet, self.command_reply, 'send')
                 if self.first_contact.event:
                     self._learned_targets[self._target] = self.first_contact.event
                 if self.trips.active:
@@ -322,7 +350,11 @@ class GroundStation:
                      'automatic': automatic}
             event['event_id'] = self._record_communication(event['app'], 'command', size, event['sent_at'])
             self._commands.append(event)
+            cutoff = self.journey.snapshot(self._target[0])['reset_at']
+            if cutoff != self._journey_cutoff:
+                self._start_observations(self._active_catalog, self.first_contact.destination)
             self.first_contact.sent(event)
+            self.command_reply.sent(event)
             if prepared:
                 self.trips.start(prepared, event, test_id)
             return event

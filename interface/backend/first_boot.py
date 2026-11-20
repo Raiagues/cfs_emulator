@@ -132,8 +132,16 @@ def observe(hardware, job, line):
     if changed or new_state:
         _record(job, line, fact=fact)
     if new_state and fact["state"] == "OPERATIONAL":
+        at = time.time()
+        reference = {"run": job["id"], "line": line}
+        hardware.journey.observe(job["target"], "boot", reference, at)
+        if job["target"] == "physical":
+            hardware.journey.observe("physical", "board", reference, at)
+            origin = hardware._load("target.json", {}).get("journey_origin")
+            if origin in ("native", "qemu"):
+                hardware.journey.observe(origin, "board", reference, at)
         hardware._save("operational-" + job["target"] + ".json",
-                       {"run_id": job["id"], "time": time.time(), "target": job["target"],
+                       {"run_id": job["id"], "time": at, "target": job["target"],
                         "started": job.get("started"), "boot_trace": job["boot_trace"],
                         "connection": job.get("connection"), "instance": job.get("instance"),
                         "apps": job.get("boot_apps"), "flight": facts})
