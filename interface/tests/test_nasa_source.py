@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from project.workspace import Workspace
 from project.flight_sources import nasa_module_names, prepare_mission
-from project.nasa_source import OFFICIAL_URL, install, source_status
+from project.nasa_source import OFFICIAL_URL, REVISION, install, source_status
 
 
 class NasaSourceTest(unittest.TestCase):
@@ -23,8 +23,11 @@ class NasaSourceTest(unittest.TestCase):
             (source / ".gitmodules").write_text('[submodule "optional"]\npath = apps/optional\n')
             self.assertEqual(nasa_module_names(root, "apps"), {"example", "plugin", "optional"})
             for marker, expected in ((" ", "ready"), ("-", "incomplete"), ("+", "incomplete")):
-                with patch("project.nasa_source._git", side_effect=[OFFICIAL_URL, "abc123", marker + "abc123 apps/example"]):
+                with patch("project.nasa_source._git", side_effect=[OFFICIAL_URL, REVISION, marker + "abc123 apps/example"]):
                     self.assertEqual(source_status(root)["state"], expected)
+
+            with patch("project.nasa_source._git", side_effect=[OFFICIAL_URL, "a" * 40]):
+                self.assertEqual(source_status(root)["state"], "revision-mismatch")
 
     def test_mission_definitions_are_independent_and_editor_protects_upstream(self):
         with tempfile.TemporaryDirectory() as scratch:

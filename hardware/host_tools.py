@@ -6,12 +6,12 @@ import subprocess
 import sys
 
 
-# Package columns correspond to git, cmake, make and cc.
+TOOLS = ("git", "cmake", "make", "cc", "stdbuf", "pgrep")
 DISTRIBUTIONS = {
-    "apt-get": (["apt-get", "install", "-y"], ("git", "cmake", "make", "build-essential")),
-    "dnf": (["dnf", "install", "-y"], ("git", "cmake", "make", "gcc")),
-    "pacman": (["pacman", "-S", "--needed", "--noconfirm"], ("git", "cmake", "make", "gcc")),
-    "zypper": (["zypper", "--non-interactive", "install"], ("git", "cmake", "make", "gcc", "python3-qt5", "python3-pyzmq")),
+    "apt-get": (["apt-get", "install", "-y"], ("git", "cmake", "make", "build-essential", "coreutils", "procps")),
+    "dnf": (["dnf", "install", "-y"], ("git", "cmake", "make", "gcc", "coreutils", "procps-ng")),
+    "pacman": (["pacman", "-S", "--needed", "--noconfirm"], ("git", "cmake", "make", "gcc", "coreutils", "procps-ng")),
+    "zypper": (["zypper", "--non-interactive", "install"], ("git", "cmake", "make", "gcc", "coreutils", "procps")),
 }
 
 
@@ -23,14 +23,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="report missing dependencies without installing")
     args = parser.parse_args()
-    tools = ("git", "cmake", "make", "cc")
+    tools = TOOLS
     present = []
     for tool in tools:
         path = shutil.which(tool)
         print(f"{tool}: {path or 'missing'}", flush=True)
         present.append(bool(path))
     if all(present):
-        print("Native build tools and Ground Station packages ready.")
+        print("Native build and runtime tools ready.")
         return 0
     missing = [name for name, ok in zip(tools, present) if not ok]
     print("Missing: " + ", ".join(missing), flush=True)

@@ -9,6 +9,7 @@ import tempfile
 from project.flight_sources import prepare_mission
 
 OFFICIAL_URL = "https://github.com/nasa/cFS.git"
+REVISION = "a4d305dc06fb7d468f5b45214d9f730b97d4bd77"
 
 
 def _git(directory, *args):
@@ -27,15 +28,28 @@ def source_status(root):
         origin = _git(source, "config", "--local", "--get", "remote.origin.url").lower().rstrip("/").removesuffix(".git")
         if origin not in ("https://github.com/nasa/cfs", "git@github.com:nasa/cfs", "ssh://git@github.com/nasa/cfs"):
             return status
-        status["revision"] = _git(source, "rev-parse", "--short=12", "HEAD")
+        status["revision"] = _git(source, "rev-parse", "HEAD")
+        if status["revision"] != REVISION:
+            status["state"] = "revision-mismatch"
+            return status
         # The index records installed modules. An upstream .gitmodules can also
         # describe optional paths with no gitlink at this revision.
         modules = _git(source, "submodule", "status", "--recursive").splitlines()
         populated = bool(modules) and all(line and line[0] not in "-+U" for line in modules)
         status["state"] = "ready" if populated and (source / "sample_defs/targets.cmake").is_file() else "incomplete"
-    except (OSError, subprocess.CalledProcessError):
-        pass
+    except (OSError, subprocess.CalledProcessError) as error:
+        status["error"] = str(error)
     return status
+
+
+def _checkout(source):
+    if _git(source, "rev-parse", "HEAD") != REVISION:
+        if _git(source, "status", "--porcelain"):
+            raise ValueError("Save your NASA checkout changes before selecting the pinned revision.")
+        subprocess.run(["git", "-C", str(source), "fetch", "--depth=1", "origin", REVISION], check=True)
+        subprocess.run(["git", "-C", str(source), "checkout", "--detach", REVISION], check=True)
+    subprocess.run(["git", "-C", str(source), "submodule", "update", "--init", "--recursive",
+                    "--depth=1", "--jobs=4", "--progress"], check=True)
 
 
 def install(root):
@@ -51,18 +65,17 @@ def install(root):
         if state == "missing":
             with tempfile.TemporaryDirectory(prefix=".nasa-cfs-", dir=root) as temporary:
                 staged = Path(temporary) / "cFS"
-                subprocess.run(["git", "clone", "--depth", "1", "--recurse-submodules", "--shallow-submodules",
-                                "--jobs", "4", "--progress", OFFICIAL_URL, str(staged)], check=True)
+                subprocess.run(["git", "clone", "--depth=1", "--no-tags", "--progress", OFFICIAL_URL, str(staged)], check=True)
+                _checkout(staged)
                 if source_status(temporary)["state"] != "ready":
                     raise ValueError("NASA cFS download is incomplete. Run the clone step again.")
                 staged.rename(source)
-        elif state == "incomplete":
-            subprocess.run(["git", "-C", str(source), "submodule", "update", "--init", "--recursive",
-                            "--jobs", "4", "--progress"], check=True)
+        elif state in {"incomplete", "revision-mismatch"}:
+            _checkout(source)
         if source_status(root)["state"] != "ready":
             raise ValueError("Missing NASA mission sources. Check the checkout and rerun setup.")
         prepare_mission(root)
-        print(f"NASA cFS ready at {_git(source, 'rev-parse', '--short=12', 'HEAD')}. Mission files are in mission/.")
+        return {"state": "ready", "revision": REVISION, "url": OFFICIAL_URL, "mission": "mission"}
 
 
 if __name__ == "__main__":
@@ -73,6 +86,6 @@ if __name__ == "__main__":
             sys.exit(0 if source["state"] == "ready" else 1)
         if len(sys.argv) != 1:
             sys.exit("Usage: python3 -m project.nasa_source [--status PROJECT]")
-        install(Path.cwd())
+        print(json.dumps(install(Path.cwd())))
     except (OSError, ValueError, subprocess.CalledProcessError) as error:
         sys.exit(str(error))

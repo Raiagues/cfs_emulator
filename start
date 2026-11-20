@@ -17,6 +17,8 @@ Web interface:
   ./start --ui --port 8766
 
 Command line:
+  ./start --no-ui source install
+  ./start --no-ui setup --target native --check
   ./start --no-ui build
   ./start --no-ui run
   ./start --no-ui stop
@@ -73,6 +75,9 @@ def main(argv=None):
 
     parser = argparse.ArgumentParser(prog='./start --no-ui', description='Flight Studio command-line tools.')
     commands = parser.add_subparsers(dest='command')
+    source = commands.add_parser('source', help='Manage the pinned official NASA checkout')
+    source.add_argument('action', choices=('install', 'status'))
+    source.add_argument('--json', action='store_true')
     commands.add_parser('status', help='Show workspace and target status')
     journey = commands.add_parser('journey', help='Show or reset first-flight observations')
     journey.add_argument('--target', choices=('native', 'qemu', 'physical'))
@@ -111,6 +116,9 @@ def main(argv=None):
         command.add_argument('--directory', help="cFS installation folder relative to the board user's home")
         if action in {'build', 'run'}:
             command.add_argument('--sensorless', action='store_true', help='Physical build without sensor apps')
+        if action == 'setup':
+            command.add_argument('--check', action='store_true', help='Report prerequisites without installing packages')
+            command.add_argument('--json', action='store_true')
         if action == 'run':
             command.add_argument('--no-follow', action='store_true', help='Return after cFS starts')
         if action == 'logs':
@@ -126,6 +134,15 @@ def main(argv=None):
     if not args.command:
         parser.print_help()
         return 0
+    if args.command == 'source':
+        from project.nasa_source import install, source_status
+        import subprocess
+        try:
+            result = install(ROOT) if args.action == 'install' else source_status(ROOT)
+        except (OSError, ValueError, subprocess.CalledProcessError) as error:
+            parser.exit(1, f'Error: {error}\n')
+        print(json.dumps(result) if args.json else f'NASA cFS {result["state"]} · {result["revision"] or result["url"]}')
+        return int(result['state'] != 'ready')
     if args.command == 'journey':
         from journey import Store
         store = Store(ROOT)
@@ -225,6 +242,17 @@ def main(argv=None):
 
     # Setup needs the real terminal for sudo; all other operations use the same
     # adapter, deployment checks and execution lock as the browser interface.
+    if args.command == 'setup' and args.check:
+        from hardware.infrastructure import check_progress
+        if not target:
+            parser.error('Choose an execution target or pass --target')
+        for frame in check_progress(manager, target):
+            if frame['status'] != 'complete':
+                continue
+            for row in frame['checks']:
+                print(f'{row["label"]} · {row["status"]} · {row["detail"]}', file=sys.stderr)
+            print(json.dumps(frame) if args.json else ('Checks passed' if frame['ready'] else 'Checks failed'))
+            return int(not frame['ready'])
     if args.command == 'setup' and target == 'qemu':
         replace(['/bin/bash', str(ROOT / 'scripts/setup.sh')])
         return 0

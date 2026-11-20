@@ -179,6 +179,7 @@ def _source_result(row, output):
         row["source"] = source
         messages = {"missing": "Clone the official NASA repository",
                     "incomplete": "Complete the NASA submodule download",
+                    "revision-mismatch": "Select the pinned NASA revision",
                     "occupied": "The cFS directory contains a different checkout"}
         row["detail"] = source["revision"] if row["ready"] else messages[source["state"]]
 
@@ -222,7 +223,7 @@ def _check_plan(hardware, target):
     if target not in ("native", "qemu", "physical"):
         raise ValueError("Select an execution target.")
     local = (sys.executable, "-m", "hardware.infrastructure")
-    for tool in ("git", "cmake", "make", "cc"):
+    for tool in ("git", "cmake", "make", "cc", "stdbuf", "pgrep"):
         yield Probe(tool, (tool, "--version"), _tool_version)
     if target != "native":
         yield Probe("docker", ("docker", "--version"), _tool_version)
