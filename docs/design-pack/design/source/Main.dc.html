@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Target setup</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:var(--c13171c)}
+a{color:var(--cd4b48a)}a:hover{color:var(--ce8cda8)}
+:root,.fs-root,.fs-root.fs-light .fs-dark{--c0d1115:#0d1115;--c11171c:#11171c;--c13171c:#13171c;--c14181d:#14181d;--c161a20:#161a20;--c163b30:#163b30;--c1a1f25:#1a1f25;--c1b150c:#1b150c;--c1c1f24:#1c1f24;--c1f7a5b:#1f7a5b;--c22272e:#22272e;--c262c34:#262c34;--c2b313a:#2b313a;--c2e9a74:#2e9a74;--c2f363f:#2f363f;--c3a414b:#3a414b;--c3a424c:#3a424c;--c3e8f72:#3e8f72;--c4b525c:#4b525c;--c5b636d:#5b636d;--c5b8fb0:#5b8fb0;--c5fc9a3:#5fc9a3;--c7cb4f0:#7cb4f0;--c7d8590:#7d8590;--c8e96a1:#8e96a1;--c9aa2ad:#9aa2ad;--c9fdcc4:#9fdcc4;--ca4acb6:#a4acb6;--cb7bfc4:#b7bfc4;--cb9c0c8:#b9c0c8;--cc3a6ff:#c3a6ff;--cc9cfd6:#c9cfd6;--cc9d0d4:#c9d0d4;--cd4b48a:#d4b48a;--cd7dbe0:#d7dbe0;--cd7dee0:#d7dee0;--cd9a35b:#d9a35b;--ce8c08a:#e8c08a;--ce8cda8:#e8cda8;--ceef0f2:#eef0f2;--cff7a59:#ff7a59;--r95_201_163:95,201,163;--r212_180_138:212,180,138;--r217_163_91:217,163,91;--c161a1f:#161a1f;--c16261f:#16261f;--c2a241c:#2a241c;--c2f6e58:#2f6e58;--c6b7380:#6b7380;--c9fe3c9:#9fe3c9;--cf3dcb8:#f3dcb8;--c343c47:#343c47}
+@keyframes fsPulse{0%,100%{opacity:1}50%{opacity:.4}}
+.fs-pulse{animation:fsPulse 1.1s ease-in-out infinite}
+.fs-root.fs-light{--c0d1115:#f8f9fa;--c11171c:#f4f5f7;--c13171c:#f3f4f6;--c14181d:#f2f3f5;--c161a20:#eff0f3;--c163b30:#daece7;--c1a1f25:#eaecef;--c1b150c:#faf9f6;--c1c1f24:#eaebed;--c1f7a5b:#97e7cc;--c22272e:#e1e3e7;--c262c34:#dbdee2;--c2b313a:#d5d8dd;--c2e9a74:#76d9b6;--c2f363f:#d0d4d9;--c3a414b:#c2c8d0;--c3a424c:#c1c8d0;--c3e8f72:#80cab0;--c4b525c:#b1b7c0;--c5b636d:#a0a7b0;--c5b8fb0:#5a90b3;--c5fc9a3:#39b689;--c7cb4f0:#0e539d;--c7d8590:#7b848f;--c8e96a1:#69727f;--c9aa2ad:#5d6674;--c9fdcc4:#287556;--ca4acb6:#545e6a;--cb7bfc4:#465056;--cb9c0c8:#424b55;--cc3a6ff:#250073;--cc9cfd6:#343c45;--cc9d0d4:#363f45;--cd4b48a:#8a6330;--cd7dbe0:#2a3037;--cd7dee0:#2a3437;--cd9a35b:#bc7c27;--ce8c08a:#8d5b18;--ce8cda8:#6d4a1a;--ceef0f2:#181c20;--cff7a59:#c02600;--r95_201_163:57,182,137;--r212_180_138:138,99,48;--r217_163_91:188,124,39;--c161a1f:#f0f1f3;--c16261f:#ebf1ee;--c2a241c:#ece9e6;--c2f6e58:#a2d9c6;--c6b7380:#8c94a0;--c9fe3c9:#207655;--cf3dcb8:#5f3f0e;--c343c47:#c9cdd4}
+.fs-root.fs-light .fs-dark{--c0d1115:#0d1115;--c11171c:#11171c;--c13171c:#13171c;--c14181d:#14181d;--c161a20:#161a20;--c163b30:#163b30;--c1a1f25:#1a1f25;--c1b150c:#1b150c;--c1c1f24:#1c1f24;--c1f7a5b:#1f7a5b;--c22272e:#22272e;--c262c34:#262c34;--c2b313a:#2b313a;--c2e9a74:#2e9a74;--c2f363f:#2f363f;--c3a414b:#3a414b;--c3a424c:#3a424c;--c3e8f72:#3e8f72;--c4b525c:#4b525c;--c5b636d:#5b636d;--c5b8fb0:#5b8fb0;--c5fc9a3:#5fc9a3;--c7cb4f0:#7cb4f0;--c7d8590:#7d8590;--c8e96a1:#8e96a1;--c9aa2ad:#9aa2ad;--c9fdcc4:#9fdcc4;--ca4acb6:#a4acb6;--cb7bfc4:#b7bfc4;--cb9c0c8:#b9c0c8;--cc3a6ff:#c3a6ff;--cc9cfd6:#c9cfd6;--cc9d0d4:#c9d0d4;--cd4b48a:#d4b48a;--cd7dbe0:#d7dbe0;--cd7dee0:#d7dee0;--cd9a35b:#d9a35b;--ce8c08a:#e8c08a;--ce8cda8:#e8cda8;--ceef0f2:#eef0f2;--cff7a59:#ff7a59;--r95_201_163:95,201,163;--r212_180_138:212,180,138;--r217_163_91:217,163,91;--c161a1f:#161a1f;--c16261f:#16261f;--c2a241c:#2a241c;--c2f6e58:#2f6e58;--c6b7380:#6b7380;--c9fe3c9:#9fe3c9;--cf3dcb8:#f3dcb8;--c343c47:#343c47}
+/*fs-anim*/
+@keyframes fsSpin{to{transform:rotate(360deg)}}
+.fs-spin{animation:fsSpin .9s linear infinite;transform-origin:50% 50%;transform-box:fill-box}
+@keyframes fsDraw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.fs-draw path{stroke-dasharray:1;stroke-dashoffset:1;animation:fsDraw .45s .12s ease-out forwards}
+@keyframes fsPop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.14);opacity:1}100%{transform:scale(1);opacity:1}}
+.fs-pop{animation:fsPop .5s cubic-bezier(.2,.9,.3,1.25) both}
+@keyframes fsRing{0%{box-shadow:0 0 0 0 rgba(var(--r95_201_163),.55)}100%{box-shadow:0 0 0 16px rgba(var(--r95_201_163),0)}}
+.fs-ring{animation:fsRing 1s ease-out 2}
+@keyframes fsIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.fs-in{animation:fsIn .35s ease-out both}
+@keyframes fsPing2{0%{box-shadow:0 0 0 0 rgba(var(--r212_180_138),.5)}100%{box-shadow:0 0 0 8px rgba(var(--r212_180_138),0)}}
+.fs-ping2{animation:fsPing2 1.3s ease-out infinite}
+@keyframes fsDash{to{stroke-dashoffset:-20}}
+.fs-dash{stroke-dasharray:4 6;animation:fsDash .7s linear infinite}
+@keyframes fsPulse{0%,100%{opacity:1}50%{opacity:.4}}
+.fs-pulse{animation:fsPulse 1.1s ease-in-out infinite}
+/*/fs-anim*/
+@keyframes fsCoach2{0%{box-shadow:0 0 0 0 rgba(212,180,138,.45)}100%{box-shadow:0 0 0 8px rgba(212,180,138,0)}}.fs-coach{animation:fsCoach2 1.8s ease-out infinite!important}.fs-coach::after{display:none!important}
+</style>
+</helmet>
+<div class="fs-root {{themeCls}}" style="min-height: 1000px; background: var(--c13171c); color: var(--cd7dbe0); font-family: Inter, system-ui, sans-serif; font-size: 12px; display: flex; flex-direction: column">
+
+<header style="height: 52px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid var(--c22272e)">
+  <span style="font-size: 15px; color: var(--ceef0f2)"><span style="font-weight: 600">Flight</span> <span style="color: var(--c9aa2ad)">studio</span> <span style="color: var(--c4b525c); margin: 0 8px">/</span><span style="color: var(--cb9c0c8); font-size: 13px">boot_cfs</span></span>
+  <span style="display: flex; align-items: center; gap: 14px"><span style="display: flex; align-items: center; gap: 6px; color: var(--c8e96a1)"><span style="width: 6px; height: 6px; border-radius: 99px; background: var(--c5fc9a3)"></span>Saved</span><button onClick="{{toggleTheme}}" aria-label="Switch between light and dark" style="width: 30px; height: 30px; border: 1px solid var(--c2b313a); border-radius: 4px; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true" style="stroke: var(--ca4acb6)"><path d="{{themeIcon}}"></path></svg></button></span>
+</header>
+<!--fs-guide-->
+<div aria-label="First steps guide" style="height: 44px; flex: none; display: flex; align-items: center; gap: 16px; padding: 0 20px; border-bottom: 1px solid var(--c22272e); background: var(--c161a1f)">
+  <span style="flex: none; display: flex; align-items: baseline; gap: 8px"><span style="font-size: 12px; font-weight: 500; color: var(--ceef0f2)">First steps</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--c7d8590)">{{gd.count}}/{{gd.total}}</span></span>
+  <div style="flex: 1; min-width: 0; display: flex; align-items: center">
+    <sc-for list="{{gd.steps}}" as="gs" hint-placeholder-count="9">
+      <sc-if value="{{gs.notFirst}}" hint-placeholder-val="{{true}}"><span style="flex: 1; min-width: 8px; height: 2px; border-radius: 2px; background: {{gs.line}}"></span></sc-if>
+      <a href="{{gs.href}}" title="{{gs.title}}" style="flex: none; display: flex; align-items: center; gap: 6px; padding: 3px 9px 3px 3px; border-radius: 99px; background: {{gs.bg}}; text-decoration: none">
+        <span class="{{gs.cls}}" style="width: 20px; height: 20px; flex: none; box-sizing: border-box; border-radius: 99px; border: 1.5px solid {{gs.border}}; background: {{gs.fill}}; display: flex; align-items: center; justify-content: center">
+          <sc-if value="{{gs.done}}" hint-placeholder-val="{{false}}"><svg class="fs-draw" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="stroke: var(--c9fe3c9)"><path d="M5 12l5 5L20 7" pathLength="1"></path></svg></sc-if>
+          <sc-if value="{{gs.notDone}}" hint-placeholder-val="{{true}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: {{gs.num}}">{{gs.n}}</span></sc-if>
+        </span>
+        <span style="font-size: 11px; color: {{gs.fg}}; white-space: nowrap">{{gs.label}}</span>
+      </a>
+    </sc-for>
+  </div>
+  <span style="flex: none; display: flex; align-items: center; gap: 8px">
+    <sc-if value="{{gd.away}}" hint-placeholder-val="{{false}}"><a href="{{gd.href}}" title="{{gd.title}}" class="fs-coach" style="position: relative; height: 28px; flex: none; padding: 0 12px; border-radius: 4px; background: var(--cd4b48a); color: var(--c1b150c); font-size: 12px; font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 6px; white-space: nowrap"><span style="font-weight: 400; opacity: 0.75">Next</span>{{gd.go}}<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="stroke: var(--c1b150c)"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a></sc-if>
+    <button onClick="{{gd.reset}}" aria-label="Start the guide over" title="Start over" style="width: 26px; height: 26px; flex: none; border-radius: 4px; border: none; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="stroke: var(--c6b7380)"><path d="M4 12a8 8 0 108-8 8.5 8.5 0 00-6 2.5L4 8.5M4 4v4.5h4.5"></path></svg></button>
+  </span>
+</div>
+<!--/fs-guide-->
+
+<main style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 48px 24px 40px; gap: 34px">
+  <span style="display: flex; align-items: center; gap: 10px"><h1 style="margin: 0; font-size: 20px; font-weight: 500; color: var(--ceef0f2); letter-spacing: -0.01em">Choose target</h1><a href="Welcome.dc.html" aria-label="What is Flight Studio?" title="What is Flight Studio?" style="width: 24px; height: 24px; box-sizing: border-box; border-radius: 99px; border: 1px solid var(--c343c47); color: var(--c8e96a1); font-size: 12px; text-decoration: none; display: flex; align-items: center; justify-content: center">?</a></span>
+
+  <section aria-label="Targets" style="display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0; width: 100%; max-width: 1180px">
+
+    <button onClick="{{pickNative}}" style="position: relative; flex: 1 1 300px; max-width: 340px; padding: 0; border: 1px solid var(--c262c34); border-radius: 6px; background: var(--c1a1f25); color: inherit; font: inherit; cursor: pointer; display: flex; flex-direction: column; overflow: hidden">
+      <sc-if value="{{isNative}}" hint-placeholder-val="{{true}}"><span style="position: absolute; inset: -1px; border: 1.5px solid var(--cd4b48a); border-radius: 6px; box-shadow: 0 24px 60px -24px rgba(var(--r212_180_138),0.45); pointer-events: none"></span></sc-if>
+      <span style="height: 230px; display: flex; align-items: center; justify-content: center; background: var(--c161a20); border-bottom: 1px solid var(--c22272e)">
+        <svg width="240" height="170" viewBox="0 0 240 170" fill="none" aria-hidden="true">
+          <rect x="30" y="12" width="180" height="116" rx="6" stroke-width="2" style="fill: var(--c0d1115); stroke: var(--c7d8590)"></rect>
+          <rect x="40" y="22" width="160" height="96" rx="2" style="fill: var(--c11171c)"></rect>
+          <circle cx="48" cy="30" r="2" style="fill: var(--c3a424c)"></circle><circle cx="55" cy="30" r="2" style="fill: var(--c3a424c)"></circle><circle cx="62" cy="30" r="2" style="fill: var(--c3a424c)"></circle>
+          <rect x="48" y="42" width="44" height="5" rx="1" style="fill: var(--cc3a6ff)"></rect><rect x="96" y="42" width="60" height="5" rx="1" style="fill: var(--c7cb4f0)"></rect>
+          <rect x="56" y="54" width="30" height="5" rx="1" style="fill: var(--c3a424c)"></rect><rect x="90" y="54" width="70" height="5" rx="1" style="fill: var(--c5fc9a3)"></rect>
+          <rect x="56" y="66" width="52" height="5" rx="1" style="fill: var(--cd4b48a)"></rect><rect x="112" y="66" width="34" height="5" rx="1" style="fill: var(--c3a424c)"></rect>
+          <rect x="56" y="78" width="80" height="5" rx="1" style="fill: var(--c3a424c)"></rect>
+          <rect x="48" y="90" width="20" height="5" rx="1" style="fill: var(--cc3a6ff)"></rect><rect x="72" y="90" width="40" height="5" rx="1" style="fill: var(--c7cb4f0)"></rect>
+          <rect x="48" y="104" width="6" height="8" style="fill: var(--cd4b48a)"></rect>
+          <path d="M106 128h28l6 22h-40z" style="fill: var(--c2b313a)"></path>
+          <rect x="84" y="148" width="72" height="7" rx="3.5" style="fill: var(--c3a414b)"></rect>
+        </svg>
+      </span>
+      <span style="display: flex; align-items: center; justify-content: space-between; padding: 16px 18px">
+        <span style="display: flex; flex-direction: column; align-items: flex-start; gap: 3px"><span style="font-size: 15px; color: var(--ceef0f2); font-weight: 500">Native</span><span style="font-size: 12px; color: var(--c8e96a1)">your computer</span></span>
+        <span style="display: flex; align-items: center; gap: 7px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--c8e96a1)"><span class="{{cs.native.cls}}" style="width: 7px; height: 7px; border-radius: 99px; background: {{cs.native.dot}}"></span>{{cs.native.text}}</span>
+      </span>
+    </button>
+
+    <span aria-hidden="true" style="flex: 0 0 56px; display: flex; align-items: center; justify-content: center">
+      <svg width="48" height="12" viewBox="0 0 48 12" fill="none"><path d="M2 6h36" stroke-width="1.5" stroke-dasharray="3 4" style="stroke: var(--c3a424c)"></path><path d="M38 1l6 5-6 5" stroke-width="1.5" style="stroke: var(--c5b636d)"></path></svg>
+    </span>
+
+    <button onClick="{{pickEmu}}" style="position: relative; flex: 1 1 300px; max-width: 340px; padding: 0; border: 1px solid var(--c262c34); border-radius: 6px; background: var(--c1a1f25); color: inherit; font: inherit; cursor: pointer; display: flex; flex-direction: column; overflow: hidden">
+      <sc-if value="{{isEmu}}" hint-placeholder-val="{{false}}"><span style="position: absolute; inset: -1px; border: 1.5px solid var(--cd4b48a); border-radius: 6px; box-shadow: 0 24px 60px -24px rgba(var(--r212_180_138),0.45); pointer-events: none"></span></sc-if>
+      <span style="height: 230px; display: flex; align-items: center; justify-content: center; background: var(--c161a20); border-bottom: 1px solid var(--c22272e)">
+        <svg width="240" height="170" viewBox="0 0 240 170" fill="none" aria-hidden="true">
+          <path d="M12 26V12h14M214 12h14v14M228 144v14h-14M26 158H12v-14" stroke-width="1.5" style="stroke: var(--cd4b48a)"></path>
+          <g stroke-width="1.2" style="stroke: var(--c5fc9a3)">
+            <rect x="26" y="26" width="180" height="118" rx="8" stroke-dasharray="5 4" style="fill: rgba(var(--r95_201_163),0.06)"></rect>
+            <circle cx="38" cy="38" r="4"></circle><circle cx="38" cy="132" r="4"></circle><circle cx="146" cy="38" r="4"></circle><circle cx="146" cy="132" r="4"></circle>
+            <rect x="48" y="31" width="104" height="13"></rect>
+            <rect x="94" y="72" width="40" height="40" rx="2"></rect>
+            <rect x="142" y="80" width="20" height="24"></rect>
+            <rect x="182" y="38" width="32" height="24"></rect>
+            <rect x="182" y="70" width="32" height="24"></rect>
+            <rect x="182" y="102" width="32" height="30"></rect>
+            <rect x="44" y="136" width="16" height="12"></rect><rect x="68" y="138" width="12" height="10"></rect><rect x="88" y="138" width="12" height="10"></rect>
+            <rect x="58" y="62" width="16" height="16"></rect>
+          </g>
+          <path d="M52 37.5H148" stroke-width="4" stroke-dasharray="2 2.6" opacity="0.7" style="stroke: var(--c5fc9a3)"></path>
+          <path d="M100 92h28M100 84h28M100 100h18" stroke-width="1" opacity="0.5" style="stroke: var(--c5fc9a3)"></path>
+        </svg>
+      </span>
+      <span style="display: flex; align-items: center; justify-content: space-between; padding: 16px 18px">
+        <span style="display: flex; flex-direction: column; align-items: flex-start; gap: 3px"><span style="font-size: 15px; color: var(--ceef0f2); font-weight: 500">Emulator</span><span style="font-size: 12px; color: var(--c8e96a1)">virtual Raspberry Pi</span></span>
+        <span style="display: flex; align-items: center; gap: 7px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--c8e96a1)"><span class="{{cs.emu.cls}}" style="width: 7px; height: 7px; border-radius: 99px; background: {{cs.emu.dot}}"></span>{{cs.emu.text}}</span>
+      </span>
+    </button>
+
+    <span aria-hidden="true" style="flex: 0 0 56px; display: flex; align-items: center; justify-content: center">
+      <svg width="48" height="12" viewBox="0 0 48 12" fill="none"><path d="M2 6h36" stroke-width="1.5" stroke-dasharray="3 4" style="stroke: var(--c3a424c)"></path><path d="M38 1l6 5-6 5" stroke-width="1.5" style="stroke: var(--c5b636d)"></path></svg>
+    </span>
+
+    <button onClick="{{pickBoard}}" style="position: relative; flex: 1 1 300px; max-width: 340px; padding: 0; border: 1px solid var(--c262c34); border-radius: 6px; background: var(--c1a1f25); color: inherit; font: inherit; cursor: pointer; display: flex; flex-direction: column; overflow: hidden">
+      <sc-if value="{{isBoard}}" hint-placeholder-val="{{false}}"><span style="position: absolute; inset: -1px; border: 1.5px solid var(--cd4b48a); border-radius: 6px; box-shadow: 0 24px 60px -24px rgba(var(--r212_180_138),0.45); pointer-events: none"></span></sc-if>
+      <span style="height: 230px; display: flex; align-items: center; justify-content: center; background: var(--c161a20); border-bottom: 1px solid var(--c22272e)">
+        <svg width="240" height="170" viewBox="0 0 240 170" fill="none" aria-hidden="true">
+          <path d="M196 14a18 18 0 0124 0M201 20a10 10 0 0114 0" stroke-width="1.8" stroke-linecap="round" style="stroke: var(--cd4b48a)"></path><circle cx="208" cy="26" r="2" style="fill: var(--cd4b48a)"></circle>
+          <rect x="22" y="30" width="180" height="118" rx="8" style="fill: var(--c1f7a5b); stroke: var(--c2e9a74)"></rect>
+          <circle cx="34" cy="42" r="4" style="fill: var(--c13171c); stroke: var(--cd4b48a)"></circle><circle cx="34" cy="136" r="4" style="fill: var(--c13171c); stroke: var(--cd4b48a)"></circle><circle cx="142" cy="42" r="4" style="fill: var(--c13171c); stroke: var(--cd4b48a)"></circle><circle cx="142" cy="136" r="4" style="fill: var(--c13171c); stroke: var(--cd4b48a)"></circle>
+          <rect x="44" y="35" width="104" height="13" style="fill: var(--c163b30)"></rect>
+          <path d="M48 39H146M48 44.5H146" stroke-width="3" stroke-dasharray="2 2.6" style="stroke: var(--cd4b48a)"></path>
+          <rect x="90" y="76" width="40" height="40" rx="2" style="fill: var(--cc9d0d4)"></rect>
+          <rect x="94" y="80" width="32" height="32" rx="1" style="fill: var(--cb7bfc4)"></rect>
+          <rect x="138" y="84" width="20" height="24" style="fill: var(--c163b30)"></rect>
+          <rect x="54" y="66" width="16" height="16" style="fill: var(--c163b30)"></rect>
+          <rect x="46" y="94" width="6" height="4" style="fill: var(--cd4b48a)"></rect><rect x="58" y="94" width="6" height="4" style="fill: var(--cd4b48a)"></rect><rect x="46" y="104" width="6" height="4" style="fill: var(--cd4b48a)"></rect><rect x="160" y="60" width="6" height="4" style="fill: var(--cd4b48a)"></rect><rect x="160" y="120" width="6" height="4" style="fill: var(--cd4b48a)"></rect>
+          <rect x="178" y="42" width="34" height="24" style="fill: var(--cd7dee0)"></rect><rect x="178" y="42" width="34" height="5" style="fill: var(--c5b8fb0)"></rect>
+          <rect x="178" y="74" width="34" height="24" style="fill: var(--cd7dee0)"></rect><rect x="178" y="74" width="34" height="5" style="fill: var(--c5b8fb0)"></rect>
+          <rect x="178" y="106" width="34" height="30" style="fill: var(--cc9d0d4)"></rect>
+          <rect x="40" y="140" width="16" height="12" rx="2" style="fill: var(--cd7dee0)"></rect><rect x="64" y="142" width="12" height="10" style="fill: var(--cd7dee0)"></rect><rect x="84" y="142" width="12" height="10" style="fill: var(--cd7dee0)"></rect><rect x="108" y="142" width="10" height="10" rx="5" style="fill: var(--c1c1f24)"></rect>
+          <circle cx="36" cy="120" r="2.5" style="fill: var(--cff7a59)"></circle><circle cx="36" cy="128" r="2.5" style="fill: var(--c5fc9a3)"></circle>
+        </svg>
+      </span>
+      <span style="display: flex; align-items: center; justify-content: space-between; padding: 16px 18px">
+        <span style="display: flex; flex-direction: column; align-items: flex-start; gap: 3px"><span style="font-size: 15px; color: var(--ceef0f2); font-weight: 500">Board</span><span style="font-size: 12px; color: var(--c8e96a1)">real Raspberry Pi</span></span>
+        <span style="display: flex; align-items: center; gap: 7px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--c8e96a1)"><span class="{{cs.board.cls}}" style="width: 7px; height: 7px; border-radius: 99px; background: {{cs.board.dot}}"></span>{{cs.board.text}}</span>
+      </span>
+    </button>
+  </section>
+
+  <section style="width: 100%; max-width: 1132px; display: flex; align-items: center; gap: 32px; flex-wrap: wrap; padding: 22px 26px; box-sizing: border-box; background: var(--c1a1f25); border: 1px solid var(--c262c34); border-radius: 6px">
+
+    <div style="flex: 1 1 360px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+      <sc-if value="{{isNative}}" hint-placeholder-val="{{true}}">
+        <span style="display: flex; align-items: center; gap: 12px">
+          <span style="color: var(--c8e96a1)">Jobs</span>
+          <span style="display: flex; align-items: center; border: 1px solid var(--c2f363f); border-radius: 3px; overflow: hidden">
+            <button aria-label="Fewer jobs" style="width: 40px; height: 40px; border: none; background: var(--c14181d); color: var(--cc9cfd6); font: inherit; font-size: 15px">−</button>
+            <span style="width: 44px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ceef0f2)">4</span>
+            <button aria-label="More jobs" style="width: 40px; height: 40px; border: none; background: var(--c14181d); color: var(--cc9cfd6); font: inherit; font-size: 15px">+</button>
+          </span>
+        </span>
+      </sc-if>
+      <sc-if value="{{isEmu}}" hint-placeholder-val="{{false}}">
+        <span style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+          <button style="height: 40px; padding: 0 14px; border: 1px solid var(--c2f363f); border-radius: 3px; background: var(--c14181d); color: var(--ceef0f2); font: inherit; display: flex; align-items: center; gap: 8px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="1.6" aria-hidden="true" style="stroke: var(--c5fc9a3)"><rect x="4" y="5" width="16" height="14" rx="1"></rect><rect x="10" y="10" width="5" height="5"></rect></svg>Raspberry Pi 4B
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true" style="stroke: var(--c8e96a1)"><path d="M6 9l6 6 6-6"></path></svg></button>
+          <button style="height: 40px; padding: 0 14px; border: 1px solid var(--c2f363f); border-radius: 3px; background: var(--c14181d); color: var(--ceef0f2); font: inherit; display: flex; align-items: center; gap: 8px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="1.6" aria-hidden="true" style="stroke: var(--cc3a6ff)"><rect x="3" y="4" width="18" height="16" rx="1"></rect><path d="M7 9l3 3-3 3"></path></svg>Raspberry Pi OS
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true" style="stroke: var(--c8e96a1)"><path d="M6 9l6 6 6-6"></path></svg></button>
+          <button aria-label="Advanced settings" style="width: 40px; height: 40px; border: 1px solid var(--c2f363f); border-radius: 3px; background: transparent; display: flex; align-items: center; justify-content: center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="1.6" aria-hidden="true" style="stroke: var(--c8e96a1)"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"></path></svg></button>
+        </span>
+      </sc-if>
+      <sc-if value="{{isBoard}}" hint-placeholder-val="{{false}}">
+        <span style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+          <label style="height: 40px; padding: 0 12px; border: 1px solid var(--c2f363f); border-radius: 3px; background: var(--c14181d); display: flex; align-items: center; gap: 8px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="1.6" aria-hidden="true" style="stroke: var(--cd4b48a)"><path d="M5 12a10 10 0 0114 0M8 15a5 5 0 018 0"></path><circle cx="12" cy="18" r="1"></circle></svg>
+            <input value="raspberrypi4.local" aria-label="Board address" style="width: 150px; border: none; background: transparent; color: var(--ceef0f2); font-family: 'JetBrains Mono', monospace; font-size: 12px; outline: none"></label>
+          <label style="height: 40px; padding: 0 12px; border: 1px solid var(--c2f363f); border-radius: 3px; background: var(--c14181d); display: flex; align-items: center; gap: 8px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="1.6" aria-hidden="true" style="stroke: var(--c9aa2ad)"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1-4 4-6 8-6s7 2 8 6"></path></svg>
+            <input value="emilly" aria-label="SSH user" style="width: 70px; border: none; background: transparent; color: var(--ceef0f2); font-family: 'JetBrains Mono', monospace; font-size: 12px; outline: none"></label>
+          <button aria-label="Advanced settings" style="width: 40px; height: 40px; border: 1px solid var(--c2f363f); border-radius: 3px; background: transparent; display: flex; align-items: center; justify-content: center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="1.6" aria-hidden="true" style="stroke: var(--c8e96a1)"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"></path></svg></button>
+        </span>
+      </sc-if>
+    </div>
+
+    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 12px">
+      <span style="display: flex; align-items: center; gap: 7px; font-size: 12px; color: {{checkFg}}"><span class="{{checkDotCls}}" style="width: 7px; height: 7px; border-radius: 99px; background: {{checkFg}}"></span>{{checkTitle}}</span>
+      <div style="display: flex; gap: 22px; align-items: flex-start">
+      <sc-for list="{{checks}}" as="c" hint-placeholder-count="3">
+        <div style="width: 64px; display: flex; flex-direction: column; align-items: center; gap: 8px">
+          <sc-if value="{{c.checking}}" hint-placeholder-val="{{false}}">
+            <span style="position: relative; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center">
+              <svg class="fs-spin" width="46" height="46" viewBox="0 0 46 46" fill="none" aria-hidden="true" style="position: absolute; left: 0; top: 0"><circle cx="23" cy="23" r="21.5" stroke-width="1.5" style="stroke: var(--c2b313a)"></circle><path d="M23 1.5a21.5 21.5 0 0121.5 21.5" stroke-width="1.8" stroke-linecap="round" style="stroke: var(--cd4b48a)"></path></svg>
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="stroke: var(--c7d8590)"><path d="{{c.icon}}"></path></svg>
+            </span>
+            <span style="font-size: 11px; white-space: nowrap; color: var(--c7d8590)">{{c.label}}</span>
+          </sc-if>
+          <sc-if value="{{c.ok}}" hint-placeholder-val="{{true}}">
+            <span class="fs-pop" style="display: block">
+              <span class="fs-ring" style="position: relative; width: 46px; height: 46px; border-radius: 99px; border: 1.5px solid var(--c3e8f72); background: rgba(var(--r95_201_163),0.08); box-sizing: border-box; display: flex; align-items: center; justify-content: center">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="stroke: var(--c9fdcc4)"><path d="{{c.icon}}"></path></svg>
+                <span style="position: absolute; right: -3px; bottom: -3px; width: 16px; height: 16px; border-radius: 99px; background: var(--c5fc9a3); border: 2px solid var(--c1a1f25); display: flex; align-items: center; justify-content: center"><svg class="fs-draw" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="stroke: var(--c13171c)"><path d="M5 12l5 5L20 7" pathLength="1"></path></svg></span>
+              </span>
+            </span>
+            <span style="font-size: 11px; white-space: nowrap; color: var(--c9aa2ad)">{{c.label}}</span>
+          </sc-if>
+          <sc-if value="{{c.fixing}}" hint-placeholder-val="{{false}}">
+            <span style="position: relative; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center">
+              <svg width="46" height="46" viewBox="0 0 46 46" fill="none" aria-hidden="true" style="position: absolute; left: 0; top: 0"><circle cx="23" cy="23" r="21.5" stroke-width="1.5" style="stroke: var(--c2b313a)"></circle><circle cx="23" cy="23" r="21.5" pathLength="100" stroke-dasharray="100" stroke-dashoffset="{{c.dash}}" transform="rotate(-90 23 23)" stroke-width="2" stroke-linecap="round" style="stroke: var(--cd9a35b)"></circle></svg>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ce8c08a)">{{c.pct}}</span>
+            </span>
+            <span style="font-size: 11px; white-space: nowrap; color: var(--ce8c08a)">installing</span>
+          </sc-if>
+          <sc-if value="{{c.todo}}" hint-placeholder-val="{{false}}">
+            <button onClick="{{c.fix}}" aria-label="{{c.aria}}" title="{{c.aria}}" class="{{c.fixCls}}" style="position: relative; width: 46px; height: 46px; padding: 0; border-radius: 99px; border: 1.5px dashed var(--cd9a35b); background: rgba(var(--r217_163_91),0.08); box-sizing: border-box; display: flex; align-items: center; justify-content: center; cursor: pointer">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="stroke: var(--ce8c08a)"><path d="{{c.icon}}"></path></svg>
+              <span style="position: absolute; right: -3px; bottom: -3px; width: 16px; height: 16px; border-radius: 99px; background: var(--cd9a35b); border: 2px solid var(--c1a1f25); color: var(--c13171c); font-size: 10px; font-weight: 700; line-height: 12px; text-align: center">+</span>
+            </button>
+            <span style="font-size: 11px; white-space: nowrap; color: var(--ce8c08a)">{{c.label}}</span>
+          </sc-if>
+        </div>
+      </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <div style="height: 46px; display: flex; align-items: center; gap: 14px">
+    <sc-if value="{{canGo}}" hint-placeholder-val="{{true}}">
+      <a href="Boot.dc.html" onClick="{{go}}" class="fs-pop fs-coach" style="height: 46px; padding: 0 28px; border-radius: 4px; background: var(--cd4b48a); color: var(--c1b150c); font-size: 13px; font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 10px">{{goLabel}}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="stroke: var(--c1b150c)"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+    </sc-if>
+    <sc-if value="{{cantGo}}" hint-placeholder-val="{{false}}">
+      <span style="height: 46px; padding: 0 24px; box-sizing: border-box; border-radius: 4px; border: 1px dashed var(--c3a424c); color: var(--c8e96a1); font-size: 13px; display: flex; align-items: center; gap: 10px">{{waitLabel}}</span>
+    </sc-if>
+  </div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); let tg = 'native'; try { tg = window.localStorage.getItem('fs-target') || 'native'; } catch (e) {} this.state = { target: tg, el: 0, fixing: {}, fixed: {} }; }
+  componentDidMount() {
+    this._iv = setInterval(() => {
+      const s = this.state, patch = {}, fx = Object.keys(s.fixing);
+      if (s.el < 3 || fx.length) patch.el = Math.round((s.el + 0.1) * 10) / 10;
+      if (fx.length) {
+        const fixing = Object.assign({}, s.fixing), fixed = Object.assign({}, s.fixed); let ch = false;
+        fx.forEach(k => { if (s.el - s.fixing[k] >= 2.2) { delete fixing[k]; fixed[k] = true; ch = true; } });
+        if (ch) { patch.fixing = fixing; patch.fixed = fixed; }
+      }
+      if (Object.keys(patch).length) this.setState(patch);
+    }, 100);
+  }
+  componentWillUnmount() { clearInterval(this._iv); }
+  /*fs-guide*/
+  journey() { try { return JSON.parse(window.localStorage.getItem('fs-journey') || '[]'); } catch (e) { return (this.state && this.state.jr) || []; } }
+  journeyHas(id) { return this.journey().indexOf(id) >= 0; }
+  journeyDone(id) { const j = this.journey(); if (j.indexOf(id) >= 0) return; j.push(id); try { window.localStorage.setItem('fs-journey', JSON.stringify(j)); } catch (e) {} this.setState({ jr: j.slice() }); }
+  guide() {
+    if (!this._gl) { this._gl = true; try { window.addEventListener('storage', (e) => { if (e.key === 'fs-journey') this.setState({ jr: JSON.parse(e.newValue || '[]') }); }); } catch (e) {} }
+    const here = 'Main';
+    const S = [
+      ['target', 'Target', 'Main', 'Choose where cFS will run'],
+      ['boot', 'Boot', 'Boot', 'Start cFS for the first time'],
+      ['event', 'Event', 'Lesson', 'Send a first message and get an answer'],
+      ['app', 'App', 'Mission', 'Create your own app'],
+      ['command', 'Command', 'AddCommand', 'Teach your app a new command'],
+      ['send', 'Send', 'Lesson', 'Send your new command'],
+      ['sensor', 'Sensor', 'Ground', 'Give your app sensor data'],
+      ['test', 'Test', 'Ground', 'Check that everything works'],
+      ['board', 'Board', 'Main', 'Run it on the real board']
+    ];
+    const jr = this.journey(), first = S.findIndex(s => s[2] === here);
+    const done = jr.concat(S.slice(0, Math.max(0, first)).map(s => s[0]).filter(id => jr.indexOf(id) < 0));
+    const cur = S.findIndex(s => done.indexOf(s[0]) < 0);
+    const steps = S.map((s, i) => {
+      const d = done.indexOf(s[0]) >= 0, c = i === cur;
+      return { n: String(i + 1), label: s[1], href: s[2] + '.dc.html', title: s[3], done: d, notDone: !d, notFirst: i > 0, cls: c ? 'fs-ping2' : '',
+        border: d ? '#3e8f72' : (c ? '#d4b48a' : '#3a424c'), fill: d ? '#16261f' : (c ? '#2a241c' : 'transparent'), num: c ? '#f3dcb8' : '#7d8590',
+        fg: d ? '#a4acb6' : (c ? '#f3dcb8' : '#6b7380'), bg: c ? 'rgba(212,180,138,0.10)' : 'transparent', line: d && (i === 0 || done.indexOf(S[i - 1][0]) >= 0) ? '#2f6e58' : '#2b313a' };
+    });
+    const all = cur < 0, c = all ? null : S[cur], away = !all && c[2] !== here;
+    return { steps, count: String(S.filter(s => done.indexOf(s[0]) >= 0).length), total: String(S.length),
+      away, href: all ? '#' : c[2] + '.dc.html', go: all ? '' : c[1], title: all ? '' : c[3],
+      reset: () => { try { window.localStorage.setItem('fs-journey', '[]'); } catch (e) {} this.setState({ jr: [] }); } };
+  }
+  /*/fs-guide*/
+  theme() { if (this.state && this.state.theme) return this.state.theme; try { return window.localStorage.getItem('fs-theme') || 'dark'; } catch (e) { return 'dark'; } }
+  toggleTheme() { const n = this.theme() === 'light' ? 'dark' : 'light'; try { window.localStorage.setItem('fs-theme', n); } catch (e) {} this.setState({ theme: n }); }
+  themeMap(o) {
+    if (typeof o === 'string') {
+      if (o.indexOf('#') < 0 && o.indexOf('rgb') < 0) return o;
+      return o.replace(/#([0-9a-fA-F]{6})(?![0-9a-zA-Z_])/g, (m, h) => 'var(--c' + h.toLowerCase() + ')')
+        .replace(/#([0-9a-fA-F]{3})(?![0-9a-zA-Z_])/g, (m, h) => 'var(--c' + (h[0] + h[0] + h[1] + h[1] + h[2] + h[2]).toLowerCase() + ')')
+        .replace(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+)\s*)?\)/g, (m, r, g, b, a) => 'rgba(var(--r' + r + '_' + g + '_' + b + '),' + (a === undefined ? '1' : a) + ')');
+    }
+    if (Array.isArray(o)) return o.map(x => this.themeMap(x));
+    if (o && typeof o === 'object') { const r = {}; for (const k in o) r[k] = this.themeMap(o[k]); return r; }
+    return o;
+  }
+  renderVals() {
+    if (!this._ls) { this._ls = true; try { window.addEventListener('storage', (e) => { if (e.key === 'fs-theme' && e.newValue) this.setState({ theme: e.newValue }); }); } catch (e) {} }
+    const v = this.themeMap(Object.assign(this._rv(), { gd: this.guide() }));
+    const light = this.theme() === 'light';
+    v.themeCls = light ? 'fs-light' : '';
+    v.toggleTheme = () => this.toggleTheme();
+    v.themeIcon = light ? 'M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z' : 'M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6L7 7M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4M12 8a4 4 0 100 8 4 4 0 000-8z';
+    return v;
+  }
+  _rv() {
+    const I = {
+      code: 'M8 7l-5 5 5 5M16 7l5 5-5 5',
+      term: 'M4 5h16v14H4zM8 10l3 2-3 2M13 15h4',
+      folder: 'M3 7h6l2 2h10v10H3z',
+      box: 'M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12v9M12 12L4 7.5',
+      down: 'M12 4v11M7 10l5 5 5-5M5 20h14',
+      chip: 'M7 7h10v10H7zM10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4',
+      wifi: 'M5 12a10 10 0 0114 0M8 15a5 5 0 018 0M12 18.5v.01',
+      key: 'M10 14a4 4 0 110-.01M13 11l7-7M17 7l2 2M15 9l2 2',
+      power: 'M12 3v8M6.5 7a7.5 7.5 0 1011 0'
+    };
+    const sets = {
+      native: [
+        { label: 'Compiler', icon: I.code, ok: true, todo: false, aria: '' },
+        { label: 'Python', icon: I.term, ok: true, todo: false, aria: '' },
+        { label: 'Source', icon: I.folder, ok: true, todo: false, aria: '' }
+      ],
+      emu: [
+        { label: 'Docker', icon: I.box, ok: true, todo: false, aria: '' },
+        { label: 'Image', icon: I.down, ok: false, todo: true, aria: 'Pull emulator image' },
+        { label: 'Toolchain', icon: I.chip, ok: true, todo: false, aria: '' }
+      ],
+      board: [
+        { label: 'Network', icon: I.wifi, ok: true, todo: false, aria: '' },
+        { label: 'SSH key', icon: I.key, ok: false, todo: true, aria: 'Authorize SSH key on the board' },
+        { label: 'Service', icon: I.power, ok: false, todo: true, aria: 'Install cFS service on the board' }
+      ]
+    };
+    const st = this.state, t = st.target, el = st.el;
+    const pick = (k) => () => { try { window.localStorage.setItem('fs-target', k); } catch (e) {} this.setState({ target: k, el: 0 }); };
+    const checks = sets[t].map((c, i) => {
+      const key = t + ':' + c.label, at = 0.5 + i * 0.6;
+      const ok = c.ok || !!st.fixed[key], fixing = st.fixing[key] !== undefined;
+      const f = fixing ? Math.min(1, (el - st.fixing[key]) / 2.2) : 0;
+      const phase = el < at ? 'checking' : (ok ? 'ok' : (fixing ? 'fixing' : 'todo'));
+      return { label: c.label, icon: c.icon, aria: c.aria, checking: phase === 'checking', ok: phase === 'ok', fixing: phase === 'fixing', todo: phase === 'todo',
+        pct: Math.round(f * 100) + '%', dash: String(Math.round(100 - f * 100)),
+        fixCls: 'fs-pop', fix: () => { const fx = Object.assign({}, this.state.fixing); fx[key] = this.state.el; this.setState({ fixing: fx }); } };
+    });
+    { const ft = checks.find(c => c.todo); if (ft && !checks.some(c => c.fixing)) ft.fixCls = 'fs-pop fs-coach'; }
+    const nCheck = checks.filter(c => c.checking).length, nFix = checks.filter(c => c.fixing).length, nTodo = checks.filter(c => c.todo).length;
+    const missing = (k) => sets[k].filter(c => !c.ok && !st.fixed[k + ':' + c.label]).length;
+    const cs = {};
+    ['native', 'emu', 'board'].forEach(k => {
+      const m = missing(k), busy = k === t && (nCheck || nFix);
+      cs[k] = busy ? { text: nFix ? 'installing' : 'checking', dot: '#d4b48a', cls: 'fs-pulse' } : (m ? { text: m + ' missing', dot: '#d9a35b', cls: '' } : { text: 'ready', dot: '#5fc9a3', cls: '' });
+    });
+    const canGo = !nCheck && !nFix && !nTodo;
+    const title = nCheck ? ['Checking this computer', '#d4b48a', 'fs-pulse'] : (nFix ? ['Installing', '#d9a35b', 'fs-pulse'] : (nTodo ? [nTodo + ' to fix · click it to install', '#e8c08a', ''] : ['Everything is ready', '#5fc9a3', '']));
+    return {
+      isNative: t === 'native', isEmu: t === 'emu', isBoard: t === 'board',
+      pickNative: pick('native'), pickEmu: pick('emu'), pickBoard: pick('board'),
+      checks, cs, checkTitle: title[0], checkFg: title[1], checkDotCls: title[2],
+      canGo, cantGo: !canGo, waitLabel: nCheck ? 'Checking…' : (nFix ? 'Installing…' : 'Fix ' + nTodo + ' item' + (nTodo > 1 ? 's' : '') + ' to continue'),
+      goLabel: t === 'board' ? 'Continue · first boot on the board' : 'Continue · first boot',
+      go: () => { this.journeyDone('target'); if (t === 'board' && this.journeyHas('test')) this.journeyDone('board'); }
+    };
+  }
+}
+</script>
+</body>
+</html>

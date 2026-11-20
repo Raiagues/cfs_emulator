@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Workspace: mission stack</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:var(--c13171c)}
+a{color:var(--cd4b48a)}a:hover{color:var(--ce8cda8)}
+.fs-pass{pointer-events:none}.fs-pass button,.fs-pass a{pointer-events:auto}
+.fs-act{transition:background .15s}.fs-act:hover{background:var(--c343c47)}
+:root,.fs-root,.fs-root.fs-light .fs-dark{--c0b0e12:#0b0e12;--c13171c:#13171c;--c14181d:#14181d;--c142a23:#142a23;--c15231f:#15231f;--c163b30:#163b30;--c181c22:#181c22;--c182230:#182230;--c191d23:#191d23;--c1a1f25:#1a1f25;--c1a3a2f:#1a3a2f;--c1b150c:#1b150c;--c1b3a2f:#1b3a2f;--c1c2025:#1c2025;--c1d1c30:#1d1c30;--c1d2228:#1d2228;--c1f1d17:#1f1d17;--c1f3350:#1f3350;--c1f7a5b:#1f7a5b;--c20262d:#20262d;--c22272e:#22272e;--c22282f:#22282f;--c22423a:#22423a;--c22483b:#22483b;--c232930:#232930;--c261a24:#261a24;--c262b33:#262b33;--c262c34:#262c34;--c262d35:#262d35;--c263a52:#263a52;--c275343:#275343;--c2a241c:#2a241c;--c2a2850:#2a2850;--c2b281e:#2b281e;--c2b313a:#2b313a;--c2c333c:#2c333c;--c2c9670:#2c9670;--c2e2716:#2e2716;--c2e9a74:#2e9a74;--c2f2618:#2f2618;--c2f363f:#2f363f;--c2f6e58:#2f6e58;--c333154:#333154;--c343c47:#343c47;--c3a2735:#3a2735;--c3a3424:#3a3424;--c3a424c:#3a424c;--c3c2836:#3c2836;--c45b48b:#45b48b;--c4a2f2b:#4a2f2b;--c4a3d22:#4a3d22;--c4a4230:#4a4230;--c4b525c:#4b525c;--c56606c:#56606c;--c5a4528:#5a4528;--c5b636d:#5b636d;--c5fd1a8:#5fd1a8;--c6b7380:#6b7380;--c6b8fb5:#6b8fb5;--c6d5a40:#6d5a40;--c7cb4f0:#7cb4f0;--c7d8590:#7d8590;--c7fbfa8:#7fbfa8;--c7fdcc0:#7fdcc0;--c8a7152:#8a7152;--c8e96a1:#8e96a1;--c8fb0d6:#8fb0d6;--c8fb8a9:#8fb8a9;--c9aa2ad:#9aa2ad;--c9d8fc6:#9d8fc6;--ca08550:#a08550;--ca3a1d6:#a3a1d6;--ca3a1ff:#a3a1ff;--ca4acb6:#a4acb6;--ca9cdf5:#a9cdf5;--cb39b6e:#b39b6e;--cb582a9:#b582a9;--cb9c0c8:#b9c0c8;--cc3a6ff:#c3a6ff;--cc4c2ff:#c4c2ff;--cc9a35f:#c9a35f;--cc9cfd6:#c9cfd6;--cc9d0d4:#c9d0d4;--cd4b48a:#d4b48a;--cd6c6ff:#d6c6ff;--cd7dbe0:#d7dbe0;--cd7dee0:#d7dee0;--cd9a35b:#d9a35b;--ce3c592:#e3c592;--ce3eefb:#e3eefb;--ce6e8eb:#e6e8eb;--ce6f5ef:#e6f5ef;--ce8c08a:#e8c08a;--ce8cda8:#e8cda8;--cebeaff:#ebeaff;--ceef0f2:#eef0f2;--ceffaf5:#effaf5;--cf0c674:#f0c674;--cf0d6b0:#f0d6b0;--cf0dcea:#f0dcea;--cf3dcb8:#f3dcb8;--cf3e6cf:#f3e6cf;--cf4b3a5:#f4b3a5;--r0_0_0:0,0,0;--r26_31_37:26,31,37;--r28_33_40:28,33,40;--r217_163_91:217,163,91;--r232_205_168:232,205,168;--c16261f:#16261f;--c20252b:#20252b;--c5fc9a3:#5fc9a3;--c9fe3c9:#9fe3c9;--cf08a75:#f08a75;--r124_180_240:124,180,240;--r95_201_163:95,201,163;--c161a1f:#161a1f;--c181d23:#181d23;--c3e8f72:#3e8f72;--cc9d0d8:#c9d0d8;--r212_180_138:212,180,138;--c16212e:#16212e;--c1f3049:#1f3049;--c1f4a3a:#1f4a3a;--c34506e:#34506e;--c3fa982:#3fa982}
+.fs-root.fs-light{--c0b0e12:#f8f8fa;--c13171c:#f3f4f6;--c14181d:#f2f3f5;--c142a23:#e8f1ee;--c15231f:#edf2f1;--c163b30:#daece7;--c181c22:#edeef1;--c182230:#e2e7ed;--c191d23:#ecedf0;--c1a1f25:#eaecef;--c1a3a2f:#daeae4;--c1b150c:#faf9f6;--c1b3a2f:#dae9e3;--c1c2025:#e9ebed;--c1d1c30:#e2e1ea;--c1d2228:#e7e9ec;--c1f1d17:#f2f1ef;--c1f3350:#c7d2e1;--c1f7a5b:#97e7cc;--c20262d:#e2e5e8;--c22272e:#e1e3e7;--c22282f:#e0e3e6;--c22423a:#d1e2de;--c22483b:#cde1da;--c232930:#dfe2e5;--c261a24:#eee9ed;--c262b33:#dcdfe2;--c262c34:#dbdee2;--c262d35:#dadee2;--c263a52:#c4cfdc;--c275343:#c3dbd2;--c2a241c:#ece9e6;--c2a2850:#c6c5db;--c2b281e:#eae9e4;--c2b313a:#d5d8dd;--c2c333c:#d4d7dc;--c2c9670:#7adbb8;--c2e2716:#efece5;--c2e9a74:#76d9b6;--c2f2618:#ede9e3;--c2f363f:#d0d4d9;--c2f6e58:#a2d9c6;--c333154:#bcbad8;--c343c47:#c9cdd4;--c3a2735:#e0d6de;--c3a3424:#e2dfd7;--c3a424c:#c1c8d0;--c3c2836:#dfd5dc;--c45b48b:#5bc49d;--c4a2f2b:#dacbc9;--c4a3d22:#e0d9cb;--c4a4230:#d6d2c8;--c4b525c:#b1b7c0;--c56606c:#a1aab5;--c5a4528:#e0ceb6;--c5b636d:#a0a7b0;--c5fd1a8:#30b787;--c6b7380:#8c94a0;--c6b8fb5:#507ba7;--c6d5a40:#c9b8a1;--c7cb4f0:#0e539d;--c7d8590:#7b848f;--c7fbfa8:#479377;--c7fdcc0:#269775;--c8a7152:#b8a184;--c8e96a1:#69727f;--c8fb0d6:#2e5685;--c8fb8a9:#50816f;--c9aa2ad:#5d6674;--c9d8fc6:#514082;--ca08550:#b9a06e;--ca3a1d6:#322f71;--ca3a1ff:#030078;--ca4acb6:#545e6a;--ca9cdf5:#0a3a6f;--cb39b6e:#a48853;--cb582a9:#8e5280;--cb9c0c8:#424b55;--cc3a6ff:#250073;--cc4c2ff:#030057;--cc9a35f:#b68939;--cc9cfd6:#343c45;--cc9d0d4:#363f45;--cd4b48a:#8a6330;--cd6c6ff:#170053;--cd7dbe0:#2a3037;--cd7dee0:#2a3437;--cd9a35b:#bc7c27;--ce3c592:#845e1f;--ce3eefb:#061b33;--ce6e8eb:#1f2227;--ce6f5ef:#112c21;--ce8c08a:#8d5b18;--ce8cda8:#6d4a1a;--cebeaff:#02002f;--ceef0f2:#181c20;--ceffaf5:#0a2418;--cf0c674:#a6720e;--cf0d6b0:#664411;--cf0dcea:#36162c;--cf3dcb8:#5f3f0e;--cf3e6cf:#463210;--cf4b3a5:#731e0b;--r0_0_0:0,0,0;--r26_31_37:234,236,239;--r28_33_40:231,233,236;--r217_163_91:188,124,39;--r232_205_168:109,74,26;--c16261f:#ebf1ee;--c20252b:#e4e6e9;--c5fc9a3:#39b689;--c9fe3c9:#207655;--cf08a75:#a5280e;--r124_180_240:14,83,157;--r95_201_163:57,182,137;--c161a1f:#f0f1f3;--c181d23:#eceef0;--c3e8f72:#80cab0;--cc9d0d8:#313b45;--r212_180_138:138,99,48;--c16212e:#e5e9ef;--c1f3049:#cdd6e3;--c1f4a3a:#cce3da;--c34506e:#a1bad4;--c3fa982:#66c9a5}
+.fs-root.fs-light .fs-dark{--c0b0e12:#0b0e12;--c13171c:#13171c;--c14181d:#14181d;--c142a23:#142a23;--c15231f:#15231f;--c163b30:#163b30;--c181c22:#181c22;--c182230:#182230;--c191d23:#191d23;--c1a1f25:#1a1f25;--c1a3a2f:#1a3a2f;--c1b150c:#1b150c;--c1b3a2f:#1b3a2f;--c1c2025:#1c2025;--c1d1c30:#1d1c30;--c1d2228:#1d2228;--c1f1d17:#1f1d17;--c1f3350:#1f3350;--c1f7a5b:#1f7a5b;--c20262d:#20262d;--c22272e:#22272e;--c22282f:#22282f;--c22423a:#22423a;--c22483b:#22483b;--c232930:#232930;--c261a24:#261a24;--c262b33:#262b33;--c262c34:#262c34;--c262d35:#262d35;--c263a52:#263a52;--c275343:#275343;--c2a241c:#2a241c;--c2a2850:#2a2850;--c2b281e:#2b281e;--c2b313a:#2b313a;--c2c333c:#2c333c;--c2c9670:#2c9670;--c2e2716:#2e2716;--c2e9a74:#2e9a74;--c2f2618:#2f2618;--c2f363f:#2f363f;--c2f6e58:#2f6e58;--c333154:#333154;--c343c47:#343c47;--c3a2735:#3a2735;--c3a3424:#3a3424;--c3a424c:#3a424c;--c3c2836:#3c2836;--c45b48b:#45b48b;--c4a2f2b:#4a2f2b;--c4a3d22:#4a3d22;--c4a4230:#4a4230;--c4b525c:#4b525c;--c56606c:#56606c;--c5a4528:#5a4528;--c5b636d:#5b636d;--c5fd1a8:#5fd1a8;--c6b7380:#6b7380;--c6b8fb5:#6b8fb5;--c6d5a40:#6d5a40;--c7cb4f0:#7cb4f0;--c7d8590:#7d8590;--c7fbfa8:#7fbfa8;--c7fdcc0:#7fdcc0;--c8a7152:#8a7152;--c8e96a1:#8e96a1;--c8fb0d6:#8fb0d6;--c8fb8a9:#8fb8a9;--c9aa2ad:#9aa2ad;--c9d8fc6:#9d8fc6;--ca08550:#a08550;--ca3a1d6:#a3a1d6;--ca3a1ff:#a3a1ff;--ca4acb6:#a4acb6;--ca9cdf5:#a9cdf5;--cb39b6e:#b39b6e;--cb582a9:#b582a9;--cb9c0c8:#b9c0c8;--cc3a6ff:#c3a6ff;--cc4c2ff:#c4c2ff;--cc9a35f:#c9a35f;--cc9cfd6:#c9cfd6;--cc9d0d4:#c9d0d4;--cd4b48a:#d4b48a;--cd6c6ff:#d6c6ff;--cd7dbe0:#d7dbe0;--cd7dee0:#d7dee0;--cd9a35b:#d9a35b;--ce3c592:#e3c592;--ce3eefb:#e3eefb;--ce6e8eb:#e6e8eb;--ce6f5ef:#e6f5ef;--ce8c08a:#e8c08a;--ce8cda8:#e8cda8;--cebeaff:#ebeaff;--ceef0f2:#eef0f2;--ceffaf5:#effaf5;--cf0c674:#f0c674;--cf0d6b0:#f0d6b0;--cf0dcea:#f0dcea;--cf3dcb8:#f3dcb8;--cf3e6cf:#f3e6cf;--cf4b3a5:#f4b3a5;--r0_0_0:0,0,0;--r26_31_37:26,31,37;--r28_33_40:28,33,40;--r217_163_91:217,163,91;--r232_205_168:232,205,168;--c16261f:#16261f;--c20252b:#20252b;--c5fc9a3:#5fc9a3;--c9fe3c9:#9fe3c9;--cf08a75:#f08a75;--r124_180_240:124,180,240;--r95_201_163:95,201,163;--c161a1f:#161a1f;--c181d23:#181d23;--c3e8f72:#3e8f72;--cc9d0d8:#c9d0d8;--r212_180_138:212,180,138;--c16212e:#16212e;--c1f3049:#1f3049;--c1f4a3a:#1f4a3a;--c34506e:#34506e;--c3fa982:#3fa982}
+/*fs-anim*/
+@keyframes fsSpin{to{transform:rotate(360deg)}}
+.fs-spin{animation:fsSpin .9s linear infinite;transform-origin:50% 50%;transform-box:fill-box}
+@keyframes fsDraw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.fs-draw path{stroke-dasharray:1;stroke-dashoffset:1;animation:fsDraw .45s .12s ease-out forwards}
+@keyframes fsPop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.14);opacity:1}100%{transform:scale(1);opacity:1}}
+.fs-pop{animation:fsPop .5s cubic-bezier(.2,.9,.3,1.25) both}
+@keyframes fsRing{0%{box-shadow:0 0 0 0 rgba(var(--r95_201_163),.55)}100%{box-shadow:0 0 0 16px rgba(var(--r95_201_163),0)}}
+.fs-ring{animation:fsRing 1s ease-out 2}
+@keyframes fsIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.fs-in{animation:fsIn .35s ease-out both}
+@keyframes fsPing2{0%{box-shadow:0 0 0 0 rgba(var(--r212_180_138),.5)}100%{box-shadow:0 0 0 8px rgba(var(--r212_180_138),0)}}
+.fs-ping2{animation:fsPing2 1.3s ease-out infinite}
+@keyframes fsDash{to{stroke-dashoffset:-20}}
+.fs-dash{stroke-dasharray:4 6;animation:fsDash .7s linear infinite}
+@keyframes fsPulse{0%,100%{opacity:1}50%{opacity:.4}}
+.fs-pulse{animation:fsPulse 1.1s ease-in-out infinite}
+/*/fs-anim*/
+@keyframes fsCoach2{0%{box-shadow:0 0 0 0 rgba(212,180,138,.45)}100%{box-shadow:0 0 0 8px rgba(212,180,138,0)}}.fs-coach{animation:fsCoach2 1.8s ease-out infinite!important}.fs-coach::after{display:none!important}
+</style>
+</helmet>
+<div class="fs-root {{themeCls}}" style="position: relative; min-height: 1200px; background: var(--c13171c); color: var(--cd7dbe0); font-family: Inter, system-ui, sans-serif; font-size: 12px; display: flex; flex-direction: column">
+
+<header style="height: 52px; display: flex; align-items: center; gap: 16px; padding: 0 20px; border-bottom: 1px solid var(--c262b33); background: var(--c14181d)">
+  <span style="flex: none; display: flex; align-items: baseline; gap: 14px"><span style="font-size: 15px; color: var(--ceef0f2); letter-spacing: -0.01em">Flight <span style="font-size: 12px; color: var(--c9aa2ad)">studio</span></span><span style="color: var(--c4b525c)">/</span><span style="font-size: 12px; color: var(--cb9c0c8)">boot_cfs</span></span>
+  <div style="flex: 1; min-width: 0; display: flex; justify-content: center">
+    <div style="display: flex; align-items: center; gap: 2px; padding: 4px; border: 1px solid var(--c2b313a); border-radius: 6px; background: var(--c191d23); white-space: nowrap">
+      <div style="display: flex; gap: 2px; padding: 2px; border: 1px solid var(--c262c34); border-radius: 4px; background: var(--c14181d)">
+        <button onClick="{{h.pickNative}}" style="height: 26px; padding: 0 10px; border: none; border-radius: 3px; font: inherit; font-size: 12px; display: flex; align-items: center; gap: 6px; white-space: nowrap; cursor: pointer; background: {{h.nBg}}; color: {{h.nFg}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; stroke: {{h.nIc}}"><rect x="3" y="4.5" width="18" height="12" rx="1.5"></rect><path d="M9 20h6M12 16.5V20"></path></svg>Native</button>
+        <button onClick="{{h.pickEmu}}" style="height: 26px; padding: 0 10px; border: none; border-radius: 3px; font: inherit; font-size: 12px; display: flex; align-items: center; gap: 6px; white-space: nowrap; cursor: pointer; background: {{h.eBg}}; color: {{h.eFg}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; stroke: {{h.eIc}}"><rect x="5" y="5" width="14" height="14" rx="2" stroke-dasharray="2.6 2.4"></rect><rect x="9.5" y="9.5" width="5" height="5" rx="0.5"></rect></svg>Emulator</button>
+        <button onClick="{{h.pickBoard}}" style="height: 26px; padding: 0 10px; border: none; border-radius: 3px; font: inherit; font-size: 12px; display: flex; align-items: center; gap: 6px; white-space: nowrap; cursor: pointer; background: {{h.bBg}}; color: {{h.bFg}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; stroke: {{h.bIc}}"><rect x="5" y="5" width="14" height="14" rx="2"></rect><rect x="9.5" y="9.5" width="5" height="5" rx="0.5"></rect><path d="M9 2.5V5M15 2.5V5M9 19v2.5M15 19v2.5M2.5 9H5M2.5 15H5M19 9h2.5M19 15h2.5"></path></svg>Board</button>
+      </div>
+      <sc-if value="{{h.isNative}}" hint-placeholder-val="{{false}}"><span style="display: flex; align-items: center; gap: 8px; padding: 0 12px; font-size: 12px; color: var(--ca4acb6)"><span style="width: 22px; height: 22px; flex: none; border-radius: 4px; background: var(--c20252b); display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; stroke: var(--ca4acb6)"><rect x="3" y="4.5" width="18" height="12" rx="1.5"></rect><path d="M9 20h6M12 16.5V20"></path></svg></span>This computer · Linux · x86_64</span></sc-if>
+      <sc-if value="{{h.notNative}}" hint-placeholder-val="{{true}}">
+        <button style="height: 30px; padding: 0 10px; border: none; border-radius: 4px; background: transparent; font: inherit; font-size: 12px; display: flex; align-items: center; gap: 7px; white-space: nowrap; flex: none; cursor: pointer; color: var(--cc9cfd6)"><span style="width: 22px; height: 22px; flex: none; border-radius: 4px; background: rgba(var(--r95_201_163),0.14); display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; stroke: var(--c7fdcc0)"><rect x="2.5" y="5.5" width="19" height="13" rx="1.5"></rect><path d="M6 9h.01M8.5 9h.01M11 9h.01M13.5 9h.01M16 9h.01M18.5 9h.01"></path><rect x="6" y="12.5" width="4.5" height="3" rx="0.5"></rect><rect x="13.5" y="12.5" width="4.5" height="3" rx="0.5"></rect></svg></span>Raspberry Pi 4B<span style="color: var(--c6b7380)">·</span>Pi OS<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-left: 4px; stroke: var(--c6b7380)"><path d="M6 9l6 6 6-6"></path></svg></button>
+      </sc-if>
+      <span style="width: 1px; height: 20px; flex: none; background: var(--c2b313a); margin: 0 4px"></span>
+      <sc-if value="{{h.isEmu}}" hint-placeholder-val="{{true}}">
+        <button onClick="{{h.emuToggle}}" style="height: 30px; padding: 0 10px; border: none; border-radius: 4px; background: transparent; font: inherit; font-size: 12px; display: flex; align-items: center; gap: 7px; white-space: nowrap; flex: none; cursor: pointer; color: var(--cc9cfd6)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; stroke: {{h.emuIc}}"><path d="{{h.emuIcon}}"></path></svg>{{h.emuLabel}}</button>
+        <button onClick="{{h.synthToggle}}" aria-pressed="{{h.synthAria}}" style="height: 30px; padding: 0 10px; border: none; border-radius: 4px; background: transparent; font: inherit; font-size: 12px; display: flex; align-items: center; gap: 7px; white-space: nowrap; flex: none; cursor: pointer; color: {{h.synthFg}}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; stroke: {{h.synthIc}}"><path d="M2 12c1.7-4.5 3.3-4.5 5 0s3.3 4.5 5 0 3.3-4.5 5 0 3.3 4.5 5 0"></path></svg>Synthetic data<span style="width: 26px; height: 15px; flex: none; box-sizing: border-box; border-radius: 99px; background: {{h.synthTrack}}; position: relative"><span style="position: absolute; top: 2px; left: {{h.synthKnob}}px; width: 11px; height: 11px; border-radius: 99px; background: {{h.synthDot}}"></span></span></button>
+      </sc-if>
+      <sc-if value="{{h.isBoard}}" hint-placeholder-val="{{false}}">
+        <button style="height: 30px; padding: 0 10px; border: none; border-radius: 4px; background: transparent; font: inherit; font-size: 12px; display: flex; align-items: center; gap: 7px; white-space: nowrap; flex: none; cursor: pointer; color: var(--cc9cfd6)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; stroke: var(--c7cb4f0)"><path d="M9 3v4M15 3v4M7 7h10v3.5a5 5 0 01-10 0zM12 15.5V21"></path></svg>Check connection</button>
+      </sc-if>
+      <span style="width: 1px; height: 20px; flex: none; background: var(--c2b313a); margin: 0 4px"></span>
+      <button onClick="{{h.build}}" style="height: 30px; padding: 0 10px; border: none; border-radius: 4px; background: transparent; font: inherit; font-size: 12px; display: flex; align-items: center; gap: 7px; white-space: nowrap; flex: none; cursor: pointer; padding: 0 11px; border: 1px solid {{h.buildBorder}}; background: {{h.buildBg}}; color: {{h.buildFg}}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; stroke: {{h.buildIc}}"><path d="M14.5 12.5l-8 8a2 2 0 01-2.9-2.9l8-8"></path><path d="M17.5 15.5L21.5 11.5"></path><path d="M20.6 12.4l-1.4-1.4a2.6 2.6 0 01-.7-1.8V8.6L15.8 6A5 5 0 0012.3 4.5H10l1 .9a5 5 0 011.7 3.8v.9l1.8 1.8h1.6l2 1.6"></path></svg>{{h.buildLabel}}</button>
+      <button onClick="{{h.runToggle}}" style="height: 30px; padding: 0 10px; border: none; border-radius: 4px; background: transparent; font: inherit; font-size: 12px; display: flex; align-items: center; gap: 7px; white-space: nowrap; flex: none; cursor: pointer; padding: 0 11px; border: 1px solid {{h.runBorder}}; background: {{h.runBg}}; color: {{h.runFg}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; stroke: {{h.runIc}}"><path d="{{h.runIcon}}"></path></svg>{{h.runLabel}}</button>
+      <span style="width: 1px; height: 20px; flex: none; background: var(--c2b313a); margin: 0 4px"></span>
+      <button onClick="{{toggleTheme}}" aria-label="Switch between light and dark" style="width: 30px; height: 30px; flex: none; border: none; border-radius: 4px; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="stroke: var(--ca4acb6)"><path d="{{themeIcon}}"></path></svg></button>
+    </div>
+  </div>
+</header>
+<!--fs-guide-->
+<div aria-label="First steps guide" style="height: 44px; flex: none; display: flex; align-items: center; gap: 16px; padding: 0 20px; border-bottom: 1px solid var(--c22272e); background: var(--c161a1f)">
+  <span style="flex: none; display: flex; align-items: baseline; gap: 8px"><span style="font-size: 12px; font-weight: 500; color: var(--ceef0f2)">First steps</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--c7d8590)">{{gd.count}}/{{gd.total}}</span></span>
+  <div style="flex: 1; min-width: 0; display: flex; align-items: center">
+    <sc-for list="{{gd.steps}}" as="gs" hint-placeholder-count="9">
+      <sc-if value="{{gs.notFirst}}" hint-placeholder-val="{{true}}"><span style="flex: 1; min-width: 8px; height: 2px; border-radius: 2px; background: {{gs.line}}"></span></sc-if>
+      <a href="{{gs.href}}" title="{{gs.title}}" style="flex: none; display: flex; align-items: center; gap: 6px; padding: 3px 9px 3px 3px; border-radius: 99px; background: {{gs.bg}}; text-decoration: none">
+        <span class="{{gs.cls}}" style="width: 20px; height: 20px; flex: none; box-sizing: border-box; border-radius: 99px; border: 1.5px solid {{gs.border}}; background: {{gs.fill}}; display: flex; align-items: center; justify-content: center">
+          <sc-if value="{{gs.done}}" hint-placeholder-val="{{false}}"><svg class="fs-draw" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="stroke: var(--c9fe3c9)"><path d="M5 12l5 5L20 7" pathLength="1"></path></svg></sc-if>
+          <sc-if value="{{gs.notDone}}" hint-placeholder-val="{{true}}"><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: {{gs.num}}">{{gs.n}}</span></sc-if>
+        </span>
+        <span style="font-size: 11px; color: {{gs.fg}}; white-space: nowrap">{{gs.label}}</span>
+      </a>
+    </sc-for>
+  </div>
+  <span style="flex: none; display: flex; align-items: center; gap: 8px">
+    <sc-if value="{{gd.away}}" hint-placeholder-val="{{false}}"><a href="{{gd.href}}" title="{{gd.title}}" class="fs-coach" style="position: relative; height: 28px; flex: none; padding: 0 12px; border-radius: 4px; background: var(--cd4b48a); color: var(--c1b150c); font-size: 12px; font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 6px; white-space: nowrap"><span style="font-weight: 400; opacity: 0.75">Next</span>{{gd.go}}<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="stroke: var(--c1b150c)"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a></sc-if>
+    <button onClick="{{gd.reset}}" aria-label="Start the guide over" title="Start over" style="width: 26px; height: 26px; flex: none; border-radius: 4px; border: none; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="stroke: var(--c6b7380)"><path d="M4 12a8 8 0 108-8 8.5 8.5 0 00-6 2.5L4 8.5M4 4v4.5h4.5"></path></svg></button>
+  </span>
+</div>
+<!--/fs-guide-->
+
+<div style="flex: 1; display: flex">
+  <nav aria-label="Sections" style="flex: 0 0 56px; border-right: 1px solid var(--c22272e); display: flex; flex-direction: column; align-items: center; padding: 14px 0; gap: 6px">
+    <a href="#" aria-label="Mission" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: var(--c232930); color: var(--ce8cda8)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 3l9 4.5-9 4.5-9-4.5z"></path><path d="M3 12l9 4.5 9-4.5M3 16.5L12 21l9-4.5"></path></svg></a>
+    <a href="#" aria-label="Code" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 4px; color: var(--c7d8590)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"></path></svg></a>
+    <a href="Lesson.dc.html" aria-label="Ground station" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 4px; color: var(--c7d8590)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="2"></circle><path d="M7.5 7.5a6.4 6.4 0 000 9M16.5 7.5a6.4 6.4 0 010 9M4.6 4.6a10.5 10.5 0 000 14.8M19.4 4.6a10.5 10.5 0 010 14.8"></path></svg></a>
+    <a href="#" aria-label="Telemetry" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 4px; color: var(--c7d8590)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 12h4l3-7 4 14 3-7h4"></path></svg></a>
+    <a href="#" aria-label="Terminal" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 4px; color: var(--c7d8590)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 9l3 3-3 3M12 15h5"></path></svg></a>
+  </nav>
+
+  <main style="position: relative; flex: 1; min-width: 0; background-color: var(--c13171c); background-image: radial-gradient(var(--c22282f) 1px, transparent 1px); background-size: 22px 22px; display: flex; flex-direction: column">
+    <div style="display: flex; align-items: center; gap: 14px; padding: 18px 24px 0; flex-wrap: wrap">
+      <div style="display: flex; padding: 3px; border-radius: 4px; background: var(--c181c22); border: 1px solid var(--c262c34)">
+        <button onClick="{{show3d}}" title="{{v3title}}" style="height: 30px; padding: 0 14px; border: none; border-radius: 3px; background: {{vb3}}; color: var(--ceef0f2); font: inherit; display: flex; align-items: center; gap: 7px; opacity: {{v3op}}; cursor: pointer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="1.7" aria-hidden="true" style="stroke: var(--cc9cfd6)"><path d="M12 3l9 4.5-9 4.5-9-4.5z"></path><path d="M3 12l9 4.5 9-4.5M3 16.5L12 21l9-4.5"></path></svg>3D</button>
+        <button onClick="{{show2d}}" style="height: 30px; padding: 0 14px; border: none; border-radius: 3px; background: {{vb2}}; color: var(--ceef0f2); font: inherit; display: flex; align-items: center; gap: 7px; cursor: pointer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="1.7" aria-hidden="true" style="stroke: var(--cc9cfd6)"><rect x="3" y="4" width="8" height="7" rx="1"></rect><rect x="13" y="4" width="8" height="7" rx="1"></rect><rect x="3" y="13" width="18" height="7" rx="1"></rect></svg>2D</button>
+      </div>
+      <span style="display: flex; align-items: center; gap: 7px; color: var(--ca4acb6)"><span style="width: 9px; height: 9px; border-radius: 2px; background: var(--c2c9670)"></span>Your apps</span>
+      <span style="display: flex; align-items: center; gap: 7px; color: var(--ca4acb6)"><span style="width: 9px; height: 9px; border-radius: 2px; background: var(--ca08550)"></span>Libraries</span>
+      <span style="display: flex; align-items: center; gap: 7px; color: var(--ca4acb6)"><span style="width: 9px; height: 9px; border-radius: 2px; background: var(--c56606c)"></span>cFS apps</span>
+      <span style="flex: 1"></span>
+      <sc-if value="{{hasNewApp}}" hint-placeholder-val="{{false}}">
+      <span style="height: 28px; padding: 0 12px; border-radius: 4px; background: rgba(var(--r217_163_91),0.1); border: 1px solid rgba(var(--r217_163_91),0.35); display: flex; align-items: center; gap: 8px; color: var(--ce8c08a)"><span style="width: 6px; height: 6px; border-radius: 99px; background: var(--cd9a35b)"></span>{{newAppName}} added · build to run it</span>
+      </sc-if>
+    </div>
+
+    <sc-if value="{{is3d}}" hint-placeholder-val="{{true}}">
+      <div class="fs-pass fs-dark" style="position: relative; flex: 1; display: flex; align-items: center; justify-content: center; margin: 12px 24px 0; border-radius: 3px; background: var(--c13171c); padding: 8px 24px 100px">
+        <button onClick="{{clear}}" aria-label="Clear selection" style="position: absolute; inset: 0; z-index: 0; padding: 0; border: none; background: transparent; cursor: default"></button>
+        <div style="position: relative; z-index: 1; width: 760px; max-width: 100%">
+          <img src="/_blob/763c76165a2e8419e5d456ee5135eff3" alt="Mission stack in 3D: your apps, libraries and cFS apps on cFE, on OSAL and PSP, on Raspberry Pi OS, on a Raspberry Pi 4B with two sensors" style="width: 100%; height: auto; display: block">
+          <svg viewBox="0 0 760 910" aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none"><rect width="760" height="910" opacity="{{dim3}}" style="fill: var(--c0b0e12)"></rect><g opacity="{{o3.sample_lib}}"><polygon points="344.8,106.1 395.2,131.4 395.2,139.4 357.8,158.1 307.2,132.9 307.2,124.9" stroke-width="1.6" stroke-linejoin="round" style="fill: rgba(var(--r232_205_168),0.30); stroke: var(--cf0d6b0)"></polygon></g><g opacity="{{o3.i2c_lib}}"><polygon points="402.2,134.9 452.8,160.1 452.8,168.1 415.2,186.9 364.8,161.6 364.8,153.6" stroke-width="1.6" stroke-linejoin="round" style="fill: rgba(var(--r232_205_168),0.30); stroke: var(--cf0d6b0)"></polygon></g><g opacity="{{o3.tmp105_lib}}"><polygon points="459.8,163.6 510.2,188.9 510.2,196.9 472.8,215.6 422.2,190.4 422.2,182.4" stroke-width="1.6" stroke-linejoin="round" style="fill: rgba(var(--r232_205_168),0.30); stroke: var(--cf0d6b0)"></polygon></g><g opacity="{{o3.lsm_lib}}"><polygon points="517.2,192.4 567.8,217.6 567.8,225.6 530.2,244.4 479.8,219.1 479.8,211.1" stroke-width="1.6" stroke-linejoin="round" style="fill: rgba(var(--r232_205_168),0.30); stroke: var(--cf0d6b0)"></polygon></g><g opacity="{{o3.test_app}}"><polygon points="288.8,123.1 373.8,165.6 373.8,183.6 331.2,204.9 246.3,162.4 246.3,144.4" stroke-width="1.6" stroke-linejoin="round" style="fill: rgba(var(--r232_205_168),0.30); stroke: var(--cf0d6b0)"></polygon></g><g opacity="{{o3.testando_app}}"><polygon points="383.8,170.6 468.8,213.1 468.8,231.1 426.2,252.4 341.2,209.9 341.2,191.9" stroke-width="1.6" stroke-linejoin="round" style="fill: rgba(var(--r232_205_168),0.30); stroke: var(--cf0d6b0)"></polygon></g><g opacity="{{o3.tmp105}}"><polygon points="352.5,697.8 397.5,720.2 397.5,726.2 340.0,755.0 295.0,732.5 295.0,726.5" stroke-width="1.6" stroke-linejoin="round" style="fill: rgba(var(--r232_205_168),0.30); stroke: var(--cf0d6b0)"></polygon></g><g opacity="{{o3.lsm303}}"><polygon points="407.5,725.2 447.5,745.2 447.5,751.2 390.0,780.0 350.0,760.0 350.0,754.0" stroke-width="1.6" stroke-linejoin="round" style="fill: rgba(var(--r232_205_168),0.30); stroke: var(--cf0d6b0)"></polygon></g><g opacity="{{o3.board}}"><polygon points="220.0,750.0 470.0,875.0 720.0,750.0 720.0,764.0 470.0,889.0 220.0,764.0" stroke-width="1.6" stroke-linejoin="round" style="fill: rgba(var(--r232_205_168),0.30); stroke: var(--cf0d6b0)"></polygon></g><g opacity="{{o3.os}}"><polygon points="220.0,570.0 470.0,695.0 720.0,570.0 720.0,580.0 470.0,705.0 220.0,580.0" stroke-width="1.6" stroke-linejoin="round" style="fill: rgba(var(--r232_205_168),0.30); stroke: var(--cf0d6b0)"></polygon></g><g opacity="{{o3.cfe}}"><polygon points="220.0,380.0 470.0,505.0 720.0,380.0 720.0,392.0 470.0,517.0 220.0,392.0" stroke-width="1.6" stroke-linejoin="round" style="fill: rgba(var(--r232_205_168),0.30); stroke: var(--cf0d6b0)"></polygon></g><g opacity="{{o3.osal}}"><polygon points="395.0,472.5 520.0,535.0 345.0,622.5 345.0,632.5 220.0,570.0 220.0,560.0" stroke-width="1.6" stroke-linejoin="round" style="fill: rgba(var(--r232_205_168),0.30); stroke: var(--cf0d6b0)"></polygon></g><g opacity="{{o3.psp}}"><polygon points="520.0,535.0 645.0,597.5 720.0,560.0 720.0,570.0 470.0,695.0 345.0,632.5 345.0,622.5" stroke-width="1.6" stroke-linejoin="round" style="fill: rgba(var(--r232_205_168),0.30); stroke: var(--cf0d6b0)"></polygon></g><g opacity="{{o3.i2c}}"><line x1="375.0" y1="715.0" x2="292.5" y2="756.2" stroke-width="4" stroke-linecap="round" style="stroke: var(--cf0d6b0)"></line><line x1="427.5" y1="741.2" x2="345.0" y2="782.5" stroke-width="4" stroke-linecap="round" style="stroke: var(--cf0d6b0)"></line><line x1="278.8" y1="753.1" x2="428.8" y2="828.1" stroke-width="4" stroke-linecap="round" style="stroke: var(--cf0d6b0)"></line></g></svg>
+          <button onClick="{{pick.board}}" aria-label="Raspberry Pi 4B board" style="position: absolute; left: 28.95%; top: 82.42%; width: 65.79%; height: 15.27%; padding: 0; border: none; background: transparent; cursor: pointer"></button>
+          <button onClick="{{pick.cfe}}" aria-label="cFE core" style="position: absolute; left: 28.95%; top: 41.76%; width: 65.79%; height: 15.05%; padding: 0; border: none; background: transparent; cursor: pointer"></button>
+          <button onClick="{{pick.os}}" aria-label="Raspberry Pi OS" style="position: absolute; left: 28.95%; top: 62.64%; width: 65.79%; height: 14.84%; padding: 0; border: none; background: transparent; cursor: pointer"></button>
+          <button onClick="{{pick.osal}}" aria-label="OSAL" style="position: absolute; left: 28.95%; top: 51.92%; width: 39.47%; height: 17.58%; padding: 0; border: none; background: transparent; cursor: pointer"></button>
+          <button onClick="{{pick.psp}}" aria-label="PSP" style="position: absolute; left: 45.39%; top: 58.79%; width: 49.34%; height: 17.58%; padding: 0; border: none; background: transparent; cursor: pointer"></button>
+          <button onClick="{{pick.cfe}}" aria-label="cFE core label" style="position: absolute; left: 5.26%; top: 40.44%; width: 21.05%; height: 3.74%; padding: 0; border: none; background: transparent; cursor: pointer"></button>
+          <button onClick="{{pick.osal}}" aria-label="OSAL label" style="position: absolute; left: 5.26%; top: 58.90%; width: 21.05%; height: 3.96%; padding: 0; border: none; background: transparent; cursor: pointer"></button>
+          <button onClick="{{pick.os}}" aria-label="Raspberry Pi OS label" style="position: absolute; left: 5.26%; top: 64.62%; width: 21.05%; height: 3.52%; padding: 0; border: none; background: transparent; cursor: pointer"></button>
+          <button onClick="{{pick.board}}" aria-label="Raspberry Pi 4B label" style="position: absolute; left: 5.26%; top: 81.43%; width: 21.05%; height: 3.52%; padding: 0; border: none; background: transparent; cursor: pointer"></button>
+          <button onClick="{{pick.i2c}}" aria-label="I2C bus 1" style="position: absolute; left: 36.68%; top: 78.57%; width: 19.74%; height: 12.43%; padding: 0; border: none; background: transparent; cursor: pointer"></button>
+          <button onClick="{{pick.tmp105}}" aria-label="tmp105 sensor" style="position: absolute; left: 38.82%; top: 76.68%; width: 13.49%; height: 6.29%; padding: 0; border: none; background: transparent; cursor: pointer"></button>
+          <button onClick="{{pick.lsm303}}" aria-label="lsm303dlhc magnetometer" style="position: absolute; left: 46.05%; top: 79.70%; width: 12.83%; height: 6.02%; padding: 0; border: none; background: transparent; cursor: pointer"></button>
+          <button onClick="{{pick.sample_lib}}" aria-label="sample_lib" style="position: absolute; left: 40.43%; top: 11.66%; width: 11.58%; height: 5.71%; padding: 0; border: none; background: transparent; cursor: pointer"></button>
+          <button onClick="{{pick.i2c_lib}}" aria-label="linux_i2c_lib" style="position: absolute; left: 47.99%; top: 14.82%; width: 11.58%; height: 5.71%; padding: 0; border: none; background: transparent; cursor: pointer"></button>
+          <button onClick="{{pick.tmp105_lib}}" aria-label="tmp105_lib" style="position: absolute; left: 55.56%; top: 17.98%; width: 11.58%; height: 5.71%; padding: 0; border: none; background: transparent; cursor: pointer"></button>
+          <button onClick="{{pick.lsm_lib}}" aria-label="lsm303dlhc_mag_lib" style="position: absolute; left: 63.13%; top: 21.14%; width: 11.58%; height: 5.71%; padding: 0; border: none; background: transparent; cursor: pointer"></button>
+          <button onClick="{{pick.test_app}}" aria-label="test_app" style="position: absolute; left: 32.40%; top: 13.53%; width: 16.78%; height: 8.98%; padding: 0; border: none; background: transparent; cursor: pointer"></button>
+          <button onClick="{{pick.testando_app}}" aria-label="testando_app" style="position: absolute; left: 44.90%; top: 18.75%; width: 16.78%; height: 8.98%; padding: 0; border: none; background: transparent; cursor: pointer"></button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{is2d}}" hint-placeholder-val="{{false}}">
+      <div class="fs-pass" style="position: relative; flex: 1; display: flex; gap: 18px; padding: 18px 24px 110px; flex-wrap: wrap; align-items: flex-start">
+        <button onClick="{{clear}}" aria-label="Clear selection" style="position: absolute; inset: 0; z-index: 0; padding: 0; border: none; background: transparent; cursor: default"></button>
+
+        <div style="position: relative; z-index: 1; flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+
+          <section style="padding: 16px; border-radius: 6px; background: var(--c15231f); border: 1px solid var(--c22423a); display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; align-items: center; gap: 10px"><span style="width: 10px; height: 10px; border-radius: 2px; background: var(--c2c9670)"></span><span style="font-size: 13px; font-weight: 600; color: var(--ce6f5ef)">Your apps</span><span style="font-family: 'JetBrains Mono', monospace; color: var(--c7fbfa8)">{{appCount}}</span></div>
+            <sc-if value="{{appsEmpty}}" hint-placeholder-val="{{true}}">
+              <div style="display: flex; align-items: center; gap: 16px; padding: 14px 16px; border-radius: 6px; border: 1px dashed var(--c2f6e58)">
+                <span style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; flex-wrap: wrap"><span style="height: 26px; padding: 0 9px; border-radius: 4px; background: var(--c16212e); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ca9cdf5); display: flex; align-items: center">ci_lab</span><span style="height: 26px; padding: 0 9px; border-radius: 4px; background: var(--c16212e); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ca9cdf5); display: flex; align-items: center">to_lab</span><span style="height: 26px; padding: 0 9px; border-radius: 4px; background: var(--c16212e); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ca9cdf5); display: flex; align-items: center">sch_lab</span><span style="height: 26px; padding: 0 9px; border-radius: 4px; background: var(--c16212e); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ca9cdf5); display: flex; align-items: center">sample_app</span><span class="fs-pulse" style="height: 26px; width: 64px; box-sizing: border-box; border-radius: 4px; border: 1.5px dashed var(--cd4b48a)"></span></span>
+                <button onClick="{{openNewApp}}" class="{{newAppCls}}" style="height: 38px; flex: none; padding: 0 16px; border-radius: 4px; border: none; background: var(--cd4b48a); color: var(--c1b150c); font: inherit; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" style="stroke: var(--c1b150c)"><path d="M12 5v14M5 12h14"></path></svg>Create your first app</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{hasNewApp}}" hint-placeholder-val="{{false}}">
+              <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+                <button onClick="{{pick.test_app}}" class="fs-pop" style="text-align: left; padding: 12px; border-radius: 4px; border: 1px solid var(--c2f6e58); background: var(--c1b3a2f); color: inherit; font: inherit; cursor: pointer; display: flex; flex-direction: column; gap: 8px; opacity: {{o.test_app}}; box-shadow: {{g.test_app}}">
+                  <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ceffaf5)">{{newAppName}}</span>
+                  <span style="display: flex; gap: 4px; flex-wrap: wrap"><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 2px 6px; border-radius: 4px; background: var(--c4a3d22); color: var(--ce3c592)">sample_lib</span></span>
+                </button>
+                <button onClick="{{openNewApp}}" style="padding: 12px; border-radius: 4px; border: 1px dashed var(--c2f6e58); background: transparent; color: var(--c7fbfa8); font: inherit; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="stroke: var(--c7fbfa8)"><path d="M12 5v14M5 12h14"></path></svg>New app</button>
+              </div>
+            </sc-if>
+          </section>
+
+          <section style="padding: 16px; border-radius: 6px; background: var(--c1f1d17); border: 1px solid var(--c3a3424); display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; align-items: center; gap: 10px"><span style="width: 10px; height: 10px; border-radius: 2px; background: var(--ca08550)"></span><span style="font-size: 13px; font-weight: 600; color: var(--cf3e6cf)">Libraries</span><span style="font-family: 'JetBrains Mono', monospace; color: var(--cb39b6e)">4</span></div>
+            <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+              <button onClick="{{pick.tmp105_lib}}" style="text-align: left; padding: 12px; border-radius: 4px; border: 1px solid var(--c4a4230); background: var(--c2b281e); color: inherit; font: inherit; cursor: pointer; display: flex; flex-direction: column; gap: 6px; opacity: {{o.tmp105_lib}}; box-shadow: {{g.tmp105_lib}}">
+                <span style="display: flex; align-items: center; gap: 6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true" style="stroke: var(--ce3c592)"><path d="M10 4a2 2 0 014 0v10a4 4 0 11-4 0z"></path></svg><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--cf3e6cf)">tmp105_lib</span></span>
+                <span style="font-size: 11px; color: var(--cb39b6e)">sensor driver</span></button>
+              <button onClick="{{pick.lsm_lib}}" style="text-align: left; padding: 12px; border-radius: 4px; border: 1px solid var(--c4a4230); background: var(--c2b281e); color: inherit; font: inherit; cursor: pointer; display: flex; flex-direction: column; gap: 6px; opacity: {{o.lsm_lib}}; box-shadow: {{g.lsm_lib}}">
+                <span style="display: flex; align-items: center; gap: 6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true" style="stroke: var(--ce3c592)"><circle cx="12" cy="12" r="8"></circle><path d="M15 9l-2 4-4 2 2-4z"></path></svg><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--cf3e6cf); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">lsm303dlhc_mag_lib</span></span>
+                <span style="font-size: 11px; color: var(--cb39b6e)">sensor driver</span></button>
+              <button onClick="{{pick.i2c_lib}}" style="text-align: left; padding: 12px; border-radius: 4px; border: 1px solid var(--c4a4230); background: var(--c2b281e); color: inherit; font: inherit; cursor: pointer; display: flex; flex-direction: column; gap: 6px; opacity: {{o.i2c_lib}}; box-shadow: {{g.i2c_lib}}">
+                <span style="display: flex; align-items: center; gap: 6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true" style="stroke: var(--ce3c592)"><path d="M3 8h18M3 16h18"></path></svg><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--cf3e6cf)">linux_i2c_lib</span></span>
+                <span style="font-size: 11px; color: var(--cb39b6e)">bus access</span></button>
+              <button onClick="{{pick.sample_lib}}" style="text-align: left; padding: 12px; border-radius: 4px; border: 1px dashed var(--c4a4230); background: transparent; color: inherit; font: inherit; cursor: pointer; display: flex; flex-direction: column; gap: 6px; opacity: {{o.sample_lib}}; box-shadow: {{g.sample_lib}}">
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--cf3e6cf)">sample_lib</span>
+                <span style="font-size: 11px; color: var(--cb39b6e)">example</span></button>
+            </div>
+          </section>
+
+          <section style="padding: 16px; border-radius: 6px; background: var(--c1a1f25); border: 1px solid var(--c262c34); display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; align-items: center; gap: 10px"><span style="width: 10px; height: 10px; border-radius: 2px; background: var(--c56606c)"></span><span style="font-size: 13px; font-weight: 600; color: var(--ceef0f2)">cFS apps</span><span style="font-family: 'JetBrains Mono', monospace; color: var(--c8e96a1)">13 · default</span><span title="read from each app's README.md" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 2px 6px; border-radius: 3px; background: var(--c2e2716); color: var(--cf0c674)">@role</span>
+              <span style="flex: 1"></span>
+              <span style="display: flex; align-items: center; gap: 5px; color: var(--c8e96a1)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true" style="stroke: var(--cc9cfd6)"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 018 0v3"></path></svg>keep</span>
+              <span style="display: flex; align-items: center; gap: 5px; color: var(--c8e96a1)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true" style="stroke: var(--cc9cfd6)"><circle cx="12" cy="12" r="9"></circle><path d="M8 12h8"></path></svg>removable</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px">
+              <sc-for list="{{cfsTiles}}" as="t" hint-placeholder-count="13">
+                <button onClick="{{t.pick}}" style="position: relative; text-align: left; padding: 10px; border-radius: 4px; border: 1px solid var(--c2f363f); background: var(--c20262d); color: inherit; font: inherit; cursor: pointer; display: flex; flex-direction: column; gap: 5px; opacity: {{t.o}}; box-shadow: {{t.g}}">
+                  <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ceef0f2)">{{t.name}}</span>
+                  <span style="font-size: 11px; color: var(--c8e96a1)">{{t.role}}</span>
+                  <sc-if value="{{t.keep}}" hint-placeholder-val="{{false}}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true" style="position: absolute; right: 8px; top: 9px; stroke: var(--cc9cfd6)"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 018 0v3"></path></svg></sc-if>
+                  <sc-if value="{{t.removable}}" hint-placeholder-val="{{true}}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true" style="position: absolute; right: 8px; top: 9px; stroke: var(--c6b7380)"><circle cx="12" cy="12" r="9"></circle><path d="M8 12h8"></path></svg></sc-if>
+                </button>
+              </sc-for>
+            </div>
+          </section>
+
+          <button onClick="{{pick.cfe}}" style="text-align: left; padding: 14px 16px; border-radius: 6px; background: var(--c261a24); border: 1px solid var(--c3c2836); color: inherit; font: inherit; cursor: pointer; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; opacity: {{o.cfe}}; box-shadow: {{g.cfe}}">
+            <span style="display: flex; align-items: center; gap: 10px; min-width: 110px"><span style="width: 10px; height: 10px; border-radius: 2px; background: var(--cb582a9)"></span><span style="font-size: 13px; font-weight: 600; color: var(--cf0dcea)">cFE core</span></span>
+            <span style="flex: 1; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--cf0dcea); text-align: center">
+              <span style="padding: 7px 0; border-radius: 3px; background: var(--c3a2735)">SB</span><span style="padding: 7px 0; border-radius: 3px; background: var(--c3a2735)">EVS</span><span style="padding: 7px 0; border-radius: 3px; background: var(--c3a2735)">ES</span><span style="padding: 7px 0; border-radius: 3px; background: var(--c3a2735)">TIME</span><span style="padding: 7px 0; border-radius: 3px; background: var(--c3a2735)">TBL</span><span style="padding: 7px 0; border-radius: 3px; background: var(--c3a2735)">FS</span>
+            </span>
+          </button>
+
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+            <button onClick="{{pick.osal}}" style="text-align: left; padding: 14px; border-radius: 6px; background: var(--c182230); border: 1px solid var(--c263a52); color: inherit; font: inherit; cursor: pointer; display: flex; align-items: center; gap: 12px; opacity: {{o.osal}}; box-shadow: {{g.osal}}">
+              <span style="width: 36px; height: 36px; border-radius: 4px; background: var(--c1f3350); display: flex; align-items: center; justify-content: center; flex: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="1.7" aria-hidden="true" style="stroke: var(--ca9cdf5)"><path d="M4 7h16M4 12h16M4 17h16"></path><path d="M9 4v16"></path></svg></span>
+              <span style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 13px; font-weight: 600; color: var(--ce3eefb)">OSAL</span><span style="font-size: 11px; color: var(--c8fb0d6)">same calls on any OS</span></span></button>
+            <button onClick="{{pick.psp}}" style="text-align: left; padding: 14px; border-radius: 6px; background: var(--c1d1c30); border: 1px solid var(--c333154); color: inherit; font: inherit; cursor: pointer; display: flex; align-items: center; gap: 12px; opacity: {{o.psp}}; box-shadow: {{g.psp}}">
+              <span style="width: 36px; height: 36px; border-radius: 4px; background: var(--c2a2850); display: flex; align-items: center; justify-content: center; flex: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="1.7" aria-hidden="true" style="stroke: var(--cc4c2ff)"><rect x="6" y="6" width="12" height="12" rx="1"></rect><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"></path></svg></span>
+              <span style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 13px; font-weight: 600; color: var(--cebeaff)">PSP</span><span style="font-size: 11px; color: var(--ca3a1d6)">fits cFS to this board</span></span></button>
+            <button onClick="{{pick.os}}" style="text-align: left; padding: 14px; border-radius: 6px; background: var(--c1c2025); border: 1px solid var(--c2f363f); color: inherit; font: inherit; cursor: pointer; display: flex; align-items: center; gap: 12px; opacity: {{o.os}}; box-shadow: {{g.os}}">
+              <span style="width: 36px; height: 36px; border-radius: 4px; background: var(--c262c34); display: flex; align-items: center; justify-content: center; flex: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="1.7" aria-hidden="true" style="stroke: var(--cc9cfd6)"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 9l3 3-3 3M12 15h5"></path></svg></span>
+              <span style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 13px; font-weight: 600; color: var(--ceef0f2)">Raspberry Pi OS</span><span style="font-size: 11px; color: var(--c8e96a1)">Linux</span></span></button>
+          </div>
+        </div>
+
+        <div style="position: relative; z-index: 1; flex: 1 1 320px; max-width: 380px; padding: 16px; border-radius: 6px; background: var(--c142a23); border: 1px solid var(--c22483b); box-sizing: border-box; display: flex; flex-direction: column; gap: 0">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px"><span style="width: 10px; height: 10px; border-radius: 2px; background: var(--c45b48b)"></span><span style="font-size: 13px; font-weight: 600; color: var(--ce6f5ef)">Hardware</span></div>
+          <button onClick="{{pick.board}}" style="padding: 14px; border-radius: 6px; border: 1px solid var(--c275343); background: var(--c1a3a2f); color: inherit; font: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: {{o.board}}; box-shadow: {{g.board}}">
+            <svg width="200" height="140" viewBox="0 0 240 170" fill="none" aria-hidden="true">
+              <rect x="22" y="30" width="180" height="118" rx="8" style="fill: var(--c1f7a5b); stroke: var(--c2e9a74)"></rect>
+              <rect x="44" y="35" width="104" height="13" style="fill: var(--c163b30)"></rect>
+              <path d="M48 39H146M48 44.5H146" stroke-width="3" stroke-dasharray="2 2.6" style="stroke: var(--cd4b48a)"></path>
+              <rect x="90" y="76" width="40" height="40" rx="2" style="fill: var(--cc9d0d4)"></rect>
+              <rect x="138" y="84" width="20" height="24" style="fill: var(--c163b30)"></rect>
+              <rect x="178" y="42" width="34" height="24" style="fill: var(--cd7dee0)"></rect>
+              <rect x="178" y="74" width="34" height="24" style="fill: var(--cd7dee0)"></rect>
+              <rect x="178" y="106" width="34" height="30" style="fill: var(--cc9d0d4)"></rect>
+              <rect x="40" y="140" width="16" height="12" rx="2" style="fill: var(--cd7dee0)"></rect><rect x="64" y="142" width="12" height="10" style="fill: var(--cd7dee0)"></rect><rect x="84" y="142" width="12" height="10" style="fill: var(--cd7dee0)"></rect>
+            </svg>
+            <span style="display: flex; align-items: baseline; gap: 8px"><span style="font-size: 13px; color: var(--ceffaf5)">Raspberry Pi 4B</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--c8fb8a9)">emulated</span></span>
+          </button>
+
+          <span style="margin: 14px 0 8px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: var(--c8fb8a9)">BUSES</span>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding-left: 14px; position: relative; opacity: {{o.i2c}}">
+            <span style="position: absolute; left: 3px; top: 4px; bottom: 4px; width: 2px; background: var(--cd4b48a)"></span>
+            <button onClick="{{pick.i2c}}" style="align-self: flex-start; height: 26px; padding: 0 10px; border-radius: 3px; border: 1px solid var(--c6d5a40); background: var(--c2a241c); color: var(--cf3dcb8); font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer; box-shadow: {{g.i2c}}">i2c-bus.1 <span style="color: var(--cb39b6e)">· GPIO2/3</span></button>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+            <button onClick="{{pick.tmp105}}" style="padding: 14px 10px; border-radius: 6px; border: 1px solid var(--c5a4528); background: var(--c2f2618); color: inherit; font: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: {{o.tmp105}}; box-shadow: {{g.tmp105}}">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke-width="1.6" aria-hidden="true" style="stroke: var(--ce8cda8)"><path d="M10 4a2 2 0 014 0v10a4 4 0 11-4 0z"></path><path d="M12 9v7"></path></svg>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--cf3e6cf)">tmp105</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--cb39b6e)">0x48</span></button>
+            <button onClick="{{pick.lsm303}}" style="padding: 14px 10px; border-radius: 6px; border: 1px solid var(--c5a4528); background: var(--c2f2618); color: inherit; font: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: {{o.lsm303}}; box-shadow: {{g.lsm303}}">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke-width="1.6" aria-hidden="true" style="stroke: var(--ce8cda8)"><circle cx="12" cy="12" r="8"></circle><path d="M15 9l-2 4-4 2 2-4z"></path></svg>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--cf3e6cf)">lsm303dlhc_mag</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--cb39b6e)">0x1E</span></button>
+          </div>
+          </div>
+          <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px; padding-left: 14px; position: relative; height: 26px">
+            <span style="position: absolute; left: 3px; top: 3px; bottom: 3px; width: 2px; background: var(--c7cb4f0)"></span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ca9cdf5)">spi0</span><span style="font-size: 11px; color: var(--c6b8fb5)">no devices · real board only</span>
+          </div>
+          <div style="margin-top: 6px; display: flex; align-items: center; gap: 10px; padding-left: 14px; position: relative; height: 26px">
+            <span style="position: absolute; left: 3px; top: 3px; bottom: 3px; width: 2px; background: var(--cc3a6ff)"></span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--cd6c6ff)">uart0</span><span style="font-size: 11px; color: var(--c9d8fc6)">no devices · real board only</span>
+          </div>
+          <a href="Ground.dc.html" style="margin-top: 10px; height: 40px; border-radius: 6px; border: 1px dashed var(--c2f6e58); color: var(--c7fbfa8); text-decoration: none; display: flex; align-items: center; justify-content: center">+ Add sensor</a>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{hasSel}}" hint-placeholder-val="{{false}}">
+      <div role="region" aria-label="Selected part" style="position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 5; width: max-content; max-width: calc(100% - 48px); padding: 10px 10px 10px 18px; border-radius: 6px; background: rgba(var(--r28_33_40),0.97); border: 1px solid var(--c3a424c); box-shadow: 0 24px 60px -16px rgba(var(--r0_0_0),0.75); display: flex; align-items: center; gap: 18px; flex-wrap: wrap">
+        <span style="width: 10px; height: 10px; border-radius: 3px; background: {{bar.color}}; flex: none"></span>
+        <span style="display: flex; flex-direction: column; gap: 2px">
+          <span style="font-size: 10px; letter-spacing: 0.12em; color: var(--c8e96a1)">{{bar.kind}}</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 600; color: var(--ceef0f2)">{{bar.title}}</span>
+        </span>
+        <span style="max-width: 300px; font-size: 12px; line-height: 1.45; color: var(--ca4acb6)">{{bar.desc}}</span>
+        <span style="display: flex; gap: 8px; align-items: center">
+          <sc-for list="{{bar.actions}}" as="a" hint-placeholder-count="2">
+            <a href="{{a.href}}" class="fs-act" style="height: 36px; padding: 0 14px; border-radius: 6px; background: {{a.bg}}; color: {{a.fg}}; text-decoration: none; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 7px; white-space: nowrap">{{a.label}}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+          </sc-for>
+          <sc-if value="{{bar.canRemove}}" hint-placeholder-val="{{false}}">
+            <button onClick="{{toggleRemove}}" style="height: 36px; padding: 0 14px; border-radius: 6px; border: 1px solid var(--c4a2f2b); background: transparent; color: var(--cf4b3a5); font: inherit; font-size: 13px; cursor: pointer; white-space: nowrap">{{bar.removeLabel}}</button>
+          </sc-if>
+          <button onClick="{{clear}}" aria-label="Close" style="width: 36px; height: 36px; border-radius: 6px; border: none; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2.2" aria-hidden="true" style="stroke: var(--c8e96a1)"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+        </span>
+      </div>
+    </sc-if>
+  </main>
+</div>
+
+<sc-if value="{{na.open}}" hint-placeholder-val="{{false}}">
+  <div style="position: absolute; inset: 0; z-index: 40; display: flex; align-items: flex-start; justify-content: center; padding-top: 140px">
+    <button onClick="{{closeNewApp}}" aria-label="Close" style="position: absolute; inset: 0; border: none; background: rgba(8,10,13,0.55); cursor: default"></button>
+    <div role="dialog" aria-label="New app" class="fs-in" style="position: relative; width: 860px; padding: 20px 22px 18px; border-radius: 6px; background: var(--c181d23); box-shadow: 0 20px 60px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; align-items: center; gap: 18px">
+        <span style="font-size: 15px; font-weight: 600; color: var(--ceef0f2)">New app</span>
+        <span style="display: flex; align-items: center; gap: 8px">
+          <sc-for list="{{na.steps}}" as="ns" hint-placeholder-count="3"><span style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: {{ns.fg}}"><span style="width: 18px; height: 18px; box-sizing: border-box; border-radius: 99px; border: 1.5px solid {{ns.border}}; background: {{ns.bg}}; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: {{ns.num}}">{{ns.n}}</span>{{ns.label}}<sc-if value="{{ns.more}}" hint-placeholder-val="{{true}}"><span style="width: 18px; height: 1.5px; margin-left: 2px; background: var(--c2b313a)"></span></sc-if></span></sc-for>
+        </span>
+        <span style="flex: 1"></span>
+        <button onClick="{{closeNewApp}}" aria-label="Close" style="width: 28px; height: 28px; border-radius: 4px; border: 1px solid var(--c2b313a); background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="stroke: var(--ca4acb6)"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+      </div>
+      <div style="display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 18px; align-items: start">
+        <div style="padding: 16px; border-radius: 6px; background: var(--c13171c); display: flex; flex-direction: column; gap: 0">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: var(--c8e96a1); padding-bottom: 12px">WHERE IT LIVES</span>
+          <div style="display: flex; justify-content: space-around; align-items: flex-end">
+            <span style="display: flex; flex-direction: column; align-items: center"><span style="height: 28px; padding: 0 10px; border-radius: 4px; background: var(--c16212e); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ca9cdf5); display: flex; align-items: center; white-space: nowrap">ci_lab</span><span style="width: 2px; height: 14px; background: var(--c34506e)"></span></span>
+            <span style="display: flex; flex-direction: column; align-items: center"><span style="height: 28px; padding: 0 10px; border-radius: 4px; background: var(--c16212e); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ca9cdf5); display: flex; align-items: center; white-space: nowrap">to_lab</span><span style="width: 2px; height: 14px; background: var(--c34506e)"></span></span>
+            <span style="display: flex; flex-direction: column; align-items: center">
+              <sc-if value="{{na.slotOn}}" hint-placeholder-val="{{false}}"><span class="fs-pop" style="height: 28px; padding: 0 10px; border-radius: 4px; background: var(--c1f4a3a); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--c9fe3c9); display: flex; align-items: center; white-space: nowrap">{{na.name}}</span><span style="width: 2px; height: 14px; background: var(--c3fa982)"></span></sc-if>
+              <sc-if value="{{na.slotOff}}" hint-placeholder-val="{{true}}"><span style="height: 28px; padding: 0 10px; box-sizing: border-box; border-radius: 4px; border: 1.5px dashed var(--cd4b48a); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--cf3dcb8); display: flex; align-items: center; white-space: nowrap">{{na.name}}</span><span style="width: 2px; height: 14px; border-left: 2px dashed var(--c8a7152)"></span></sc-if>
+            </span>
+          </div>
+          <span style="height: 12px; border-radius: 3px; background: var(--c1f3049); display: flex; align-items: center; justify-content: center"></span>
+          <span style="padding: 5px 0 0; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--c7cb4f0)">Software Bus</span>
+          <div style="display: flex; justify-content: space-around; align-items: flex-start; margin-top: -19px">
+            <span style="display: flex; flex-direction: column; align-items: center"><span style="width: 2px; height: 14px; background: var(--c34506e)"></span><span style="height: 19px"></span><span style="height: 28px; padding: 0 10px; border-radius: 4px; background: var(--c16212e); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ca9cdf5); display: flex; align-items: center; white-space: nowrap">sch_lab</span></span>
+            <span style="display: flex; flex-direction: column; align-items: center"><span style="width: 2px; height: 14px; background: var(--c34506e)"></span><span style="height: 19px"></span><span style="height: 28px; padding: 0 10px; border-radius: 4px; background: var(--c16212e); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ca9cdf5); display: flex; align-items: center; white-space: nowrap">sample_app</span></span>
+          </div>
+          <span style="padding-top: 14px; font-size: 11px; line-height: 1.5; color: var(--ca4acb6)">{{na.mids}}</span>
+        </div>
+
+        <sc-if value="{{na.isWhat}}" hint-placeholder-val="{{true}}">
+          <div style="display: flex; flex-direction: column; gap: 12px">
+            <sc-for list="{{na.facts}}" as="fa" hint-placeholder-count="3">
+              <span style="display: flex; align-items: center; gap: 12px"><span style="width: 30px; height: 30px; flex: none; border-radius: 6px; background: var(--c20252b); display: flex; align-items: center; justify-content: center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="stroke: var(--ce8cda8)"><path d="{{fa.icon}}"></path></svg></span><span style="font-size: 13px; color: var(--ceef0f2)">{{fa.t}}</span></span>
+            </sc-for>
+            <label style="display: flex; flex-direction: column; gap: 6px; padding-top: 6px; font-size: 11px; color: var(--c8e96a1)">Name
+              <input value="{{na.name}}" onInput="{{na.setName}}" onChange="{{na.setName}}" spellcheck="false" style="height: 38px; padding: 0 12px; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--c343c47); background: var(--c13171c); color: var(--ceef0f2); font-family: 'JetBrains Mono', monospace; font-size: 13px; outline: none"></label>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{na.isList}}" hint-placeholder-val="{{false}}">
+          <div style="display: flex; flex-direction: column; gap: 12px">
+            <sc-for list="{{na.groups}}" as="gr" hint-placeholder-count="4">
+              <div style="display: flex; flex-direction: column; gap: 4px">
+                <span style="font-size: 12px; color: var(--ce8cda8)">{{gr.title}}</span>
+                <sc-for list="{{gr.items}}" as="f" hint-placeholder-count="2">
+                  <span style="display: flex; align-items: center; gap: 10px; min-height: 24px">
+                    <span style="width: 14px; height: 14px; flex: none; display: flex; align-items: center; justify-content: center">
+                      <sc-if value="{{f.wait}}" hint-placeholder-val="{{true}}"><span style="width: 5px; height: 5px; border-radius: 99px; background: var(--c3a424c)"></span></sc-if>
+                      <sc-if value="{{f.busy}}" hint-placeholder-val="{{false}}"><svg class="fs-spin" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1.5A5.5 5.5 0 0112.5 7" stroke-width="1.8" stroke-linecap="round" style="stroke: var(--cd4b48a)"></path></svg></sc-if>
+                      <sc-if value="{{f.ok}}" hint-placeholder-val="{{false}}"><svg class="fs-draw" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="stroke: var(--c7fdcc0)"><path d="M5 12l5 5L20 7" pathLength="1"></path></svg></sc-if>
+                    </span>
+                    <span style="width: 230px; flex: none; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: {{f.fg}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{f.file}}</span>
+                    <span style="min-width: 0; font-size: 12px; color: var(--ca4acb6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: {{f.font}}">{{f.what}}</span>
+                  </span>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px">
+        <sc-if value="{{na.isDone}}" hint-placeholder-val="{{false}}"><span class="fs-in" style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--c9fe3c9)"><span class="fs-pop" style="width: 24px; height: 24px; border-radius: 99px; background: var(--c1f4a3a); display: flex; align-items: center; justify-content: center"><svg class="fs-draw" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="stroke: var(--c9fe3c9)"><path d="M5 12l5 5L20 7" pathLength="1"></path></svg></span>{{na.name}} on the bus</span></sc-if>
+        <span style="flex: 1"></span>
+        <sc-if value="{{na.canBack}}" hint-placeholder-val="{{false}}"><button onClick="{{na.back}}" style="height: 38px; padding: 0 16px; border-radius: 4px; border: 1px solid var(--c343c47); background: transparent; color: var(--cc9cfd6); font: inherit; cursor: pointer">Back</button></sc-if>
+        <sc-if value="{{na.isWhat}}" hint-placeholder-val="{{true}}"><button onClick="{{na.next}}" class="fs-coach" style="position: relative; height: 38px; padding: 0 18px; border-radius: 4px; border: none; background: var(--cd4b48a); color: var(--c1b150c); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">See its files →</button></sc-if>
+        <sc-if value="{{na.isFiles}}" hint-placeholder-val="{{false}}"><button onClick="{{na.create}}" class="fs-coach" style="position: relative; height: 38px; padding: 0 18px; border-radius: 4px; border: none; background: var(--cd4b48a); color: var(--c1b150c); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Create {{na.name}}</button></sc-if>
+        <sc-if value="{{na.isDone}}" hint-placeholder-val="{{false}}"><a href="AddCommand.dc.html" class="fs-pop" style="height: 38px; padding: 0 18px; border-radius: 4px; background: var(--cd4b48a); color: var(--c1b150c); font-size: 13px; font-weight: 600; text-decoration: none; display: flex; align-items: center; white-space: nowrap">Next: add a command →</a></sc-if>
+      </div>
+    </div>
+  </div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1160}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { view: this.journeyHas('app') ? '3d' : '2d', sel: null, removed: {}, na: { open: false, name: 'test_app', step: 'what', t: 0 }, newApp: this.journeyHas('app') ? 'test_app' : null }; }
+  componentDidMount() {
+    this._iv = setInterval(() => {
+      const na = this.state.na;
+      if (na.step !== 'creating') return;
+      const t = Math.round((na.t + 0.1) * 10) / 10;
+      if (t >= 3.6) { this.setState({ na: Object.assign({}, na, { step: 'done', t }), newApp: na.name, view: '2d' }); this.journeyDone('app'); }
+      else this.setState({ na: Object.assign({}, na, { t }) });
+    }, 100);
+  }
+  componentWillUnmount() { clearInterval(this._iv); }
+  hdr() {
+    const t = this.state.hdrTarget || (() => { try { return window.localStorage.getItem('fs-target') || 'emu'; } catch (e) { return 'emu'; } })(), b = !!this.state.hdrBuilt, r = !!this.state.hdrRunning, emu = !!this.state.hdrEmu, syn = this.synthOn();
+    if (!this._synL) { this._synL = true; try { window.addEventListener('storage', (e) => { if (e.key === 'fs-synth') this.setState({ hdrSynth: e.newValue === 'on' }); if (e.key === 'fs-target' && e.newValue) this.setState({ hdrTarget: e.newValue }); }); } catch (e) {} }
+    const seg = (k) => t === k ? ['#2c333c', '#eef0f2', '#e8cda8'] : ['transparent', '#8e96a1', '#6b7380'];
+    const N = seg('native'), E = seg('emu'), B = seg('board');
+    return {
+      isNative: t === 'native', notNative: t !== 'native', isEmu: t === 'emu', isBoard: t === 'board',
+      nBg: N[0], nFg: N[1], nIc: N[2], eBg: E[0], eFg: E[1], eIc: E[2], bBg: B[0], bFg: B[1], bIc: B[2],
+      pickNative: () => this.pickTarget('native'), pickEmu: () => this.pickTarget('emu'), pickBoard: () => this.pickTarget('board'),
+      emuToggle: () => this.setState(emu ? { hdrEmu: false, hdrRunning: false } : { hdrEmu: true }),
+      emuLabel: emu ? 'Stop emulator' : 'Start emulator', emuIcon: emu ? 'M12 3.5V11M6.6 7a7.6 7.6 0 1010.8 0' : 'M12 3a9 9 0 110 18 9 9 0 010-18zM10.2 8.6l5 3.4-5 3.4z', emuIc: emu ? '#f08a75' : '#5fc9a3',
+      synthToggle: () => this.setSynth(!syn), synthAria: syn ? 'true' : 'false', synthFg: syn ? '#9fe3c9' : '#c9cfd6', synthIc: syn ? '#5fc9a3' : '#d4b48a',
+      synthTrack: syn ? '#2f6e58' : '#2b313a', synthDot: syn ? '#9fe3c9' : '#7d8590', synthKnob: syn ? '13' : '2',
+      build: () => this.setState({ hdrBuilt: true }), buildLabel: b ? 'Built' : 'Build cFS', buildIc: b ? '#7fdcc0' : '#e8cda8',
+      buildBorder: b ? '#343c47' : '#8a7152', buildBg: b ? 'transparent' : '#2a241c', buildFg: b ? '#a4acb6' : '#e8cda8',
+      runToggle: () => { if (r) this.setState({ hdrRunning: false }); else if (b) this.setState({ hdrRunning: true, hdrEmu: true }); },
+      runLabel: r ? 'Stop cFS' : 'Run cFS', runIcon: r ? 'M8 6h8a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2z' : 'M7.5 5.2v13.6a.6.6 0 00.9.5l10.6-6.8a.6.6 0 000-1L8.4 4.7a.6.6 0 00-.9.5z', runIc: r ? '#f08a75' : (b ? '#5fc9a3' : '#4b525c'),
+      runBorder: b && !r ? '#2f6e58' : '#343c47', runBg: b && !r ? '#16261f' : 'transparent', runFg: r ? '#c9cfd6' : (b ? '#9fe3c9' : '#5b636d')
+    };
+  }
+  pickTarget(k) { try { window.localStorage.setItem('fs-target', k); } catch (e) {} this.setState({ hdrTarget: k }); }
+  synthOn() { if (this.state && typeof this.state.hdrSynth === 'boolean') return this.state.hdrSynth; try { return window.localStorage.getItem('fs-synth') === 'on'; } catch (e) { return false; } }
+  setSynth(v) { try { window.localStorage.setItem('fs-synth', v ? 'on' : 'off'); } catch (e) {} this.setState({ hdrSynth: v }); }
+  /*fs-guide*/
+  journey() { try { return JSON.parse(window.localStorage.getItem('fs-journey') || '[]'); } catch (e) { return (this.state && this.state.jr) || []; } }
+  journeyHas(id) { return this.journey().indexOf(id) >= 0; }
+  journeyDone(id) { const j = this.journey(); if (j.indexOf(id) >= 0) return; j.push(id); try { window.localStorage.setItem('fs-journey', JSON.stringify(j)); } catch (e) {} this.setState({ jr: j.slice() }); }
+  guide() {
+    if (!this._gl) { this._gl = true; try { window.addEventListener('storage', (e) => { if (e.key === 'fs-journey') this.setState({ jr: JSON.parse(e.newValue || '[]') }); }); } catch (e) {} }
+    const here = 'Mission';
+    const S = [
+      ['target', 'Target', 'Main', 'Choose where cFS will run'],
+      ['boot', 'Boot', 'Boot', 'Start cFS for the first time'],
+      ['event', 'Event', 'Lesson', 'Send a first message and get an answer'],
+      ['app', 'App', 'Mission', 'Create your own app'],
+      ['command', 'Command', 'AddCommand', 'Teach your app a new command'],
+      ['send', 'Send', 'Lesson', 'Send your new command'],
+      ['sensor', 'Sensor', 'Ground', 'Give your app sensor data'],
+      ['test', 'Test', 'Ground', 'Check that everything works'],
+      ['board', 'Board', 'Main', 'Run it on the real board']
+    ];
+    const jr = this.journey(), first = S.findIndex(s => s[2] === here);
+    const done = jr.concat(S.slice(0, Math.max(0, first)).map(s => s[0]).filter(id => jr.indexOf(id) < 0));
+    const cur = S.findIndex(s => done.indexOf(s[0]) < 0);
+    const steps = S.map((s, i) => {
+      const d = done.indexOf(s[0]) >= 0, c = i === cur;
+      return { n: String(i + 1), label: s[1], href: s[2] + '.dc.html', title: s[3], done: d, notDone: !d, notFirst: i > 0, cls: c ? 'fs-ping2' : '',
+        border: d ? '#3e8f72' : (c ? '#d4b48a' : '#3a424c'), fill: d ? '#16261f' : (c ? '#2a241c' : 'transparent'), num: c ? '#f3dcb8' : '#7d8590',
+        fg: d ? '#a4acb6' : (c ? '#f3dcb8' : '#6b7380'), bg: c ? 'rgba(212,180,138,0.10)' : 'transparent', line: d && (i === 0 || done.indexOf(S[i - 1][0]) >= 0) ? '#2f6e58' : '#2b313a' };
+    });
+    const all = cur < 0, c = all ? null : S[cur], away = !all && c[2] !== here;
+    return { steps, count: String(S.filter(s => done.indexOf(s[0]) >= 0).length), total: String(S.length),
+      away, href: all ? '#' : c[2] + '.dc.html', go: all ? '' : c[1], title: all ? '' : c[3],
+      reset: () => { try { window.localStorage.setItem('fs-journey', '[]'); } catch (e) {} this.setState({ jr: [] }); } };
+  }
+  /*/fs-guide*/
+  theme() { if (this.state && this.state.theme) return this.state.theme; try { return window.localStorage.getItem('fs-theme') || 'dark'; } catch (e) { return 'dark'; } }
+  toggleTheme() { const n = this.theme() === 'light' ? 'dark' : 'light'; try { window.localStorage.setItem('fs-theme', n); } catch (e) {} this.setState({ theme: n }); }
+  themeMap(o) {
+    if (typeof o === 'string') {
+      if (o.indexOf('#') < 0 && o.indexOf('rgb') < 0) return o;
+      return o.replace(/#([0-9a-fA-F]{6})(?![0-9a-zA-Z_])/g, (m, h) => 'var(--c' + h.toLowerCase() + ')')
+        .replace(/#([0-9a-fA-F]{3})(?![0-9a-zA-Z_])/g, (m, h) => 'var(--c' + (h[0] + h[0] + h[1] + h[1] + h[2] + h[2]).toLowerCase() + ')')
+        .replace(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+)\s*)?\)/g, (m, r, g, b, a) => 'rgba(var(--r' + r + '_' + g + '_' + b + '),' + (a === undefined ? '1' : a) + ')');
+    }
+    if (Array.isArray(o)) return o.map(x => this.themeMap(x));
+    if (o && typeof o === 'object') { const r = {}; for (const k in o) r[k] = this.themeMap(o[k]); return r; }
+    return o;
+  }
+  renderVals() {
+    if (!this._ls) { this._ls = true; try { window.addEventListener('storage', (e) => { if (e.key === 'fs-theme' && e.newValue) this.setState({ theme: e.newValue }); }); } catch (e) {} }
+    const v = this.themeMap(Object.assign(this._rv(), { gd: this.guide() }));
+    const light = this.theme() === 'light';
+    v.themeCls = light ? 'fs-light' : '';
+    v.toggleTheme = () => this.toggleTheme();
+    v.themeIcon = light ? 'M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z' : 'M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6L7 7M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4M12 8a4 4 0 100 8 4 4 0 000-8z';
+    return v;
+  }
+  _rv() {
+    const C = { hw: '#45b48b', bus: '#d4b48a', lib: '#c9a35f', app: '#5fd1a8', cfs: '#8e96a1', cfe: '#b582a9', osal: '#7cb4f0', psp: '#a3a1ff', os: '#8e96a1' };
+    const n = (name, sub, color) => ({ name, sub, color, solid: true, dashed: false });
+    const none = (name, sub) => ({ name, sub, color: '#6b7380', solid: false, dashed: true });
+    const CFS = {
+      ci_lab: ['commands in', 1], to_lab: ['telemetry out', 1], sch_lab: ['scheduler', 1],
+      cf: ['file transfer', 0], cs: ['checksums', 0], ds: ['data storage', 0], fm: ['file manager', 0],
+      hk: ['housekeeping', 0], hs: ['health & safety', 0], lc: ['limit checker', 0], md: ['memory dwell', 0],
+      sc: ['stored commands', 0], sample_app: ['example', 2]
+    };
+    const INFO = {
+      tmp105: { kind: 'SENSOR', color: C.hw, title: 'tmp105', desc: 'temperature · simulated in the emulator',
+        chain: [n('tmp105', 'sensor · 0x48', C.hw), n('I²C bus 1', '/dev/i2c-1', C.bus), n('linux_i2c_lib', 'bus access', C.lib), n('tmp105_lib', 'sensor driver', C.lib), n('test_app', 'your app', C.app)],
+        facts: [{ k: 'Address', v: '0x48' }, { k: 'Bus', v: 'i2c-1' }, { k: 'Driver', v: 'tmp105_lib' }], action: 'Open driver code' },
+      lsm303: { kind: 'SENSOR', color: C.hw, title: 'lsm303dlhc_mag', desc: 'magnetometer · not used yet',
+        chain: [n('lsm303dlhc_mag', 'sensor · 0x1E', C.hw), n('I²C bus 1', '/dev/i2c-1', C.bus), n('linux_i2c_lib', 'bus access', C.lib), n('lsm303dlhc_mag_lib', 'sensor driver', C.lib), none('no app yet', 'nothing calls this driver')],
+        facts: [{ k: 'Address', v: '0x1E' }, { k: 'Bus', v: 'i2c-1' }, { k: 'Driver', v: 'lsm303dlhc_mag_lib' }], action: 'Use it in an app' },
+      i2c: { kind: 'BUS', color: C.bus, title: 'I²C bus 1', desc: '2 wires · one address per sensor',
+        chain: [n('Raspberry Pi 4B', 'GPIO2 · GPIO3', C.hw), n('/dev/i2c-1', 'Linux device', C.os), n('linux_i2c_lib', 'opens the device', C.lib), n('tmp105_lib · lsm303dlhc_mag_lib', 'talk to each address', C.lib)],
+        facts: [{ k: 'SDA', v: 'GPIO2 · pin 3' }, { k: 'SCL', v: 'GPIO3 · pin 5' }, { k: 'Devices', v: '0x48 · 0x1E' }], action: 'Scan bus' },
+      board: { kind: 'BOARD', color: C.hw, title: 'Raspberry Pi 4B', desc: 'flight computer',
+        chain: [n('Raspberry Pi 4B', 'hardware', C.hw), n('Raspberry Pi OS', 'Linux', C.os), n('PSP', 'board support', C.psp), n('cFE', 'core services', C.cfe)],
+        facts: [{ k: 'SoC', v: 'BCM2711' }, { k: 'Mode', v: 'emulated' }, { k: 'Buses', v: 'i2c-1' }], action: 'Open workbench' },
+      os: { kind: 'OPERATING SYSTEM', color: C.os, title: 'Raspberry Pi OS', desc: 'Linux · cFS is one process',
+        chain: [n('OSAL', 'calls into Linux', C.osal), n('Raspberry Pi OS', 'threads, files, sockets, /dev/i2c-1', C.os), n('Raspberry Pi 4B', 'hardware', C.hw)],
+        facts: [{ k: 'Kernel', v: 'Linux' }, { k: 'Gives cFS', v: 'threads · files · devices' }], action: 'Open terminal' },
+      osal: { kind: 'PLATFORM', color: C.osal, title: 'OSAL', desc: 'same calls on any OS',
+        chain: [n('test_app', 'calls OS_TaskCreate()', C.app), n('OSAL', 'POSIX version', C.osal), n('pthread_create()', 'Linux', C.os)],
+        facts: [{ k: 'Change OS', v: 'apps unchanged' }, { k: 'Supports', v: 'POSIX · RTEMS · VxWorks' }], action: 'Browse OSAL calls' },
+      psp: { kind: 'PLATFORM', color: C.psp, title: 'PSP', desc: 'fits cFS to this board',
+        chain: [n('cFE ES', 'asks for a restart', C.cfe), n('CFE_PSP_Restart()', 'PSP', C.psp), n('Raspberry Pi 4B', 'restarts', C.hw)],
+        facts: [{ k: 'Change board', v: 'swap the PSP' }, { k: 'Handles', v: 'boot · memory · clock' }], action: 'Browse PSP calls' },
+      cfe: { kind: 'CORE', color: C.cfe, title: 'cFE', desc: '6 core services',
+        chain: [n('apps', 'yours and cFS', C.app), n('cFE', 'SB · EVS · ES · TIME · TBL · FS', C.cfe), n('OSAL · PSP', 'platform', C.osal)],
+        facts: [{ k: 'SB', v: 'messages' }, { k: 'EVS', v: 'events' }, { k: 'ES', v: 'apps · startup' }, { k: 'TBL', v: 'tables' }], action: 'Open startup script' },
+      test_app: { kind: 'YOUR APP', color: C.app, title: 'test_app', desc: 'your app',
+        chain: [n('test_app', 'your app', C.app), n('tmp105_lib', 'sensor driver', C.lib), n('linux_i2c_lib', 'bus access', C.lib), n('I²C bus 1', '/dev/i2c-1', C.bus), n('tmp105', '0x48', C.hw)],
+        facts: [{ k: 'Libraries', v: 'sample_lib · tmp105_lib' }, { k: 'Status', v: 'new' }], action: 'Open code' },
+      testando_app: { kind: 'YOUR APP', color: C.app, title: 'testando_app', desc: 'your app',
+        chain: [n('testando_app', 'your app', C.app), n('sample_lib', 'example', C.lib), none('no hardware', 'touches no sensor')],
+        facts: [{ k: 'Libraries', v: 'sample_lib' }, { k: 'Status', v: 'new' }], action: 'Open code' },
+      tmp105_lib: { kind: 'LIBRARY', color: C.lib, title: 'tmp105_lib', desc: 'tmp105 driver',
+        chain: [n('test_app', 'calls it', C.app), n('tmp105_lib', 'driver', C.lib), n('linux_i2c_lib', 'bus access', C.lib), n('tmp105', '0x48', C.hw)],
+        facts: [{ k: 'Depends on', v: 'linux_i2c_lib' }, { k: 'Used by', v: 'test_app' }], action: 'Open code' },
+      lsm_lib: { kind: 'LIBRARY', color: C.lib, title: 'lsm303dlhc_mag_lib', desc: 'magnetometer driver',
+        chain: [none('no app yet', ''), n('lsm303dlhc_mag_lib', 'driver', C.lib), n('linux_i2c_lib', 'bus access', C.lib), n('lsm303dlhc_mag', '0x1E', C.hw)],
+        facts: [{ k: 'Depends on', v: 'linux_i2c_lib' }, { k: 'Used by', v: 'none' }], action: 'Use it in an app' },
+      i2c_lib: { kind: 'LIBRARY', color: C.lib, title: 'linux_i2c_lib', desc: 'I²C access for drivers',
+        chain: [n('tmp105_lib · lsm303dlhc_mag_lib', 'drivers', C.lib), n('linux_i2c_lib', 'bus access', C.lib), n('/dev/i2c-1', 'Linux', C.os), n('I²C bus 1', 'wires', C.bus)],
+        facts: [{ k: 'Used by', v: '2 drivers' }, { k: 'Status', v: 'modified' }], action: 'Open code' },
+      sample_lib: { kind: 'LIBRARY', color: C.lib, title: 'sample_lib', desc: 'example library',
+        chain: [n('test_app · testando_app · sample_app', 'call it', C.app), n('sample_lib', 'example', C.lib)],
+        facts: [{ k: 'Used by', v: '3 apps' }, { k: 'Removable', v: 'yes' }], action: 'Open code' }
+    };
+    Object.keys(CFS).forEach(k => {
+      const [role, t] = CFS[k];
+      INFO[k] = { kind: t === 1 ? 'cFS APP · KEEP' : (t === 2 ? 'cFS APP · EXAMPLE' : 'cFS APP · OPTIONAL'), color: C.cfs, title: k,
+        desc: t === 1 ? 'needed for the ground station' : (t === 2 ? 'example app' : 'optional'),
+        chain: [n(k, role, C.cfs), n('cFE', 'core services', C.cfe)],
+        facts: [{ k: 'Role', v: role }, { k: 'Removable', v: t === 1 ? 'no' : 'yes' }], action: t === 1 ? 'Open code' : 'Remove from mission' };
+    });
+    const LINKS = {
+      tmp105: ['tmp105', 'i2c', 'i2c_lib', 'tmp105_lib', 'test_app'],
+      lsm303: ['lsm303', 'i2c', 'i2c_lib', 'lsm_lib'],
+      i2c: ['i2c', 'tmp105', 'lsm303', 'i2c_lib', 'tmp105_lib', 'lsm_lib', 'os', 'board'],
+      board: ['board', 'psp', 'os'],
+      os: ['os', 'board', 'osal'],
+      osal: ['osal', 'os', 'cfe'],
+      psp: ['psp', 'board', 'cfe'],
+      cfe: ['cfe', 'osal', 'psp'],
+      test_app: ['test_app', 'sample_lib', 'tmp105_lib', 'i2c_lib', 'i2c', 'tmp105'],
+      testando_app: ['testando_app', 'sample_lib'],
+      tmp105_lib: ['tmp105_lib', 'i2c_lib', 'i2c', 'tmp105', 'test_app'],
+      lsm_lib: ['lsm_lib', 'i2c_lib', 'i2c', 'lsm303'],
+      i2c_lib: ['i2c_lib', 'tmp105_lib', 'lsm_lib', 'i2c', 'os'],
+      sample_lib: ['sample_lib', 'test_app', 'testando_app', 'sample_app']
+    };
+    const ALL = ['test_app', 'testando_app', 'sample_lib', 'i2c_lib', 'tmp105_lib', 'lsm_lib', 'cfe', 'osal', 'psp', 'os', 'board', 'i2c', 'tmp105', 'lsm303'].concat(Object.keys(CFS));
+    const sel = this.state.sel;
+    const set = sel ? (LINKS[sel] || [sel, 'cfe']) : null;
+    const o = {}, g = {}, o3 = {}, pick = {};
+    ALL.forEach(id => {
+      const on = !!(set && set.indexOf(id) >= 0);
+      o[id] = set && !on ? '0.28' : '1';
+      g[id] = on ? '0 0 0 2px #e8cda8, 0 0 28px -6px rgba(232,205,168,0.6)' : 'none';
+      o3[id] = on ? 1 : 0;
+      pick[id] = () => this.setState({ sel: this.state.sel === id ? null : id });
+    });
+    const order = ['ci_lab', 'to_lab', 'sch_lab', 'cf', 'cs', 'ds', 'fm', 'hk', 'hs', 'lc', 'md', 'sc', 'sample_app'];
+    const rem = this.state.removed || {};
+    const cfsTiles = order.map(k => ({ name: k, role: rem[k] ? 'removed' : CFS[k][0], keep: CFS[k][1] === 1, removable: CFS[k][1] !== 1, o: rem[k] ? '0.3' : o[k], g: g[k], pick: pick[k] }));
+    const L = (label, href) => ({ label, href });
+    const CODE = 'AddCommand.dc.html', SENS = 'Ground.dc.html', GS = 'Lesson.dc.html', SETUP = 'Main.dc.html';
+    const ACT = {
+      tmp105: [L('Sensor data', SENS), L('Driver code', CODE)],
+      lsm303: [L('Sensor data', SENS), L('Use in an app', CODE)],
+      i2c: [L('Sensor data', SENS), L('Bus driver code', CODE)],
+      board: [L('Target setup', SETUP), L('Sensor data', SENS)],
+      os: [L('Target setup', SETUP)],
+      osal: [L('Browse OSAL code', CODE)], psp: [L('Browse PSP code', CODE)],
+      cfe: [L('Send commands', GS), L('Browse code', CODE)],
+      test_app: [L('Open code', CODE), L('Send commands', GS)], testando_app: [L('Open code', CODE), L('Send commands', GS)],
+      tmp105_lib: [L('Open code', CODE), L('Live data', SENS)], lsm_lib: [L('Open code', CODE)], i2c_lib: [L('Open code', CODE)], sample_lib: [L('Open code', CODE)]
+    };
+    const info = sel ? INFO[sel] : INFO.tmp105;
+    const isCfs = sel && CFS[sel];
+    const acts = (ACT[sel] || (isCfs && CFS[sel][1] === 1 ? [L('Send commands', GS), L('Open code', CODE)] : [L('Open code', CODE)]))
+      .map((a, i) => Object.assign({}, a, { bg: i === 0 ? '#d4b48a' : '#262d35', fg: i === 0 ? '#1b150c' : '#e6e8eb' }));
+    const canRemove = !!(isCfs && CFS[sel][1] !== 1);
+    const bar = { color: info.color, kind: info.kind, title: info.title, desc: rem[sel] ? 'removed · not built' : info.desc + (isCfs ? '  ·  @role in apps/' + sel + '/README.md' : ''), actions: acts, canRemove, removeLabel: rem[sel] ? 'Restore' : 'Remove from mission' };
+    const toggleRemove = () => { const r = Object.assign({}, this.state.removed); if (r[sel]) delete r[sel]; else r[sel] = true; this.setState({ removed: r }); };
+    const v = this.state.view;
+    const na = this.state.na, nm = na.name || 'test_app', NM = nm.toUpperCase(), fresh = !this.journeyHas('app') && !this.state.newApp;
+    const G = [
+      ['How it runs', [['fsw/src/' + nm + '.c', 'main loop']]],
+      ['What it understands', [['fsw/src/' + nm + '_dispatch.c', 'routes messages'], ['fsw/src/' + nm + '_cmds.c', 'command handlers'], ['config/default_' + nm + '_fcncodes.h', 'command numbers'], ['config/default_' + nm + '_msgstruct.h', 'message layouts']]],
+      ['How others reach it', [['config/default_' + nm + '_msgids.h', '0x18A0 in · 0x08A0 out'], ['fsw/inc/' + nm + '_eventids.h', 'event numbers']]],
+      ['How cFS finds it', [['CMakeLists.txt · README.md', 'build · @role'], ['targets.cmake', 'list(APPEND MISSION_GLOBAL_APPLIST ' + nm + ')', 1], ['cpu1_cfe_es_startup.scr', 'CFE_APP, ' + nm + ', ' + NM + '_Main, ' + NM + ', 50, 16384, 0x0, 0;', 1]]]
+    ];
+    let idx = 0;
+    const groups = G.map(gp => ({ title: gp[0], items: gp[1].map(it => { const at = 0.3 + idx * 0.3; idx++; const creating = na.step === 'creating', fin = na.step === 'done';
+      const busy = creating && na.t >= at - 0.3 && na.t < at, ok = fin || (creating && na.t >= at);
+      return { file: it[0], what: it[1], font: it[2] ? "'JetBrains Mono', monospace" : 'Inter, sans-serif', wait: !busy && !ok, busy, ok, fg: ok ? '#eef0f2' : '#a4acb6' }; }) }));
+    const si = na.step === 'what' ? 0 : (na.step === 'files' ? 1 : 2);
+    const naV = { open: na.open, name: nm, groups, isWhat: na.step === 'what', isFiles: na.step === 'files', isList: na.step !== 'what', isDone: na.step === 'done',
+      canBack: na.step === 'files', slotOn: na.step === 'done', slotOff: na.step !== 'done',
+      mids: na.step === 'done' ? '0x18A0 in · 0x08A0 out' : '',
+      steps: [['What it is'], ['Its files'], ['Create']].map((x, i) => ({ n: i < si || na.step === 'done' ? '✓' : String(i + 1), label: x[0], more: i < 2, fg: i === si ? '#eef0f2' : '#7d8590', border: i < si || na.step === 'done' ? '#3e8f72' : (i === si ? '#d4b48a' : '#3a424c'), bg: i < si || na.step === 'done' ? '#16261f' : 'transparent', num: i < si || na.step === 'done' ? '#9fe3c9' : (i === si ? '#f3dcb8' : '#7d8590') })),
+      facts: [
+        { icon: 'M12 3a9 9 0 110 18 9 9 0 010-18zM12 7v5l3 2', t: 'Its own task', s: '' },
+        { icon: 'M3 12h18M7 8v8M12 8v8M17 8v8', t: 'Talks only through the bus', s: '' },
+        { icon: 'M4 7h16v10H4zM8 11h4M8 14h8', t: 'Has addresses on the bus', s: '' }
+      ],
+      setName: (e) => { const val = String(e.target.value).toLowerCase().replace(/[^a-z0-9_]/g, '_').slice(0, 20); this.setState({ na: Object.assign({}, this.state.na, { name: val }) }); },
+      next: () => this.setState({ na: Object.assign({}, this.state.na, { step: 'files' }) }), back: () => this.setState({ na: Object.assign({}, this.state.na, { step: 'what' }) }),
+      create: () => { if (!nm) return; this.setState({ na: Object.assign({}, this.state.na, { step: 'creating', t: 0 }) }); } };
+    return {
+      h: this.hdr(),
+      na: naV, appCount: String(this.state.newApp ? 1 : 0), appsEmpty: !this.state.newApp, hasNewApp: !!this.state.newApp, newAppName: this.state.newApp || '',
+      newAppCls: !this.state.newApp && !this.state.na.open ? 'fs-coach' : '',
+      v3op: fresh ? '0.4' : '1', v3title: fresh ? 'Shows the whole mission once you have an app' : '',
+      openNewApp: () => this.setState({ na: { open: true, name: 'test_app', step: 'what', t: 0 } }),
+      closeNewApp: () => { if (this.state.na.step !== 'creating') this.setState({ na: Object.assign({}, this.state.na, { open: false }) }); },
+      is3d: v === '3d', is2d: v === '2d',
+      vb3: v === '3d' ? '#2c333c' : 'transparent', vb2: v === '2d' ? '#2c333c' : 'transparent',
+      show3d: () => { if (!fresh) this.setState({ view: '3d' }); }, show2d: () => this.setState({ view: '2d' }),
+      o, g, o3, pick, cfsTiles,
+      dim3: sel ? 0.45 : 0,
+      hasSel: !!sel, noSel: !sel,
+      bar, toggleRemove,
+      clear: () => this.setState({ sel: null })
+    };
+  }
+}
+</script>
+</body>
+</html>
