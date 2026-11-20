@@ -81,6 +81,7 @@ Restart=no
                f"{commands['journalctl']} -u cfs-studio.service -n 60 --no-pager -o cat",
                f"{commands['journalctl']} -u cfs-studio.service -n 100 -f -o cat",
                f"{commands['journalctl']} -u cfs-studio.service -n all -f -o json",
+               f"{commands['journalctl']} -u cfs-studio.service -n all --no-pager -o json",
                f"{commands['modprobe']} i2c-dev"]
     policy = marker + "# Flight service, I2C module and explicit Linux shutdown.\n"
     policy += f"{user} ALL=(root) NOPASSWD: " + ", ".join(allowed) + "\n"

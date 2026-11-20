@@ -309,7 +309,7 @@ export function mountFirstBoot(container,{api,target}) {
     }
     else if(button.hasAttribute('data-console')){
       consoleOpen=!consoleOpen;
-      if(consoleOpen && target!=='native' && live.running && !live.job.id) {
+      if(consoleOpen && target!=='native' && live.running) {
         try { await api('job',{action:'logs',options:{target,kind:'current-flight'}}); }
         catch(error){err=error.message;}
       }

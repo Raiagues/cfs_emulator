@@ -148,9 +148,10 @@ class ReleaseTest(unittest.TestCase):
         alias.symlink_to(rollback)
         self.current.symlink_to(Path("..") / "releases" / rollback.name)
         calls = [subprocess.CompletedProcess([], status) for status in (1, 0, 0)]
-        with patch("hardware.activate_release.time.sleep"), patch("hardware.activate_release.subprocess.run", side_effect=calls) as run:
-            activate_release.activate(self.root, new.name)
-        self.assertEqual(run.call_args_list[-1].args[0], ["sudo", "-n", "systemctl", "is-active", "--quiet", "cfs-studio.service"])
+        with patch("hardware.activate_release.wait_service") as watch, patch("hardware.activate_release.subprocess.run", side_effect=calls) as run:
+            activate_release.activate(self.root, new.name, 10)
+        self.assertEqual(run.call_args_list[-1].args[0], ["sudo", "-n", "systemctl", "start", "cfs-studio.service"])
+        self.assertEqual(watch.call_args.args[:2], ("cfs-studio.service", 10))
         self.assertFalse(obsolete.exists())
         self.assertTrue(all(path.exists() for path in (old_installation, rollback, alias, unrelated)))
         self.assertEqual(self.current.resolve(), new)
@@ -162,9 +163,10 @@ class ReleaseTest(unittest.TestCase):
         new = self.release(3)
         self.current.symlink_to(prior)
         calls = [subprocess.CompletedProcess([], 1), subprocess.CompletedProcess([], 0), subprocess.CalledProcessError(3, "is-active")]
-        with patch("hardware.activate_release.time.sleep"), patch("hardware.activate_release.subprocess.run", side_effect=calls):
+        with patch("hardware.activate_release.wait_service", side_effect=subprocess.CalledProcessError(3, "journalctl")), \
+                patch("hardware.activate_release.subprocess.run", return_value=subprocess.CompletedProcess([], 1)):
             with self.assertRaises(subprocess.CalledProcessError):
-                activate_release.activate(self.root, new.name)
+                activate_release.activate(self.root, new.name, 10)
         self.assertEqual(self.current.resolve(), prior)
         self.assertTrue(before.exists())
         self.assertTrue(new.exists())

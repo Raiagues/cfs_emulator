@@ -189,6 +189,9 @@ class Studio:
 
     def _emit(self, record, line):
         with self.lock:
+            if str(line).startswith('@cfs-instance '):
+                record['instance'] = line.split()[1]
+                return
             first_boot.observe(self.hardware, record, str(line))
             if record['action'] == 'values' and str(line).startswith('@qmp-write '):
                 receipt = json.loads(line[len('@qmp-write '):])
@@ -249,17 +252,8 @@ class Studio:
             result = self._execute_job(record, options, emit)
             with self.lock:
                 record['result'] = result
-            if record['action'] in {'first-boot', 'run', 'boot'} and not record['cancel'].is_set():
-                # The same output continues after startup. Release the operation
-                # lock so a long-running log tail never blocks Build/Run/Stop.
-                with self.lock:
-                    record['operation_complete'] = True
-                    record['ready_at'] = time.time()
-                    record['streaming'] = True
-                    self.operation.release()
-                    owns_operation = False
-                self._follow_logs(record, emit)
-            with self.lock:
+                record['operation_complete'] = True
+                record['ready_at'] = time.time()
                 record['exit_code'] = 0
                 record['status'] = 'succeeded'
         except Exception as error:
@@ -314,20 +308,6 @@ class Studio:
             except (ValueError, OSError, RuntimeError) as error:
                 emit('Catalog unavailable: ' + str(error))
         return result
-
-    def _follow_logs(self, record, emit):
-        follow = {'target': record['target'], 'kind': record['kind']}
-        if record['connection']:
-            follow['connection'] = record['connection']
-        if record['action'] in {'first-boot', 'run'}:
-            def remember_invocation(instance):
-                with self.lock:
-                    record['instance'] = instance
-            follow.update(kind='current-flight', on_invocation=remember_invocation)
-        if record['action'] == 'boot' and record['target'] == 'qemu':
-            follow['tail'] = 0  # boot.sh already printed the serial history.
-        if not record['cancel'].is_set():
-            self.hardware.execute('logs', emit, cancel=record['cancel'], **follow)
 
     def boot_journal_snapshot(self, target, connection, instance):
         """Read an existing invocation's log buffer without creating or cancelling readers."""

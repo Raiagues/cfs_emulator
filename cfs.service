@@ -5,6 +5,6 @@ After=multi-user.target
 
 [Service]
 WorkingDirectory=/opt/cFS/build-rpi_linux/exe/cpu1
-ExecStart=/opt/cFS/build-rpi_linux/exe/cpu1/core-cpu1
+ExecStart=stdbuf -oL -eL /opt/cFS/build-rpi_linux/exe/cpu1/core-cpu1
 StandardOutput=journal
 StandardError=journal

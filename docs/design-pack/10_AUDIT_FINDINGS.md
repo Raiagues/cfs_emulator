@@ -16,13 +16,13 @@ The detailed reports are in `audit/` (click-through report with screenshots in `
 
 ## B. Navigation and journey (must fix)
 
-1. **The current step is decided by the URL, not by progress.** `interface/static/journey.js` maps rail views to steps (`railSteps = {architecture:'app', bench:'sensor', code:'command', ground:'event', simulation:'sensor'}`). Opening the Ground station view during the Send step marks Event as current; opening Synthetic data during Test marks Sensor as current. Fix: the step bar renders from the server's `current` (see `02_ARCHITECTURE.md`); rail views never change it.
+1. **The current step is decided by the URL, not by progress.** `interface/static/journey.js` maps rail views to steps (`railSteps = {architecture:'app', bench:'sensor', code:'command', ground:'event', simulation:'sensor'}`). Opening the Ground station view during the Send step marks Event as current; opening Synthetic data during Test marks Sensor as current. Fix: the step bar renders from the server's `current` (see `02_ARCHITECTURE.md`); rail views never change it. Fixed in `e8379b8`.
 2. **Steps are credited out of order.** Fixed in `7c45166`. `interface/backend/journey.py` `derive()` marks each step done from its own evidence only. An app created before the first event marks App done while Event is not. Fix: `done[step] = evidence and done[previous]`.
-3. **Reset lives in one browser.** "Start over" stores a cutoff in `localStorage` (`fs-journey-reset`); the server and other tabs keep the old progress. Fix: `POST /api/journey/reset` stored server-side.
-4. **Next can point past an incomplete step.** `journeyNavigation()` returns `stages[index+1]` when the current step is done, without checking earlier steps. Fix: `next_route` from the server.
+3. **Reset lives in one browser.** "Start over" stores a cutoff in `localStorage` (`fs-journey-reset`); the server and other tabs keep the old progress. Fix: `POST /api/journey/reset` stored server-side. Fixed in `e8379b8`.
+4. **Next can point past an incomplete step.** `journeyNavigation()` returns `stages[index+1]` when the current step is done, without checking earlier steps. Fix: `next_route` from the server. Fixed in `e8379b8`.
 5. **A button keeps its label but changes its destination.** `app.js:356` switches the toolbar "Start emulator" button's `data-job` to `setup` when setup is missing; `app.js:748` then redirects to `/infrastructure?target=qemu`. The user presses "Start emulator" and lands on another page. Fix: show "Set up emulator" (or a disabled button with the reason) when setup is missing.
-6. **Navigation is written from many places.** `location.href`/`history.*`/`href` are set in `app.js` (lines 509, 744, 748, 928, 930, 946, 968, 1204, 1302, 1477), `infrastructure.js:487`, `first-boot.js:210,234`, `sensor-designer.js:11`, `emulator-guide.html`, `journey.js` (step links). Fix: one router module.
-7. **Unreachable steps are clickable links** in the step bar (every stop gets an `href`). Fix: only reachable stops are links.
+6. **Navigation is written from many places.** `location.href`/`history.*`/`href` are set in `app.js` (lines 509, 744, 748, 928, 930, 946, 968, 1204, 1302, 1477), `infrastructure.js:487`, `first-boot.js:210,234`, `sensor-designer.js:11`, `emulator-guide.html`, `journey.js` (step links). Fix: one router module. Fixed in `e8379b8`.
+7. **Unreachable steps are clickable links** in the step bar (every stop gets an `href`). Fix: only reachable stops are links. Fixed in `e8379b8`.
 
 ## C. Code review (full report: `audit/code_report.md`; control-to-endpoint map: `audit/endpoints.md`)
 

@@ -18,6 +18,7 @@ import selectors
 import shlex
 import shutil
 import signal
+import socket
 import stat
 import subprocess
 import sys
@@ -27,7 +28,10 @@ import threading
 import time
 
 
+from hardware import boot_trace
+from hardware.readiness import StartupError, wait_native
 from hardware.targets import selected_target
+from project.defaults import boot_timeout
 from journey import Store
 from journey import mission as evidence
 
@@ -357,23 +361,49 @@ class HardwareManager:
                 continue
         return {'running': bool(pids), 'pids': pids, 'service': 'native'}
 
+    def _native_command_port(self, state):
+        from ground_station.catalog import CATALOG_VERSION, build_catalog
+        cached = self._load("catalog-native-" + state["fingerprint"] + ".json", {})
+        if cached.get("catalog_version") != CATALOG_VERSION:
+            cached = build_catalog(self.root, build_dir=state["build_dir"])
+        transport = cached.get("transport") or {}
+        if "command_port" not in transport:
+            raise HardwareError("Cannot read the CI_LAB command port from this build: " + ", ".join(cached.get("errors", [])))
+        return transport["command_port"]
+
     def _run_native(self, emit, cancel):
         _, payload, state = self._require_build(target="native")
         self.assert_can_start("native")
+        port = self._native_command_port(state)
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as probe:
+            try:
+                probe.bind(("", port))
+            except OSError as error:
+                raise HardwareError(f"CI_LAB cannot bind UDP port {port}: {error.strerror}. Stop the process using it.") from error
         argv = [str(payload / "core-cpu1")]
         if shutil.which("stdbuf"):
             argv = ["stdbuf", "-oL", "-eL", *argv]
         emit("$ " + shlex.join(argv))
-        with (self.runtime / "native.log").open("wb") as output:
-            process = subprocess.Popen(argv, cwd=payload, stdin=subprocess.DEVNULL, stdout=output, stderr=subprocess.STDOUT, start_new_session=True)
+        log = self.runtime / "native.log"
+        started = time.time()
+        with log.open("wb") as output:
+            process = subprocess.Popen(argv, cwd=payload, stdin=subprocess.DEVNULL, stdout=output,
+                                       stderr=subprocess.STDOUT, start_new_session=True)
         instance = secrets.token_hex(16)
-        self._save("native.json", {"pid": process.pid, "instance": instance, "started_at": time.time()})
-        time.sleep(1)
-        if process.poll() is not None:
-            for line in (self.runtime / "native.log").read_text(errors="replace").splitlines():
-                emit(line)
-            raise HardwareError("Native cFS exited during startup.", returncode=process.returncode)
-        return self._deploy_record("native", state, pid=process.pid, instance=instance)
+        try:
+            self._save("native.json", {"pid": process.pid, "instance": instance, "started_at": started})
+            emit("@cfs-instance " + instance)
+            wait_native(process, log, emit, boot_timeout(), cancel)
+            return self._deploy_record("native", state, pid=process.pid, instance=instance, deployed_at=started)
+        except BaseException:
+            if process.poll() is None:
+                process.terminate()
+                try:
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait()
+            raise
 
     def _stop_native(self, emit):
         pids = self._local_flight_state()["pids"]
@@ -683,7 +713,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
         board = {"connection": self._load("connection.json"), "candidates": self.ssh_candidates(), "last_probe": physical}
         return {"board": config["board"], "os": config["os"], "profiles": self.profiles(),
                 "execution": execution, "tools": tools,
-                "native": dict(local, log_path="hardware/.runtime/native.log", os=platform.system(), architecture=platform.machine()),
+                "native": dict(local, last_operational=self._load("operational-native.json", {}).get("time"), log_path="hardware/.runtime/native.log", os=platform.system(), architecture=platform.machine()),
                 "docker": {"available": code == 0, "error": docker if code else None},
                 "qemu": qemu, "build": builds[default_target], "builds": builds,
                 "physical": board, "deployed": deployed}
@@ -794,11 +824,12 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
     def _deploy_record(self, target, state, **extra):
         self._invalidate_observation(target)
         records = self._load("deployed.json", {})
-        records[target] = dict(state, target=target, deployed_at=time.time(), **extra)
+        records[target] = {**state, "target": target, "deployed_at": time.time(), **extra}
         self._save("deployed.json", records)
         return records[target]
 
     def _run_physical(self, emit, cancel, connection, sensorless, board):
+        started = time.time()
         root, payload, state = self._require_build(sensorless, target="physical")
         if not board["systemd"]:
             raise HardwareError("The board requires systemd.")
@@ -822,17 +853,18 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
         with tempfile.TemporaryFile() as archive:
             with tarfile.open(fileobj=archive, mode="w") as tar:
                 tar.add(payload, arcname="cpu1")
+                for script in ("readiness.py", "activate_release.py"):
+                    tar.add(self.root / "hardware" / script, arcname=script)
             archive.seek(0)
             self._stream(argv + [unpack], emit, cancel, stdin=archive, timeout=180)
         emit("[deploy] Release uploaded")
         self.assert_can_start('physical', connection)
-        command = shlex.join(["python3", "-", directory, release])
-        with (self.root / "hardware/activate_release.py").open("rb") as script:
-            self._stream(argv + [command], emit, cancel, stdin=script, timeout=60)
-        self.probe(connection, emit, cancel)
-        return self._deploy_record("physical", state, sensorless=sensorless, connection=self.connection(connection), release=remote)
+        command = shlex.join(["python3", "-u", remote + "/activate_release.py", directory, release, str(boot_timeout())])
+        self._stream(argv + [command], emit, cancel, timeout=boot_timeout() + 30)
+        return self._deploy_record("physical", state, connection=self.connection(connection), release=remote, deployed_at=started)
 
     def _run_qemu(self, emit, cancel):
+        started = time.time()
         root, payload, state = self._require_build(target="qemu")
         running = self._qemu_running()
         if running is None:
@@ -861,9 +893,12 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
                    "rm -rf -- " + shlex.quote(previous) + "; "
                    "if test -e " + shlex.quote(working) + "; then mv -- " + shlex.quote(working) + " " + shlex.quote(previous) + "; fi; "
                    "mv -- " + shlex.quote(staging) + " " + shlex.quote(working) + "; "
-                   "systemctl start cfs.service && sleep 2 && systemctl is-active --quiet cfs.service")
+                   "systemctl start cfs.service")
         self._stream(argv + [command], emit, cancel, timeout=30)
-        return self._deploy_record("qemu", state)
+        with (self.root / "hardware/readiness.py").open("rb") as monitor:
+            self._stream(argv + [shlex.join(["python3", "-u", "-", "cfs.service", str(boot_timeout())])],
+                         emit, cancel, stdin=monitor, timeout=boot_timeout() + 10)
+        return self._deploy_record("qemu", state, deployed_at=started)
 
     def simulation_script(self, device_id):
         if device_id is None:
@@ -1090,7 +1125,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
 
     def _run(self, target, connection, sensorless, emit, cancel, on_start):
         self.assert_can_start(target, connection)
-        self._require_build(sensorless, target=target)
+        build = self._require_build(sensorless, target=target)
         if on_start:
             on_start()
         board = None
@@ -1098,12 +1133,32 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
             connection = self.connection(connection)
             board = self.probe(connection, emit, cancel)
         self._save_active(target, connection, "starting")
-        if target == "native":
-            result = self._run_native(emit, cancel)
-        elif target == "physical":
-            result = self._run_physical(emit, cancel, connection, sensorless, board)
-        else:
-            result = self._run_qemu(emit, cancel)
+        record = {"action": "run", "id": secrets.token_hex(16), "target": target, "connection": connection,
+                  "started": time.time(), "phase": "run"}
+        last_line = None
+
+        def log(line):
+            nonlocal last_line
+            last_line = line
+            if line.startswith("@cfs-instance "):
+                record["instance"] = line.split()[1]
+                record["boot_apps"] = boot_trace.app_records((build[1] / "cf/cfe_es_startup.scr").read_text())
+            else:
+                boot_trace.observe(self, record, line)
+            emit(line)
+
+        try:
+            if target == "native":
+                result = self._run_native(log, cancel)
+            elif target == "physical":
+                result = self._run_physical(log, cancel, connection, sensorless, board)
+            else:
+                result = self._run_qemu(log, cancel)
+        except (StartupError, HardwareError, OSError) as error:
+            self._save_active(target, connection, "failed")
+            if isinstance(error, HardwareError) and error.returncode and last_line:
+                raise HardwareError(last_line, returncode=error.returncode) from error
+            raise HardwareError(str(error)) from error
         self._save_active(target, connection, "running")
         return result
 

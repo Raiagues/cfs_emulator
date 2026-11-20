@@ -7,7 +7,10 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import time
+if __package__:
+    from .readiness import StartupError, wait_service
+else:
+    from readiness import StartupError, wait_service
 
 
 RELEASE = re.compile(r"[0-9a-f]{16}(?:-sensorless)?-[0-9]+\Z")
@@ -21,7 +24,7 @@ def link_to(current, target):
         os.replace(link, current)
 
 
-def activate(directory, release):
+def activate(directory, release, timeout):
     directory = directory.resolve()
     if not RELEASE.fullmatch(release):
         raise ValueError("Invalid Studio release name")
@@ -43,9 +46,9 @@ def activate(directory, release):
         service = ["sudo", "-n", "systemctl"]
         try:
             subprocess.run([*service, "start", "cfs-studio.service"], check=True)
-            time.sleep(2)
-            subprocess.run([*service, "is-active", "--quiet", "cfs-studio.service"], check=True)
-        except (subprocess.SubprocessError, OSError):
+            wait_service("cfs-studio.service", timeout, lambda line: print(line, flush=True))
+        except (subprocess.SubprocessError, OSError, StartupError):
+            subprocess.run([*service, "stop", "cfs-studio.service"], check=True)
             if previous is None:
                 current.unlink()
             else:
@@ -65,4 +68,7 @@ def activate(directory, release):
 
 
 if __name__ == "__main__":
-    activate(Path(sys.argv[1]), sys.argv[2])
+    try:
+        activate(Path(sys.argv[1]), sys.argv[2], float(sys.argv[3]))
+    except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
+        sys.exit(str(error))

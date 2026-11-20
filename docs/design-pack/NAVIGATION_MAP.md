@@ -868,7 +868,7 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#architecture | Include temp in session | simulationEnable=temp |
 | /studio?target=native#architecture | Inertial sensormpu6050 · 0x681.04 g | signalDevice=imu |
 | /studio?target=native#architecture | J2 | orbitModel=J2 |
-| /studio?target=native#architecture | Magnetometerlsm303dlhc_mag · 0x1e12.25 µT | signalDevice=mag |
+| /studio?target=native#architecture | Magnetometerlsm303dlhc_mag · 0x1e12.4 µT | signalDevice=mag |
 | /studio?target=native#architecture | Mean anomaly at epoch in ° | orbitNumber=anomaly |
 | /studio?target=native#architecture | Molniya | orbitPreset=molniya |
 | /studio?target=native#architecture | One orbitFull period | signalScenario=orbit |
@@ -935,7 +935,7 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#bench | Include temp in session | simulationEnable=temp |
 | /studio?target=native#bench | Inertial sensormpu6050 · 0x681.04 g | signalDevice=imu |
 | /studio?target=native#bench | J2 | orbitModel=J2 |
-| /studio?target=native#bench | Magnetometerlsm303dlhc_mag · 0x1e12.25 µT | signalDevice=mag |
+| /studio?target=native#bench | Magnetometerlsm303dlhc_mag · 0x1e12.4 µT | signalDevice=mag |
 | /studio?target=native#bench | Mean anomaly at epoch in ° | orbitNumber=anomaly |
 | /studio?target=native#bench | Molniya | orbitPreset=molniya |
 | /studio?target=native#bench | One orbitFull period | signalScenario=orbit |
@@ -977,11 +977,28 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#boot | App, complete | /studio?target=native#app |
 | /studio?target=native#boot | Board | /?target=physical#board |
 | /studio?target=native#boot | Boot, complete | /studio?target=native#boot |
+| /studio?target=native#boot | Build cFS, Waiting | stage=build stageLayer=build state=waiting bootFocus=stage-build |
+| /studio?target=native#boot | Change | /?target=native#target |
+| /studio?target=native#boot | Check target | /?target=native#target |
 | /studio?target=native#boot | Command, complete | /studio?target=native#command |
+| /studio?target=native#boot | Core Flight Executive | layer=cfe bootFocus=cfe current=false lit=false |
+| /studio?target=native#boot | Core ready, Waiting | stage=CORE_READY stageLayer=cfe state=waiting bootFocus=stage-CORE_READY |
+| /studio?target=native#boot | Early init, Waiting | stage=EARLY_INIT stageLayer=cfe state=waiting bootFocus=stage-EARLY_INIT |
 | /studio?target=native#boot | Event, complete | /studio?target=native#event |
+| /studio?target=native#boot | Execution hardware | layer=hw bootFocus=hw current=false lit=false |
+| /studio?target=native#boot | Loading apps, Waiting | stage=APPS_INIT stageLayer=apps state=waiting bootFocus=stage-APPS_INIT |
+| /studio?target=native#boot | Mission applications | layer=apps bootFocus=apps current=false lit=false |
+| /studio?target=native#boot | Open console | console= bootFocus=console |
+| /studio?target=native#boot | Operating System Abstraction Layer | layer=osal bootFocus=osal current=false lit=false |
+| /studio?target=native#boot | Operating system | layer=os bootFocus=os current=false lit=false |
+| /studio?target=native#boot | Operational, Waiting | stage=OPERATIONAL stageLayer=apps state=waiting bootFocus=stage-OPERATIONAL |
+| /studio?target=native#boot | Pause view | pause= bootFocus=pause |
+| /studio?target=native#boot | Platform Support Package | layer=psp bootFocus=psp current=false lit=false |
+| /studio?target=native#boot | Replay boot | replay= bootFocus=replay |
 | /studio?target=native#boot | Send, complete | /studio?target=native#send |
 | /studio?target=native#boot | Sensor, complete | /studio?target=native#sensor |
 | /studio?target=native#boot | Start over | flight=reset |
+| /studio?target=native#boot | Starting core, Waiting | stage=CORE_STARTUP stageLayer=cfe state=waiting bootFocus=stage-CORE_STARTUP |
 | /studio?target=native#boot | Switch to light theme | themeToggle= |
 | /studio?target=native#boot | Target, complete | /#target |
 | /studio?target=native#boot | Test, complete | /studio?target=native#test |
@@ -1014,7 +1031,7 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#code | Include temp in session | simulationEnable=temp |
 | /studio?target=native#code | Inertial sensormpu6050 · 0x681.04 g | signalDevice=imu |
 | /studio?target=native#code | J2 | orbitModel=J2 |
-| /studio?target=native#code | Magnetometerlsm303dlhc_mag · 0x1e12.25 µT | signalDevice=mag |
+| /studio?target=native#code | Magnetometerlsm303dlhc_mag · 0x1e12.4 µT | signalDevice=mag |
 | /studio?target=native#code | Mean anomaly at epoch in ° | orbitNumber=anomaly |
 | /studio?target=native#code | Molniya | orbitPreset=molniya |
 | /studio?target=native#code | One orbitFull period | signalScenario=orbit |
@@ -1089,10 +1106,6 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#command | Terminal | toggle-terminal |
 | /studio?target=native#command | Test, complete | /studio?target=native#test |
 | /studio?target=native#command | Workspace setup | /#target |
-| /studio?target=native#command | apps | SUMMARY |
-| /studio?target=native#command | libs | SUMMARY |
-| /studio?target=native#command | mission/cpu1_cfe_es_startup.scr | file=mission/cpu1_cfe_es_startup.scr |
-| /studio?target=native#command | sample_defs | SUMMARY |
 | /studio?target=native#event | All apps | allGroundApps= |
 | /studio?target=native#event | App, complete | /studio?target=native#app |
 | /studio?target=native#event | Architecture | view=architecture |
@@ -1151,7 +1164,7 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#ground | Include temp in session | simulationEnable=temp |
 | /studio?target=native#ground | Inertial sensormpu6050 · 0x681.04 g | signalDevice=imu |
 | /studio?target=native#ground | J2 | orbitModel=J2 |
-| /studio?target=native#ground | Magnetometerlsm303dlhc_mag · 0x1e12.31 µT | signalDevice=mag |
+| /studio?target=native#ground | Magnetometerlsm303dlhc_mag · 0x1e12.4 µT | signalDevice=mag |
 | /studio?target=native#ground | Mean anomaly at epoch in ° | orbitNumber=anomaly |
 | /studio?target=native#ground | Molniya | orbitPreset=molniya |
 | /studio?target=native#ground | One orbitFull period | signalScenario=orbit |
@@ -1284,7 +1297,7 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#simulation | Include temp in session | simulationEnable=temp |
 | /studio?target=native#simulation | Inertial sensormpu6050 · 0x681.04 g | signalDevice=imu |
 | /studio?target=native#simulation | J2 | orbitModel=J2 |
-| /studio?target=native#simulation | Magnetometerlsm303dlhc_mag · 0x1e12.31 µT | signalDevice=mag |
+| /studio?target=native#simulation | Magnetometerlsm303dlhc_mag · 0x1e12.4 µT | signalDevice=mag |
 | /studio?target=native#simulation | Mean anomaly at epoch in ° | orbitNumber=anomaly |
 | /studio?target=native#simulation | Molniya | orbitPreset=molniya |
 | /studio?target=native#simulation | One orbitFull period | signalScenario=orbit |

@@ -390,9 +390,10 @@ def run(args):
     if args.action not in ("sync", "check"):
         plan["project/config.json"] = json.dumps(config, indent=2) + "\n"
     changes = command_source_changes(root, plan, args.app) if args.action == "add-command" else None
-    from hardware.targets import selected_target
-    from journey.mission import created
-    target = selected_target(root) if new_apps else None
+    if new_apps:
+        from hardware.targets import selected_target
+        from journey.mission import created
+        target = selected_target(root)
     changed = commit(root, plan, check=args.action == "check")
     for name in new_apps:
         created(root, target, name)
