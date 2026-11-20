@@ -1,3 +1,4 @@
+import {onUpdate} from './updates.js';
 import {targetDrawing} from './target-drawing.js';
 import {stepUrl} from './router.js';
 import {icon} from './ui.js';
@@ -168,7 +169,7 @@ function clock(milliseconds) {
   return [Math.floor(seconds/60), seconds%60].map(x=>String(x).padStart(2,'0')).join(':');
 }
 export function mountFirstBoot(container,{api,target}) {
-  let disposed=false,timer=null,starting=false,data=null,pick='',pickKey='',lastCue='',consoleOpen=false,err='';
+  let disposed=false,starting=false,data=null,pick='',pickKey='',lastCue='',consoleOpen=false,err='';
   let readError='';
   let live=null, pausedAt=null, pausedIndex=null, replayStart=null, replayTimer=null;
   function publishRunning(running) {
@@ -280,7 +281,7 @@ export function mountFirstBoot(container,{api,target}) {
         status.setAttribute('aria-busy','false');
       }
     }
-    if(!disposed)timer=setTimeout(poll,600);
+
   }
   const click=async event=>{
     const button=event.target.closest('button');
@@ -326,6 +327,7 @@ export function mountFirstBoot(container,{api,target}) {
     }
   };
   container.addEventListener('click',click);
+  const unsubscribe=onUpdate(['jobs','hardware','journey'],poll);
   document.addEventListener('keydown',closeDetails);publishRunning(false);poll();
-  return ()=>{disposed=true;publishRunning(false);clearTimeout(timer);clearTimeout(replayTimer);container.removeEventListener('click',click);document.removeEventListener('keydown',closeDetails);};
+  return ()=>{disposed=true;publishRunning(false);unsubscribe();clearTimeout(replayTimer);container.removeEventListener('click',click);document.removeEventListener('keydown',closeDetails);};
 }

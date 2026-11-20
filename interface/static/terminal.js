@@ -1,3 +1,4 @@
+import {jobLog} from './updates.js';
 import {icon} from './ui.js';
 import {mountShells} from './shell.js';
 
@@ -70,6 +71,34 @@ export function mountTerminal({state,esc,layout,api,onStream,onCloseJob,onError}
   parent.innerHTML=html;
   if(attr)parent.querySelector(`[${attr}="${CSS.escape(value)}"]`)?.focus({preventScroll:true});
  }
+ const logs = new Map();
+ let following = null;
+ function follow(job) {
+  const id = job && job.action !== 'shell' ? job.id : null;
+  if (id === following?.id) return;
+  following?.controller.abort();
+  following = null;
+  if (!id) return;
+  const store = logs.get(id) || {cursor:0, lines:[], done:false};
+  if (store.done) return;
+  logs.set(id, store);
+  for (const old of logs.keys()) if (!state.jobs.some(item => item.id === old)) logs.delete(old);
+  const controller = new AbortController();
+  following = {id, controller};
+  (async () => {
+   for await (const frame of jobLog(id, store.cursor, controller.signal)) {
+    if (controller.signal.aborted) return;
+    if (frame.truncated) store.lines = [];
+    store.lines.push(...frame.lines);
+    store.lines = store.lines.slice(-3000);
+    store.cursor = frame.cursor;
+    store.done = frame.status !== 'running';
+    render();
+   }
+  })().catch(error => {
+   if (!controller.signal.aborted) {following = null; onError(error);}
+  });
+ }
  function render(){
   const jobs=visibleJobs(),job=jobs.find(job=>job.id===state.selectedJob);
   replaceKeepingFocus(sessions,[...jobs].reverse().map(row).join(''));
@@ -79,10 +108,11 @@ export function mountTerminal({state,esc,layout,api,onStream,onCloseJob,onError}
   replaceKeepingFocus(menu.querySelector('.terminal-open-menu'),'<button type="button" data-new-shell>'+icon('terminal')+'<span>New terminal</span><small>Local shell</small></button>'+streams.map(kind=>`<button type="button" data-terminal-stream="${kind}">${icon(kind==='boot'?'cpu':'terminal')}<span>${kind==='boot'?'Linux output':'Run cFS output'}</span></button>`).join('')+(closedJobs.length?'<div class="terminal-menu-label">Closed outputs</div>'+closedJobs.map(job=>`<button type="button" data-terminal-job="${esc(job.id)}" title="${esc(status(job))}">${icon('terminal')}<span>${esc(label(job))}</span>${job.status==='running'?'<i class="session-dot running"></i>':''}</button>`).join(''):''));
   shells.select(job?.action==='shell'?job:null);
   output.hidden=job?.action==='shell';
+  follow(job);
   const key=job?.id||'empty',changed=output.dataset.job!==key;
   if(changed)remember();
   const position=positions.get(key),bottom=changed?position?.bottom!==false:output.scrollTop+output.clientHeight>=output.scrollHeight-30;
-  const text=job?(job.lines.join('\n').replace(/\x1b\[[0-?]*[ -/]*[@-~]/g,'')||'Waiting for process output…'):'No open terminal';
+  const text=job?((logs.get(job.id)?.lines || job.lines || []).join('\n').replace(/\x1b\[[0-?]*[ -/]*[@-~]/g,'')||'Waiting for process output…'):'No open terminal';
   if(output.textContent!==text)output.textContent=text;
   output.classList.toggle('terminal-empty',!job);
   output.dataset.job=key;

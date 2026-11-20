@@ -1,3 +1,4 @@
+import {onUpdate} from './updates.js';
 import {targetDrawing} from './target-drawing.js';
 import {api, checkFrames, readJourney} from './api.js';
 import {navigate, pageStep, redirectForStep, stepUrl} from './router.js';
@@ -278,14 +279,22 @@ async function followInstaller(session, groupName, recheck = true) {
   installation = {...session, group: groupName};
   $('#terminal-title').textContent = installerLabels[session.setup_action];
   if ($('#setup-terminal').open) shells.select(session);
-  while (installation.status === 'running') {
-    $('#terminal-state').textContent = installation.input_required ? 'Input required' : 'Installing';
-    controls();
-    await new Promise(resolve => setTimeout(resolve,400));
-    const jobs = await api('jobs');
-    const current = jobs.find(job => job.id === session.id);
-    if (!current) throw Error('Installer unavailable');
-    Object.assign(installation,current);
+  if (installation.status === 'running') {
+    await new Promise((resolve, reject) => {
+      const read = async () => {
+        try {
+          const jobs = await api('jobs?lines=0');
+          const current = jobs.find(job => job.id === session.id);
+          if (!current) throw Error('Installer unavailable');
+          Object.assign(installation, current);
+          $('#terminal-state').textContent = current.input_required ? 'Input required' : 'Installing';
+          controls();
+          if (current.status !== 'running') {unsubscribe(); resolve();}
+        } catch (error) {unsubscribe(); reject(error);}
+      };
+      const unsubscribe = onUpdate(['jobs'], read);
+      read();
+    });
   }
   const success = installation.status === 'succeeded';
   $('#terminal-state').textContent = success ? 'Completed' : 'Exit ' + installation.exit_code;
@@ -527,7 +536,7 @@ form.addEventListener('submit', async event => {
     if (redirect) {navigate(redirect, true); return;}
   }
   target = boardVisit ? 'physical' : settings.target;
-  const jobs = await api('jobs');
+  const jobs = await api('jobs?lines=0');
   const running = jobs.find(job => job.setup_action && job.status === 'running');
   if (running) {
     target = running.target;

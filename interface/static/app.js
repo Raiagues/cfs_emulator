@@ -1,3 +1,4 @@
+import {onUpdate} from './updates.js';
 import {bindWorkspace, displayTarget, historyEntry, navigate, recordRoute, redirectForStep, requestedTarget,
         stepUrl, workspaceRoute, workspaceTarget} from './router.js';
 import {api, readJourney} from './api.js';
@@ -763,7 +764,7 @@ async function pollJobs() {
  if(jobsPolling)return;jobsPolling=true;
  try{
   const before=signalJobState();
-  state.jobs=await api('jobs');
+  state.jobs=await api('jobs?lines=0');
   if(!state.terminalStream&&(!state.selectedJob||!state.jobs.some(j=>j.id===state.selectedJob)))selectTargetTerminal();
   for(const job of state.jobs){
    const phase=job.operation_complete&&job.status!=='failed'?'ready':job.status,key=job.id+':'+phase;
@@ -1465,8 +1466,12 @@ async function openWorkspace(){
 }
 $('#workspace-opening button').onclick=openWorkspace;
 openWorkspace();
-setInterval(()=>{if(document.hidden||!workspaceReady)return;pollJobs().catch(e=>feedback(e.message,true));if(state.view==='ground'||(state.view==='simulation'&&state.signalView==='qemu'))pollGround().catch(e=>feedback(e.message,true));},1500);
-setInterval(()=>{if(!document.hidden&&workspaceReady){if(!state.missionBusy&&!state.profileBusy)refresh().catch(e=>feedback(e.message,true));if(isWorkbench())hardwareRefresh().catch(e=>feedback(e.message,true));}},15000);
+onUpdate(['jobs'], () => workspaceReady && pollJobs().catch(error => feedback(error.message,true)));
+onUpdate(['ground'], () => workspaceReady && (state.view === 'ground' || state.view === 'simulation') &&
+ pollGround().catch(error => feedback(error.message,true)));
+onUpdate(['hardware'], () => workspaceReady && hardwareRefresh().catch(error => feedback(error.message,true)));
+onUpdate(['workspace'], () => workspaceReady && !state.missionBusy && !state.profileBusy &&
+ refresh().catch(error => feedback(error.message,true)));
 
 function syncNavigation(){
  const onlyCode=document.body.classList.contains('code-only');

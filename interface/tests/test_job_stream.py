@@ -44,3 +44,30 @@ class JobStreamTest(unittest.TestCase):
                 self.assertEqual(frames[-1]['result'], {'compiled': True})
                 self.assertEqual(frames[-1]['status'], 'succeeded')
                 self.assertEqual(next(app.job_updates(ident, 2))['lines'], [])
+
+    def test_status_probe_is_shared_until_invalidated(self):
+        from types import SimpleNamespace
+        from jobs.monitor import Changes, HardwareMonitor
+        with TemporaryDirectory() as temp:
+            root = Path(temp)
+            probes = []
+            def status():
+                probes.append(len(probes) + 1)
+                return {'builds':{'native':{'fingerprint':str(len(probes))}}}
+            hardware = SimpleNamespace(status=status, journey=SimpleNamespace(path=root/'observations'),
+                                       state=SimpleNamespace(database=root/'state'))
+            events = Changes()
+            monitor = HardwareMonitor(hardware, events, ttl=300)
+            try:
+                self.assertEqual(monitor.snapshot(), monitor.snapshot())
+                self.assertEqual(probes, [1])
+                with events.condition:
+                    self.assertTrue(events.condition.wait_for(lambda: 'hardware' in events.topics, timeout=3))
+                _, topics = next(events.stream(-1))
+                self.assertIn('hardware', topics)
+                monitor.invalidate()
+                with monitor.condition:
+                    self.assertTrue(monitor.condition.wait_for(lambda: len(probes) == 2, timeout=3))
+                self.assertEqual(monitor.snapshot()['builds']['native']['fingerprint'], '2')
+            finally:
+                monitor.close()

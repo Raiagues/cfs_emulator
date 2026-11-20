@@ -15,7 +15,8 @@ from .round_trip import PassedTests, RoundTrips, TestPlans
 
 
 class GroundStation:
-    def __init__(self, root):
+    def __init__(self, root, on_change=lambda: None):
+        self.on_change = on_change
         self.root = Path(root).resolve()
         self._catalog = None
         self._build_root = self.root
@@ -142,6 +143,7 @@ class GroundStation:
             self._error = self._failure = str(message)
             self.trips.finish('disconnected')
             self._updates.notify_all()
+            self.on_change()
 
     def _record_communication(self, app, kind, size, timestamp):
         """Count observed UDP traffic independently of the bounded message history."""
@@ -198,6 +200,7 @@ class GroundStation:
             if "Message" in values and "PacketID.AppName" in values:
                 self._events.append(packet)
             self._updates.notify_all()
+            self.on_change()
 
     def send(self, command_id, values=None, *, test_id=None):
         with self._lock:
@@ -314,6 +317,7 @@ class GroundStation:
         with self._updates:
             self.trips.finish('disconnected')
             self._updates.notify_all()
+            self.on_change()
         if self._receiver:
             self._receiver.stop()
         if self._socket:

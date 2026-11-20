@@ -1,3 +1,4 @@
+import {onUpdate} from './updates.js';
 import {api, readJourney} from './api.js';
 import {navigate, pageStep, stepUrl} from './router.js';
 
@@ -86,5 +87,5 @@ if (bar) {
   window.addEventListener('flight:navigate', () => {if (observations) render(observations);});
   new MutationObserver(refresh).observe(document.body, {attributes:true, attributeFilter:['data-flight-target']});
   refresh();
-  setInterval(() => {if (!document.hidden) refresh();}, 3500);
+  onUpdate(['journey', 'target'], refresh);
 }

@@ -48,6 +48,10 @@ export function readJourney(target, board = false, options) {
 
 export async function* checkFrames(target, signal) {
   const response = await request('infrastructure/check', {target}, {signal, headers:{Accept:'application/x-ndjson'}});
+  yield* readFrames(response);
+}
+
+export async function* readFrames(response) {
   const stream = response.body.pipeThrough(new TextDecoderStream()).getReader();
   let buffer = '';
   try {
@@ -64,7 +68,7 @@ export async function* checkFrames(target, signal) {
         yield frame;
       }
     }
-    if (buffer.trim()) throw Error('Incomplete setup report');
+    if (buffer.trim()) throw Error('Incomplete server stream');
   } finally {
     stream.releaseLock();
   }

@@ -51,12 +51,15 @@ export function mountShells({api,onError,onExit}) {
   }
   const shell=shells.get(active);shell.element.hidden=false;
   requestAnimationFrame(()=>fit(shell));
+  readOutput();
  }
- async function poll(){
+ async function readOutput(){
   const id=active,shell=shells.get(id);
-  if(shell&&!shell.ended&&!host.hidden&&!document.hidden){
-   try{
-    const result=await api('terminal/read',{id,cursor:shell.cursor});
+  if (!shell || shell.ended || shell.reading || host.hidden) return;
+  shell.reading=true;
+  try {
+   while (active===id && !shell.ended && !host.hidden && !document.hidden) {
+    const result=await api('terminal/read',{id,cursor:shell.cursor,wait:true});
     if(result.truncated)shell.term.writeln('\r\n[Older output exceeded the terminal buffer]\r\n');
     if(result.data)await new Promise(resolve=>shell.term.write(Uint8Array.from(atob(result.data),c=>c.charCodeAt(0)),resolve));
     shell.cursor=result.cursor;
@@ -66,10 +69,10 @@ export function mountShells({api,onError,onExit}) {
      shell.term.options.cursorBlink=false;
      if(!onExit?.(id,result.exit_code))shell.term.writeln('\r\n[Shell exited]');
     }
-   }catch(error){onError(error);await new Promise(resolve=>setTimeout(resolve,2000));}
-  }
-  setTimeout(poll,120);
+   }
+  } catch(error){onError(error);}
+  finally{shell.reading=false;}
  }
- poll();
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)readOutput();});
  return {select,focus:()=>shells.get(active)?.term.focus(),dispose:id=>{const shell=shells.get(id);if(shell){shell.term.dispose();shell.element.remove();shells.delete(id);}if(active===id)active=null;}};
 }

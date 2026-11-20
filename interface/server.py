@@ -16,6 +16,7 @@ from hardware import infrastructure
 from hardware.device_settings import device_settings, update_device
 from hardware.targets import selected_target
 from jobs.service import Laboratory
+from jobs.monitor import HardwareMonitor
 from journey import first_boot
 from sensors.orbit import preview as orbit_preview
 
@@ -33,6 +34,12 @@ class Studio(Laboratory):
     def __init__(self, root=ROOT):
         super().__init__(root)
         self.token = secrets.token_urlsafe(32)
+        self.monitor = HardwareMonitor(self.hardware, self.changes)
+
+    def close(self):
+        self.changes.close()
+        self.monitor.close()
+        super().close()
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -80,6 +87,21 @@ class Handler(BaseHTTPRequestHandler):
         finally:
             snapshots.close()
 
+    def events(self, app):
+        cursor = int(self.headers.get('Last-Event-ID', -1))
+        if cursor < -1:
+            raise ValueError('Invalid event cursor')
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/event-stream')
+        self.send_header('Cache-Control', 'no-store')
+        self.send_header('Connection', 'close')
+        self.end_headers()
+        self.close_connection = True
+        for revision, topics in app.changes.stream(cursor):
+            frame = f'id: {revision}\ndata: {json.dumps(topics)}\n\n' if topics else ': connected\n\n'
+            self.wfile.write(frame.encode())
+            self.wfile.flush()
+
     def do_GET(self):
         try:
             if not self.valid_host():
@@ -87,6 +109,8 @@ class Handler(BaseHTTPRequestHandler):
             url = urlparse(self.path)
             query = {k: v[0] for k, v in parse_qs(url.query).items()}
             app = self.server.studio
+            if url.path == '/api/events':
+                return self.events(app)
             if url.path == '/api/jobs/stream':
                 return self.stream_records(app.job_updates(query.get('id'), int(query.get('cursor', 0))))
             routes = {
@@ -98,9 +122,9 @@ class Handler(BaseHTTPRequestHandler):
                 '/api/tree': lambda: app.workspace.tree(query.get('path', '')),
                 '/api/files/search': lambda: app.workspace.search_files(query.get('root', 'cFS'), query.get('q', '')),
                 '/api/file': lambda: app.workspace.read_file(query['path']),
-                '/api/hardware': app.hardware.status,
+                '/api/hardware': lambda: app.monitor.snapshot(),
                 '/api/first-boot': lambda: first_boot.snapshot(app, query.get('target') or selected_target(app.hardware.root), journal=app.boot_journal_snapshot),
-                '/api/infrastructure': lambda: infrastructure.snapshot(app.hardware, verify_source=query.get('verify_source') == '1'),
+                '/api/infrastructure': lambda: infrastructure.snapshot(app.hardware),
                 '/api/simulation': app.workspace.simulation_snapshot,
                 '/api/simulation/orbit': lambda: orbit_preview(json.loads(query['parameters'])),
                 '/api/hardware/device': lambda: device_settings(app.workspace, query.get('id')),
@@ -225,7 +249,8 @@ class Handler(BaseHTTPRequestHandler):
                 result = app.shells.create(body.get('rows', 24), body.get('cols', 80),
                                            body.get('setup_action'), body.get('target'))
             elif path == '/api/terminal/read':
-                result = app.shells.get(body['id']).read(body.get('cursor', 0))
+                shell = app.shells.get(body['id'])
+                result = (shell.wait_read if body.get('wait') else shell.read)(body.get('cursor', 0))
             elif path == '/api/terminal/input':
                 result = app.shells.get(body['id']).write(body['data'])
             elif path == '/api/terminal/resize':
@@ -246,6 +271,16 @@ class Handler(BaseHTTPRequestHandler):
                 result = app.ground.cancel_test(body.get('id'))
             else:
                 return self.reply({'error': 'Not found'}, 404)
+            if path in {'/api/hardware/target', '/api/mission/profile', '/api/infrastructure'}:
+                app.changes.publish('target', 'workspace', 'journey')
+                app.monitor.invalidate()
+            elif path in {'/api/journey/reset', '/api/infrastructure/check'}:
+                app.changes.publish('journey')
+            elif path.startswith(('/api/mission/', '/api/hardware/')) or path in {'/api/file', '/api/mutate', '/api/simulation'}:
+                app.changes.publish('workspace', 'journey')
+                app.monitor.invalidate()
+            elif path.startswith('/api/ground/'):
+                app.changes.publish('ground', 'journey')
             self.reply(result or {'ok': True})
         except (BrokenPipeError, ConnectionResetError):
             pass

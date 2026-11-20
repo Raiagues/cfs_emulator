@@ -15,6 +15,7 @@ from urllib.request import Request, urlopen
 from hardware import infrastructure
 from hardware.manager import HardwareManager
 from interface.server import Handler
+from jobs.monitor import Changes
 
 
 class SetupChecksTest(unittest.TestCase):
@@ -26,7 +27,7 @@ class SetupChecksTest(unittest.TestCase):
         (root / 'config/image').write_text('studio:test')
         self.hardware = HardwareManager(root)
         self.server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
-        self.server.studio = SimpleNamespace(token='test-token', hardware=self.hardware)
+        self.server.studio = SimpleNamespace(token='test-token', hardware=self.hardware, changes=Changes())
         self.addCleanup(self.server.server_close)
         thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         thread.start()

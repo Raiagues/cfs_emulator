@@ -26,7 +26,7 @@ _port_probe_lock = threading.Lock()
 
 
 def sources_ready(root):
-    return source_status(root)["state"] == "ready"
+    return _source_inventory(root)["state"] == "installed"
 
 
 def emulator_config(root):

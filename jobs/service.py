@@ -14,6 +14,7 @@ from hardware.targets import selected_target
 from ground_station.station import GroundStation
 from ground_station.catalog import apply_overrides, CATALOG_VERSION
 from jobs.terminal import Shells
+from jobs.monitor import Changes
 from journey import first_boot, mission as evidence
 
 
@@ -24,9 +25,10 @@ class Laboratory:
 
     def __init__(self, root):
         self.workspace = Workspace(root)
-        self.shells = Shells(root)
+        self.changes = Changes()
+        self.shells = Shells(root, on_change=lambda: self.changes.publish("jobs"))
         self.hardware = HardwareManager(root)
-        self.ground = GroundStation(root)
+        self.ground = GroundStation(root, on_change=lambda: self.changes.publish("ground"))
         self.jobs = {}
         self.lock = threading.Condition()
         self.target_locks = {target: threading.Lock() for target in ("native", "qemu", "physical")}
@@ -87,6 +89,7 @@ class Laboratory:
             if exclusive:
                 self.target_locks[target].release()
             raise
+        self.changes.publish('jobs')
         return {'id': ident}
 
     def _running_reader(self, action, key, target, kind, connection):
@@ -161,6 +164,7 @@ class Laboratory:
 
     def _emit(self, record, line):
         with self.lock:
+            self.changes.publish('jobs')
             self.lock.notify_all()
             if str(line).startswith('@cfs-instance '):
                 record['instance'] = line.split()[1]
@@ -243,6 +247,7 @@ class Laboratory:
                 if record['cancel'].is_set():
                     record['status'] = 'cancelled'
                 record['ended'] = time.time()
+                self.changes.publish('jobs', 'hardware', 'journey')
                 self.lock.notify_all()
             if owns_operation:
                 self.target_locks[record['target']].release()
@@ -459,6 +464,7 @@ class Laboratory:
         return self.ground.plans.save(body, self.ground_catalog(body.get('target')) if not body.get('delete') else {})
 
     def close(self):
+        self.changes.close()
         self.shells.close()
         with self.lock:
             self.closing = True

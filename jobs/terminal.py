@@ -31,13 +31,15 @@ SETUP_COMMANDS = {
 class Shell:
     LIMIT = 1024 * 1024
 
-    def __init__(self, root, rows=24, cols=80, setup_action=None, target='local'):
+    def __init__(self, root, rows=24, cols=80, setup_action=None, target='local', on_change=lambda: None):
+        self.on_change = on_change
         self.id = secrets.token_hex(12)
         self.setup_action = setup_action
         self.target = target
         self.started = time.time()
         self.prompt_tail = b""
         self.lock = threading.RLock()
+        self.output = threading.Condition(self.lock)
         self.input_lock = threading.Lock()
         self.chunks = deque()
         self.end = self.start = 0
@@ -89,10 +91,16 @@ class Shell:
                     self.end += len(data)
                     while self.end - self.start > self.LIMIT:
                         self.start += len(self.chunks.popleft())
+                    self.output.notify_all()
+                    self.on_change()
         except OSError:
             pass  # Linux PTYs report EIO after the last slave closes.
         finally:
-            self.exit_code = self.process.wait()
+            status = self.process.wait()
+            with self.output:
+                self.exit_code = status
+                self.output.notify_all()
+            self.on_change()
 
     def waiting_for_input(self):
         try:
@@ -112,6 +120,13 @@ class Shell:
                 'operation_complete': not self.setup_action or code is not None,
                 'status': 'running' if code is None else 'succeeded' if code == 0 else 'cancelled' if self.interrupted else 'failed',
                 'exit_code': code, 'lines': []}
+
+    def wait_read(self, cursor):
+        with self.output:
+            if type(cursor) is not int or cursor < 0:
+                raise ValueError('Invalid terminal cursor')
+            self.output.wait_for(lambda: self.end != cursor or self.exit_code is not None or self.closed, timeout=20)
+            return self.read(cursor)
 
     def read(self, cursor):
         if type(cursor) is not int or cursor < 0:
@@ -194,7 +209,8 @@ class Shell:
 
 
 class Shells:
-    def __init__(self, root):
+    def __init__(self, root, on_change=lambda: None):
+        self.on_change = on_change
         self.root = root
         self.sessions = {}
         self.lock = threading.RLock()
@@ -223,7 +239,7 @@ class Shells:
                     del self.sessions[session.id]
             if sum(s.process.poll() is None for s in self.sessions.values()) >= 16:
                 raise ValueError('Close a shell before opening another (16 active).')
-            shell = Shell(self.root, rows, cols, setup_action, target if setup_action else 'local')
+            shell = Shell(self.root, rows, cols, setup_action, target if setup_action else 'local', self.on_change)
             self.sessions[shell.id] = shell
             return shell.snapshot()
 
