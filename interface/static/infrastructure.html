@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#13171c">
   <title>Choose target · Flight Studio</title>
+  <link rel="icon" href="/favicon.svg">
   <link rel="stylesheet" href="/design.css">
   <link rel="stylesheet" href="/infrastructure.css">
   <link rel="stylesheet" href="/setup-progress.css">
@@ -13,7 +14,8 @@
 </head>
 <body>
   <header class="setup-header">
-    <span class="brand"><strong>Flight</strong> studio <span class="brand-divider">/</span><span id="project-name"></span></span>
+    <div class="brand-group"><details data-brand-menu><summary class="brand"><strong>Flight</strong> studio</summary><nav>
+<a data-destination="welcome">Welcome</a><a data-destination="target">Setup</a></nav></details><span class="brand-divider">/</span><span id="project-name"></span></div>
     <div class="header-actions"><span id="save-state" role="status"></span><button type="button" data-theme-toggle aria-label="Switch theme"></button></div>
   </header>
   <nav id="flight-guide" aria-label="First flight"></nav>

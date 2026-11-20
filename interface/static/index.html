@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#191b20">
   <title>Flight Studio</title>
+  <link rel="icon" href="/favicon.svg">
   <link rel="stylesheet" href="/design.css">
   <link rel="stylesheet" href="/workspace.css">
   <link rel="stylesheet" href="/first-boot.css">
@@ -20,7 +21,8 @@
 <body class="workspace-loading no-terminal no-tree no-editor">
   <header class="topbar">
     <div class="workspace-identity">
-      <a class="brand" href="/#target" title="Workspace setup" aria-label="Workspace setup"><span>Flight <span class="brand-studio">studio</span></span></a>
+      <details data-brand-menu><summary class="brand"><strong>Flight</strong> studio</summary><nav>
+<a data-destination="welcome">Welcome</a><a data-destination="target">Setup</a></nav></details>
       <div class="project-title"><span class="slash">/</span><span id="project-title"></span></div>
     </div>
     <div class="execution-toolbar">

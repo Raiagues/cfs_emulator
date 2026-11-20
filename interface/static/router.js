@@ -80,3 +80,29 @@ export function bindWorkspace(follow, handleError) {
     open();
   });
 }
+
+export function finishWelcome(target) {
+  localStorage.setItem('fs-welcome', 'seen');
+  navigate(stepUrl('target', location, target));
+}
+
+export function registerBrand(root = document) {
+  for (const menu of root.querySelectorAll('[data-brand-menu]')) {
+    for (const link of menu.querySelectorAll('[data-destination]')) {
+      link.href = stepUrl(link.dataset.destination);
+    }
+    menu.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        menu.open = false;
+        menu.querySelector('summary').focus();
+      }
+    });
+  }
+}
+
+if (typeof document !== 'undefined') {
+  if (location.pathname === '/' && !location.hash && !location.search && !localStorage.getItem('fs-welcome')) {
+    navigate(stepUrl('welcome'), true);
+  }
+  registerBrand();
+}

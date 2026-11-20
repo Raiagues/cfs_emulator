@@ -153,7 +153,9 @@ class Handler(BaseHTTPRequestHandler):
             }
             if url.path in routes:
                 return self.reply(routes[url.path]())
-            if url.path == '/':
+            if url.path == '/welcome':
+                name = 'welcome.html'
+            elif url.path == '/':
                 name = 'infrastructure.html'
             elif url.path in {'/studio', '/studio/'}:
                 if not infrastructure.sources_ready(app.workspace.root):
