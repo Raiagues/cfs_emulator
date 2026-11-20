@@ -4,6 +4,7 @@ import {bindWorkspace, displayTarget, historyEntry, navigate, recordRoute, redir
 import {api, readJourney} from './api.js';
 import {commandLaunchStep} from './command-launch.js';
 import {openAppWizard} from './app-wizard.js';
+import {mountGroundLesson} from './ground-lesson.js';
 import {mountFirstBoot} from './first-boot.js';
 import {refreshJourney} from './journey.js';
 import {drawOrbit,mountOrbit} from './orbit-preview.js';
@@ -530,6 +531,24 @@ function showFirstBoot(){
 function leaveBoot(){
  bootCleanup?.();bootCleanup=null;bootTarget=null;
 }
+const activities = {event: mountGroundLesson};
+let activity;
+function guidedView() {
+ const mount = activities[state.activity];
+ if (activity && (activity.step !== state.activity || activity.target !== state.target)) {
+  activity.close(); activity = null;
+ }
+ if (!mount) return false;
+ if (!activity) {
+  const pane = document.createElement('section');
+  pane.className = 'activity-view';
+  $('#view').replaceChildren(pane);
+  activity = {step:state.activity, target:state.target, close:mount(pane,{state})};
+ }
+ $('#visual-heading').hidden=true;
+ syncNavigation();
+ return true;
+}
 function renderView(){
  if(!workspaceReady)return;
  const detailState=new Map([...(state.view==='architecture'?Object.entries(state.archDetails||{}):[]),...(document.body.dataset.view===state.view?[...$('#view').querySelectorAll('details[data-detail-key]')].map(d=>[d.dataset.detailKey,d.open]):[])]);
@@ -542,8 +561,9 @@ function renderView(){
  document.body.dataset.view=state.view;
  document.body.classList.toggle('simulation-mode',state.view==='simulation');
  document.body.classList.toggle('simulation-widgets',state.view==='simulation');
+ if(state.view!=='boot' && bootCleanup)leaveBoot();
+ if(guidedView())return;
  if(state.view==='boot'){showFirstBoot();return;}
- if(bootCleanup)leaveBoot();
  const html=({architecture,bench,simulation:()=>renderSimulationBoard(state,{esc}),ground}[state.view])();
  if(oldBoard && html.includes('id="board-stage"')){
   // Keep the canvas connected while hardware status and sensor settings refresh.
@@ -864,7 +884,7 @@ let groundPolling=false;
 document.addEventListener('visibilitychange',()=>{
  if(document.hidden || !workspaceReady)return;
  pollJobs().catch(error=>feedback(error.message,true));
- if(state.view==='ground')pollGround().catch(error=>feedback(error.message,true));
+ if(!state.activity && state.view==='ground')pollGround().catch(error=>feedback(error.message,true));
 });
 async function pollGround(){
  if(groundPolling)return;groundPolling=true;
@@ -957,19 +977,22 @@ async function selectView(view,sourceFile,sourceLine,inspection=null,route=view)
  if(view!=='ground' && state.view==='ground' && state.ground?.first_flight?.answer)state.coachDismissed=true;
  if(view!==state.view && state.groundError){state.groundError='';feedback('');}
  const codeOnly=view==='code',next=codeOnly?'architecture':view,previous=state.view;
- document.body.classList.toggle('code-only',codeOnly);state.view=next;state.inspected=null;
+ state.activity=activities[route] ? route : null;
+ if(state.activity)document.body.dataset.activity=route;else delete document.body.dataset.activity;
+ document.body.classList.toggle('code-only',codeOnly && !state.activity);state.view=next;state.inspected=null;
  state.archFollowSource=false;
- document.body.classList.toggle('no-editor',!codeOnly);
- document.body.classList.toggle('no-tree',!codeOnly);
+ document.body.classList.toggle('no-editor',!codeOnly || !!state.activity);
+ document.body.classList.toggle('no-tree',!codeOnly || !!state.activity);
  if(next==='simulation' && state.signalSidebar==null)state.signalSidebar=window.innerWidth>760;
  recordRoute(route);
- if(next==='ground' && !state.commandLaunch && state.catalogTarget!==state.target)state.catalogLoading=true;
+ if(!state.activity && next==='ground' && !state.commandLaunch && state.catalogTarget!==state.target)state.catalogLoading=true;
  renderToolbar();renderView();
  document.body.classList.remove('workspace-loading');
  if(next==='simulation'){
   terminal.selectContext('simulation',{reveal:false});
   if(previous!==next)terminal.show(false);
  }else terminal.selectContext('flight',{reveal:false});
+ if(state.activity)return true;
  if(codeOnly){
   const first=state.workspace.apps.find(app=>app.managed)||state.workspace.apps.find(app=>app.name==='sample_app');
   const path=sourceFile || lastFiles.get('flight') || first?.entry || state.workspace.mission.source.path;
@@ -1467,7 +1490,7 @@ async function openWorkspace(){
 $('#workspace-opening button').onclick=openWorkspace;
 openWorkspace();
 onUpdate(['jobs'], () => workspaceReady && pollJobs().catch(error => feedback(error.message,true)));
-onUpdate(['ground'], () => workspaceReady && (state.view === 'ground' || state.view === 'simulation') &&
+onUpdate(['ground'], () => workspaceReady && !state.activity && (state.view === 'ground' || state.view === 'simulation') &&
  pollGround().catch(error => feedback(error.message,true)));
 onUpdate(['hardware'], () => workspaceReady && hardwareRefresh().catch(error => feedback(error.message,true)));
 onUpdate(['workspace'], () => workspaceReady && !state.missionBusy && !state.profileBusy &&

@@ -780,3 +780,25 @@
 .requirement.install-failed .ring {border-color:var(--fs-danger);color:var(--fs-danger)}
 .check-cause,.fields label small[role=alert],.fields input[aria-invalid=true]+small,#jobs-detail small {color:var(--fs-danger)}
 .terminal-twin pre:empty,.fields label small:empty {display:none}
+
+.fs-panel {border:1px solid var(--fs-line);border-radius:var(--fs-radius-card);background:var(--fs-panel)}
+.activity-view :is(h1,h2,h3,p) {margin:0}
+.activity-view h2 {font:500 var(--fs-label)/1.4 var(--fs-sans);color:var(--fs-text)}
+.activity-view :is(small,summary) {color:var(--fs-muted);font-size:var(--fs-caption)}
+.activity-view summary {cursor:pointer}
+.activity-view svg {width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.lesson-list,.lesson-right {background:var(--fs-surface)}
+.lesson-list {border-inline-end:1px solid var(--fs-line)}
+.lesson-right {border-inline-start:1px solid var(--fs-line)}
+.lesson-row {padding:8px;border:1px solid transparent;border-radius:var(--fs-radius-control);background:transparent;color:var(--fs-text)}
+.lesson-row:hover,.lesson-row[aria-pressed=true] {border-color:var(--fs-line);background:var(--fs-panel)}
+.lesson-row strong,.lesson-node,.lesson-bytes code,.lesson-right article strong {font:var(--fs-label)/1.4 var(--fs-mono)}
+.lesson-cards i {font:var(--fs-caption) var(--fs-mono);border:1px solid var(--fs-line);border-radius:50%;color:var(--fs-muted)}
+.lesson-cards [data-done=true] i,.lesson-delta {color:var(--fs-success)}
+.lesson-cards [data-failed],.lesson-form output {color:var(--fs-danger);border-color:var(--fs-danger)}
+.lesson-form input {border:1px solid var(--fs-line);border-radius:var(--fs-radius-control);background:var(--fs-bg);color:var(--fs-text);padding:6px 10px;font:var(--fs-label) var(--fs-mono)}
+.lesson-node,.lesson-packet {padding:6px 9px;border:1px solid var(--fs-line);border-radius:var(--fs-radius-control);background:var(--fs-surface);color:var(--fs-text)}
+.lesson-track > svg {width:100%;height:100%;stroke:var(--fs-line);stroke-width:1.6}
+.lesson-track .fs-dash {stroke:var(--fs-success)}
+.lesson-packet {background:var(--fs-accent-bg);border-color:var(--fs-accent);color:var(--fs-accent);font:var(--fs-small) var(--fs-mono);border-radius:var(--fs-radius-pill)}
+.lesson-packet.answer {color:var(--fs-blue);border-color:var(--fs-blue);background:var(--fs-panel)}

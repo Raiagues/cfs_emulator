@@ -10,6 +10,7 @@ from .catalog import build_catalog, apply_overrides
 from . import official
 from .first_event import FirstEvent
 from journey import Store
+from project.defaults import sensor_timeout
 from sensors.observations import SensorTelemetry
 from .round_trip import PassedTests, RoundTrips, TestPlans
 
@@ -339,7 +340,8 @@ class GroundStation:
                                   'build_fingerprint': (self._active_catalog or {}).get('build_fingerprint'),
                                   'receiving': connected and self._last_received is not None and time.time() - self._last_received < 10,
                                   'transport': self._transport, 'backend': 'CI_LAB / TO_LAB', 'error': self._error,
-                                  'first_flight': self.first_contact.snapshot(),
+                                  'first_flight': self.first_contact.snapshot(), 'authored_reply': self.command_reply.snapshot(),
+                                  'reply_timeout': sensor_timeout(),
                                   'received': self._received, 'malformed': self._malformed,
                                   'last_received': self._last_received,
                                   'communication': {'since': self._session_started,

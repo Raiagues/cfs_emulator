@@ -1,3 +1,4 @@
+import {updateNode} from './dom.js';
 import {guide} from './coach.js';
 import {onUpdate} from './updates.js';
 import {targetDrawing} from './target-drawing.js';
@@ -121,28 +122,6 @@ function picture(id,data,layers) {
       ${other.length?`<details class="boot-other"><summary>+${other.length} NASA apps</summary>${other.map(([name,on])=>chip(name,on)).join('')}</details>`:''}</div>`;
   }
   return `<header><span class="boot-picture-icon">${icon(layer?.[2]||'build')}</span><h2 title="${tooltips[id]}">${escape(name)}</h2><i class="boot-picture-dot" data-lit="${!!layer?.[4] || id==='build'}"></i></header><div class="boot-figure" data-scene="${id}">${figure}</div>`;
-}
-
-// Keep live SVG strokes, focused buttons and scrolling console nodes across polls.
-function updateNode(current,next){
-  if(current.isEqualNode(next))return;
-  if(current.nodeName!==next.nodeName || current.getAttribute?.('data-scene')!==next.getAttribute?.('data-scene')){
-    current.replaceWith(next);
-    return;
-  }
-  if(current.nodeType===Node.TEXT_NODE){current.nodeValue=next.nodeValue;return;}
-  for(const attr of Array.from(current.attributes)){
-    if(!next.hasAttribute(attr.name))current.removeAttribute(attr.name);
-  }
-  for(const attr of next.attributes){
-    if(current.getAttribute(attr.name)!==attr.value)current.setAttribute(attr.name,attr.value);
-  }
-  const children=Array.from(next.childNodes);
-  children.forEach((child,i)=>{
-    if(current.childNodes[i])updateNode(current.childNodes[i],child);
-    else current.append(child);
-  });
-  while(current.childNodes.length>children.length)current.lastChild.remove();
 }
 
 // Replay only observations that the backend had received at this instant.

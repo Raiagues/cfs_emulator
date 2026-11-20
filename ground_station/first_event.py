@@ -73,7 +73,7 @@ class FirstEvent:
         return {'telemetry': bool(self.downlink), 'event': bool(self.event), 'answer': bool(self.answer),
                 'event_at': self.event, 'answer_at': self.answer, 'return_host': self.destination,
                 'enable_command': self.enable, 'noop_command': standard or next(iter(self.noops), None),
-                'baseline_apps': sorted(self.counter),
+                'baseline_apps': sorted(self.counter), 'counters': dict(self.counter),
                 'downlink_receipt': self.downlink_receipt,
                 'app': self.pending['app'] if self.pending else self.noops.get(standard),
                 'automatic': automatic, 'receipt': dict(self.pending) if self.pending else None}
