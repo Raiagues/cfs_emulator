@@ -188,6 +188,7 @@ def parser():
     command.add_argument("name", help="Reader identifier")
     command.add_argument("--device", required=True)
     command.add_argument("--new-app", action="store_true", help="Create the app and its reader together")
+    command.add_argument("--read-command", metavar="NAME", help="Also create a command to read and publish this sensor on demand")
     command = commands.add_parser("add-device")
     command.add_argument("name")
     command.add_argument("--id", required=True)
@@ -207,6 +208,10 @@ def parser():
             command.add_argument("--actuator")
         if kind == "telemetry":
             command.add_argument("--sensor")
+    for kind in ("sensor", "command", "telemetry"):
+        command = commands.add_parser(f"remove-{kind}")
+        command.add_argument("app")
+        command.add_argument("name")
     command = commands.add_parser("bind-telemetry")
     command.add_argument("app")
     command.add_argument("name")
@@ -220,6 +225,9 @@ def parser():
 
 def run(args):
     root = args.root.resolve()
+    if args.action in {"remove-sensor", "remove-command", "remove-telemetry"}:
+        from interface.backend.workspace import Workspace
+        return Workspace(root).mutate(args.action, {"app": args.app, "name": args.name}), 0
     if args.action == "register-model":
         from project.sensor_models import register
         return register(root, json.loads(args.definition.read_text()),
@@ -336,6 +344,15 @@ def run(args):
                 "device": catalog["buses"][device["bus"]]["device"], "address": device["address"],
                 "tlm_mid": generator.allocate(generator.TELEMETRY_IDS, used, "telemetry MID")})
             registry["sensors"][args.name] = args.device
+            if args.action == "link-hal" and args.read_command:
+                command_name = identifier(args.read_command)
+                for relative in generator.entity_files(args.app, "command", command_name):
+                    if safe_path(root, "mission/" + relative).exists():
+                        raise ProjectError(f"Conflicting command file: {relative}")
+                used_codes = {command["code"] for command in manifest["commands"]}
+                first_code = 4 if manifest["schema_version"] == 2 else 2
+                manifest["commands"].append({"name": command_name, "reader": args.name,
+                    "code": generator.allocate(range(first_code, 128), used_codes, "command code")})
         elif kind == "command":
             code = args.code if args.code is not None else generator.allocate(
                 range(4 if manifest["schema_version"] == 2 else 2, 128), {command["code"] for command in manifest[collection]}, "command code")

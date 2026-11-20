@@ -262,22 +262,29 @@ def planned_settings(root, settings):
     files[SOURCE] = _replace(text, tree, "SESSION", stored)
     for model_name, entries in groups.items():
         model = _model_source(root, model_name)
-        validated = {name: {prop: _compact(signal) for prop, signal in _device_settings(devices[name], catalog, model, values).items()}
+        validated = {name: _device_settings(devices[name], catalog, model, values)
                      for name, values in entries.items()}
         # A model has one default waveform. Only differing device instances
         # need overrides; functions always remain in the same sensor file.
         all_instances = [device for device in devices.values() if device["model"] == model_name]
         if len(all_instances) == 1:
-            signals = next(iter(validated.values()))
+            signals = {prop: _compact(value) for prop, value in next(iter(validated.values())).items()}
             instances = {}
         else:
             signals = copy.deepcopy(model["signals"])
             instances = {name: value for name, value in model["instances"].items() if name in devices}
             for name, values in validated.items():
-                inherited = {prop: _compact(_signal_settings(devices[name], prop, limits,
-                             {**model, "instances": {}}))
-                             for prop, limits in catalog["models"][model_name]["properties"].items()}
-                difference = {prop: value for prop, value in values.items() if value != inherited[prop]}
+                difference = {}
+                for prop, value in values.items():
+                    limits = catalog["models"][model_name]["properties"][prop]
+                    inherited = _signal_settings(devices[name], prop, limits, {**model, "instances": {}})
+                    # Instance fields overlay model defaults. Keep explicit resets
+                    # such as enabled=True or noise="none" when those defaults differ.
+                    override = {key: val for key, val in value.items() if inherited.get(key) != val}
+                    if "custom" in override:
+                        override["function"] = override.pop("custom")
+                    if override:
+                        difference[prop] = override
                 if difference: instances[name] = difference
                 else: instances.pop(name, None)
         updated = _replace(model["text"], model["tree"], "SIGNALS", signals)
@@ -299,7 +306,7 @@ def waveform_for(root, device, settings, catalog=None, orbit=None):
     def sample(seconds, initial):
         illumination = {}
         base = None
-        if any(signal["function"] == "script" for signal in signals):
+        if any(signal["function"] == "script" and signal.get("enabled", True) for signal in signals):
             initial = tuple(signal["initial"] for signal in signals)
             initial = initial[0] if len(initial) == 1 else initial
             base = original.sample(seconds, initial)
@@ -307,6 +314,9 @@ def waveform_for(root, device, settings, catalog=None, orbit=None):
         values = []
         for index, signal in enumerate(signals):
             value, kind = signal["initial"], signal["function"]
+            if not signal.get("enabled", True):
+                values.append(value)
+                continue
             if kind == "script": value = base[index]
             elif kind == "sine": value += signal["amplitude"] * math.sin(2 * math.pi * seconds / signal["period"])
             elif kind == "ramp": value += signal["slope"] * seconds
@@ -350,6 +360,8 @@ def run_session(root=ROOT, steps=None, events=False, dry_run=False, device_id=No
     for sensor in selected:
         device = devices[sensor["device"]]
         waveforms[device["id"]] = waveform_for(root, device, sensor, catalog, orbit)
+        if not waveforms[device["id"]].enabled:
+            raise ValueError(f"Select at least one output for {device['id']}")
     def report(elapsed, samples):
         payload = []
         for device, values in samples:

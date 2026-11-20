@@ -1,0 +1,24 @@
+{
+  "schema_version": 2,
+  "name": "hal_mpu",
+  "cmd_mid": 6662,
+  "hk_request_mid": 6663,
+  "wakeup_mid": 6664,
+  "hk_tlm_mid": 2564,
+  "period_ticks": 20,
+  "hk_period_ticks": 40,
+  "priority": 55,
+  "stack_size": 32768,
+  "perf_id": 102,
+  "sensors": [
+    {
+      "name": "sample",
+      "driver": "mpu6050",
+      "device": "/dev/i2c-1",
+      "address": 104,
+      "tlm_mid": 2565
+    }
+  ],
+  "commands": [],
+  "telemetry": []
+}

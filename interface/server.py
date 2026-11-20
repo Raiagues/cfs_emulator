@@ -372,7 +372,8 @@ class Studio:
         filename = 'catalog-' + profile + '-' + fingerprint + ('-sensorless' if sensorless else '') + '.json'
         cached = self.hardware._load(filename)
         if cached and cached.get('catalog_version') == CATALOG_VERSION:
-            return cached
+            # Board and emulator share ARM layouts. Receipts belong to this deployment.
+            return dict(cached, build_target=target)
         build_root, _, build_state = self.hardware._require_build(sensorless, target=target)
         if build_state.get('fingerprint') != fingerprint:
             raise ValueError('The target uses a different build. Build and run before reconnecting.')
@@ -399,7 +400,7 @@ class Studio:
         if not state:
             return {'packets': [], 'commands': [], 'transport': {},
                     'errors': ['Build and run the flight software to prepare the catalog.']}
-        return apply_overrides(self.freeze_catalog(state, sensorless), self.workspace.root)
+        return apply_overrides(self.freeze_catalog(dict(state, target=target), sensorless), self.workspace.root)
 
     def ground_start(self, options):
         if set(options) - {'target', 'connection', 'journey_reset_at'}:

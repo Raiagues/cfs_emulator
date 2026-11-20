@@ -106,3 +106,26 @@ manager.execute("stop", target="native", emit=print)
 ```
 
 A interface e a CLI compartilham `hardware/.runtime/execution.lock` para serializar build, boot, execução, parada e desligamento do mesmo checkout. Uma tentativa concorrente recebe o estado ocupado e pode ser repetida depois da operação em andamento.
+
+### Imagem local ou de um fork
+
+No diretório que contém `start`, `./start --no-ui emulator` mostra a imagem e a porta SSH. A interface usa essas mesmas configurações. Para construir no PC, com Docker e Buildx disponíveis, escolha uma tag e use o Dockerfile do projeto:
+
+```sh
+./start --no-ui emulator --image flight-studio:local
+./scripts/build.sh
+./scripts/setup.sh
+```
+
+O script usa a tag selecionada e grava na imagem o identificador dos modelos QEMU compilados. A compilação precisa de espaço para a imagem Raspberry Pi OS descompactada, o disco convertido e a árvore de compilação do QEMU. O primeiro boot também precisa de espaço no diretório `board/` para o disco persistente. Para usar outra porta, inclua por exemplo `--port 2223` no comando de seleção, com o emulador desligado.
+
+Para usar GHCR próprio, um mantenedor pode executar o workflow **Publish emulator image** na branch padrão do fork. O workflow publica para Linux amd64 em `ghcr.io/<conta>/<repositorio>`. Depois de publicada a imagem, selecione a tag no cliente, por exemplo `./start --no-ui emulator --image ghcr.io/minha-conta/meu-projeto:latest`, e execute `./scripts/setup.sh`. Para registros privados, autentique o cliente Docker com acesso de leitura.
+
+### Verificação em um host Debian limpo
+
+A receita abaixo instala dependências e baixa o cFS em um sistema de arquivos novo. Ela inclui os fontes de missão, deixando fora os builds, o disco do guest, os estados de execução e as chaves da máquina. O contêiner compila para o alvo nativo. Os ensaios ARM64 usam separadamente o emulador e a placa.
+
+```sh
+docker build -f scripts/portability.Dockerfile -t flight-studio-host:local .
+docker run --rm --network none flight-studio-host:local
+```

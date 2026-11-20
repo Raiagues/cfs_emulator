@@ -45,6 +45,15 @@ def validate_emulator(value):
     return {"ssh_port": port, "image": image}
 
 
+def save_emulator(hardware, value):
+    """Persist the same settings used by workspace setup, boot and local builds."""
+    value = validate_emulator(value)
+    if emulator_config(hardware.root) != value:
+        hardware.require_stopped_emulator_for_configuration()
+        hardware._save("emulator.json", value)
+    return value
+
+
 def _source_inventory(root):
     """Inspect installation files without launching Git before the user asks for a check."""
     checkout = root / "cFS"
@@ -117,13 +126,10 @@ def save(studio, body):
                 raise ValueError("Stop cFS on the previous board before changing its connection.")
             hardware._mark_stopped("physical", prior_board)
     profile_changed = target != "native" and (board, system) != (config["board"], config["os"])
-    emulator_changed = emulator is not None and emulator != emulator_config(hardware.root)
-    if emulator_changed and not profile_changed:
-        hardware.require_stopped_emulator_for_configuration()
     if profile_changed and _source_inventory(hardware.root)["state"] == "installed":
         studio.workspace.select_profile(board, system, hardware=hardware)
     if emulator is not None:
-        hardware._save("emulator.json", emulator)
+        save_emulator(hardware, emulator)
     if target == "physical" and connection != previous:
         if connection:
             hardware._save("connection.json", connection)

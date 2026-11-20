@@ -2,7 +2,59 @@
   "schema_version": 1,
   "board": "raspi4b",
   "os": "raspios",
-  "devices": [],
-  "apps": [],
-  "buses": []
+  "devices": [
+    {
+      "name": "Temperature",
+      "id": "temp",
+      "model": "tmp105",
+      "bus": "i2c-bus.1",
+      "address": 72,
+      "values": {}
+    },
+    {
+      "name": "Magnetometer",
+      "id": "mag",
+      "model": "lsm303dlhc_mag",
+      "bus": "i2c-bus.1",
+      "address": 30,
+      "values": {}
+    },
+    {
+      "name": "Inertial sensor",
+      "id": "imu",
+      "model": "mpu6050",
+      "bus": "i2c-bus.1",
+      "address": 104,
+      "values": {}
+    }
+  ],
+  "apps": [
+    {
+      "name": "hal_temp",
+      "sensors": {
+        "sample": "temp"
+      },
+      "telemetry_bindings": {},
+      "command_bindings": {}
+    },
+    {
+      "name": "hal_mag",
+      "sensors": {
+        "sample": "mag"
+      },
+      "telemetry_bindings": {},
+      "command_bindings": {}
+    },
+    {
+      "name": "hal_mpu",
+      "sensors": {
+        "sample": "imu"
+      },
+      "telemetry_bindings": {},
+      "command_bindings": {}
+    }
+  ],
+  "buses": [
+    "i2c-bus.1"
+  ]
 }

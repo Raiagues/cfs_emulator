@@ -1,5 +1,10 @@
 CFE_LIB, cfe_assert,  CFE_Assert_LibInit, ASSERT_LIB,    0,   0,     0x0, 0;
 CFE_LIB, sample_lib,  SAMPLE_LIB_Init,    SAMPLE_LIB,    0,   0,     0x0, 0;
+CFE_LIB, linux_i2c_lib, LINUX_I2C_LIB_Init, LINUX_I2C_LIB, 0, 0, 0x0, 0;
+CFE_LIB, hal_sensor, HAL_SENSOR_LibInit, HAL_SENSOR, 0, 0, 0x0, 0;
+CFE_LIB, tmp105_lib, TMP105_LIB_Init, TMP105_LIB, 0, 0, 0x0, 0;
+CFE_LIB, lsm303dlhc_mag_lib, LSM303DLHC_MAG_LIB_Init, LSM303DLHC_MAG_LIB, 0, 0, 0x0, 0;
+CFE_LIB, mpu6050_lib, MPU6050_LIB_Init, MPU6050_LIB, 0, 0, 0x0, 0;
 CFE_APP, sch_lab,     SCH_LAB_AppMain,    SCH_LAB,      35,   32768, 0x0, 0;
 CFE_APP, ci_lab,      CI_LAB_AppMain,     CI_LAB,       40,   32768, 0x0, 0;
 CFE_APP, to_lab,      TO_LAB_AppMain,     TO_LAB,       45,   32768, 0x0, 0;
@@ -13,3 +18,6 @@ CFE_APP, hs,  HS_AppMain, HS, 70,  131072, 0x0, 0;
 CFE_APP, sc,  SC_AppMain, SC, 70,  131072, 0x0, 0;
 CFE_APP, md,  MD_AppMain, MD, 70,  131072, 0x0, 0;
 CFE_APP, cs,  CS_AppMain, CS, 70,  131072, 0x0, 0;
+CFE_APP, hal_temp, HAL_TEMP_Main, HAL_TEMP, 55, 32768, 0x0, 0;
+CFE_APP, hal_mag, HAL_MAG_Main, HAL_MAG, 55, 32768, 0x0, 0;
+CFE_APP, hal_mpu, HAL_MPU_Main, HAL_MPU, 55, 32768, 0x0, 0;

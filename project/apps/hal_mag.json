@@ -1,0 +1,24 @@
+{
+  "schema_version": 2,
+  "name": "hal_mag",
+  "cmd_mid": 6659,
+  "hk_request_mid": 6660,
+  "wakeup_mid": 6661,
+  "hk_tlm_mid": 2562,
+  "period_ticks": 20,
+  "hk_period_ticks": 40,
+  "priority": 55,
+  "stack_size": 32768,
+  "perf_id": 101,
+  "sensors": [
+    {
+      "name": "sample",
+      "driver": "lsm303dlhc_mag",
+      "device": "/dev/i2c-1",
+      "address": 30,
+      "tlm_mid": 2563
+    }
+  ],
+  "commands": [],
+  "telemetry": []
+}

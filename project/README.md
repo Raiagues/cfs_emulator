@@ -60,6 +60,21 @@ Em **Hardware**, selecione **Add bus**, escolha o conector da placa e use **Add 
 
 A biblioteca do chip usa `hal_sensor`. O leitor associa o dispositivo ao transporte informado pela placa. Leitores vinculados e dependências CMake determinam quais bibliotecas entram no build e em que ordem o cFE as carrega. Para um chip novo, registre uma definição em **Hardware** ou use `./start --no-ui project register-model <arquivo>`. [Modelos, barramentos e HAL](drivers/README.md)
 
+Para solicitar uma amostra também por comando, preencha **Read command** ao vincular o HAL ou use a opção equivalente no terminal.
+
+```sh
+./start --no-ui project link-hal hal_payload temp --device payload_temp --new-app --read-command read_now
+```
+
+O comando gerado recebe apenas o cabeçalho, chama o mesmo leitor da aquisição periódica e publica a telemetria com valor, status e validade. O código do comando é alocado entre os códigos livres da aplicação. O contador de comandos registra o resultado do leitor. Para retirar esse vínculo e manter a aplicação, remova seus componentes na ordem de dependência.
+
+```sh
+./start --no-ui project remove-command hal_payload read_now
+./start --no-ui project remove-sensor hal_payload temp
+```
+
+As bibliotecas de missão criadas com `library new` incluem pontos `@studio.edit library.init` e `@studio.edit library.function` no código copiado de `sample_lib` quando essas funções estão presentes. O vínculo com um sensor I²C materializa e inclui automaticamente a biblioteca de transporte `linux_i2c_lib`, reutilizada pelos leitores do barramento.
+
 ## Mapa dos arquivos
 
 | Arquivo | Responsabilidade |

@@ -79,7 +79,13 @@ def validate_manifest(manifest, project_root=None):
         if not isinstance(manifest[collection], list):
             raise AppgenError(f"{collection} must be a list")
         for entity in manifest[collection]:
-            keys(entity, expected, collection)
+            reader_command = collection == "commands" and isinstance(entity, dict) and "reader" in entity
+            keys(entity, expected | {"reader"} if reader_command else expected, collection)
+            if reader_command:
+                valid_name(entity["reader"])
+                if not any(isinstance(sensor, dict) and sensor.get("name") == entity["reader"]
+                           for sensor in manifest["sensors"]):
+                    raise AppgenError("Remove the read command before removing its reader: " + entity["reader"])
             valid_name(entity["name"])
             symbol = pascal(entity["name"])
             if manifest["schema_version"] == 2 and symbol in {"Process", "DisplayParam"}:
@@ -324,8 +330,8 @@ def plan_library(root, name):
     if directory.exists():
         raise AppgenError(f"Library directory already exists: {name}")
     prefix = name.upper()
-    from project.appgen.sample import copy_sample
-    files = {f"libs/{name}/{path}": source for path, source in copy_sample(root, "sample_lib", name).items()}
+    from project.appgen.sample import library_sources
+    files = {f"libs/{name}/{path}": source for path, source in library_sources(root, name).items()}
     entry = prefix + "_Init"
     return {"files": files, "startup": {"module": name, "entry_point": entry,
             "fields": ["CFE_LIB", name, entry, prefix, "0", "0", "0x0", "0"]},

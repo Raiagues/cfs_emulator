@@ -296,7 +296,7 @@ class Workspace:
     def save_simulation(self, settings, expected_hash):
         from sensors.session import load_session, planned_settings
         from project.manage import commit
-        with self.lock:
+        with self.lock, self.mission._write_lock():
             if expected_hash != load_session(self.root)['hash']:
                 raise ValueError('Sensor code or settings changed. Reload before saving widgets.')
             changed = commit(self.root, planned_settings(self.root, settings))
@@ -554,6 +554,8 @@ class Workspace:
             args += ["--device", self.model.identifier(payload.get("device", ""))]
             if payload.get("new_app") is True:
                 args.append("--new-app")
+            if payload.get("read_command"):
+                args += ["--read-command", self.model.identifier(payload["read_command"])]
         elif action == "remove-device":
             args.append(self.model.identifier(payload.get("id", "")))
         elif action == "add-device":

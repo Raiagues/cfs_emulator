@@ -47,17 +47,17 @@ class SetupChecksTest(unittest.TestCase):
         running = threading.Event()
         release = threading.Event()
 
-        run = subprocess.run
-
+        # This test exercises the HTTP stream and concurrent requests. Running
+        # host tools here makes the synchronization depend on local startup time.
         def capture(command, **options):
-            if command[:2] == ('docker', 'buildx'):
-                return subprocess.CompletedProcess(command, 0, 'Buildx v0.30.0')
+            if command[1:3] == ('-m', 'project.nasa_source'):
+                return subprocess.CompletedProcess(command, 1, '{"state":"missing"}')
             if command[:2] == ('docker', 'version'):
                 running.set()
                 if not release.wait(5):
                     raise RuntimeError('client did not receive the running state')
                 return subprocess.CompletedProcess(command, 0, '28.0.0')
-            return run(command, **options)
+            return subprocess.CompletedProcess(command, 0, 'tool 1.0')
 
         with patch('hardware.infrastructure.subprocess.run', side_effect=capture), self.request('physical') as stream:
             self.assertEqual(stream.headers.get_content_type(), 'application/x-ndjson')
@@ -65,12 +65,14 @@ class SetupChecksTest(unittest.TestCase):
             self.assertIsNone(first['ready'])
             self.assertTrue(all(row['status'] == 'pending' for row in first['checks']))
             try:
-                self.assertTrue(running.wait(4))
                 for line in stream:
                     state = json.loads(line)
                     engine = next(row for row in state['checks'] if row['label'] == 'Docker engine ≥ 23')
                     if engine['status'] == 'running':
                         break
+                else:
+                    self.fail('stream completed before the engine check started')
+                self.assertTrue(running.wait(4))
                 self.assertIsNone(engine['ready'])
                 self.assertIsNone(engine['duration_ms'])
                 self.assertEqual(state['status'], 'running')

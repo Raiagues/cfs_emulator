@@ -221,12 +221,13 @@ def main():
     parser.add_argument("--interval", type=float, help="seconds between updates; defaults to SESSION")
     parser.add_argument("--steps", type=int, help="stop after this many updates")
     parser.add_argument("--dry-run", action="store_true", help="preview samples without connecting to QEMU")
+    parser.add_argument("--events", action="store_true", help="emit machine-readable @sensor JSON with physical units per tick")
     parser.add_argument("--trace-qmp", action="store_true", help="also print complete QMP requests and responses")
     args = parser.parse_args()
     try:
         from sensors.session import run_session
         run_session(args.root, sensor_ids=args.ids, interval=args.interval, steps=args.steps,
-                    trace_qmp=args.trace_qmp, dry_run=args.dry_run)
+                    trace_qmp=args.trace_qmp, dry_run=args.dry_run, events=args.events)
     except KeyboardInterrupt:
         print("Synthetic data stopped.", flush=True)
     except (OSError, ValueError, RuntimeError) as error:

@@ -106,8 +106,10 @@ export function halDialog(workspace, deviceId, {dialog, esc, save}) {
   dialog('Link sensor HAL',`<div class="hal-device">${icon('circuit')} <strong>${esc(device.name)}</strong><code>${esc(device.bus)} · 0x${device.address.toString(16)}</code></div>
      <label>Mission app<select name="target">${names}<option value="">Create mission app…</option></select></label>
      <label class="hal-app-name">App name<input name="app" value="${esc(candidate)}" ${inputs}></label>
-     <label>Reader name<input name="reader" value="${esc(device.id)}" ${inputs}></label>`, values =>
-       save('link-hal',{app:values.target || values.app, new_app:!values.target, name:values.reader, device:deviceId}), 'Link HAL');
+     <label>Reader name<input name="reader" value="${esc(device.id)}" ${inputs}></label>
+     <label>Read command (optional)<input name="read_command" placeholder="read_now" maxlength="19" pattern="[a-z][a-z0-9]*(_[a-z0-9]+)*"></label>`, values =>
+       save('link-hal',{app:values.target || values.app, new_app:!values.target, name:values.reader, device:deviceId,
+         read_command:values.read_command}), 'Link HAL');
   const target = document.querySelector('#dialog-body [name=target]');
   const newApp = document.querySelector('#dialog-body .hal-app-name');
   const update = () => {

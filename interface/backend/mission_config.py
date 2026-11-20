@@ -233,8 +233,9 @@ class MissionConfig:
             else:
                 dependencies = self._dependency_order(name)
                 for dependency in dependencies:
-                    if dependency not in catalog and not any(self._path(f"cFS/{group}/{dependency}/CMakeLists.txt").is_file()
-                                                              for group in ("apps", "libs")):
+                    if dependency not in catalog and not any(
+                            self._path(module_directory(self.root, group, dependency) / "CMakeLists.txt").is_file()
+                            for group in ("apps", "libs")):
                         raise ValueError("Missing native module source: " + dependency)
                     removed.discard(dependency)
                     if dependency == name or dependency not in compiled and dependency not in catalog:

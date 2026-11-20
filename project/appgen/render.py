@@ -69,8 +69,12 @@ def render_app(manifest, root=None):
         entity = entity_name(name)
         extra = {"NAME": name, "ENTITY": entity, "ENTITY_UPPER": name.upper()}
         stem = f"fsw/src/commands/{app}_{name}_cmd"
-        emit("command.c.in", stem + ".c", False, extra)
-        emit("command.h.in", stem + ".h", False, extra)
+        template = "command"
+        if "reader" in command:
+            template = "hal_sensor/read_command"
+            extra.update(READER=command["reader"], READER_ENTITY=entity_name(command["reader"]))
+        for suffix in (".c", ".h"):
+            emit(template + suffix + ".in", stem + suffix, False, extra)
         sources.append(stem + ".c")
         command_includes.append(f'#include "commands/{app}_{name}_cmd.h"')
         code_definitions.append(f'#define {prefix}_{name.upper()}_CC {command["code"]}')

@@ -1,0 +1,24 @@
+{
+  "schema_version": 2,
+  "name": "hal_temp",
+  "cmd_mid": 6656,
+  "hk_request_mid": 6657,
+  "wakeup_mid": 6658,
+  "hk_tlm_mid": 2560,
+  "period_ticks": 20,
+  "hk_period_ticks": 40,
+  "priority": 55,
+  "stack_size": 32768,
+  "perf_id": 100,
+  "sensors": [
+    {
+      "name": "sample",
+      "driver": "tmp105",
+      "device": "/dev/i2c-1",
+      "address": 72,
+      "tlm_mid": 2561
+    }
+  ],
+  "commands": [],
+  "telemetry": []
+}

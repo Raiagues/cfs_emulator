@@ -1,6 +1,6 @@
 # Flight Studio
 
-O Flight Studio é uma bancada local para desenvolver missões com o **NASA core Flight System (cFS)**. Você escolhe um alvo Linux, vê o hardware e a arquitetura da missão, edita C, compila e conversa com a aplicação pela Ground Station. O projeto inicial mantém as aplicações da distribuição da NASA e começa sem sensores conectados ou apps criadas no Studio.
+O Flight Studio é uma bancada local para desenvolver missões com o **NASA core Flight System (cFS)**. Você escolhe um alvo Linux, vê o hardware e a arquitetura da missão, edita C, compila e conversa com a aplicação pela Ground Station. A missão desta cópia inclui as aplicações de exemplo da NASA e três leitores I²C criados no Studio. O TMP105 mede temperatura, o LSM303DLHC fornece o campo magnético em três eixos e o MPU6050 fornece aceleração, velocidade angular e temperatura interna. Os modelos e leitores podem ser removidos ou recriados pela interface ou pelo terminal.
 
 ![Configuração dos alvos no Flight Studio](docs/images/first-flight/setup-1440-dark-studio.webp)
 
@@ -115,6 +115,8 @@ Em **Synthetic data**, selecione um dispositivo conectado. Para temperatura orbi
 | --- | --- | --- |
 | Emulador QEMU | Docker Engine 23+, Buildx 0.10+, OpenSSH e espaço para a imagem e o disco do guest. **Install emulator image** ou `./scripts/setup.sh` prepara imagem e chave local. | **Start emulator**, **Build cFS**, **Run cFS**. Ao terminar, use **Stop cFS** e **Stop emulator** para desligar o guest. |
 | Placa física | Inicialize a Pi 4B com Raspberry Pi OS de 64 bits, SSH habilitado e acesso à rede. Informe host ou IP, usuário e identidade SSH na configuração. Use **Check connection** para verificar acesso e permissões do serviço. | **Build cFS** compila ARM64 no host. **Run cFS** envia a missão e inicia o serviço na placa selecionada. A Ground Station usa a rota IPv4 entre o computador e a placa. |
+
+A imagem e a porta também podem ser escolhidas pelo terminal. [Construção local, registro do fork e instalação limpa](hardware/README.md#imagem-local-ou-de-um-fork).
 
 A imagem tem seu próprio identificador para os modelos de registradores. Ao alterar um modelo emulado, prepare a imagem correspondente e reinicie o guest para aplicar a alteração. O disco persistente do guest está em `board/`. Interromper a visualização do log deixa a execução em andamento.
 

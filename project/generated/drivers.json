@@ -1,4 +1,34 @@
 {
-  "modules": {},
+  "modules": {
+    "hal_sensor": {
+      "CMakeLists.txt": "d0aa7699eb4b61ed049874156e10d988c77dbb65a04646a8b01269359cf160a8",
+      "fsw/public_inc/hal_sensor.h": "e3799656ccb154b51c50664c567d7b536e26626608028b7aa4ea38c55b13f3a7",
+      "fsw/src/hal_sensor.c": "f3508991e11cb025f2311e757c454df6d9f21a66a7785c2c46fe3163debc8c2a"
+    },
+    "linux_i2c_lib": {
+      "CMakeLists.txt": "f9fa0c212fe3fda8cf2a8d4f7ddc13c35c430e529009ae62d19d4577126fe2d8",
+      "fsw/public_inc/linux_i2c_lib.h": "884b878816bc412113831b643ecc26b1953d67458ee353fafd610b7817ca640e",
+      "fsw/public_inc/linux_i2c_sensor.h": "48e9369be22544712bfffbcab1c354465582315e426c7153f99c08f9db9fb1ab",
+      "fsw/src/linux_i2c_lib.c": "349920f5429ff032da4bc591c061489ff4a5e740ac4a8f6ef686c3ea410e628d",
+      "fsw/src/linux_i2c_lib_internal.h": "99f7f2dbee5300b84a3a09fc3d070542518f8266fffa7367e9e1701b3084d46f",
+      "fsw/src/linux_i2c_lib_version.h": "fa46049c94ccaa45aab216e80bcc76b7bebe6c062e67ae583fe02d78e43f8d3d"
+    },
+    "lsm303dlhc_mag_lib": {
+      "CMakeLists.txt": "a2a62f16ad193cea3a670bd934084f3d85f2d7bef1c6a6a05647be4e8343aa91",
+      "fsw/public_inc/lsm303dlhc_mag_lib.h": "42b8ce5812e595c5f897fd1196601e065381fcb88cc38b61e64f90c3f7c6b708",
+      "fsw/src/lsm303dlhc_mag_lib.c": "578db25baa7a62ae5142de418a4697398f4e7eb2706eb56390d95c8306b753ad"
+    },
+    "mpu6050_lib": {
+      "CMakeLists.txt": "4c8b82db07a829dada5147f83d377e4aa0fe2f46da2198f3955c273ebebd41b6",
+      "fsw/public_inc/mpu6050_lib.h": "494b59e77f53470e6ca8f4f73c1d6998d4b18f8b923f5898b93f690f73cfce16",
+      "fsw/src/compat.c": "b878cfb66283b3138469634e7c7214d5bb6f8f2b51906a8c4207263fea9cf4d8",
+      "fsw/src/mpu6050_lib.c": "9eef4d4cbc3d4a203e9524520efb9c8b8e37613b0a2f4d38b033127da3a9187d"
+    },
+    "tmp105_lib": {
+      "CMakeLists.txt": "9716b5fa7c9c8d504713889f26c067d2990ecffff91fdc5fbf1d2b1bb6a70593",
+      "fsw/public_inc/tmp105_lib.h": "e42deb6d93c446ab69d9cb86a4a7c9c4acba5159444c76ad0ff239be2679e004",
+      "fsw/src/tmp105_lib.c": "b3356b3f50325033ab0b5724e723c0ad1a6ec846a270d0a24d077c5dff572b92"
+    }
+  },
   "retained": {}
 }

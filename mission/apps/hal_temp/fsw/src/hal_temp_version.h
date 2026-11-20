@@ -1,0 +1,73 @@
+/************************************************************************
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
+ *
+ * Copyright (c) 2023 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
+
+/**
+ * @file
+ *
+ *  The Hal Temp header file containing version information
+ */
+
+#ifndef HAL_TEMP_VERSION_H
+#define HAL_TEMP_VERSION_H
+
+/* Development Build Macro Definitions */
+
+#define HAL_TEMP_BUILD_NUMBER   1
+#define HAL_TEMP_BUILD_BASELINE "v7.0.2"
+#define HAL_TEMP_BUILD_CODENAME "Draco" /**< @brief: Development: Code name for the current build */
+
+/*
+ * Version Macros, see \ref cfsversions for definitions.
+ */
+#define HAL_TEMP_MAJOR_VERSION 7
+#define HAL_TEMP_MINOR_VERSION 0
+#define HAL_TEMP_REVISION      2
+
+/**
+ * @brief Last official release.
+ */
+#define HAL_TEMP_LAST_OFFICIAL "v7.0.1"
+
+/*!
+ * @brief Mission revision.
+ *
+ * Reserved for mission use to denote patches/customizations as needed.
+ * Values 1-254 are reserved for mission use to denote patches/customizations as needed. NOTE: Reserving 0 and 0xFF for
+ * cFS open-source development use (pending resolution of nasa/cFS#440)
+ */
+#define HAL_TEMP_MISSION_REV 0xFF
+
+#define HAL_TEMP_STR_HELPER(x) #x /*!< @brief Helper function to concatenate strings from integer macros */
+#define HAL_TEMP_STR(x) \
+    HAL_TEMP_STR_HELPER(x) /*!< @brief Helper function to concatenate strings from integer macros */
+
+/*! @brief Development Build Version Number.
+ * @details Baseline git tag + Number of commits since baseline. @n
+ * See @ref cfsversions for format differences between development and release versions.
+ */
+#define HAL_TEMP_VERSION HAL_TEMP_BUILD_BASELINE "-rc" HAL_TEMP_STR(HAL_TEMP_BUILD_NUMBER) "-oss"
+
+/**
+ * @brief Max Version String length.
+ *
+ * Maximum length that an OSAL version string can be.
+ *
+ */
+#define HAL_TEMP_CFG_MAX_VERSION_STR_LEN 256
+
+#endif /* HAL_TEMP_VERSION_H */

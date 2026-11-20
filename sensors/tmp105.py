@@ -8,8 +8,11 @@ PERIOD_SECONDS = 30.0
 
 
 SIGNALS = {'temperature': {'function': 'orbit.thermal',
-                          'material': {'size': '1U', 'mass': 1.3, 'alpha': .7,
-                                       'emissivity': .7, 'power': 1.0}}}
+                 'material': {'size': '1U',
+                              'mass': 1.3,
+                              'alpha': 0.7,
+                              'emissivity': 0.7,
+                              'power': 1.0}}}
 
 
 def configure(device):

@@ -17,6 +17,15 @@ HK = dict(EVENT, mid=2049, app='demo', name='DEMO_HK',values={'Count':8})
 
 
 class RoundTripTest(unittest.TestCase):
+    def test_arm_catalog_keeps_receipts_on_the_requested_board(self):
+        from interface.server import Studio, CATALOG_VERSION
+        studio = Mock()
+        stored = {'build_target': 'qemu', 'catalog_version': CATALOG_VERSION}
+        studio.hardware._load.return_value = stored
+        state = {'target': 'physical', 'fingerprint': 'a' * 64}
+        self.assertEqual(Studio.freeze_catalog(studio, state)['build_target'], 'physical')
+        self.assertEqual(stored['build_target'], 'qemu')
+
     def test_downlink_retries_only_setup_when_flight_receiver_starts_late(self):
         with tempfile.TemporaryDirectory() as root:
             station = GroundStation(root)

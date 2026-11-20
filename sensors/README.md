@@ -96,6 +96,40 @@ python3 -m sensors.session
 ./start --no-ui simulate-preview --model tmp105
 ```
 
+Use the configured device IDs from `signals show`. The following examples use
+a temperature sensor named `temp` and an MPU6050 named `imu`. Changes are saved
+in the same Python settings that the Studio widgets read. The next simulation
+loads them.
+
+```sh
+./start --no-ui signals show
+./start --no-ui signals show imu
+./start --no-ui signals select imu temp
+./start --no-ui signals configure imu --outputs accel-x accel-y --function constant --initial 0 --noise gaussian --noise-level 0.01
+./start --no-ui signals configure imu --channel accel-x --initial 0.5 --interval 0.25
+./start --no-ui simulate imu --dry-run --steps 4 --events
+./start --no-ui signals orbit --perigee 500 --apogee 550 --inclination 53 --model J2 --epoch 2026-01-01T00:00:00Z
+./start --no-ui signals configure temp --outputs temperature --function orbit.thermal --material '{"size":"3U","mass":4,"alpha":0.7,"emissivity":0.7,"power":1}'
+./start --no-ui simulate temp --dry-run --interval 60 --steps 90 --events
+./start --no-ui simulate imu --interval 0.25 --steps 4 --events --trace-qmp
+```
+
+`--outputs` enables the listed channels and disables the remaining channels
+of the device. The number of names determines the number of outputs written.
+`--channel` edits individual channels while preserving their enabled state.
+`signals configure` includes the device in the session. `signals select`
+sets the default devices for a run with no explicit IDs. During QMP injection,
+disabled channels retain their current register-model values. The waveform
+parameters use the units displayed by `signals show DEVICE`. Gaussian noise
+uses the specified standard deviation. Uniform noise varies within the
+specified half-width around the waveform.
+
+With a TLE in a file, use `./start --no-ui signals orbit --tle orbit.tle --model J2`.
+The session uses the propagator chosen in `--model`; orbital inputs also accept
+the manual node, argument of perigee and initial anomaly. The orbit determines
+eclipse and heating for a thermal or sunlight channel. Magnetic field, angular
+rate and acceleration require their own models or input signals.
+
 Ctrl+C stops sending. A session loads the Python files when it starts, so edits apply
 from the next session. `./start --no-ui values` sets every emulated sensor back to its
 value in `project/config.json`, like Reset all signals in the Hardware view.

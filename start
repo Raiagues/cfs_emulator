@@ -23,6 +23,7 @@ Command line:
   ./start --no-ui status
   ./start --no-ui profile --board raspi4b --os raspios
   ./start --no-ui profile --native
+  ./start --no-ui emulator --image flight-studio:local
   ./start --no-ui boot --target qemu
   ./start --no-ui simulate-preview --model tmp105
   ./start --no-ui app new attitude_app
@@ -32,6 +33,7 @@ Command line:
   ./start --no-ui library remove payload_lib
   ./start --no-ui run --target physical --host raspberrypi.local
   ./start --no-ui project --help
+  ./start --no-ui signals --help
   ./start --no-ui simulate --help
 
 Run './start --no-ui COMMAND --help' for command options.
@@ -56,6 +58,9 @@ def main(argv=None):
         print(HELP, file=sys.stderr)
         return 2
     argv = argv[1:]
+    if argv[:1] == ['signals']:
+        replace([sys.executable, '-m', 'sensors.cli', *argv[1:]])
+        return 0
     if argv and argv[0] in {'project', 'simulate'}:
         if any(arg == '--root' or arg.startswith('--root=') for arg in argv[1:]):
             print('Commands use the project containing ./start; --root is not supported.', file=sys.stderr)
@@ -73,6 +78,9 @@ def main(argv=None):
     selection.add_argument('--native', action='store_true', help='Use this computer without a board')
     selection.add_argument('--board', help='Board identifier from the hardware catalog')
     profile.add_argument('--os', help='Operating system identifier for the selected board')
+    emulator = commands.add_parser('emulator', help='Show or select the Docker image and local SSH port')
+    emulator.add_argument('--image', help='Docker image tag or registry reference')
+    emulator.add_argument('--port', type=int, help='Local port forwarded to the emulated board')
     apps = commands.add_parser('app', help='Create or select mission applications')
     apps.add_argument('action', choices=('list', 'new', 'edit', 'add', 'enable', 'disable', 'remove', 'delete'),
                       help='remove excludes the app from the mission; delete also removes its sources')
@@ -107,11 +115,28 @@ def main(argv=None):
             source.add_argument('--device', help='Configured sensor ID')
             source.add_argument('--model', help='Python sensor model; no board is needed')
     commands.add_parser('project', help='Project generator commands (project --help)')
+    commands.add_parser('signals', help='Inspect and configure sensor signals and orbit (signals --help)')
     commands.add_parser('simulate', help='Synthetic sensor data (simulate --help)')
     args = parser.parse_args(argv)
     if not args.command:
         parser.print_help()
         return 0
+    if args.command == 'emulator':
+        from hardware.infrastructure import emulator_config, save_emulator
+        from hardware.manager import HardwareManager
+        try:
+            config = emulator_config(ROOT)
+            if args.image is not None or args.port is not None:
+                if args.image is not None:
+                    config['image'] = args.image
+                if args.port is not None:
+                    config['ssh_port'] = args.port
+                config = save_emulator(HardwareManager(ROOT), config)
+            print(json.dumps(config, indent=2))
+            return 0
+        except (OSError, ValueError, RuntimeError) as error:
+            print(f'Error: {error}', file=sys.stderr)
+            return 1
     if args.command == 'profile':
         if bool(args.board) != bool(args.os):
             parser.error('Select both --board and --os, or use --native')

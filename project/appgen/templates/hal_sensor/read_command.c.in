@@ -1,0 +1,10 @@
+#include "@APP@_@NAME@_cmd.h"
+#include "sensors/@APP@_@READER@_sensor.h"
+
+/** @brief Acquire and publish one @READER@ sample. */
+CFE_Status_t @PREFIX@_@ENTITY@Cmd(const @PREFIX@_@ENTITY@Cmd_t *Msg)
+{
+    /* @studio.edit command.@NAME@ */
+    (void)Msg;
+    return @PREFIX@_@READER_ENTITY@_Read();
+}

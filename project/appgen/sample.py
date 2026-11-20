@@ -43,6 +43,21 @@ def copy_sample(root, sample, name):
     return files
 
 
+def library_sources(root, name):
+    """Expose edit points in the library copied from the selected NASA source."""
+    files = copy_sample(root, "sample_lib", name)
+    path = f"fsw/src/{name}.c"
+    for suffix, point in (("Init", "init"), ("Function", "function")):
+        source = files[path]
+        # The example function is optional in other versions of sample_lib.
+        symbol = f"{name.upper()}_{suffix}"
+        if suffix == "Function" and symbol not in blank_lexemes(source):
+            continue
+        offset = in_function(source, symbol, r"\A\{", path) + 1
+        files[path] = source[:offset] + f"\n    /* @studio.edit library.{point} */" + source[offset:]
+    return files
+
+
 def extend_app(root, manifest, additions, values):
     """Keep upstream initialization, tables, commands and run loop. Insert mission hooks."""
     name = manifest['name']

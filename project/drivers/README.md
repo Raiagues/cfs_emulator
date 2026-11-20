@@ -67,6 +67,14 @@ Os modelos nativos do QEMU também podem descrever identidades de vários bytes,
 | [LSM303DLHC](models/lsm303dlhc_mag/model.json) | Verifica a identidade H43 e o estado de dado pronto. Reordena X/Z/Y para X/Y/Z, usa o ganho corrente de cada eixo e identifica saturação. |
 | [MPU6050](models/mpu6050/model.json) | Confere a identidade, acorda o chip e lê sete saídas em uma transação de 14 bytes. Aceleração e giro têm seletores de escala independentes. |
 
+## Escolher a frequência de aquisição
+
+O endereço e o barramento identificam a instância. O mapa de registradores descreve o chip. A lista de saídas determina o número de canais da amostra e as unidades definem o significado da telemetria. A sequência de inicialização pode selecionar a faixa ou o modo de operação. Um chip que exige aguardar conversão ou calibração pode implementar essa lógica em um driver próprio.
+
+O período de leitura da aplicação é configurado em **Edit app** ou com `./start --no-ui app edit <app> --wakeup-hz <Hz>`. Ele deve corresponder a um número inteiro de ticks do SCH_LAB. O parâmetro `--hk-hz` ajusta a frequência do pacote de estado da aplicação. Cada aquisição do HAL publica o pacote de amostra, incluindo o status e o indicador de validade.
+
+Consulte a documentação do componente para escolher o período. No TMP105, a escolha de resolução altera o tempo típico de conversão de 27,5 a 220 ms. No LSM303DLHC, a taxa magnética depende da configuração de CRA_REG_M. No MPU6050, o divisor de amostragem e o filtro digital determinam a frequência de atualização dos registros. Uma aplicação que consulta os registros mais rapidamente pode reler a mesma amostra. [Texas Instruments, TMP105](https://www.ti.com/lit/ds/symlink/tmp105.pdf) · [STMicroelectronics, LSM303DLHC](https://www.st.com/resource/en/datasheet/lsm303dlhc.pdf) · [InvenSense, MPU-6000/MPU-6050 Register Map](https://www.invensense.com/wp-content/uploads/2015/02/MPU-6000-Register-Map1.pdf)
+
 ## Implementar operações próprias
 
 O segundo template lê um contador de 8 bits. O [modelo](templates/custom-model.json) declara o endereço e os canais. A implementação da transação e da conversão fica em [driver.c.example](templates/driver.c.example). Registre os dois arquivos juntos.

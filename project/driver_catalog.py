@@ -125,7 +125,10 @@ def _dependency_values(text, cache):
     with tempfile.TemporaryDirectory(prefix="cfs-dependencies-") as temporary:
         path = Path(temporary) / "dependencies.cmake"
         path.write_text(script)
-        result = subprocess.run(["cmake", "-P", str(path)], capture_output=True, text=True, timeout=10)
+        try:
+            result = subprocess.run(["cmake", "-P", str(path)], capture_output=True, text=True, timeout=60)
+        except subprocess.TimeoutExpired as error:
+            raise ValueError("CMake timed out while reading module dependencies.") from error
     if result.returncode:
         raise ValueError("Cannot evaluate native library dependencies: " + result.stderr.strip())
     return [(name, [item for item in values.split(";") if item])

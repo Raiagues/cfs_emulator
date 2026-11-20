@@ -7,9 +7,9 @@ AMPLITUDE_UT = 20.0
 PERIOD_SECONDS = 30.0
 
 
-SIGNALS = {'mag-x': {'initial': 0, 'function': 'hold'},
+SIGNALS = {'mag-x': {'initial': 12.3, 'function': 'constant', 'noise': 'gaussian', 'noise_level': 0.04},
  'mag-y': {'initial': 0, 'function': 'sine', 'amplitude': 70, 'period': 300},
- 'mag-z': {'initial': 0, 'function': 'script'}}
+ 'mag-z': {'initial': -20.5, 'function': 'constant'}}
 
 
 def configure(device):

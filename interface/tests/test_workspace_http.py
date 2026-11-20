@@ -121,12 +121,19 @@ class WorkspaceHTTPTest(unittest.TestCase):
         args = {"app": "science", "device": "probe", "name": "temp", "new_app": True}
         self.api("mutate", {"action": "link-hal", "payload": dict(args, device="absent")}, 400)
         self.assertFalse((self.root / "mission/apps/science").exists())
-        self.mutate("link-hal", **args)
+        self.mutate("link-hal", **args, read_command="read_now")
+        command_path = "mission/apps/science/fsw/src/commands/science_read_now_cmd.c"
+        command = self.file(command_path)
+        self.assertIn("SCIENCE_Temp_Read()", command["content"])
+        self.assertIn("@studio.edit command.read_now", command["content"])
         self.assertTrue((self.root / "mission/libs/hal_sensor").exists())
         workspace = self.api("workspace")
         self.assertIn("science", workspace["mission"]["enabled"])
         self.assertEqual(workspace["project"]["apps"][0]["sensors"], {"temp": "probe"})
         self.assertTrue((self.root / "mission/apps/science/fsw/src/sensors/science_temp_sensor.c").is_file())
+        blocked = self.api("mutate", {"action": "remove-sensor", "payload": {"app": "science", "name": "temp"}}, 400)
+        self.assertIn("Remove the read command", blocked["error"])
+        self.mutate("remove-command", app="science", name="read_now")
         self.mutate("remove-sensor", app="science", name="temp")
         self.mutate("link-hal", **dict(args, name="another", new_app=False))
         self.mutate("remove-sensor", app="science", name="another")
@@ -152,6 +159,10 @@ class WorkspaceHTTPTest(unittest.TestCase):
         lib = {"kind": "library", "name": "cal_lib", "settings": {}}
         self.api("mission/draft", {**lib, "expected_hash": initial}, 400)
         mission = self.create("library", "cal_lib", mission["source"]["hash"])
+        self.assertIn("@studio.edit library.init", self.file("mission/libs/cal_lib/fsw/src/cal_lib.c")["content"])
+        for action in ("remove", "add"):
+            library = {"action": action, "name": "cal_lib", "expected_hash": mission["source"]["hash"]}
+            mission = self.api("mission/library", library)["mission"]
         lib_name = {"kind": "library", "name": "cal_lib", "new_name": "bench_lib"}
         self.api("mission/rename", {**lib_name, "expected_hash": initial}, 400)
         mission = self.api("mission/rename", {**lib_name, "expected_hash": mission["source"]["hash"]})["mission"]
