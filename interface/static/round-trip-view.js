@@ -113,7 +113,7 @@ export function tripPanel(state,command,helpers){
   const {esc,hex,icon}=helpers;
   const ground=stationState(state);
   const system=state.groundMode==='system';
-  const history=(ground.commands||[]).filter(c=>!c.automatic).slice().reverse();
+  const history=(ground.commands||[]).slice().reverse();
   const sent=history.filter(c=>c.id===command?.id);
   const tests=ground.runs||[], plan=planFor(state,command);
   const inspected=sent.find(item=>item.event_id===state.inspectedSend);

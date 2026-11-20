@@ -26,18 +26,10 @@ class RoundTripTest(unittest.TestCase):
         self.assertEqual(Studio.freeze_catalog(studio, state)['build_target'], 'physical')
         self.assertEqual(stored['build_target'], 'qemu')
 
-    def test_downlink_retries_only_setup_when_flight_receiver_starts_late(self):
-        with tempfile.TemporaryDirectory() as root:
-            station = GroundStation(root)
-            station._connected = Mock(return_value=True)
-            def observe_after_retry(*_, **kwargs):
-                if station.send.call_count == 2:
-                    station._received += 1
-            station.send = Mock()
-            with patch.object(station._updates, 'wait_for', side_effect=observe_after_retry):
-                station._enable_downlink('TO_LAB_OUTPUT_ENABLE_CC', '127.0.0.1')
-            self.assertEqual(station.send.call_count, 2)
-            station.send.assert_called_with('TO_LAB_OUTPUT_ENABLE_CC', {'dest_IP':'127.0.0.1'}, automatic=True)
+    def test_udp_checksum_and_function_code_match_the_mission_noop(self):
+        from ground_station.official import encode
+        command = dict(fields=[], size=8, mid=0x1882, code=0, header_size=8)
+        self.assertEqual(encode(command, {}, 'little').hex(), '1882c000000100a4')
 
     def test_only_matching_ordered_evidence_advances(self):
         trips=RoundTrips()

@@ -1,6 +1,6 @@
 # Ground Station
 
-A estação envia comandos ao cFS em execução e decodifica a telemetria recebida. Os módulos oficiais em `cFS/tools/cFS-GroundSystem/` vêm com o checkout da NASA feito no setup. O Studio usa o MiniCmdUtil para enviar comandos, o RoutingService para receber datagramas UDP e o GenericTelemetry para decodificar os pacotes. Para preparar o checkout e o ambiente Python, consulte o [guia inicial](../README.md).
+A estação envia pacotes CCSDS por UDP ao CI_LAB e decodifica os pacotes de TO_LAB usando os offsets, os tipos e a ordem de bytes do catálogo compilado.
 
 ![Primeiro contato na Ground Station, com o destino do downlink selecionado](../docs/images/first-flight/ground-1440-dark-studio.webp)
 
@@ -11,7 +11,7 @@ A estação envia comandos ao cFS em execução e decodifica a telemetria recebi
 3. Selecione `sample_app` e o comando `SAMPLE_APP_NOOP_CC`. Confira MID, código e tamanho do pacote e envie o comando. A seção **Sent** mostra os bytes transmitidos.
 4. Em **Telemetry events**, procure o evento `SAMPLE: NOOP command`. O housekeeping seguinte de `SAMPLE_APP` informa o novo `CommandCounter`. Esses dois registros permitem verificar que a app processou o NOOP.
 
-A transmissão UDP, a chegada de telemetria e o processamento pela app são observações distintas. **Sent** registra a transmissão local. O primeiro pacote recebido confirma o caminho de retorno. Um evento com a origem e a assinatura esperadas constitui evidência de processamento. Em **System overview**, os contadores por app mostram o tráfego da conexão atual, incluindo os comandos automáticos enviados a TO_LAB.
+A transmissão UDP, a chegada de telemetria e o processamento pela app são observações distintas. **Sent** registra a transmissão local. O primeiro pacote recebido confirma o caminho de retorno. Um evento com a origem e a assinatura esperadas constitui evidência de processamento. Em **System overview**, os contadores por app mostram o tráfego da conexão atual.
 
 ```mermaid
 sequenceDiagram
@@ -25,9 +25,9 @@ sequenceDiagram
     TO-)UI: Pacotes UDP para o receptor
 ```
 
-Depois do primeiro evento de NOOP confirmado, o Studio habilita a saída automaticamente nas reconexões ao mesmo destino durante a execução do Studio. As confirmações do painel pertencem à conexão ativa. Com o downlink aberto, a estação inscreve os pacotes ausentes da tabela compilada via `TO_LAB_ADD_PKT_CC` e espera até oito segundos por cada confirmação. As falhas ficam em **Catalog details**.
+A tabela compilada de TO_LAB define os pacotes encaminhados ao solo. Ao reconectar, envie **ENABLE_OUTPUT** para indicar o endereço do receptor.
 
-**Start over** marca um novo início neste navegador. Se a última resposta de NOOP do destino for anterior ao reinício, a próxima conexão aguarda o envio manual de **ENABLE_OUTPUT**. A sessão de voo pode continuar durante o reinício do guia.
+**Start over** reinicia o histórico do alvo no servidor. Cada aba consulta o mesmo histórico.
 
 ## Montar um teste de ida e volta
 
@@ -72,4 +72,4 @@ As portas são lidas da configuração compilada de CI_LAB e TO_LAB. No perfil p
 
 Em **Emulator**, a conexão cria um `hostfwd_add` por QMP para a porta compilada. A implementação espera uma bridge Docker alcançável a partir do host e o redirecionamento dura até o fim do processo QEMU. Em **Board**, o Studio lê `SSH_CONNECTION` e verifica a rota UDP do host usando os endereços observados. Um NAT ou salto SSH que altere o endereço de retorno pode impedir essa verificação.
 
-A descoberta, o uso dos módulos oficiais e o estado da sessão ficam nos módulos abaixo. [Catálogo](catalog.py) · [Descoberta em C](discovery.py) · [Integração NASA](official.py) · [Sessão](station.py)
+A descoberta, a codificação CCSDS e o estado da sessão ficam nos módulos abaixo. [Catálogo](catalog.py) · [Descoberta em C](discovery.py) · [Integração NASA](official.py) · [Sessão](station.py)

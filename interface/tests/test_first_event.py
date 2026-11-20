@@ -1,3 +1,5 @@
+import copy
+import socket
 import tempfile
 import unittest
 from unittest.mock import MagicMock, patch
@@ -42,49 +44,26 @@ class FirstEventTest(unittest.TestCase):
             self.assertEqual(saved['observations'][0]['sequence'], 21)
             self.assertFalse(restored.snapshot()['first_flight']['event'])
 
-    def test_connect_respects_the_requesting_browsers_last_reset(self):
-        with tempfile.TemporaryDirectory() as root:
+    def test_connections_and_downlink_packets_never_transmit_a_command(self):
+        with tempfile.TemporaryDirectory() as root, socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as flight:
+            flight.bind(('127.0.0.1', 0))
+            flight.settimeout(.1)
             ground = GroundStation(root)
-            fake = MagicMock()
-            with patch('ground_station.official', fake, create=True), patch.object(ground, '_enable_downlink') as enable:
-                snapshot = ground.start('127.0.0.1', listen_host='127.0.0.1', catalog=CATALOG)
-                self.assertEqual(snapshot['commands'], [])
-                self.assertFalse(snapshot['first_flight']['automatic'])
-                self.assertEqual(snapshot['first_flight']['return_host'], '127.0.0.1')
-                enable.assert_not_called()
-                # Receive a compiled INFO event after a manual NOOP. Record the flight
-                # timestamp, so unrelated packets cannot satisfy a browser's replay.
-                reply = {'PacketID.AppName': 'SAMPLE_APP', 'PacketID.EventType': 2,
-                         'PacketID.EventID': 3, 'Message': 'SAMPLE: NOOP command'}
-                fake.RoutingService.get_pkt_id.return_value = '0808'
-                page = MagicMock()
-                fake.Definitions.return_value.pages = {0x0808: page}
-                def receive(at, sequence):
-                    data = bytes.fromhex('0808c0') + bytes([sequence]) + bytes.fromhex('00010000')
-                    ground._definitions[0x0808] = {'name': 'EVS', 'app': 'cfe_evs'}
-                    with patch('ground_station.station.time.time', return_value=at):
-                        ground._accept(data)
-                ground.first_contact.sent({'id':'SAMPLE_APP_NOOP_CC', 'event_id':0})
-                page.read.return_value = reply, []
-                receive(10, 1)
-                page.read.return_value = {**reply, 'Message':'Unrelated'}, []
-                receive(20, 2)
-                # Same browser after reset, before another qualifying reply.
-                parameters = dict(listen_host='127.0.0.1', catalog=CATALOG, journey_reset_at=15)
-                self.assertFalse(ground.start('127.0.0.1', **parameters)['first_flight']['automatic'])
-                enable.assert_not_called()
-                # A browser with no reset still has the original learning.
-                snapshot = ground.start('127.0.0.1', listen_host='127.0.0.1', catalog=CATALOG)
-                self.assertTrue(snapshot['first_flight']['automatic'])
-                self.assertFalse(snapshot['first_flight']['event'])
-                enable.assert_called_once_with('TO_LAB_OUTPUT_ENABLE_CC', '127.0.0.1')
-                ground.first_contact.sent({'id':'SAMPLE_APP_NOOP_CC', 'event_id':0})
-                page.read.return_value = reply, []
-                receive(30, 1)
-                self.assertTrue(ground.start('127.0.0.1', **parameters)['first_flight']['automatic'])
-                with self.assertRaises(ValueError):
-                    ground.start('127.0.0.1', **{**parameters, 'journey_reset_at':-1})
-                self.assertTrue(ground.snapshot()['connected'])
+            self.addCleanup(ground.stop)
+            catalog = copy.deepcopy(CATALOG)
+            catalog.update(byte_order='little', packets=[])
+            catalog['transport'].update(command_port=flight.getsockname()[1], telemetry_port=0)
+            catalog['commands'][1].update(mid=0x1882, code=0, fields=[], size=8)
+            for _ in range(2):
+                ground.start('127.0.0.1', '127.0.0.1', catalog=catalog)
+                flight.sendto(bytes.fromhex('0808c000000000'), ground._receiver.socket.getsockname())
+                with ground._updates:
+                    self.assertTrue(ground._updates.wait_for(lambda: ground._received > 0, timeout=2))
+                with self.assertRaises(TimeoutError):
+                    flight.recvfrom(64)
+                self.assertEqual(ground.snapshot()['commands'], [])
+                ground.send('SAMPLE_APP_NOOP_CC')
+                self.assertEqual(flight.recvfrom(64)[0].hex(), '1882c000000100a4')
                 ground.stop()
 
     def test_first_downlink_is_linked_to_one_send_and_not_to_later_commands(self):

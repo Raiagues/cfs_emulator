@@ -91,7 +91,7 @@ function commandList(state, helpers) {
 }
 function contactCoach(state, esc, icon) {
  const flight=stationState(state).first_flight || {};
- if(flight.automatic || (flight.answer && state.coachDismissed))return '';
+ if(flight.answer && state.coachDismissed)return '';
  const commands=state.catalog?.commands||[];
  const enable=commands.find(c=>c.id===(flight.enable_command||'TO_LAB_OUTPUT_ENABLE_CC'));
  const noop=commands.find(c=>c.id===flight.noop_command)||commands.find(c=>c.app==='sample_app' && c.id.endsWith('_NOOP_CC'));
@@ -120,7 +120,7 @@ export function renderGround(state,helpers){
   const visible=filteredCommands(state,hex), selected=selectedCommand(state,visible);
   const managed=new Set(state.workspace.project.apps.map(app=>app.name));
   const firstContact=!ground.first_flight?.event && !state.allGroundApps;
-  const errors=[...(state.catalog?.errors||[]),...(ground.subscription_errors||[])];
+  const errors=state.catalog?.errors||[];
   const narrow=state.groundPane||'route';
   return `<section class="flight-ground" data-pane="${esc(narrow)}"><header class="ground-mobile-tabs">${['commands','route','telemetry'].map(key=>`<button data-ground-pane="${key}" aria-pressed="${key===narrow}">${esc(key)}</button>`).join('')}</header>
   <aside class="flight-library"><header>Commands<button data-ground="catalog" title="Refresh catalog">${icon('refresh')} From build</button></header>

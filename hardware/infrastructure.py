@@ -235,9 +235,7 @@ def _check_plan(hardware, target):
         yield Probe("docker", ("docker", "--version"), _tool_version)
         yield Probe("ssh", ("ssh", "-V"), _tool_version)
         yield Probe("scp", (*local, "check-scp"))
-    python_check = ("from PyQt5.QtCore import PYQT_VERSION_STR, QThread; import zmq; "
-                    "print('PyQt5', PYQT_VERSION_STR, '· pyzmq', zmq.pyzmq_version())")
-    yield Probe("Ground Station Python packages", (sys.executable, "-c", python_check), repair="./scripts/setup-native.sh")
+    yield Probe("Python", (sys.executable, "--version"), _tool_version)
     if target != "native":
         yield Probe("Docker engine ≥ 23", ("docker", "version", "--format", "{{.Server.Version}}"),
                     partial(_version_at_least, (23, 0)))

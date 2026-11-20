@@ -411,18 +411,8 @@ class Studio:
             if not self.hardware.same_board(current, prior):
                 raise ValueError('Run cFS on the selected board to deploy this mission there.')
         catalog = apply_overrides(self.freeze_catalog(deployment, bool(deployment.get('sensorless'))), self.workspace.root)
-        if target == 'native':
-            instance = deployment.get('instance') if deployment.get('pid') in hardware['native']['pids'] else None
-        else:
-            argv = self.hardware.ssh_argv(target, options.get('connection'))
-            service = 'cfs-studio.service' if target == 'physical' else 'cfs.service'
-            command = f'systemctl show --property=InvocationID --value {service}'
-            code, instance = self.hardware._capture(argv + [command], 5)
-            if code or len(instance) != 32 or any(c not in '0123456789abcdef' for c in instance):
-                instance = None
         link = resolve_ground_link(self.hardware, target, catalog, options.get('connection'))
-        result = self.ground.start(**link, catalog=catalog, service_instance=instance,
-                                   journey_reset_at=self.hardware.journey.snapshot(target)['reset_at'])
+        result = self.ground.start(**link, catalog=catalog)
         self.ground_target = target
         return dict(result, target=target)
 

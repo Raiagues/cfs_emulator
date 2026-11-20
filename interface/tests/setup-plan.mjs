@@ -16,7 +16,7 @@ test('setup repairs shared prerequisites before the emulator image and re-evalua
 });
 
 test('clicking an individual group scopes installation to observed failures in that group', () => {
-  const rows = [failure('NASA cFS source'),failure('Ground Station Python packages'),{label:'git',status:'pending'}];
+  const rows = [failure('NASA cFS source'),failure('Python'),{label:'git',status:'pending'}];
   assert.equal(nextRepair('native',rows,'Source').action,'clone-cfs');
   assert.equal(nextRepair('native',rows,'Compiler'),null);
   assert.equal(nextRepair('native',rows,'Python').action,'native-tools');

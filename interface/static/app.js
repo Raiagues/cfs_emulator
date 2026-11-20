@@ -819,7 +819,7 @@ function updateGround(snapshot){
   state.groundSelection=first.noop_command;state.groundApp='';
  }
  if(JSON.stringify(first)!==JSON.stringify(prior)){renderView();return;}
- if(!previous||['connected','target','error'].some(key=>previous[key]!==snapshot[key])||JSON.stringify(previous.subscription_errors)!==JSON.stringify(snapshot.subscription_errors))renderView();else updateTelemetry();
+ if(!previous||['connected','target','error'].some(key=>previous[key]!==snapshot[key]))renderView();else updateTelemetry();
 }
 let catalogRequest=null;
 function groundRefresh(){
