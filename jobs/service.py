@@ -19,7 +19,7 @@ from journey import first_boot, mission as evidence
 
 
 class Laboratory:
-    ACTIONS = {'first-boot', 'clone-cfs', 'model-test', 'sensor-test', 'connect', 'probe', 'logs', 'simulate', 'setup', 'build', 'boot',
+    ACTIONS = {'first-boot', 'model-test', 'sensor-test', 'connect', 'probe', 'logs', 'simulate', 'setup', 'build', 'boot',
                'run', 'stop', 'shutdown', 'values', 'simulate-preview'}
     BACKGROUND = {'logs', 'simulate', 'simulate-preview'}
 
@@ -186,7 +186,6 @@ class Laboratory:
                     samples = None
                 if isinstance(samples, dict):
                     record['samples'] = dict(samples, received_at=time.time())
-                    evidence.record_signal(self.hardware.root, record)
                     return
             if record['action'] == 'boot' and record['target'] == 'qemu':
                 output = str(line)
@@ -222,11 +221,22 @@ class Laboratory:
     def _run_job(self, record, options):
         """Job thread. Runtime jobs reserve their target until the operation ends."""
         owns_operation = record['action'] not in self.BACKGROUND
-        emit = lambda line: self._emit(record, line)
         try:
             if record['cancel'].is_set():
                 return
-            result = self._execute_job(record, options, emit)
+            directory = self.hardware.runtime / 'jobs'
+            directory.mkdir(mode=0o700, exist_ok=True)
+            log_path = directory / f'{record["action"]}-{record["id"]}.log'
+            with log_path.open('x', buffering=1) as log:
+                record['log_path'] = str(log_path)
+                def emit(line):
+                    print(line, file=log)
+                    self._emit(record, line)
+                try:
+                    result = self._execute_job(record, options, emit)
+                except Exception as error:
+                    print(str(error), file=log)
+                    raise
             with self.lock:
                 record['result'] = result
                 record['operation_complete'] = True
@@ -256,10 +266,6 @@ class Laboratory:
         action, target, kind, connection = record['action'], record['target'], record['kind'], record['connection']
         if action == 'first-boot':
             return first_boot.execute(self, record, options, emit)
-        if action == 'clone-cfs':
-            self.hardware._stream([str(self.workspace.root / 'scripts/install-cfs.sh')], emit,
-                                  cancel=record['cancel'], cwd=self.workspace.root)
-            return infrastructure.source_status(self.workspace.root)
         if action == 'boot' and target == 'qemu':
             # Refuse an impossible boot before disconnecting anything.
             self.hardware.assert_can_boot(options.get('retry', False))
@@ -276,6 +282,8 @@ class Laboratory:
         # A run replaces the readers only once its build and target checks pass.
         on_start = replace_readers if action == 'run' else None
         result = self.hardware.execute(action, emit, cancel=record['cancel'], on_start=on_start, **options)
+        if action == 'simulate-preview':
+            return record.get('scenario_result') or record.get('samples') or result
         if action in {'stop', 'shutdown'}:
             # Readers opened meanwhile would follow software that no longer runs.
             self._cancel_readers(target, connection, kind='flight' if action == 'stop' else None)

@@ -56,13 +56,6 @@ def record_writes(root, target, writes):
 
 def record_signal(root, job):
     target = job["target"]
-    if job["action"] == "simulate" and target == "qemu":
-        sample = job.get("samples") or {}
-        devices = {device["id"] for device in sample.get("devices", [])}
-        fresh = devices.difference(job.get("confirmed_devices", []))
-        if fresh:
-            record_writes(root, target, dict.fromkeys(fresh, sample["received_at"]))
-            job["confirmed_devices"] = sorted(devices)
     if job["action"] == "simulate-preview" and job.get("status") == "succeeded":
         scenario = job.get("scenario_result") or {}
         checks = scenario.get("checks")

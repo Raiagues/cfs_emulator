@@ -72,10 +72,11 @@ def main(argv=None):
         if any(arg == '--root' or arg.startswith('--root=') for arg in argv[1:]):
             print('Commands use the project containing ./start; --root is not supported.', file=sys.stderr)
             return 2
-        command = ([sys.executable, str(ROOT / 'project/manage.py')] if argv[0] == 'project' else
-                   [sys.executable, '-u', '-m', 'sensors.simulator'])
-        replace([*command, *argv[1:]])
-        return 0
+        if argv[0] == 'project':
+            from project.manage import main as project_cli
+            return project_cli(argv[1:], public=True)
+        from sensors.simulator import main as simulate
+        return simulate(argv[1:], public=True)
 
     parser = argparse.ArgumentParser(prog='./start --no-ui', description='Flight Studio command-line tools.')
     commands = parser.add_subparsers(dest='command')
@@ -84,6 +85,7 @@ def main(argv=None):
     source.add_argument('--json', action='store_true')
     status = commands.add_parser('status', help='Show workspace and target status')
     status.add_argument('--json', action='store_true')
+    status.add_argument('--target', choices=('native', 'physical', 'qemu'))
     target = commands.add_parser('target', help='Show or select the target')
     target.add_argument('name', nargs='?', choices=('native', 'qemu', 'physical'))
     target.add_argument('--use-board', action='store_true')
@@ -104,9 +106,10 @@ def main(argv=None):
     emulator.add_argument('--image', help='Docker image tag or registry reference')
     emulator.add_argument('--port', type=int, help='Local port forwarded to the emulated board')
     apps = commands.add_parser('app', help='Create or select mission applications')
-    apps.add_argument('action', choices=('list', 'new', 'edit', 'add', 'enable', 'disable', 'remove', 'delete'),
+    apps.add_argument('action', choices=('list', 'new', 'edit', 'add', 'enable', 'disable', 'remove', 'delete', 'rename'),
                       help='remove excludes the app from the mission; delete also removes its sources')
     apps.add_argument('name', nargs='?')
+    apps.add_argument('--to', metavar='NEW_NAME')
     apps.add_argument('--priority', type=int)
     apps.add_argument('--stack-size', type=int)
     apps.add_argument('--wakeup-hz', type=float)
@@ -114,9 +117,10 @@ def main(argv=None):
     apps.add_argument('--preview', action='store_true', help='Print the source/configuration plan without writing it')
     apps.add_argument('--json', action='store_true')
     libraries = commands.add_parser('library', help='Create and manage native mission libraries')
-    libraries.add_argument('action', choices=('list', 'new', 'add', 'remove', 'delete'),
+    libraries.add_argument('action', choices=('list', 'new', 'add', 'remove', 'delete', 'rename'),
                            help='remove excludes the library from the mission; delete also removes its sources')
     libraries.add_argument('name', nargs='?')
+    libraries.add_argument('--to', metavar='NEW_NAME')
     libraries.add_argument('--preview', action='store_true')
     libraries.add_argument('--json', action='store_true')
     for action in ('first-boot', 'model-test', 'sensor-test', 'setup', 'build', 'boot', 'run', 'stop', 'shutdown', 'connect', 'probe', 'logs', 'values', 'simulate-preview'):
@@ -132,6 +136,7 @@ def main(argv=None):
         if action in {'build', 'run'}:
             command.add_argument('--sensorless', action='store_true', help='Physical build without sensor apps')
         if action == 'setup':
+            command.add_argument('--jobs', type=int, help='Save the number of parallel native build jobs')
             command.add_argument('--check', action='store_true', help='Report prerequisites without installing packages')
         if action == 'run':
             follow = command.add_mutually_exclusive_group()
@@ -240,6 +245,8 @@ def main(argv=None):
     if args.command in {'app', 'library'}:
         if (args.action == 'list' and args.name) or (args.action != 'list' and not args.name):
             parser.error(f'{args.command} list takes no name; all other actions require a name')
+        if (args.action == 'rename') != bool(args.to):
+            parser.error('Use rename NAME --to NEW_NAME')
         settings = {key: getattr(args, key) for key in ('priority', 'stack_size', 'wakeup_hz', 'hk_hz')
                     if getattr(args, key, None) is not None}
         if args.action not in {'new', 'edit'} and (settings or args.preview):
@@ -255,6 +262,8 @@ def main(argv=None):
                 result = draft if args.preview else workspace.save_mission_draft(
                     args.command, args.name, draft['draft']['settings'], draft['expected_hash'],
                     draft['plan_hash'], mode=mode)
+            elif args.action == 'rename':
+                result = workspace.rename_module(args.command, args.name, args.to, mission['source']['hash'])
             elif args.action == 'list':
                 result = mission if args.command == 'app' else mission['available_libraries']
             elif args.command == 'library':
@@ -293,6 +302,19 @@ def main(argv=None):
     if args.command == 'values' and target != 'qemu':
         parser.error('values requires --target qemu')
 
+    connection = {'host': host, 'user': user or '', 'port': port} if host else None
+    if connection is not None:
+        if identity:
+            connection['identity_file'] = identity
+        if directory:
+            connection['directory'] = directory
+    if args.command == 'setup' and (connection is not None or args.jobs is not None):
+        from hardware.infrastructure import save
+        if args.jobs is not None and target != 'native':
+            parser.error('--jobs applies to native builds')
+        settings = {'connection': connection} if connection is not None else {'build_jobs': args.jobs}
+        save(manager, {'target': target, **settings})
+
     # Setup needs the real terminal for sudo; all other operations use the same
     # adapter, deployment checks and execution lock as the browser interface.
     if args.command == 'setup' and args.check:
@@ -307,20 +329,25 @@ def main(argv=None):
             print(json.dumps(frame) if args.json else ('Checks passed' if frame['ready'] else 'Checks failed'))
             return int(not frame['ready'])
     if args.command == 'setup' and target == 'qemu':
-        replace(['/bin/bash', str(ROOT / 'scripts/setup.sh')])
-        return 0
+        result = subprocess.run(['/bin/bash', str(ROOT / 'scripts/setup.sh')], stdout=sys.stderr)
+        if result.returncode == 0:
+            print(json.dumps({'target': target, 'ready': True}) if args.json else 'Emulator ready')
+        return result.returncode
     try:
         if args.command == 'status':
-            status = manager.status()
-            active = status['execution']['running_targets']
-            print(json.dumps(status) if args.json else ('Running · ' + ', '.join(active) if active else 'cFS stopped'))
+            snapshot = manager.status()
+            state = snapshot[args.target] if args.target else snapshot
+            if args.json:
+                print(json.dumps(state))
+            elif args.target == 'native':
+                native = state.get('pids') or []
+                observed = state.get('last_operational') or '—'
+                print(f'Native · PID {", ".join(map(str, native)) or "stopped"} · last OPERATIONAL {observed}')
+            else:
+                active = snapshot['execution']['running_targets']
+                running = args.target in active if args.target else bool(active)
+                print('Running · ' + (args.target or ', '.join(active)) if running else 'cFS stopped')
             return 0
-        connection = {'host': host, 'user': user or '', 'port': port} if host else None
-        if connection is not None:
-            if identity:
-                connection['identity_file'] = identity
-            if directory:
-                connection['directory'] = directory
         from jobs.cli import run
         options = {'target': target}
         if connection is not None:

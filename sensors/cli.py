@@ -37,6 +37,8 @@ def parser():
     for field in ('perigee', 'apogee', 'inclination', 'node', 'argument', 'anomaly'):
         unit = 'altitude in km' if field in ('perigee', 'apogee') else 'angle in degrees'
         orb.add_argument('--'+field, type=float, help=unit)
+    for command in (show, select, cfg, orb):
+        command.add_argument('--json', action='store_true')
     return cli
 
 
@@ -117,7 +119,20 @@ def main():
     cli = parser()
     args = cli.parse_args()
     try:
-        print(json.dumps(execute(Workspace(ROOT), args), ensure_ascii=False, indent=2))
+        result = execute(Workspace(ROOT), args)
+        if args.json:
+            print(json.dumps(result, ensure_ascii=False))
+        elif args.command == 'show':
+            devices = [result] if args.device else result['available']
+            for device in devices:
+                signals = device.get('signals') or device.get('defaults', {}).get('signals', {})
+                print(f'{device["id"]} · {", ".join(signals)}')
+        elif args.command == 'orbit':
+            orbit = result.get('settings', {}).get('orbit', result)
+            for field, value in orbit.items():
+                print(f'{field} · {value}')
+        else:
+            print('\n'.join(result.get('changed', [])) or 'Up to date')
     except (OSError, RuntimeError, ValueError) as error:
         cli.exit(1, f'Error: {error}\n')
 

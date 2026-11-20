@@ -11,9 +11,9 @@ import sys
 import tempfile
 from string import Template
 
-sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+if __name__ == "__main__":
+    sys.path.insert(0, str(ROOT))
 from project.model import (ProjectError, appgen, board_catalog, identifier, load_config,
                            mapped_manifests, protected_apps, read_manifests, safe_path,
                            validate_config, required_libraries, planned_project_files)
@@ -165,10 +165,18 @@ def sensor_packet(app, packet, sensor, generator):
             for suffix in (".h", ".c")}
 
 
-def parser():
-    cli = argparse.ArgumentParser(description=__doc__)
-    cli.add_argument("--root", type=Path, default=ROOT)
+def parser(public=False):
+    cli = argparse.ArgumentParser(prog="./start --no-ui project" if public else None, description=__doc__)
+    if public:
+        cli.set_defaults(root=ROOT)
+    else:
+        cli.add_argument("--root", type=Path, default=ROOT)
     commands = cli.add_subparsers(dest="action", required=True)
+    device = commands.add_parser("device", help="Read or update an existing device's bus, address and pins")
+    device.add_argument("id")
+    device.add_argument("--bus")
+    device.add_argument("--address", type=lambda value: int(value, 0))
+    device.add_argument("--pins", type=json.loads)
     for action in ("sync", "check", "devices", "list"):
         commands.add_parser(action)
     command = commands.add_parser("register-model", help="Register a sensor from its model.json")
@@ -225,6 +233,16 @@ def parser():
 
 def run(args):
     root = args.root.resolve()
+    if args.action == "device":
+        from hardware.device_settings import device_settings, update_device
+        from project.workspace import Workspace
+        workspace = Workspace(root)
+        current = device_settings(workspace, args.id)
+        updates = {key: getattr(args, key) for key in ("address", "bus", "pins") if getattr(args, key) is not None}
+        if not updates:
+            return current, 0
+        payload = {key: current["device"][key] for key in ("id", "address", "bus")}
+        return update_device(workspace, {**payload, **updates, "expected_hash": current["source"]["hash"]}), 0
     if args.action in {"remove-sensor", "remove-command", "remove-telemetry"}:
         from project.workspace import Workspace
         return Workspace(root).mutate(args.action, {"app": args.app, "name": args.name}), 0
@@ -406,14 +424,31 @@ def run(args):
     return result, 1 if args.action == "check" and changed else 0
 
 
-def main(argv=None):
-    args = parser().parse_args(argv)
+def main(argv=None, *, public=False):
+    argv = list(sys.argv[1:] if argv is None else argv)
+    machine = not public or "--json" in argv
+    if public and "--json" in argv:
+        argv.remove("--json")
+    args = parser(public).parse_args(argv)
     try:
         result, status = run(args)
     except (ValueError, OSError) as exc:
-        print(json.dumps({"error": str(exc)}), file=sys.stderr)
+        print(f"Error: {exc}", file=sys.stderr)
         return 2
-    print(json.dumps(result, indent=2))
+    if machine:
+        print(json.dumps(result))
+    elif args.action == "list":
+        print("\n".join(app["name"] for app in result["project"]["apps"]) or "No project apps")
+    elif args.action == "devices":
+        print("\n".join(sorted(result["models"])))
+    elif args.action == "device":
+        device = result["device"]
+        print(f'{device["id"]} · {device["bus"]} · {device["address"]:#04x}')
+    elif "changed" in result:
+        print("\n".join(result["changed"]) or "Up to date")
+    else:
+        for key, value in result.items():
+            print(f"{key} · {value}")
     return status
 
 

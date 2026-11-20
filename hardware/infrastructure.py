@@ -335,15 +335,6 @@ def check_progress(hardware, target):
         yield snapshot(done=index == len(plan) - 1)
 
 
-def check(hardware, target):
-    """Compatibility response for single JSON requests."""
-    for report in check_progress(hardware, target):
-        if report["status"] == "complete":
-            checks = [{key: item[key] for key in ("label", "ready", "detail", "command")}
-                      for item in report["checks"]]
-            return {"target": target, "checks": checks, "ready": report["ready"]}
-
-
 def _cli(args):
     if len(args) == 3 and args[0] == "check-board":
         from hardware.manager import HardwareManager

@@ -11,7 +11,6 @@ import os
 from pathlib import Path
 from journey import SHIPPED_APPS
 import re
-import subprocess
 import sys
 import tempfile
 import threading
@@ -592,11 +591,11 @@ class Workspace:
                 args += ["--sensor", self.model.identifier(payload["sensor"])]
         else:
             raise ValueError("Unknown operation")
-        command = ["bash", str(self.root / "scripts/project.sh"), *args]
-        result = subprocess.run(command, cwd=self.root, text=True, capture_output=True, timeout=60)
-        if result.returncode:
-            raise ValueError(result.stderr.strip() or result.stdout.strip())
-        return json.loads(result.stdout)
+        from project.manage import parser, run
+        result, status = run(parser().parse_args(["--root", str(self.root), *args]))
+        if status:
+            raise ValueError(f"Project operation {action} failed")
+        return result
 
     def _remove(self, action, payload, config):
         """Compose appgen's planned files with the project registry in one transaction."""

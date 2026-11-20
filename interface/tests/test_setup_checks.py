@@ -44,7 +44,7 @@ class SetupChecksTest(unittest.TestCase):
             body['label'] = label
         return urlopen(Request(url, json.dumps(body).encode(), headers), timeout=10)
 
-    def test_live_probe_and_simultaneous_legacy_request(self):
+    def test_two_targets_can_stream_checks_concurrently(self):
         running = threading.Event()
         release = threading.Event()
 
@@ -78,11 +78,11 @@ class SetupChecksTest(unittest.TestCase):
                 self.assertIsNone(engine['duration_ms'])
                 self.assertEqual(state['status'], 'running')
                 # A slow Docker request must not hold the workspace operation lock.
-                with self.request('native', stream=False) as native:
-                    legacy = json.load(native)
-                self.assertEqual(set(legacy), {'target', 'ready', 'checks'})
-                self.assertEqual(legacy['target'], 'native')
-                self.assertTrue(all(set(item) == {'label', 'ready', 'detail', 'command'} for item in legacy['checks']))
+                with self.request('native') as native:
+                    final_native = [json.loads(line) for line in native][-1]
+                self.assertEqual(final_native['target'], 'native')
+                self.assertEqual(final_native['status'], 'complete')
+                self.assertTrue(all('ready' in item for item in final_native['checks']))
             finally:
                 release.set()
             final = [json.loads(line) for line in stream][-1]
@@ -130,13 +130,13 @@ class SetupChecksTest(unittest.TestCase):
         git.write_text('#!/bin/sh\ntest "$1" = "--version" || exit 99\necho broken-git-on-path >&2\nexit 17\n')
         git.chmod(0o755)
         with patch.dict(os.environ, PATH=str(fixture)):
-            with self.request('native', stream=False, label='git') as response:
-                failed = json.load(response)
-            with self.request('native', stream=False, label='make') as response:
-                missing = json.load(response)
+            def rows():
+                with self.request('native') as response:
+                    return {row['label']: row for row in [json.loads(line) for line in response][-1]['checks']}
+            failed_rows = rows()
+            failed, missing = failed_rows['git'], failed_rows['make']
             git.write_text('#!/bin/sh\nexit 0\n')
-            with self.request('native', stream=False, label='git') as response:
-                no_version = json.load(response)
+            no_version = rows()['git']
         self.assertEqual(failed['probe'], 'git --version')
         self.assertEqual(failed['status'], 'failed')
         self.assertEqual(failed['exit_code'], 17)

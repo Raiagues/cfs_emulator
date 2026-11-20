@@ -22,13 +22,13 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | #advanced-toggle | `infrastructure.js:62` | infrastructure.js:481 | close, showModal | — | — |
 | #append-step | `trip-editor.js:22` | trip-editor.js:75 | button | — | — |
 | #cancel-dialog | `index.html:99` | app.js:1178 | close | — | — |
-| #check | `infrastructure.html:63` | infrastructure.js:461 | button | POST /api/infrastructure/check | infrastructure.check_one, self.stream_checks, infrastructure.check |
+| #check | `infrastructure.html:63` | infrastructure.js:461 | button | POST /api/infrastructure/check | self.stream_checks |
 | #delete-trip | `trip-editor.js:22` | trip-editor.js:76 | close, state.coreServices, state.groundApp, state.groundQuery, state.groundSelection, state.selectedTests, state.selectedTests[body.plan.command], state.testPlans, state.workspace | GET /api/workspace, POST /api/ground/tests | app.ground_plan, {**app.workspace.snapshot(), 'builds': app.hardware.builds_status()} |
 | #enter | `infrastructure.html:46` | infrastructure.js:516 | button | — | — |
-| #fix-group | `infrastructure.html:63` | infrastructure.js:460 | close, showModal | GET /api/infrastructure, GET /api/jobs, POST /api/infrastructure/check, POST /api/terminal/create | app.jobs_snapshot(include_lines=query.get('lines') != '0'), app.shells.create, infrastructure.check_one, self.stream_checks, infrastructure.check, infrastructure.snapshot(app.hardware) |
+| #fix-group | `infrastructure.html:63` | infrastructure.js:460 | close, showModal | GET /api/infrastructure, GET /api/jobs, POST /api/infrastructure/check, POST /api/terminal/create | app.jobs_snapshot(include_lines=query.get('lines') != '0'), app.shells.create, infrastructure.snapshot(app.hardware), self.stream_checks |
 | #ground-packet | `panels.js:217` | app.js:1048 | state.groundPacket | — | — |
 | #inspect | `infrastructure.html:47` | infrastructure.js:445 | showModal | — | — |
-| #install | `infrastructure.html:45` | infrastructure.js:441, infrastructure.js:442 | close, showModal | GET /api/infrastructure, GET /api/jobs, POST /api/infrastructure/check, POST /api/terminal/create | app.jobs_snapshot(include_lines=query.get('lines') != '0'), app.shells.create, infrastructure.check_one, self.stream_checks, infrastructure.check, infrastructure.snapshot(app.hardware) |
+| #install | `infrastructure.html:45` | infrastructure.js:441, infrastructure.js:442 | close, showModal | GET /api/infrastructure, GET /api/jobs, POST /api/infrastructure/check, POST /api/terminal/create | app.jobs_snapshot(include_lines=query.get('lines') != '0'), app.shells.create, infrastructure.snapshot(app.hardware), self.stream_checks |
 | #operation-output | `index.html:47` | app.js:1199 | button | — | — |
 | #orbit-{…} data-orbit-element | `orbit-preview.js:69` | orbit-preview.js:222 | input | — | — |
 | #settings-cancel | `infrastructure.html:56` | infrastructure.js:338 | close | — | — |
@@ -121,7 +121,6 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | Tests | `round-trip-view.js:18` | HTML / enclosing form or listener | summary | — | — |
 | Workspace setup | `index.html:23` | HTML / enclosing form or listener | /#target | — | — |
 | a | `app.js:734` | HTML / enclosing form or listener | {…} | — | — |
-| a | `emulator-guide.html:1` | HTML / enclosing form or listener | /infrastructure?target=qemu | — | — |
 | a | `first-boot.js:213` | HTML / enclosing form or listener | {…} | — | — |
 | a | `first-boot.js:221` | HTML / enclosing form or listener | {…} | — | — |
 | a | `journey.js:77` | HTML / enclosing form or listener | a | — | — |
@@ -698,7 +697,7 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | POST /api/hardware/model | `register` |
 | POST /api/hardware/target | `app.hardware.select_target` |
 | POST /api/infrastructure | `infrastructure.save` |
-| POST /api/infrastructure/check | `infrastructure.check_one, self.stream_checks, infrastructure.check` |
+| POST /api/infrastructure/check | `self.stream_checks` |
 | POST /api/job | `app.job` |
 | POST /api/job/cancel | `app.cancel` |
 | POST /api/jobs/stream | `self.stream_records, app.job_updates` |
@@ -866,7 +865,7 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#architecture | Include temp in session | simulationEnable=temp |
 | /studio?target=native#architecture | Inertial sensormpu6050 · 0x681.04 g | signalDevice=imu |
 | /studio?target=native#architecture | J2 | orbitModel=J2 |
-| /studio?target=native#architecture | Magnetometerlsm303dlhc_mag · 0x1e12.24 µT | signalDevice=mag |
+| /studio?target=native#architecture | Magnetometerlsm303dlhc_mag · 0x1e12.25 µT | signalDevice=mag |
 | /studio?target=native#architecture | Mean anomaly at epoch in ° | orbitNumber=anomaly |
 | /studio?target=native#architecture | Molniya | orbitPreset=molniya |
 | /studio?target=native#architecture | One orbitFull period | signalScenario=orbit |
@@ -933,7 +932,7 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#bench | Include temp in session | simulationEnable=temp |
 | /studio?target=native#bench | Inertial sensormpu6050 · 0x681.04 g | signalDevice=imu |
 | /studio?target=native#bench | J2 | orbitModel=J2 |
-| /studio?target=native#bench | Magnetometerlsm303dlhc_mag · 0x1e12.24 µT | signalDevice=mag |
+| /studio?target=native#bench | Magnetometerlsm303dlhc_mag · 0x1e12.25 µT | signalDevice=mag |
 | /studio?target=native#bench | Mean anomaly at epoch in ° | orbitNumber=anomaly |
 | /studio?target=native#bench | Molniya | orbitPreset=molniya |
 | /studio?target=native#bench | One orbitFull period | signalScenario=orbit |
@@ -976,28 +975,11 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#boot | App, complete | /studio?target=native#app |
 | /studio?target=native#boot | Board | /?target=physical#board |
 | /studio?target=native#boot | Boot, complete | /studio?target=native#boot |
-| /studio?target=native#boot | Build cFS, Waiting | stage=build stageLayer=build state=waiting bootFocus=stage-build |
-| /studio?target=native#boot | Change | /?target=native#target |
-| /studio?target=native#boot | Check target | /?target=native#target |
 | /studio?target=native#boot | Command, complete | /studio?target=native#command |
-| /studio?target=native#boot | Core Flight Executive | layer=cfe bootFocus=cfe current=false lit=false |
-| /studio?target=native#boot | Core ready, Waiting | stage=CORE_READY stageLayer=cfe state=waiting bootFocus=stage-CORE_READY |
-| /studio?target=native#boot | Early init, Waiting | stage=EARLY_INIT stageLayer=cfe state=waiting bootFocus=stage-EARLY_INIT |
 | /studio?target=native#boot | Event, complete | /studio?target=native#event |
-| /studio?target=native#boot | Execution hardware | layer=hw bootFocus=hw current=false lit=false |
-| /studio?target=native#boot | Loading apps, Waiting | stage=APPS_INIT stageLayer=apps state=waiting bootFocus=stage-APPS_INIT |
-| /studio?target=native#boot | Mission applications | layer=apps bootFocus=apps current=false lit=false |
-| /studio?target=native#boot | Open console | console= bootFocus=console |
-| /studio?target=native#boot | Operating System Abstraction Layer | layer=osal bootFocus=osal current=false lit=false |
-| /studio?target=native#boot | Operating system | layer=os bootFocus=os current=false lit=false |
-| /studio?target=native#boot | Operational, Waiting | stage=OPERATIONAL stageLayer=apps state=waiting bootFocus=stage-OPERATIONAL |
-| /studio?target=native#boot | Pause view | pause= bootFocus=pause |
-| /studio?target=native#boot | Platform Support Package | layer=psp bootFocus=psp current=false lit=false |
-| /studio?target=native#boot | Replay boot | replay= bootFocus=replay |
 | /studio?target=native#boot | Send, complete | /studio?target=native#send |
 | /studio?target=native#boot | Sensor, complete | /studio?target=native#sensor |
 | /studio?target=native#boot | Start over | flight=reset |
-| /studio?target=native#boot | Starting core, Waiting | stage=CORE_STARTUP stageLayer=cfe state=waiting bootFocus=stage-CORE_STARTUP |
 | /studio?target=native#boot | Switch to light theme | themeToggle= |
 | /studio?target=native#boot | Target, complete | /#target |
 | /studio?target=native#boot | Test, complete | /studio?target=native#test |
@@ -1029,7 +1011,7 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#code | Include temp in session | simulationEnable=temp |
 | /studio?target=native#code | Inertial sensormpu6050 · 0x681.04 g | signalDevice=imu |
 | /studio?target=native#code | J2 | orbitModel=J2 |
-| /studio?target=native#code | Magnetometerlsm303dlhc_mag · 0x1e12.24 µT | signalDevice=mag |
+| /studio?target=native#code | Magnetometerlsm303dlhc_mag · 0x1e12.25 µT | signalDevice=mag |
 | /studio?target=native#code | Mean anomaly at epoch in ° | orbitNumber=anomaly |
 | /studio?target=native#code | Molniya | orbitPreset=molniya |
 | /studio?target=native#code | One orbitFull period | signalScenario=orbit |
@@ -1084,31 +1066,22 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#command | Find a file | search-files |
 | /studio?target=native#command | Find in file | find-toggle |
 | /studio?target=native#command | Ground station | view=ground |
-| /studio?target=native#command | HAL sensor templates | SUMMARY |
 | /studio?target=native#command | Hardware | view=bench |
 | /studio?target=native#command | Hide sidebar | hide-explorer |
-| /studio?target=native#command | Mission | SUMMARY |
-| /studio?target=native#command | NASA cFS | SUMMARY |
 | /studio?target=native#command | New command | codeCommand=hal_mag |
 | /studio?target=native#command | Packet | sourceTab=packet |
 | /studio?target=native#command | Run cFS on this computer | target=native |
 | /studio?target=native#command | Run in the QEMU emulator | target=qemu |
 | /studio?target=native#command | Run on the physical board | target=physical |
 | /studio?target=native#command | Send, complete | /studio?target=native#send |
-| /studio?target=native#command | Sensor drivers | SUMMARY |
 | /studio?target=native#command | Sensor, complete | /studio?target=native#sensor |
 | /studio?target=native#command | Start over | flight=reset |
 | /studio?target=native#command | Switch to light theme | themeToggle= |
-| /studio?target=native#command | Synthetic data | SUMMARY |
 | /studio?target=native#command | Synthetic data | view=simulation |
 | /studio?target=native#command | Target, complete | /#target |
 | /studio?target=native#command | Terminal | toggle-terminal |
 | /studio?target=native#command | Test, complete | /studio?target=native#test |
 | /studio?target=native#command | Workspace setup | /#target |
-| /studio?target=native#command | apps | SUMMARY |
-| /studio?target=native#command | libs | SUMMARY |
-| /studio?target=native#command | mission/cpu1_cfe_es_startup.scr | file=mission/cpu1_cfe_es_startup.scr |
-| /studio?target=native#command | sample_defs | SUMMARY |
 | /studio?target=native#event | All apps | allGroundApps= |
 | /studio?target=native#event | App, complete | /studio?target=native#app |
 | /studio?target=native#event | Architecture | view=architecture |
@@ -1166,7 +1139,7 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#ground | Include temp in session | simulationEnable=temp |
 | /studio?target=native#ground | Inertial sensormpu6050 · 0x681.04 g | signalDevice=imu |
 | /studio?target=native#ground | J2 | orbitModel=J2 |
-| /studio?target=native#ground | Magnetometerlsm303dlhc_mag · 0x1e12.24 µT | signalDevice=mag |
+| /studio?target=native#ground | Magnetometerlsm303dlhc_mag · 0x1e12.25 µT | signalDevice=mag |
 | /studio?target=native#ground | Mean anomaly at epoch in ° | orbitNumber=anomaly |
 | /studio?target=native#ground | Molniya | orbitPreset=molniya |
 | /studio?target=native#ground | One orbitFull period | signalScenario=orbit |
@@ -1299,7 +1272,7 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#simulation | Include temp in session | simulationEnable=temp |
 | /studio?target=native#simulation | Inertial sensormpu6050 · 0x681.04 g | signalDevice=imu |
 | /studio?target=native#simulation | J2 | orbitModel=J2 |
-| /studio?target=native#simulation | Magnetometerlsm303dlhc_mag · 0x1e12.24 µT | signalDevice=mag |
+| /studio?target=native#simulation | Magnetometerlsm303dlhc_mag · 0x1e12.31 µT | signalDevice=mag |
 | /studio?target=native#simulation | Mean anomaly at epoch in ° | orbitNumber=anomaly |
 | /studio?target=native#simulation | Molniya | orbitPreset=molniya |
 | /studio?target=native#simulation | One orbitFull period | signalScenario=orbit |

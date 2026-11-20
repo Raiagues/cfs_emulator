@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Local Flight Studio. Start with: python3 interface/server.py."""
 import argparse
+import ipaddress
 import json
 import secrets
 import sys
@@ -17,6 +18,8 @@ from hardware.device_settings import device_settings, update_device
 from hardware.targets import selected_target
 from jobs.service import Laboratory
 from jobs.monitor import HardwareMonitor
+from interface.access import authenticated, loopback_listener
+from project.defaults import loopback, port
 from journey import first_boot
 from sensors.orbit import preview as orbit_preview
 
@@ -34,6 +37,8 @@ class Studio(Laboratory):
     def __init__(self, root=ROOT):
         super().__init__(root)
         self.token = secrets.token_urlsafe(32)
+        self.launch_key = secrets.token_urlsafe(32)
+        self.browser_session = secrets.token_urlsafe(32)
         self.monitor = HardwareMonitor(self.hardware, self.changes)
 
     def close(self):
@@ -109,6 +114,18 @@ class Handler(BaseHTTPRequestHandler):
             url = urlparse(self.path)
             query = {k: v[0] for k, v in parse_qs(url.query).items()}
             app = self.server.studio
+            if url.path == '/' and 't' in query:
+                if not secrets.compare_digest(query['t'].encode(), app.launch_key.encode()):
+                    return self.reply({'error': 'Open the URL printed by ./start.'}, 403)
+                self.send_response(303)
+                self.send_header('Set-Cookie', f'flight_session={app.browser_session}; Path=/; HttpOnly; SameSite=Strict')
+                self.send_header('Cache-Control', 'no-store')
+                self.send_header('Referrer-Policy', 'no-referrer')
+                self.send_header('Location', '/')
+                self.end_headers()
+                return
+            if url.path.startswith('/api/') and not authenticated(self):
+                return self.reply({'error': 'Open the URL printed by ./start.'}, 403)
             if url.path == '/api/events':
                 return self.events(app)
             if url.path == '/api/jobs/stream':
@@ -148,8 +165,6 @@ class Handler(BaseHTTPRequestHandler):
                     self.end_headers()
                     return
                 name = 'index.html'
-            elif url.path == '/emulator-guide.html':
-                name = 'emulator-guide.html'
             else:
                 name = url.path.removeprefix('/')
                 if Path(name).suffix not in ASSET_TYPES:
@@ -175,15 +190,19 @@ class Handler(BaseHTTPRequestHandler):
             self.reply({'error': str(error)}, 500)
 
     def valid_host(self):
-        return self.headers.get('Host') in {f'127.0.0.1:{self.server.server_port}', f'localhost:{self.server.server_port}'}
+        return self.headers.get('Host') in {f'{loopback()}:{self.server.server_port}', f'localhost:{self.server.server_port}'}
 
     def do_POST(self):
         app = self.server.studio
         origin = self.headers.get('Origin')
-        allowed_origins = {f'http://127.0.0.1:{self.server.server_port}', f'http://localhost:{self.server.server_port}'}
+        allowed_origins = {f'http://{loopback()}:{self.server.server_port}', f'http://localhost:{self.server.server_port}'}
         token = self.headers.get('X-Studio-Token', '')
-        if not self.valid_host() or (origin and origin not in allowed_origins) or not secrets.compare_digest(token, app.token):
+        if (not self.valid_host() or (origin and origin not in allowed_origins)
+                or not secrets.compare_digest(token.encode(), app.token.encode()) or not authenticated(self)):
             return self.reply({'error': 'Invalid session. Reload the page.'}, 403)
+        if self.path.startswith('/api/terminal/') and (
+                not ipaddress.ip_address(self.server.server_address[0]).is_loopback or not loopback_listener(self.connection)):
+            return self.reply({'error': 'The terminal requires a local server and browser.'}, 403)
         try:
             length = int(self.headers.get('Content-Length', 0))
             if not 0 < length <= 2_000_000:
@@ -202,11 +221,9 @@ class Handler(BaseHTTPRequestHandler):
             elif path == '/api/infrastructure':
                 result = infrastructure.save(app.hardware, body)
             elif path == '/api/infrastructure/check':
-                if 'label' in body:
-                    return self.reply(infrastructure.check_one(app.hardware, body.get('target'), body['label']))
-                if 'application/x-ndjson' in self.headers.get('Accept', ''):
-                    return self.stream_checks(app.hardware, body.get('target'))
-                result = infrastructure.check(app.hardware, body.get('target'))
+                if set(body) != {'target'}:
+                    raise ValueError('Send a target to run its prerequisite checks.')
+                return self.stream_checks(app.hardware, body['target'])
             elif path == '/api/mutate':
                 result = app.workspace.mutate(body['action'], body.get('payload', {}), body.get('expected_hash'))
             elif path == '/api/mission/app':
@@ -293,12 +310,12 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--port', type=int, default=8765)
+    parser.add_argument('--port', type=int, default=port('HTTP_PORT', 8765))
     args = parser.parse_args()
-    server = ThreadingHTTPServer(('127.0.0.1', args.port), Handler)
+    server = ThreadingHTTPServer((loopback(), args.port), Handler)
     server.daemon_threads = True
     server.studio = Studio()
-    print(f'Flight Studio: http://127.0.0.1:{server.server_port}', flush=True)
+    print(f'Flight Studio: http://{loopback()}:{server.server_port}/?t={server.studio.launch_key}', flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
