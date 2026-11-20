@@ -943,7 +943,7 @@ class HardwareManager:
             if action == "shutdown":
                 return self._shutdown(target, connection, emit, cancel)
             if action == "values" and target == "qemu":
-                return self._stream(["bash", "scripts/project.sh", "values"], emit, cancel, timeout=30)
+                return self._stream([sys.executable, "sensors/runtime.py", "values"], emit, cancel, timeout=30)
             raise HardwareError("Unsupported hardware action: " + str(action))
 
     def _logs(self, target, connection, kind, tail, emit, cancel, on_invocation=None):
