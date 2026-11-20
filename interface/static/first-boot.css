@@ -5,7 +5,7 @@ body[data-view=boot] .workspace-theme { position:static; transform:none; margin-
 body[data-view=boot] .execution-toolbar,body[data-view=boot] #operation-status,body[data-view=boot] #studio>.rail { display:none; }
 .first-boot-view { height:100%; min-height:0; }
 .first-boot {
-  width:min(100%,1512px); height:100%; min-height:0; margin:auto; padding:clamp(12px,2vh,20px) clamp(12px,2.3vw,32px) clamp(10px,2vh,20px);
+  width:min(100%,1244px); height:100%; min-height:0; margin:auto; padding:clamp(12px,2vh,20px) clamp(12px,2.3vw,32px) clamp(10px,2vh,20px);
   display:flex; flex-direction:column; gap:clamp(8px,1.8vh,16px); color:var(--fs-text); overflow:hidden;
 }
 .first-boot h1,.first-boot h2,.first-boot pre {margin:0;}
@@ -16,7 +16,7 @@ body[data-view=boot] .execution-toolbar,body[data-view=boot] #operation-status,b
 .boot-title,.boot-stage-caption,.boot-picture header,.first-boot footer,.boot-success {display:flex;align-items:center;gap:10px;}
 .boot-title {gap:14px;}
 .boot-load-status {display:flex;align-items:center;gap:8px;margin:0;color:var(--fs-muted);font-size:var(--fs-label);}
-.boot-load-status[aria-busy=true]::before {content:'';width:12px;height:12px;border:2px solid var(--fs-line);border-top-color:var(--fs-accent);border-radius:var(--fs-radius-pill);animation:boot-spin .75s linear infinite;}
+.boot-load-status[aria-busy=true]::before {content:'';width:12px;height:12px;border:2px solid var(--fs-line);border-top-color:var(--fs-accent);border-radius:var(--fs-radius-pill);animation:fsSpin .9s linear infinite;}
 .boot-title>span {display:flex;align-items:center;gap:8px;color:var(--fs-text);font-size:var(--fs-label);background:var(--fs-panel);padding:6px 10px;border-radius:var(--fs-radius-control);}
 .boot-title>span svg {color:var(--fs-success);}
 .boot-title a,.first-boot footer a {color:var(--fs-accent);font-size:var(--fs-label);text-decoration:none;}
@@ -39,10 +39,10 @@ button.boot-stage {position:relative;display:grid;align-content:center;min-width
 .boot-stage-caption svg {width:12px;height:12px;}
 .boot-stage[data-state=waiting] {color:var(--fs-muted);}
 .boot-stage[data-state=active] {border-color:var(--fs-accent);}
-.boot-stage[data-state=active] i::after {content:'';position:absolute;inset:-1px;border:2px solid transparent;border-top-color:var(--fs-accent);border-radius:inherit;animation:boot-spin .75s linear infinite;}
-.boot-stage[data-state=done] i {color:var(--fs-success);border-color:var(--fs-success);background:color-mix(in srgb,var(--fs-success) 10%,var(--fs-panel));animation:fs-pop .32s ease-out both,fs-ring .52s ease-out;}
-.boot-success svg {animation:fs-pop .32s ease-out both;}
-.boot-stage[data-state=done] svg path,.boot-success svg path {stroke-dasharray:1;animation:fs-check .32s ease-out both;}
+.boot-stage[data-state=active] i::after {content:'';position:absolute;inset:-1px;border:2px solid transparent;border-top-color:var(--fs-accent);border-radius:inherit;animation:fsSpin .9s linear infinite;}
+.boot-stage[data-state=done] i {color:var(--fs-success);border-color:var(--fs-success);background:color-mix(in srgb,var(--fs-success) 10%,var(--fs-panel));animation:fsPop .5s cubic-bezier(.2,.9,.3,1.25) both,fs-ring .52s ease-out;}
+.boot-success svg {animation:fsPop .5s cubic-bezier(.2,.9,.3,1.25) both;}
+.boot-stage[data-state=done] svg path,.boot-success svg path {stroke-dasharray:1;animation:fsDraw .45s .12s ease-out forwards;}
 .boot-stage[data-state=failed] {border-color:var(--fs-danger);}
 .boot-stage[data-state=failed] i {color:var(--fs-danger);border-color:var(--fs-danger);}
 .boot-stage small,.boot-console-heading code,.boot-picture code {font:var(--fs-caption)/1.4 var(--fs-mono);color:var(--fs-muted);}
@@ -96,7 +96,7 @@ button.boot-stage {position:relative;display:grid;align-content:center;min-width
 .boot-options .boot-chip[data-lit=true] {color:var(--fs-success);background:color-mix(in srgb,var(--fs-success) 12%,var(--fs-panel));}
 .boot-services {grid-template-columns:repeat(3,1fr);}
 .boot-services>span {display:grid;place-items:center;gap:5px;padding:13px 4px;background:var(--fs-surface);border:1px dashed var(--fs-line);border-radius:var(--fs-radius-card);color:var(--fs-muted);}
-.boot-services span[data-lit=true] {background:var(--layer-fill);color:var(--layer-tone);border:1px solid color-mix(in srgb,var(--layer-tone) 42%,var(--fs-line));animation:fs-pop .48s ease-out;}
+.boot-services span[data-lit=true] {background:var(--layer-fill);color:var(--layer-tone);border:1px solid color-mix(in srgb,var(--layer-tone) 42%,var(--fs-line));animation:fsPop .5s cubic-bezier(.2,.9,.3,1.25);}
 .boot-services strong {font:500 var(--fs-body) var(--fs-mono);}
 .boot-services small {color:var(--fs-muted);font-size:var(--fs-caption);}
 .boot-app-diagram {width:100%;display:flex;align-items:center;gap:10px;}
@@ -114,7 +114,7 @@ button.boot-stage {position:relative;display:grid;align-content:center;min-width
 .boot-slot {color:var(--fs-muted);}
 .boot-console {position:relative;flex:0 0 44px;min-width:0;}
 .boot-console-sheet {position:absolute;inset:auto 0 0;overflow:hidden;background:var(--fs-panel);}
-.boot-console[data-open=true] .boot-console-sheet {z-index:4;box-shadow:0 -8px 24px var(--fs-shadow-3);animation:boot-enter .22s ease-out;}
+.boot-console[data-open=true] .boot-console-sheet {z-index:4;box-shadow:0 -8px 24px var(--fs-shadow-3);animation:fsIn .35s ease-out;}
 .boot-console-heading {display:flex;align-items:center;gap:14px;height:42px;padding:5px 7px 5px 14px;}
 .boot-console-heading strong {display:flex;align-items:center;gap:8px;font:500 var(--fs-body) var(--fs-sans);}
 .boot-console-heading strong svg {color:var(--fs-muted);}
@@ -130,14 +130,14 @@ button.boot-stage {position:relative;display:grid;align-content:center;min-width
 .boot-picture[data-animating=true] .boot-branches .selected {stroke-dasharray:5 3;animation:boot-dash .9s linear infinite;}
 .boot-picture .boot-picture-icon {transition:color .2s,background .2s;}
 .boot-processes b[data-lit=false] {color:var(--fs-muted);font:500 var(--fs-label) var(--fs-mono);border-style:dashed;}
-.boot-picture[data-animating=true] .boot-os-window>header svg {animation:fs-wait 1.25s ease-in-out infinite;}
-.boot-processes b[data-lit=true],.boot-app-row .boot-chip[data-lit=true] {animation:fs-pop .4s ease-out;}
-.boot-app-row .boot-chip[data-lit=true]::after,.boot-app-row .boot-chip[data-lit=true]::before {background:var(--layer-tone);animation:boot-enter .3s ease-out;}
+.boot-picture[data-animating=true] .boot-os-window>header svg {animation:fsPulse 1.1s ease-in-out infinite;}
+.boot-processes b[data-lit=true],.boot-app-row .boot-chip[data-lit=true] {animation:fsPop .5s cubic-bezier(.2,.9,.3,1.25);}
+.boot-app-row .boot-chip[data-lit=true]::after,.boot-app-row .boot-chip[data-lit=true]::before {background:var(--layer-tone);animation:fsIn .35s ease-out;}
 .boot-layer {transition:color .25s,border-color .25s,background-color .25s;}
-.boot-layer[data-lit=true]>span:first-child,.boot-chip[data-lit=true] {animation:fs-pop .48s ease-out;}
-.boot-figure {animation:boot-enter .32s ease-out;}
+.boot-layer[data-lit=true]>span:first-child,.boot-chip[data-lit=true] {animation:fsPop .5s cubic-bezier(.2,.9,.3,1.25);}
+.boot-figure {animation:fsIn .35s ease-out;}
 .boot-picture[data-animating=true] .boot-compile-arrow path:first-child {animation:boot-dash .7s linear infinite;}
-.boot-picture[data-animating=true] .boot-picture-dot[data-lit=true] {animation:fs-wait 1.25s ease-in-out infinite;}
+.boot-picture[data-animating=true] .boot-picture-dot[data-lit=true] {animation:fsPulse 1.1s ease-in-out infinite;}
 .boot-stage[data-state=active]:not(:last-child)::after {border:0;height:2px;background:repeating-linear-gradient(90deg,var(--fs-accent) 0 4px,transparent 4px 8px);background-size:8px 2px;animation:boot-connect .8s linear infinite;}
 .first-boot footer {min-height:26px;justify-content:flex-end;}
 .boot-success {color:var(--fs-success);font-size:var(--fs-body);}
@@ -191,3 +191,11 @@ button.boot-stage {position:relative;display:grid;align-content:center;min-width
   .boot-hardware {max-width:120px;}
 }
 @media(prefers-reduced-motion:reduce){.first-boot *,.first-boot *::before,.first-boot *::after {animation:none!important;transition:none!important;}}
+
+.boot-phases {--track-gap:clamp(12px,2.7vw,40px)}
+.boot-stage-caption small {margin-left:auto}
+.boot-milestones {display:flex;gap:6px;justify-content:space-between;min-width:0}
+.boot-milestones:empty {display:none}
+.boot-milestones button {min-width:0;padding:3px 6px;font:var(--fs-caption) var(--fs-mono);color:var(--fs-success)}
+.boot-cause {white-space:normal;overflow-wrap:anywhere;font:var(--fs-caption) var(--fs-mono);color:var(--fs-danger)}
+.first-boot footer .terminal-twin {margin-right:auto}

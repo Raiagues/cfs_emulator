@@ -1,5 +1,12 @@
 // A modal owns the next action until it closes. Completed screens yield to the step bar.
+let screenAction;
 export function guide(control) {
+  screenAction = control;
+  refreshCoach();
+}
+
+export function refreshCoach() {
+  let control = screenAction?.isConnected ? screenAction : null;
   const bar = document.querySelector('#flight-guide');
   const dialog = document.querySelector('dialog[open]');
   if (dialog && !dialog.contains(control)) control = null;

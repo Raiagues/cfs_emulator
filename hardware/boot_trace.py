@@ -40,6 +40,8 @@ def parse_boot_line(line):
         if match[1] == "OPERATIONAL" and "entering OPERATIONAL state" not in match[0]:
             return None
         return {"state": match[1]}
+    if line.startswith("SCH Lab Initialized."):
+        return {"app": "SCH_LAB"}
     match = EVENT.search(line)
     if match:
         message = INITIALIZED.match(match[5])

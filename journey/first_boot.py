@@ -3,6 +3,7 @@ import platform
 import time
 
 from hardware import infrastructure
+from journey import SHIPPED_APPS
 from project.model import load_config
 
 from hardware.boot_trace import (CATALOG_ACTIVITY, SERVICES, STATES, _record, app_records, boot_observed,
@@ -80,7 +81,7 @@ def snapshot(studio, target, *, journal=None):
             "hardware": "This computer" if target == "native" else profile.get("board_label", "Board"),
             "architecture": platform.machine() if target == "native" else profile.get("board", ""),
             "os": platform.system() if target == "native" else profile.get("os_label", "Linux"),
-            "apps": apps,
+            "apps": apps, "example_apps": sorted(SHIPPED_APPS), "authored_apps": [app["name"] for app in config_data.get("apps", []) if app["name"] not in SHIPPED_APPS],
             "services": [name for name in SERVICES if (hardware.root / "cFS/cfe/modules" / name.lower()).is_dir()], "es_states": STATES, "flight": flight, "stopped": stopped,
             "running": live, "unverified": bool(unknown),
             "job": {k: job[k] for k in ("id", "status", "action", "phase", "guest_stage", "build_percent", "build_activity", "error", "started") if k in job},

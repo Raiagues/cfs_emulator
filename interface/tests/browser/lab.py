@@ -19,7 +19,8 @@ def lab(root, *, completed=False):
         ignore = shutil.ignore_patterns('__pycache__', '.runtime', '.state', 'build-native', 'build-flight', '.prepare*')
         for folder in ('cFS', 'mission', 'project', 'hardware', 'jobs', 'journey', 'ground_station', 'sensors', 'config', 'scripts'):
             shutil.copytree(root / folder, mission_root / folder, ignore=ignore, symlinks=True)
-        shutil.copy2(root / 'Dockerfile', mission_root)
+        for name in ('Dockerfile', 'start', 'boot.sh', 'logs.sh', 'stop.sh'):
+            shutil.copy2(root / name, mission_root)
         prepare_mission(mission_root)
         with ThreadingHTTPServer(('127.0.0.1', 0), Handler) as server:
             server.daemon_threads = False

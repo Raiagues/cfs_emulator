@@ -98,7 +98,7 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | Remove step | `trip-editor.js:12` | trip-editor.js:71 | button | — | — |
 | Remove telemetry | `architecture.js:35` | app.js:1414 | close, showModal, state.activeLine, state.coreServices, state.groundApp, state.jumpLine, state.path, state.selectedDevice, state.simulation, state.simulationDirty, state.simulationError, state.sourceCommand, state.sourcePreview, state.sourceStep, state.workspace | GET /api/file, GET /api/simulation, GET /api/workspace, POST /api/mutate | app.workspace.mutate, app.workspace.read_file(query['path']), app.workspace.simulation_snapshot, {**app.workspace.snapshot(), 'builds': app.hardware.builds_status()} |
 | Remove {…} | `hardware-links.js:62` | app.js:1395 | close, showModal, state.activeLine, state.coreServices, state.groundApp, state.inspected, state.jumpLine, state.path, state.selectedDevice, state.simulation, state.simulationDirty, state.simulationError, state.sourceCommand, state.sourcePreview, state.sourceStep, state.workspace | GET /api/file, GET /api/simulation, GET /api/workspace, POST /api/mutate | app.workspace.mutate, app.workspace.read_file(query['path']), app.workspace.simulation_snapshot, {**app.workspace.snapshot(), 'builds': app.hardware.builds_status()} |
-| Replay boot | `first-boot.js:224` | first-boot.js:303 | button | — | — |
+| Replay boot | `first-boot.js:233` | first-boot.js:310 | button | — | — |
 | Run cFS on this computer | `index.html:30` | app.js:1405, infrastructure.js:123, infrastructure.js:167 | replaceState, state.catalog, state.catalogLoading, state.catalogTarget, state.ground, state.groundApp, state.groundError, state.groundSelection, state.hardware, state.selectedDevice, state.simulation, state.simulationDirty, state.simulationError, state.testPlans | GET /api/ground, GET /api/ground/tests, GET /api/hardware, GET /api/simulation, POST /api/hardware/target | app.ground.plans.read, app.ground_snapshot, app.hardware.select_target, app.monitor.snapshot(), app.workspace.simulation_snapshot |
 | Run in the QEMU emulator | `index.html:31` | app.js:1405, infrastructure.js:123, infrastructure.js:167 | replaceState, state.catalog, state.catalogLoading, state.catalogTarget, state.ground, state.groundApp, state.groundError, state.groundSelection, state.hardware, state.selectedDevice, state.simulation, state.simulationDirty, state.simulationError, state.testPlans | GET /api/ground, GET /api/ground/tests, GET /api/hardware, GET /api/simulation, POST /api/hardware/target | app.ground.plans.read, app.ground_snapshot, app.hardware.select_target, app.monitor.snapshot(), app.workspace.simulation_snapshot |
 | Run on target | `index.html:44` | app.js:1406, terminal.js:33 | close, navigate(stepUrl('target', location, 'qemu')), showModal, stepUrl('target') | POST /api/file, POST /api/job | app.job, app.workspace.write_file |
@@ -110,7 +110,7 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | Shut down QEMU | `index.html:41` | app.js:1406, terminal.js:33 | close, navigate(stepUrl('target', location, 'qemu')), showModal, stepUrl('target') | POST /api/file, POST /api/job | app.job, app.workspace.write_file |
 | Signal settings | `simulation.js:62` | app.js:1266 | state.signalSidebar | — | — |
 | Solar flare | `welcome.html:120` | HTML / enclosing form or listener | button | — | — |
-| Start over | `journey.js:81` | journey.js:83, welcome-scenes.js:736 | navigate(stepUrl('target')), stepUrl('target') | POST /api/journey/reset | app.ground.reset_journey |
+| Start over | `journey.js:83` | journey.js:85, welcome-scenes.js:736 | navigate(stepUrl('target')), stepUrl('target') | POST /api/journey/reset | app.ground.reset_journey |
 | Start over | `welcome.html:501` | HTML / enclosing form or listener | button | — | — |
 | Start the orbit | `welcome.html:175` | HTML / enclosing form or listener | button | — | — |
 | Start | `welcome.html:210` | HTML / enclosing form or listener | button | — | — |
@@ -126,9 +126,8 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | Turn on checksum | `welcome.html:121` | HTML / enclosing form or listener | button | — | — |
 | Turn on the camera | `welcome.html:176` | HTML / enclosing form or listener | button | — | — |
 | a | `app.js:734` | HTML / enclosing form or listener | {…} | — | — |
-| a | `first-boot.js:213` | HTML / enclosing form or listener | {…} | — | — |
-| a | `first-boot.js:221` | HTML / enclosing form or listener | {…} | — | — |
-| a | `journey.js:81` | HTML / enclosing form or listener | a | — | — |
+| a | `first-boot.js:230` | HTML / enclosing form or listener | {…} | — | — |
+| a | `journey.js:83` | HTML / enclosing form or listener | a | — | — |
 | a | `sensor-designer.js:12` | HTML / enclosing form or listener | {…} | — | — |
 | a | `welcome.html:600` | HTML / enclosing form or listener | https://github.com/nasa/cFS | — | — |
 | address | `app.js:465` | HTML / enclosing form or listener | input | — | — |
@@ -158,12 +157,13 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | data-arch-tab | `architecture.js:56` | app.js:1229 | state.archApp, state.archFollowSource, state.archLibrary, state.archOverview, state.archSource | — | — |
 | data-back | `app-wizard.js:75` | app-wizard.js:83 | button | — | — |
 | data-board-stop | `simulation.js:51` | app.js:1279 | button | POST /api/job/cancel | app.cancel |
+| data-boot-check | `first-boot.js:222` | HTML / enclosing form or listener | {…} | — | — |
 | data-choose-board | `mission-diagram.js:127` | app.js:1224 | button | — | — |
 | data-code-command | `panels.js:131` | app.js:1291 | close, selectView('code'), showModal, state.activeLine, state.catalogTarget, state.commandTask, state.coreServices, state.groundApp, state.jumpLine, state.lastAuthoredCommand, state.path, state.selectedDevice, state.simulation, state.simulationDirty, state.simulationError, state.sourceCommand, state.sourcePreview, state.sourceStep, state.workspace | GET /api/file, GET /api/simulation, GET /api/workspace, POST /api/mutate | app.workspace.mutate, app.workspace.read_file(query['path']), app.workspace.simulation_snapshot, {**app.workspace.snapshot(), 'builds': app.hardware.builds_status()} |
 | data-command-back | `app.js:490` | app.js:1283 | selectView('code'), state.commandLaunch, state.commandTask, state.sourceCommand | — | — |
 | data-command-launch | `app.js:490` | app.js:1284, app.js:799 | navigate(stepUrl('target', location, 'qemu')), navigate(stepUrl('target', location, intent.target)), openFlightStep('boot'), replaceState, selectView('code'), state.catalog, state.catalogLoading, state.catalogTarget, state.commandLaunch, state.commandTask, state.ground, state.groundApp, state.groundError, state.groundSelection, state.hardware, state.selectedDevice, state.simulation, state.simulationDirty, state.simulationError, state.sourceCommand, state.testPlans, stepUrl('target') | GET /api/ground, GET /api/ground/tests, GET /api/hardware, GET /api/simulation, POST /api/file, POST /api/hardware/target, POST /api/job | app.ground.plans.read, app.ground_snapshot, app.hardware.select_target, app.job, app.monitor.snapshot(), app.workspace.simulation_snapshot, app.workspace.write_file |
 | data-command-test | `source-guide.js:221` | app.js:1286 | recordRoute('send'), selectView('ground'), state.commandLaunch, state.coreServices, state.workspace | GET /api/workspace, POST /api/file | app.workspace.write_file, {**app.workspace.snapshot(), 'builds': app.hardware.builds_status()} |
-| data-console data-boot-focus | `first-boot.js:240` | first-boot.js:311 | button | POST /api/job | app.job |
+| data-console data-boot-focus | `first-boot.js:245` | first-boot.js:318 | button | POST /api/job | app.job |
 | data-create data-app | `architecture.js:33` | app.js:1413 | close, selectView('code'), showModal, state.activeLine, state.catalogTarget, state.commandTask, state.coreServices, state.groundApp, state.inspected, state.jumpLine, state.lastAuthoredCommand, state.path, state.selectedDevice, state.simulation, state.simulationDirty, state.simulationError, state.sourceCommand, state.sourcePreview, state.sourceStep, state.workspace | GET /api/file, GET /api/simulation, GET /api/workspace, POST /api/mission/draft, POST /api/mission/save, POST /api/mutate | app.workspace.mission_draft, app.workspace.mutate, app.workspace.read_file(query['path']), app.workspace.save_mission_draft, app.workspace.simulation_snapshot, {**app.workspace.snapshot(), 'builds': app.hardware.builds_status()} |
 | data-create data-app | `architecture.js:36` | app.js:1413 | close, selectView('code'), showModal, state.activeLine, state.catalogTarget, state.commandTask, state.coreServices, state.groundApp, state.inspected, state.jumpLine, state.lastAuthoredCommand, state.path, state.selectedDevice, state.simulation, state.simulationDirty, state.simulationError, state.sourceCommand, state.sourcePreview, state.sourceStep, state.workspace | GET /api/file, GET /api/simulation, GET /api/workspace, POST /api/mission/draft, POST /api/mission/save, POST /api/mutate | app.workspace.mission_draft, app.workspace.mutate, app.workspace.read_file(query['path']), app.workspace.save_mission_draft, app.workspace.simulation_snapshot, {**app.workspace.snapshot(), 'builds': app.hardware.builds_status()} |
 | data-create data-preferred-bus | `hardware-links.js:63` | app.js:1413 | close, selectView('code'), showModal, state.activeLine, state.catalogTarget, state.commandTask, state.coreServices, state.groundApp, state.inspected, state.jumpLine, state.lastAuthoredCommand, state.path, state.selectedDevice, state.simulation, state.simulationDirty, state.simulationError, state.sourceCommand, state.sourcePreview, state.sourceStep, state.workspace | GET /api/file, GET /api/simulation, GET /api/workspace, POST /api/mission/draft, POST /api/mission/save, POST /api/mutate | app.workspace.mission_draft, app.workspace.mutate, app.workspace.read_file(query['path']), app.workspace.save_mission_draft, app.workspace.simulation_snapshot, {**app.workspace.snapshot(), 'builds': app.hardware.builds_status()} |
@@ -242,7 +242,8 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | data-simulation-stop | `index.html:75` | app.js:1278 | button | POST /api/job/cancel | app.cancel |
 | data-simulation-test | `index.html:75` | app.js:1277 | navigate(stepUrl('target', location, 'qemu')), state.simulation, state.simulationDirty, state.simulationError, state.simulationSaving, stepUrl('target') | GET /api/file, POST /api/file, POST /api/job, POST /api/job/cancel, POST /api/simulation | app.cancel, app.job, app.jobs_snapshot, app.workspace.save_simulation, app.workspace.read_file(query['path']), app.workspace.write_file |
 | data-source-tab | `source-guide.js:184` | app.js:1325 | showModal, state.catalog, state.catalogLoading, state.catalogTarget, state.ground, state.groundApp, state.groundError, state.groundSelection, state.testPlans | GET /api/ground, GET /api/ground/tests | app.ground.plans.read, app.ground_snapshot |
-| data-start-boot data-boot-focus | `first-boot.js:216` | first-boot.js:318 | button | GET /api/first-boot, POST /api/job | app.job, first_boot.snapshot(app, query.get('target') or selected_target(app.hardware.root), journal=app.boot_journal_snapshot) |
+| data-stage data-stage-layer | `first-boot.js:238` | first-boot.js:296 | button | — | — |
+| data-start-boot data-boot-focus | `first-boot.js:225` | first-boot.js:325 | button | GET /api/first-boot, POST /api/job | app.job, first_boot.snapshot(app, query.get('target') or selected_target(app.hardware.root), journal=app.boot_journal_snapshot) |
 | data-step-key | `trip-editor.js:16` | HTML / enclosing form or listener | select | — | — |
 | data-step-key | `trip-editor.js:17` | HTML / enclosing form or listener | select | — | — |
 | data-step-key | `trip-editor.js:18` | HTML / enclosing form or listener | select | — | — |
@@ -280,6 +281,7 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | summary | `app-wizard.js:55` | HTML / enclosing form or listener | summary | — | — |
 | summary | `app-wizard.js:67` | HTML / enclosing form or listener | summary | — | — |
 | summary | `architecture.js:22` | HTML / enclosing form or listener | summary | — | — |
+| summary | `first-boot.js:250` | HTML / enclosing form or listener | summary | — | — |
 | summary | `index.html:24` | HTML / enclosing form or listener | summary | — | — |
 | summary | `infrastructure.html:17` | HTML / enclosing form or listener | summary | — | — |
 | summary | `infrastructure.html:51` | HTML / enclosing form or listener | summary | — | — |
@@ -311,9 +313,9 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | {…} | `app.js:634` | HTML / enclosing form or listener | input | — | — |
 | {…} | `app.js:634` | HTML / enclosing form or listener | select | — | — |
 | {…} | `architecture.js:17` | HTML / enclosing form or listener | input | — | — |
-| {…} | `first-boot.js:223` | first-boot.js:304 | button | — | — |
-| {…} | `first-boot.js:232` | first-boot.js:302 | button | — | — |
-| {…} | `first-boot.js:77` | first-boot.js:289, infrastructure.js:173 | button | — | — |
+| {…} | `first-boot.js:232` | first-boot.js:311 | button | — | — |
+| {…} | `first-boot.js:236` | first-boot.js:309 | button | — | — |
+| {…} | `first-boot.js:78` | first-boot.js:296, infrastructure.js:173 | button | — | — |
 | {…} | `infrastructure.js:31` | HTML / enclosing form or listener | select | — | — |
 | {…} | `mission-diagram.js:71` | app.js:1355, app.js:1356 | close, selectView('code'), showModal, state.activeLine, state.catalogTarget, state.commandTask, state.coreServices, state.groundApp, state.jumpLine, state.lastAuthoredCommand, state.path, state.selectedDevice, state.simulation, state.simulationDirty, state.simulationError, state.sourceCommand, state.sourcePreview, state.sourceStep, state.workspace | GET /api/file, GET /api/simulation, GET /api/workspace, POST /api/mission/draft, POST /api/mission/save, POST /api/mutate | app.workspace.mission_draft, app.workspace.mutate, app.workspace.read_file(query['path']), app.workspace.save_mission_draft, app.workspace.simulation_snapshot, {**app.workspace.snapshot(), 'builds': app.hardware.builds_status()} |
 | {…} | `panels.js:62` | app.js:1384 | state.groundMode, state.groundPacket, state.groundPane, state.groundSelection | — | — |
@@ -565,18 +567,18 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | board.js:633 | window pointerup | — | — |
 | board.js:634 | window pointercancel | — | — |
 | board.js:635 | boardCanvas wheel | — | — |
-| first-boot.js:124 | data-scene | — | — |
-| first-boot.js:178 | data-boot-ready-target | — | — |
-| first-boot.js:177 | data-boot-ready-target | — | — |
-| first-boot.js:318 | data-start-boot | — | GET /api/first-boot, POST /api/job |
-| first-boot.js:311 | data-console | — | POST /api/job |
-| first-boot.js:304 | data-pause | — | — |
-| first-boot.js:303 | data-replay | — | — |
-| first-boot.js:302 | data-layer | — | — |
-| first-boot.js:289 | data-stage-layer | — | — |
-| first-boot.js:323 | key Escape | — | — |
-| first-boot.js:329 | container click | — | — |
-| first-boot.js:331 | document keydown | — | — |
+| first-boot.js:127 | data-scene | — | — |
+| first-boot.js:181 | data-boot-ready-target | — | — |
+| first-boot.js:180 | data-boot-ready-target | — | — |
+| first-boot.js:325 | data-start-boot | — | GET /api/first-boot, POST /api/job |
+| first-boot.js:318 | data-console | — | POST /api/job |
+| first-boot.js:311 | data-pause | — | — |
+| first-boot.js:310 | data-replay | — | — |
+| first-boot.js:309 | data-layer | — | — |
+| first-boot.js:296 | data-stage-layer | — | — |
+| first-boot.js:330 | key Escape | — | — |
+| first-boot.js:336 | container click | — | — |
+| first-boot.js:338 | document keydown | — | — |
 | hardware-links.js:119 | target change | — | — |
 | infrastructure.js:123 | data-target | — | — |
 | infrastructure.js:147 | data-content | — | — |
@@ -613,9 +615,9 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | infrastructure.js:519 | form change | — | POST /api/infrastructure, POST /api/infrastructure/check, POST /api/mission/profile |
 | infrastructure.js:540 | #enter | — | — |
 | infrastructure.js:538 | form submit | navigate(stepUrl('boot', location, target)), stepUrl('boot') | POST /api/hardware/target, POST /api/job |
-| journey.js:83 | data-flight | navigate(stepUrl('target')), stepUrl('target') | POST /api/journey/reset |
-| journey.js:90 | window flight:updated | — | — |
-| journey.js:91 | window flight:navigate | — | — |
+| journey.js:85 | data-flight | navigate(stepUrl('target')), stepUrl('target') | POST /api/journey/reset |
+| journey.js:92 | window flight:updated | — | — |
+| journey.js:93 | window flight:navigate | — | — |
 | layout.js:35 | handle pointerdown | — | — |
 | layout.js:40 | data-dragging | — | — |
 | layout.js:40 | handle pointermove | — | — |
@@ -899,148 +901,88 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#app | Target, complete | /#target |
 | /studio?target=native#app | Terminal | toggle-terminal |
 | /studio?target=native#app | Test, complete | /studio?target=native#test |
-| /studio?target=native#architecture | 1× | orbitRate=1 |
-| /studio?target=native#architecture | 600× | orbitRate=600 |
-| /studio?target=native#architecture | 60× | orbitRate=60 |
-| /studio?target=native#architecture | Apogee altitude in km | orbitNumber=apogee |
+| /studio?target=native#architecture | All apps | allGroundApps= |
 | /studio?target=native#architecture | App, complete | /studio?target=native#app |
 | /studio?target=native#architecture | Architecture | view=architecture |
-| /studio?target=native#architecture | Argument of perigee in ° | orbitNumber=argument |
 | /studio?target=native#architecture | Board | /?target=physical#board |
 | /studio?target=native#architecture | Boot, complete | /studio?target=native#boot |
 | /studio?target=native#architecture | Build for this computer | job=build |
 | /studio?target=native#architecture | Build this target first | job=run |
-| /studio?target=native#architecture | Close settings | signalSidebar= |
+| /studio?target=native#architecture | Catalog details · 1 | SUMMARY |
 | /studio?target=native#architecture | Code | view=code |
 | /studio?target=native#architecture | Command, complete | /studio?target=native#command |
-| /studio?target=native#architecture | Eclipse entrySun → shadow | signalScenario=eclipse |
-| /studio?target=native#architecture | Elements | orbitSource=elements |
+| /studio?target=native#architecture | Connect | ground=start |
 | /studio?target=native#architecture | Event, complete | /studio?target=native#event |
 | /studio?target=native#architecture | Flight studio | SUMMARY |
 | /studio?target=native#architecture | Ground station | view=ground |
-| /studio?target=native#architecture | Hardware | signalHardware= |
 | /studio?target=native#architecture | Hardware | view=bench |
-| /studio?target=native#architecture | ISS-like | orbitPreset=iss |
-| /studio?target=native#architecture | Inclination in ° | orbitNumber=inclination |
-| /studio?target=native#architecture | Include imu in session | simulationEnable=imu |
-| /studio?target=native#architecture | Include mag in session | simulationEnable=mag |
-| /studio?target=native#architecture | Include temp in session | simulationEnable=temp |
-| /studio?target=native#architecture | Inertial sensormpu6050 · 0x681.04 g | signalDevice=imu |
-| /studio?target=native#architecture | J2 | orbitModel=J2 |
-| /studio?target=native#architecture | Magnetometerlsm303dlhc_mag · 0x1e12.25 µT | signalDevice=mag |
-| /studio?target=native#architecture | Mean anomaly at epoch in ° | orbitNumber=anomaly |
-| /studio?target=native#architecture | Molniya | orbitPreset=molniya |
-| /studio?target=native#architecture | One orbitFull period | signalScenario=orbit |
-| /studio?target=native#architecture | OrbitSSO 550 · 97.6° · 96 min | signalOrbit= |
-| /studio?target=native#architecture | Pause orbit preview | orbitPlay= |
-| /studio?target=native#architecture | Perigee altitude in km | orbitNumber=perigee |
-| /studio?target=native#architecture | Python | signalView=python |
-| /studio?target=native#architecture | QEMU | signalView=qemu |
-| /studio?target=native#architecture | RAAN in ° | orbitNumber=node |
-| /studio?target=native#architecture | Run | runSignalScenario= |
-| /studio?target=native#architecture | Run cFS | signalBegin= |
+| /studio?target=native#architecture | New command in code | codeCommand=hal_temp |
+| /studio?target=native#architecture | Refresh catalog | ground=catalog |
+| /studio?target=native#architecture | Round trip | groundMode=trip |
 | /studio?target=native#architecture | Run cFS on this computer | target=native |
 | /studio?target=native#architecture | Run in the QEMU emulator | target=qemu |
 | /studio?target=native#architecture | Run on the physical board | target=physical |
-| /studio?target=native#architecture | SSO 550 | orbitPreset=sso |
-| /studio?target=native#architecture | Save settings | simulationSave= |
 | /studio?target=native#architecture | Send, complete | /studio?target=native#send |
-| /studio?target=native#architecture | Sensor drops outLoss → recovery | signalScenario=dropout |
 | /studio?target=native#architecture | Sensor, complete | /studio?target=native#sensor |
-| /studio?target=native#architecture | Signal settings | signalSidebar= |
-| /studio?target=native#architecture | Signals | signalView=signals |
 | /studio?target=native#architecture | Start over | flight=reset |
 | /studio?target=native#architecture | Switch to light theme | themeToggle= |
 | /studio?target=native#architecture | Synthetic data | view=simulation |
-| /studio?target=native#architecture | TLE | orbitSource=tle |
+| /studio?target=native#architecture | System overview | groundMode=system |
 | /studio?target=native#architecture | Target, complete | /#target |
-| /studio?target=native#architecture | Temperaturetmp105 · 0x48— | signalDevice=temp |
 | /studio?target=native#architecture | Terminal | toggle-terminal |
-| /studio?target=native#architecture | Test | signalView=test |
 | /studio?target=native#architecture | Test, complete | /studio?target=native#test |
-| /studio?target=native#architecture | Two-body | orbitModel=Two-body |
-| /studio?target=native#architecture | interval | INPUT |
-| /studio?target=native#architecture | orbit-anomaly | orbitElement=anomaly |
-| /studio?target=native#architecture | orbit-apogee | orbitElement=apogee |
-| /studio?target=native#architecture | orbit-argument | orbitElement=argument |
-| /studio?target=native#architecture | orbit-inclination | orbitElement=inclination |
-| /studio?target=native#architecture | orbit-node | orbitElement=node |
-| /studio?target=native#architecture | orbit-perigee | orbitElement=perigee |
-| /studio?target=native#bench | 1× | orbitRate=1 |
-| /studio?target=native#bench | 600× | orbitRate=600 |
-| /studio?target=native#bench | 60× | orbitRate=60 |
-| /studio?target=native#bench | Apogee altitude in km | orbitNumber=apogee |
+| /studio?target=native#bench | All apps | allGroundApps= |
 | /studio?target=native#bench | App, complete | /studio?target=native#app |
 | /studio?target=native#bench | Architecture | view=architecture |
-| /studio?target=native#bench | Argument of perigee in ° | orbitNumber=argument |
 | /studio?target=native#bench | Board | /?target=physical#board |
 | /studio?target=native#bench | Boot, complete | /studio?target=native#boot |
 | /studio?target=native#bench | Build for this computer | job=build |
 | /studio?target=native#bench | Build this target first | job=run |
-| /studio?target=native#bench | Close settings | signalSidebar= |
+| /studio?target=native#bench | Catalog details · 1 | SUMMARY |
 | /studio?target=native#bench | Code | view=code |
 | /studio?target=native#bench | Command, complete | /studio?target=native#command |
-| /studio?target=native#bench | Eclipse entrySun → shadow | signalScenario=eclipse |
-| /studio?target=native#bench | Elements | orbitSource=elements |
+| /studio?target=native#bench | Connect | ground=start |
 | /studio?target=native#bench | Event, complete | /studio?target=native#event |
 | /studio?target=native#bench | Flight studio | SUMMARY |
 | /studio?target=native#bench | Ground station | view=ground |
-| /studio?target=native#bench | Hardware | signalHardware= |
 | /studio?target=native#bench | Hardware | view=bench |
-| /studio?target=native#bench | ISS-like | orbitPreset=iss |
-| /studio?target=native#bench | Inclination in ° | orbitNumber=inclination |
-| /studio?target=native#bench | Include imu in session | simulationEnable=imu |
-| /studio?target=native#bench | Include mag in session | simulationEnable=mag |
-| /studio?target=native#bench | Include temp in session | simulationEnable=temp |
-| /studio?target=native#bench | Inertial sensormpu6050 · 0x681.04 g | signalDevice=imu |
-| /studio?target=native#bench | J2 | orbitModel=J2 |
-| /studio?target=native#bench | Magnetometerlsm303dlhc_mag · 0x1e12.26 µT | signalDevice=mag |
-| /studio?target=native#bench | Mean anomaly at epoch in ° | orbitNumber=anomaly |
-| /studio?target=native#bench | Molniya | orbitPreset=molniya |
-| /studio?target=native#bench | One orbitFull period | signalScenario=orbit |
-| /studio?target=native#bench | OrbitSSO 550 · 97.6° · 96 min | signalOrbit= |
-| /studio?target=native#bench | Pause orbit preview | orbitPlay= |
-| /studio?target=native#bench | Perigee altitude in km | orbitNumber=perigee |
-| /studio?target=native#bench | Python | signalView=python |
-| /studio?target=native#bench | QEMU | signalView=qemu |
-| /studio?target=native#bench | RAAN in ° | orbitNumber=node |
-| /studio?target=native#bench | Run | runSignalScenario= |
-| /studio?target=native#bench | Run cFS | signalBegin= |
+| /studio?target=native#bench | New command in code | codeCommand=hal_temp |
+| /studio?target=native#bench | Refresh catalog | ground=catalog |
+| /studio?target=native#bench | Round trip | groundMode=trip |
 | /studio?target=native#bench | Run cFS on this computer | target=native |
 | /studio?target=native#bench | Run in the QEMU emulator | target=qemu |
 | /studio?target=native#bench | Run on the physical board | target=physical |
-| /studio?target=native#bench | SSO 550 | orbitPreset=sso |
-| /studio?target=native#bench | Save settings | simulationSave= |
 | /studio?target=native#bench | Send, complete | /studio?target=native#send |
-| /studio?target=native#bench | Sensor drops outLoss → recovery | signalScenario=dropout |
 | /studio?target=native#bench | Sensor, complete | /studio?target=native#sensor |
-| /studio?target=native#bench | Signal settings | signalSidebar= |
-| /studio?target=native#bench | Signals | signalView=signals |
 | /studio?target=native#bench | Start over | flight=reset |
 | /studio?target=native#bench | Switch to light theme | themeToggle= |
 | /studio?target=native#bench | Synthetic data | view=simulation |
-| /studio?target=native#bench | TLE | orbitSource=tle |
+| /studio?target=native#bench | System overview | groundMode=system |
 | /studio?target=native#bench | Target, complete | /#target |
-| /studio?target=native#bench | Temperaturetmp105 · 0x48— | signalDevice=temp |
 | /studio?target=native#bench | Terminal | toggle-terminal |
-| /studio?target=native#bench | Test | signalView=test |
 | /studio?target=native#bench | Test, complete | /studio?target=native#test |
-| /studio?target=native#bench | Two-body | orbitModel=Two-body |
-| /studio?target=native#bench | interval | INPUT |
-| /studio?target=native#bench | orbit-anomaly | orbitElement=anomaly |
-| /studio?target=native#bench | orbit-apogee | orbitElement=apogee |
-| /studio?target=native#bench | orbit-argument | orbitElement=argument |
-| /studio?target=native#bench | orbit-inclination | orbitElement=inclination |
-| /studio?target=native#bench | orbit-node | orbitElement=node |
-| /studio?target=native#bench | orbit-perigee | orbitElement=perigee |
 | /studio?target=native#boot | App, complete | /studio?target=native#app |
 | /studio?target=native#boot | Board | /?target=physical#board |
 | /studio?target=native#boot | Boot, complete | /studio?target=native#boot |
+| /studio?target=native#boot | Build cFS, Waiting | stage=build stageLayer=build state=waiting bootFocus=stage-build |
+| /studio?target=native#boot | Change | /?target=native#target |
+| /studio?target=native#boot | Check target | /?target=native#target |
 | /studio?target=native#boot | Command, complete | /studio?target=native#command |
+| /studio?target=native#boot | Core Flight Executive | layer=cfe bootFocus=cfe current=false lit=false |
 | /studio?target=native#boot | Event, complete | /studio?target=native#event |
+| /studio?target=native#boot | Execution hardware | layer=hw bootFocus=hw current=false lit=false |
 | /studio?target=native#boot | Flight studio | SUMMARY |
+| /studio?target=native#boot | In the terminal | SUMMARY |
+| /studio?target=native#boot | Mission applications | layer=apps bootFocus=apps current=false lit=false |
+| /studio?target=native#boot | Open console | console= bootFocus=console |
+| /studio?target=native#boot | Operating System Abstraction Layer | layer=osal bootFocus=osal current=false lit=false |
+| /studio?target=native#boot | Operating system | layer=os bootFocus=os current=false lit=false |
+| /studio?target=native#boot | Pause view | pause= bootFocus=pause |
+| /studio?target=native#boot | Platform Support Package | layer=psp bootFocus=psp current=false lit=false |
+| /studio?target=native#boot | Replay boot | replay= bootFocus=replay |
 | /studio?target=native#boot | Send, complete | /studio?target=native#send |
 | /studio?target=native#boot | Sensor, complete | /studio?target=native#sensor |
+| /studio?target=native#boot | Start cFS, Waiting | stage=run stageLayer=cfe state=waiting bootFocus=stage-run |
 | /studio?target=native#boot | Start over | flight=reset |
 | /studio?target=native#boot | Switch to light theme | themeToggle= |
 | /studio?target=native#boot | Target, complete | /#target |
@@ -1081,10 +1023,6 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#code | Target, complete | /#target |
 | /studio?target=native#code | Terminal | toggle-terminal |
 | /studio?target=native#code | Test, complete | /studio?target=native#test |
-| /studio?target=native#code | apps | SUMMARY |
-| /studio?target=native#code | libs | SUMMARY |
-| /studio?target=native#code | mission/cpu1_cfe_es_startup.scr | file=mission/cpu1_cfe_es_startup.scr |
-| /studio?target=native#code | sample_defs | SUMMARY |
 | /studio?target=native#command | @Tags | sourceTab=source |
 | /studio?target=native#command | App, complete | /studio?target=native#app |
 | /studio?target=native#command | Architecture | view=architecture |
@@ -1101,22 +1039,17 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#command | Find in file | find-toggle |
 | /studio?target=native#command | Flight studio | SUMMARY |
 | /studio?target=native#command | Ground station | view=ground |
-| /studio?target=native#command | HAL sensor templates | SUMMARY |
 | /studio?target=native#command | Hardware | view=bench |
 | /studio?target=native#command | Hide sidebar | hide-explorer |
-| /studio?target=native#command | Mission | SUMMARY |
-| /studio?target=native#command | NASA cFS | SUMMARY |
 | /studio?target=native#command | New command | codeCommand=hal_mag |
 | /studio?target=native#command | Packet | sourceTab=packet |
 | /studio?target=native#command | Run cFS on this computer | target=native |
 | /studio?target=native#command | Run in the QEMU emulator | target=qemu |
 | /studio?target=native#command | Run on the physical board | target=physical |
 | /studio?target=native#command | Send, complete | /studio?target=native#send |
-| /studio?target=native#command | Sensor drivers | SUMMARY |
 | /studio?target=native#command | Sensor, complete | /studio?target=native#sensor |
 | /studio?target=native#command | Start over | flight=reset |
 | /studio?target=native#command | Switch to light theme | themeToggle= |
-| /studio?target=native#command | Synthetic data | SUMMARY |
 | /studio?target=native#command | Synthetic data | view=simulation |
 | /studio?target=native#command | Target, complete | /#target |
 | /studio?target=native#command | Terminal | toggle-terminal |
@@ -1204,51 +1137,41 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#send | Target, complete | /#target |
 | /studio?target=native#send | Terminal | toggle-terminal |
 | /studio?target=native#send | Test, complete | /studio?target=native#test |
-| /studio?target=native#sensor | 1× | orbitRate=1 |
-| /studio?target=native#sensor | 600× | orbitRate=600 |
-| /studio?target=native#sensor | 60× | orbitRate=60 |
+| /studio?target=native#sensor | All apps | allGroundApps= |
 | /studio?target=native#sensor | App, complete | /studio?target=native#app |
 | /studio?target=native#sensor | Architecture | view=architecture |
 | /studio?target=native#sensor | Board | /?target=physical#board |
 | /studio?target=native#sensor | Boot, complete | /studio?target=native#boot |
 | /studio?target=native#sensor | Build for this computer | job=build |
 | /studio?target=native#sensor | Build this target first | job=run |
-| /studio?target=native#sensor | Close settings | signalSidebar= |
+| /studio?target=native#sensor | Catalog details · 1 | SUMMARY |
 | /studio?target=native#sensor | Code | view=code |
 | /studio?target=native#sensor | Command, complete | /studio?target=native#command |
+| /studio?target=native#sensor | Connect | ground=start |
 | /studio?target=native#sensor | Event, complete | /studio?target=native#event |
 | /studio?target=native#sensor | Flight studio | SUMMARY |
 | /studio?target=native#sensor | Ground station | view=ground |
-| /studio?target=native#sensor | Hardware | signalHardware= |
 | /studio?target=native#sensor | Hardware | view=bench |
-| /studio?target=native#sensor | Orbit | signalOrbit= |
-| /studio?target=native#sensor | Pause orbit preview | orbitPlay= |
-| /studio?target=native#sensor | Python | signalView=python |
-| /studio?target=native#sensor | QEMU | signalView=qemu |
-| /studio?target=native#sensor | Run cFS | signalBegin= |
+| /studio?target=native#sensor | New command in code | codeCommand=hal_temp |
+| /studio?target=native#sensor | Refresh catalog | ground=catalog |
+| /studio?target=native#sensor | Round trip | groundMode=trip |
 | /studio?target=native#sensor | Run cFS on this computer | target=native |
 | /studio?target=native#sensor | Run in the QEMU emulator | target=qemu |
 | /studio?target=native#sensor | Run on the physical board | target=physical |
 | /studio?target=native#sensor | Send, complete | /studio?target=native#send |
 | /studio?target=native#sensor | Sensor, complete | /studio?target=native#sensor |
-| /studio?target=native#sensor | Signal settings | signalSidebar= |
-| /studio?target=native#sensor | Signals | signalView=signals |
 | /studio?target=native#sensor | Start over | flight=reset |
 | /studio?target=native#sensor | Switch to light theme | themeToggle= |
 | /studio?target=native#sensor | Synthetic data | view=simulation |
+| /studio?target=native#sensor | System overview | groundMode=system |
 | /studio?target=native#sensor | Target, complete | /#target |
 | /studio?target=native#sensor | Terminal | toggle-terminal |
-| /studio?target=native#sensor | Test | signalView=test |
 | /studio?target=native#sensor | Test, complete | /studio?target=native#test |
 | /studio?target=native#simulation | 1× | orbitRate=1 |
 | /studio?target=native#simulation | 600× | orbitRate=600 |
 | /studio?target=native#simulation | 60× | orbitRate=60 |
-| /studio?target=native#simulation | All channels | seriesChannel= seriesId=imu\|g |
-| /studio?target=native#simulation | All channels | seriesChannel= seriesId=mag\|µT |
-| /studio?target=native#simulation | Apogee altitude in km | orbitNumber=apogee |
 | /studio?target=native#simulation | App, complete | /studio?target=native#app |
 | /studio?target=native#simulation | Architecture | view=architecture |
-| /studio?target=native#simulation | Argument of perigee in ° | orbitNumber=argument |
 | /studio?target=native#simulation | Board | /?target=physical#board |
 | /studio?target=native#simulation | Boot, complete | /studio?target=native#boot |
 | /studio?target=native#simulation | Build for this computer | job=build |
@@ -1256,36 +1179,19 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#simulation | Close settings | signalSidebar= |
 | /studio?target=native#simulation | Code | view=code |
 | /studio?target=native#simulation | Command, complete | /studio?target=native#command |
-| /studio?target=native#simulation | Elements | orbitSource=elements |
 | /studio?target=native#simulation | Event, complete | /studio?target=native#event |
 | /studio?target=native#simulation | Flight studio | SUMMARY |
 | /studio?target=native#simulation | Ground station | view=ground |
 | /studio?target=native#simulation | Hardware | signalHardware= |
 | /studio?target=native#simulation | Hardware | view=bench |
-| /studio?target=native#simulation | ISS-like | orbitPreset=iss |
-| /studio?target=native#simulation | Inclination in ° | orbitNumber=inclination |
-| /studio?target=native#simulation | Include imu in session | simulationEnable=imu |
-| /studio?target=native#simulation | Include mag in session | simulationEnable=mag |
-| /studio?target=native#simulation | Include temp in session | simulationEnable=temp |
-| /studio?target=native#simulation | Inertial sensormpu6050 · 0x681.04 g | signalDevice=imu |
-| /studio?target=native#simulation | J2 | orbitModel=J2 |
-| /studio?target=native#simulation | Magnetometerlsm303dlhc_mag · 0x1e12.36 µT | signalDevice=mag |
-| /studio?target=native#simulation | Mean anomaly at epoch in ° | orbitNumber=anomaly |
-| /studio?target=native#simulation | Molniya | orbitPreset=molniya |
-| /studio?target=native#simulation | Next charts | signalPage=1 |
-| /studio?target=native#simulation | OrbitSSO 550 · 97.6° · 96 min | signalOrbit= |
+| /studio?target=native#simulation | Orbit | signalOrbit= |
 | /studio?target=native#simulation | Pause orbit preview | orbitPlay= |
-| /studio?target=native#simulation | Perigee altitude in km | orbitNumber=perigee |
-| /studio?target=native#simulation | Previous charts | signalPage=-1 |
 | /studio?target=native#simulation | Python | signalView=python |
 | /studio?target=native#simulation | QEMU | signalView=qemu |
-| /studio?target=native#simulation | RAAN in ° | orbitNumber=node |
 | /studio?target=native#simulation | Run cFS | signalBegin= |
 | /studio?target=native#simulation | Run cFS on this computer | target=native |
 | /studio?target=native#simulation | Run in the QEMU emulator | target=qemu |
 | /studio?target=native#simulation | Run on the physical board | target=physical |
-| /studio?target=native#simulation | SSO 550 | orbitPreset=sso |
-| /studio?target=native#simulation | Save settings | simulationSave= |
 | /studio?target=native#simulation | Send, complete | /studio?target=native#send |
 | /studio?target=native#simulation | Sensor, complete | /studio?target=native#sensor |
 | /studio?target=native#simulation | Signal settings | signalSidebar= |
@@ -1293,90 +1199,37 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#simulation | Start over | flight=reset |
 | /studio?target=native#simulation | Switch to light theme | themeToggle= |
 | /studio?target=native#simulation | Synthetic data | view=simulation |
-| /studio?target=native#simulation | TLE | orbitSource=tle |
 | /studio?target=native#simulation | Target, complete | /#target |
-| /studio?target=native#simulation | Temperaturetmp105 · 0x488.17 °C | signalDevice=temp |
 | /studio?target=native#simulation | Terminal | toggle-terminal |
 | /studio?target=native#simulation | Test | signalView=test |
 | /studio?target=native#simulation | Test, complete | /studio?target=native#test |
-| /studio?target=native#simulation | Two-body | orbitModel=Two-body |
-| /studio?target=native#simulation | accel-x | seriesChannel=accel-x seriesId=imu\|g |
-| /studio?target=native#simulation | accel-y | seriesChannel=accel-y seriesId=imu\|g |
-| /studio?target=native#simulation | accel-z | seriesChannel=accel-z seriesId=imu\|g |
-| /studio?target=native#simulation | interval | INPUT |
-| /studio?target=native#simulation | mag-x | seriesChannel=mag-x seriesId=mag\|µT |
-| /studio?target=native#simulation | mag-y | seriesChannel=mag-y seriesId=mag\|µT |
-| /studio?target=native#simulation | mag-z | seriesChannel=mag-z seriesId=mag\|µT |
-| /studio?target=native#simulation | orbit-anomaly | orbitElement=anomaly |
-| /studio?target=native#simulation | orbit-apogee | orbitElement=apogee |
-| /studio?target=native#simulation | orbit-argument | orbitElement=argument |
-| /studio?target=native#simulation | orbit-inclination | orbitElement=inclination |
-| /studio?target=native#simulation | orbit-node | orbitElement=node |
-| /studio?target=native#simulation | orbit-perigee | orbitElement=perigee |
-| /studio?target=native#test | 1× | orbitRate=1 |
-| /studio?target=native#test | 600× | orbitRate=600 |
-| /studio?target=native#test | 60× | orbitRate=60 |
-| /studio?target=native#test | Apogee altitude in km | orbitNumber=apogee |
+| /studio?target=native#test | All apps | allGroundApps= |
 | /studio?target=native#test | App, complete | /studio?target=native#app |
 | /studio?target=native#test | Architecture | view=architecture |
-| /studio?target=native#test | Argument of perigee in ° | orbitNumber=argument |
 | /studio?target=native#test | Board | /?target=physical#board |
 | /studio?target=native#test | Boot, complete | /studio?target=native#boot |
 | /studio?target=native#test | Build for this computer | job=build |
 | /studio?target=native#test | Build this target first | job=run |
-| /studio?target=native#test | Close settings | signalSidebar= |
+| /studio?target=native#test | Catalog details · 1 | SUMMARY |
 | /studio?target=native#test | Code | view=code |
 | /studio?target=native#test | Command, complete | /studio?target=native#command |
-| /studio?target=native#test | Eclipse entrySun → shadow | signalScenario=eclipse |
-| /studio?target=native#test | Elements | orbitSource=elements |
+| /studio?target=native#test | Connect | ground=start |
 | /studio?target=native#test | Event, complete | /studio?target=native#event |
 | /studio?target=native#test | Flight studio | SUMMARY |
 | /studio?target=native#test | Ground station | view=ground |
-| /studio?target=native#test | Hardware | signalHardware= |
 | /studio?target=native#test | Hardware | view=bench |
-| /studio?target=native#test | ISS-like | orbitPreset=iss |
-| /studio?target=native#test | Inclination in ° | orbitNumber=inclination |
-| /studio?target=native#test | Include imu in session | simulationEnable=imu |
-| /studio?target=native#test | Include mag in session | simulationEnable=mag |
-| /studio?target=native#test | Include temp in session | simulationEnable=temp |
-| /studio?target=native#test | Inertial sensormpu6050 · 0x681.04 g | signalDevice=imu |
-| /studio?target=native#test | J2 | orbitModel=J2 |
-| /studio?target=native#test | Magnetometerlsm303dlhc_mag · 0x1e12.25 µT | signalDevice=mag |
-| /studio?target=native#test | Mean anomaly at epoch in ° | orbitNumber=anomaly |
-| /studio?target=native#test | Molniya | orbitPreset=molniya |
-| /studio?target=native#test | One orbitFull period | signalScenario=orbit |
-| /studio?target=native#test | OrbitSSO 550 · 97.6° · 96 min | signalOrbit= |
-| /studio?target=native#test | Pause orbit preview | orbitPlay= |
-| /studio?target=native#test | Perigee altitude in km | orbitNumber=perigee |
-| /studio?target=native#test | Python | signalView=python |
-| /studio?target=native#test | QEMU | signalView=qemu |
-| /studio?target=native#test | RAAN in ° | orbitNumber=node |
-| /studio?target=native#test | Run | runSignalScenario= |
-| /studio?target=native#test | Run cFS | signalBegin= |
+| /studio?target=native#test | New command in code | codeCommand=hal_temp |
+| /studio?target=native#test | Refresh catalog | ground=catalog |
+| /studio?target=native#test | Round trip | groundMode=trip |
 | /studio?target=native#test | Run cFS on this computer | target=native |
 | /studio?target=native#test | Run in the QEMU emulator | target=qemu |
 | /studio?target=native#test | Run on the physical board | target=physical |
-| /studio?target=native#test | SSO 550 | orbitPreset=sso |
-| /studio?target=native#test | Save settings | simulationSave= |
 | /studio?target=native#test | Send, complete | /studio?target=native#send |
-| /studio?target=native#test | Sensor drops outLoss → recovery | signalScenario=dropout |
 | /studio?target=native#test | Sensor, complete | /studio?target=native#sensor |
-| /studio?target=native#test | Signal settings | signalSidebar= |
-| /studio?target=native#test | Signals | signalView=signals |
 | /studio?target=native#test | Start over | flight=reset |
 | /studio?target=native#test | Switch to light theme | themeToggle= |
 | /studio?target=native#test | Synthetic data | view=simulation |
-| /studio?target=native#test | TLE | orbitSource=tle |
+| /studio?target=native#test | System overview | groundMode=system |
 | /studio?target=native#test | Target, complete | /#target |
-| /studio?target=native#test | Temperaturetmp105 · 0x48— | signalDevice=temp |
 | /studio?target=native#test | Terminal | toggle-terminal |
-| /studio?target=native#test | Test | signalView=test |
 | /studio?target=native#test | Test, complete | /studio?target=native#test |
-| /studio?target=native#test | Two-body | orbitModel=Two-body |
-| /studio?target=native#test | interval | INPUT |
-| /studio?target=native#test | orbit-anomaly | orbitElement=anomaly |
-| /studio?target=native#test | orbit-apogee | orbitElement=apogee |
-| /studio?target=native#test | orbit-argument | orbitElement=argument |
-| /studio?target=native#test | orbit-inclination | orbitElement=inclination |
-| /studio?target=native#test | orbit-node | orbitElement=node |
-| /studio?target=native#test | orbit-perigee | orbitElement=perigee |

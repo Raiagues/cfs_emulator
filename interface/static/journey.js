@@ -1,3 +1,4 @@
+import {refreshCoach} from './coach.js';
 import {onUpdate} from './updates.js';
 import {api, readJourney} from './api.js';
 import {navigate, pageStep, stepUrl} from './router.js';
@@ -56,6 +57,7 @@ function render(snapshot) {
   }
   else forward.removeAttribute('href');
   bar.querySelector('.flight-complete').hidden = !snapshot.optional_board && current !== null;
+  if (next) refreshCoach();
 }
 
 export async function refreshJourney() {

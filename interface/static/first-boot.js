@@ -1,10 +1,11 @@
+import {guide} from './coach.js';
 import {onUpdate} from './updates.js';
 import {targetDrawing} from './target-drawing.js';
 import {stepUrl} from './router.js';
 import {icon} from './ui.js';
 
 const escape = value => String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const drawnCheck = '<svg viewBox="0 0 24 24" aria-hidden="true"><path pathLength="1" d="m5 12 4 4 10-10"/></svg>';
+const drawnCheck = '<svg class="fs-draw" viewBox="0 0 24 24" aria-hidden="true"><path pathLength="1" d="m5 12 4 4 10-10"/></svg>';
 const names={native:'Native',qemu:'Emulator',physical:'Board'};
 const tooltips={apps:'Mission applications',cfe:'Core Flight Executive',osal:'Operating System Abstraction Layer',psp:'Platform Support Package',os:'Operating system',hw:'Execution hardware',build:'Build flight software'};
 const serviceIcons={ES:['play','apps'],EVS:['antenna','events'],SB:['workflow','messages'],TBL:['table','tables'],TIME:['clock','clock'],FS:['files','files']};
@@ -69,14 +70,15 @@ export function bootStages(data, {phase,es}=bootLayers(data)) {
 }
 
 function stageCard(card,index,pickKey) {
-  const {key,label,caption,state,percent,layer}=card;
+  const {key,label,caption,state,percent,layer,cause}=card;
   const measured=state==='active' && Number.isFinite(percent);
   const complete=state==='done';
   const status=measured?caption+' '+percent+'%':caption;
   const spoken={waiting:'Waiting', active:'In progress', done:'Complete', failed:'Interrupted'}[state];
   return `<button type="button" class="boot-stage" data-stage="${key}" data-stage-layer="${layer}" data-state="${state}"
-    data-boot-focus="stage-${key}" aria-label="${escape(label+', '+(status||spoken))}" aria-pressed="${pickKey===key}" title="${escape(status||key)}">
-    <span class="boot-stage-caption"><i aria-hidden="true">${complete?drawnCheck:index+1}</i><strong>${escape(label)}</strong></span>
+    data-boot-focus="stage-${key}" aria-label="${escape(label+', '+(status||spoken))}" aria-pressed="${pickKey===key}" ${state==='waiting'?'disabled':''} title="${escape(status||key)}">
+    <span class="boot-stage-caption"><i aria-hidden="true">${complete?drawnCheck:index+1}</i><strong>${escape(label)}</strong><small>${escape(status||'')}</small></span>
+    ${cause?'<span class="boot-cause" role="alert">'+escape(cause)+'</span>':''}
     <span class="boot-meter" aria-hidden="true" data-indeterminate="${state==='active'&&!measured}"><b style="width:${complete?100:measured?percent:0}%"></b></span>
   </button>`;
 }
@@ -110,10 +112,13 @@ function picture(id,data,layers) {
     }).join('')}</div>`;
   } else {
     const apps=new Map(layer[3]);
+    const user = data.authored_apps?.filter(name=>apps.has(name)) || [];
+    const other = [...apps].filter(([name])=>!['ci_lab','to_lab','sch_lab','sample_app',...user].includes(name) && !data.example_apps?.includes(name));
     const draw=name=>apps.has(name)?chip(name,apps.get(name)):'';
     figure=`<div class="boot-app-diagram"><div class="boot-ground">${icon('antenna')}Ground</div>
       <div class="boot-app-bus"><div class="boot-app-row">${draw('ci_lab')}${draw('to_lab')}</div>
-      <span class="boot-sb">Software Bus</span><div class="boot-app-row">${draw('sch_lab')}${draw('sample_app')}<span class="boot-slot">+ App</span></div></div></div>`;
+      <span class="boot-sb">Software Bus</span><div class="boot-app-row">${draw('sch_lab')}${draw('sample_app')}${user.map(draw).join('')}</div></div>
+      ${other.length?`<details class="boot-other"><summary>+${other.length} NASA apps</summary>${other.map(([name,on])=>chip(name,on)).join('')}</details>`:''}</div>`;
   }
   return `<header><span class="boot-picture-icon">${icon(layer?.[2]||'build')}</span><h2 title="${tooltips[id]}">${escape(name)}</h2><i class="boot-picture-dot" data-lit="${!!layer?.[4] || id==='build'}"></i></header><div class="boot-figure" data-scene="${id}">${figure}</div>`;
 }
@@ -194,10 +199,16 @@ export function mountFirstBoot(container,{api,target}) {
     data=pausedAt!=null||replayStart!=null ? bootFrame(live,ms,pausedIndex??live.trace.length-1) : live;
     if(disposed || !data)return;
     const {layers,phase,auto,es}=bootLayers(data);
-    const {preparation,startup,runStatus}=bootStages(data,{phase,es});
-    const currentStep=preparation.find(card=>card.state==='active'||card.state==='failed');
-    const prepStatus=currentStep?.percent!=null?currentStep.caption+' '+currentStep.percent+'%':currentStep?.caption;
+    const {preparation,startup}=bootStages(data,{phase,es});
     const job=data.job,running=data.running,failed=['failed','cancelled'].includes(job.status);
+    const runState = es.includes('OPERATIONAL') ? 'done' : phase === 'run' ? (failed ? 'failed' : 'active') : 'waiting';
+    const phases = [...preparation, {key:'run', label:stagesFor(target).at(-1)[1], layer:'cfe', state:runState,
+      caption:runState === 'done' ? 'OPERATIONAL' : runState === 'active' ? stageProgress('run', job, es).label : ''}];
+    const fault = phases.find(card => card.state === 'failed');
+    if (fault) fault.cause = job.error || data.lines.at(-1);
+    const mainApps = new Set(['ci_lab','to_lab','sch_lab','sample_app', ...(data.authored_apps || [])]);
+    const appChips = layers[0][3];
+    const extra = appChips.filter(([name]) => !mainApps.has(name) && !data.example_apps?.includes(name));
     const cue=[job.id,phase,job.guest_stage,auto,es.at(-1)].join('/');
     if(cue!==lastCue && pausedAt==null){pick='';pickKey='';}
     lastCue=cue;
@@ -210,10 +221,10 @@ export function mountFirstBoot(container,{api,target}) {
     let action = '';
     if (data === live && !running && idle) {
       if (!live.verified || live.unverified) {
-        action = `<a href="${stepUrl('target', location, target)}">Check target</a>`;
+        action = `<a data-boot-check href="${stepUrl('target', location, target)}">Check target</a>`;
       } else {
         const label = failed || live.stopped || err ? 'Retry first boot' : 'Start first boot';
-        action = `<button class="fs-coach" data-start-boot data-boot-focus="start" ${starting ? 'disabled' : ''}>${label}</button>`;
+        action = `<button class="primary" data-start-boot data-boot-focus="start" ${starting ? 'disabled' : ''}>${label}</button>`;
       }
     }
     const fragment=document.createElement('template');
@@ -222,14 +233,11 @@ export function mountFirstBoot(container,{api,target}) {
       <time class="boot-clock" aria-label="Boot elapsed">${clock(elapsed())}</time>
       <button class="boot-control" data-pause data-boot-focus="pause" aria-label="${pausedAt==null?'Pause view':'Resume view'}" title="${pausedAt==null?'Pause view':'Resume view'}" ${!live.trace.length || (!replayStart && pausedAt==null && live.running)?'disabled':''}>${pausedAt==null?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14m8-14v14"/></svg>':icon('play')+'<span>Resume</span>'}</button>
       <button class="boot-control" data-replay data-boot-focus="replay" aria-label="Replay boot" title="Replay boot" ${live.trace.length<2?'disabled':''}>${icon('rotate')}</button></header>
-      <div class="boot-stages" style="--prep-width:${preparation.length}fr">
-        <section class="boot-stage-group"><h2>${escape(names[target])}<small>${escape(prepStatus||'')}</small></h2>
-        <div class="boot-track">${preparation.map((card,i)=>stageCard(card,i,pickKey)).join('')}</div></section>
-        <section class="boot-stage-group"><h2>Start cFS<small>${escape(runStatus)}</small></h2>
-        <div class="boot-track">${startup.map((card,i)=>stageCard(card,preparation.length+i,pickKey)).join('')}</div></section>
-      </div>
+      <div class="boot-track boot-phases">${phases.map((card,i)=>stageCard(card,i,pickKey)).join('')}</div>
       <div class="boot-layout"><section class="boot-stack"><h2>cFS · layer by layer</h2>
-      ${layers.map(([id,name,glyph,chips,lit])=>`<button type="button" class="boot-layer" data-layer="${id}" data-boot-focus="${id}" title="${tooltips[id]}" aria-pressed="${id===selected}" data-current="${id===auto && !running && !failed}" data-lit="${!!lit}"><span>${icon(glyph)}</span><strong>${escape(name)}</strong><span class="boot-chips">${chips.map(([text,on])=>chip(text,on)).join('')}</span></button>`).join('')}
+      ${layers.map(([id,name,glyph,chips,lit])=>`<button type="button" class="boot-layer" data-layer="${id}" data-boot-focus="${id}" title="${tooltips[id]}" aria-pressed="${id===selected}" data-current="${id===auto && !running && !failed}" data-lit="${!!lit}"><span>${icon(glyph)}</span><strong>${escape(name)}</strong><span class="boot-chips">${chips.filter(([name])=>id !== 'apps' || mainApps.has(name)).map(([name,on])=>chip(name,on)).join('')}${id==='apps' && extra.length?chip('+'+extra.length+' NASA apps',extra.every(([,on])=>on)):''}</span></button>`).join('')}
+      <div class="boot-milestones" aria-label="Executive Services states">${startup.filter(card => card.state !== 'waiting').map(card =>
+        `<button type="button" class="fs-pop" data-stage="${card.key}" data-stage-layer="${card.layer}" aria-pressed="${pickKey===card.key}">${escape(card.key)}</button>`).join('')}</div>
       </section>
       <section class="boot-picture" data-kind="${selected}" data-animating="${selected===auto && job.status==='running'&&!failed&&!running&&pausedAt==null}">${picture(selected,data,layers)}</section></div>
       <section class="boot-console" data-open="${consoleOpen}" aria-label="Boot console">
@@ -242,10 +250,11 @@ export function mountFirstBoot(container,{api,target}) {
           <pre id="boot-console-output" aria-label="Boot log" tabindex="0" ${consoleOpen?'':'hidden'}>${consoleOpen?escape(data.lines.join('\n')):''}</pre>
         </div>
       </section>
-      <footer>${running?`<span class="boot-success">${drawnCheck}cFS is running</span>`:action}<output>${escape(readError||err||job.error||'')}</output></footer></section>`;
+      <footer><details class="terminal-twin" ${container.querySelector('.terminal-twin')?.open?'open':''}><summary>In the terminal</summary><pre>./start --no-ui first-boot --target ${escape(target)}</pre></details>${running?`<span class="boot-success">${drawnCheck}cFS is running</span>`:action}<output>${escape(readError||err||(!fault && job.error)||'')}</output></footer></section>`;
     const next=fragment.content.firstElementChild, existing=container.firstElementChild;
     if(existing?.classList.contains('first-boot'))updateNode(existing,next);
     else container.replaceChildren(next);
+    guide(container.querySelector('[data-start-boot], [data-boot-check]'));
     if(focus&&!container.contains(document.activeElement))container.querySelector(`[data-boot-focus="${CSS.escape(focus)}"]`)?.focus({preventScroll:true});
     const nextOutput=container.querySelector('.boot-console pre:not([hidden])');
     if(nextOutput)nextOutput.scrollTop=atEnd?nextOutput.scrollHeight:oldScroll;
@@ -261,7 +270,7 @@ export function mountFirstBoot(container,{api,target}) {
       await api('job',{action:'first-boot',options:{target}});
       live=await api('first-boot?target='+encodeURIComponent(target));
     }catch(error){err=error.message;}
-    finally{starting=false;}
+    finally{starting=false;draw();}
   }
   async function poll(){
     try{
