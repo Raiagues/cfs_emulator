@@ -245,7 +245,8 @@ def run(args):
     if args.action in ("sync", "check") and not configured(root, config):
         return {"changed": [], "deleted": [], "check": args.action == "check"}, 0
     if args.action in ("stamp", "check-build"):
-        target = getattr(args, 'target', None) or ('native' if config['board'] is None else 'qemu')
+        from hardware.targets import selected_target
+        target = getattr(args, 'target', None) or selected_target(root, required=True)
         if target != 'native' and config['board'] is None:
             raise ProjectError('Build target must match the selected native or board profile')
         kind = 'native' if target == 'native' else 'flight'

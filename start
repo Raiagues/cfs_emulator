@@ -45,6 +45,7 @@ def replace(argv):
 
 
 def main(argv=None):
+    from hardware.targets import selected_target
     argv = list(sys.argv[1:] if argv is None else argv)
     os.chdir(ROOT)
     if argv and argv[0] in {'-h', '--help'}:
@@ -126,7 +127,6 @@ def main(argv=None):
         parser.print_help()
         return 0
     if args.command == 'journey':
-        from hardware.targets import selected_target
         from journey import Store
         store = Store(ROOT)
         target = args.target or selected_target(ROOT)
@@ -169,7 +169,7 @@ def main(argv=None):
                 print(json.dumps({'board': args.board, 'os': args.os, 'changed': result['changed']}, indent=2))
             else:
                 config = workspace.model.load_config(ROOT)
-                print(json.dumps({'target': manager.default_target(), 'board': config['board'], 'os': config['os'], 'profiles': manager.profiles()}, indent=2))
+                print(json.dumps({'target': selected_target(ROOT), 'board': config['board'], 'os': config['os'], 'profiles': manager.profiles()}, indent=2))
             return 0
         except (OSError, ValueError, RuntimeError) as error:
             print(f'Error: {error}', file=sys.stderr)
@@ -207,7 +207,7 @@ def main(argv=None):
             return 1
     from hardware.manager import HardwareError, HardwareManager
     manager = HardwareManager(ROOT)
-    target = getattr(args, 'target', None) or manager.default_target()
+    target = getattr(args, 'target', None) or selected_target(ROOT)
     host, user = getattr(args, 'host', None), getattr(args, 'user', None)
     port = getattr(args, 'ssh_port', 22)
     identity, directory = getattr(args, 'identity_file', None), getattr(args, 'directory', None)

@@ -45,3 +45,27 @@ export function readJourney(target, board = false, options) {
   else if (target) params.set('target', target);
   return api('journey?' + params, undefined, options);
 }
+
+export async function* checkFrames(target, signal) {
+  const response = await request('infrastructure/check', {target}, {signal, headers:{Accept:'application/x-ndjson'}});
+  const stream = response.body.pipeThrough(new TextDecoderStream()).getReader();
+  let buffer = '';
+  try {
+    for (;;) {
+      const {value, done} = await stream.read();
+      if (done) break;
+      buffer += value;
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      for (const line of lines) {
+        if (!line) continue;
+        const frame = JSON.parse(line);
+        if (frame.error) throw Error(frame.error);
+        yield frame;
+      }
+    }
+    if (buffer.trim()) throw Error('Incomplete setup report');
+  } finally {
+    stream.releaseLock();
+  }
+}

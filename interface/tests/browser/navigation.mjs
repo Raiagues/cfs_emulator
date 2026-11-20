@@ -161,7 +161,8 @@ async function crawl(url, verifyRoutes) {
     const context = await browser.newContext({viewport:{width:1440,height:900}});
     const page = await context.newPage();
     // Inventory visits never install software or deploy the lab being inspected.
-    let visiting = '', resetting = false;
+    let visiting = '', resetting = false, selecting = false;
+    const selections = [];
     page.on('pageerror', e => faults.push(visiting + ' ' + e.message));
     page.on('response', async response => {
       if (response.status() >= 400 && response.request().method() === 'GET') {
@@ -170,6 +171,10 @@ async function crawl(url, verifyRoutes) {
     });
     await context.route('**/api/**', route => {
       const request = route.request();
+      if (selecting && request.method() === 'POST') {
+        selections.push([new URL(request.url()).pathname, request.postDataJSON(), request.headers().accept]);
+        return route.continue();
+      }
       if (request.method() === 'GET' || resetting && new URL(request.url()).pathname === '/api/journey/reset') return route.continue();
       rows.push([visiting, 'Route entry', request.method() + ' ' + new URL(request.url()).pathname]);
       return route.fulfill({status:409, contentType:'application/json',body:'{"error":"Inventory captured this action"}'});
@@ -188,6 +193,24 @@ async function crawl(url, verifyRoutes) {
         assert.equal(await page.locator('#flight-guide [data-flight=boot][href]').count(), 0);
         assert.equal(await page.locator('#flight-guide [aria-current=step]').getAttribute('data-flight'), 'target');
       }
+      for (const route of ['/#target', '/?target=qemu#target']) {
+        await page.goto(new URL(route, base).href);
+        await page.locator('#targets button:not(:disabled)').first().waitFor();
+        assert.equal(await page.locator('#targets [aria-pressed=true]').count(), 0);
+        assert.deepEqual((await saved()).slice(0,2), [false,null]);
+      }
+      selecting = true;
+      await page.locator('button[data-target=native]').click();
+      await page.locator('#enter:visible:not(:disabled)').waitFor();
+      assert.deepEqual(selections.map(([path, body]) => [path,body]), [
+        ['/api/hardware/target',{target:'native'}], ['/api/infrastructure/check',{target:'native'}]
+      ]);
+      assert.equal(selections[1][2], 'application/x-ndjson');
+      assert.deepEqual((await saved()).slice(0,2), [true,'native']);
+      selecting = false;
+      await page.reload();
+      await page.locator('button[data-target=native][aria-pressed=true]').waitFor();
+      await page.locator('#flight-guide a[data-flight=boot]').waitFor();
       assert.deepEqual(faults, []);
       assert.deepEqual(rows, []);
       return rows;

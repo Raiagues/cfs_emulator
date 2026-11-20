@@ -1,6 +1,6 @@
 import {targetDrawing} from './target-drawing.js';
-import {api, readJourney, request} from './api.js';
-import {navigate, pageStep, redirectForStep, requestedTarget, stepUrl} from './router.js';
+import {api, checkFrames, readJourney} from './api.js';
+import {navigate, pageStep, redirectForStep, stepUrl} from './router.js';
 import {icon} from './ui.js';
 import {mountShells} from './shell.js';
 import {groupsByTarget, groupFor, repairFor, nextRepair} from './setup-plan.js';
@@ -11,13 +11,12 @@ const form = $('#infrastructure-form');
 const settingsForm = $('#target-settings-form');
 const settingsDialog = $('#settings-sheet');
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const targets = ['native','qemu','physical'];
+const boardVisit = pageStep() === 'board';
 const checksByTarget = new Map();
 const checkRequests = new Map();
-let settings = null, target = 'native', busy = false, dirty = false;
+let settings = null, target = null, busy = false, dirty = false;
 let activeGroup = '', installation = null, selectedVersion = 0;
 let verification = null;
-let saving = Promise.resolve();
 function feedback(message = '', error = false) {
   $('#feedback').textContent = message;
   $('#feedback').classList.toggle('error', error);
@@ -52,6 +51,13 @@ function connectionButton(field, glyph, label, value) {
 function renderFields() {
   if (target) document.body.dataset.flightTarget = target;
   else delete document.body.dataset.flightTarget;
+  $('.setup-panel').hidden = !target;
+  $('.setup-footer').hidden = !target;
+  if (!target) {
+    $('#configuration').replaceChildren();
+    controls();
+    return;
+  }
   const configure = `<button type="button" class="settings-button" id="advanced-toggle" aria-haspopup="dialog" aria-controls="settings-sheet">${icon('sliders')}Configure</button>`;
   let fields;
   if (target === 'native') {
@@ -143,7 +149,7 @@ function updateDetails(plans) {
 }
 
 function renderChecks() {
-  if (!settings) return;
+  if (!settings || !target) return;
   const plans = groups(target);
   const checking = checkRequests.has(target);
   const missing = plans.filter(x => x.state === 'missing').length;
@@ -179,12 +185,19 @@ function renderChecks() {
   terminal.hidden = !installation || installation.target !== target;
   const details = $('#inspect');
   details.dataset.input = String(fixing && Boolean(installation.input_required));
+  if (boardVisit) {
+    $('#enter').textContent = settings.target === 'physical' ? 'Build cFS' : 'Use this board';
+    if (!ready && !checking && !missing) {
+      install.hidden = false;
+      install.textContent = 'Check connection';
+    }
+  }
   details.textContent = details.dataset.input === 'true' ? 'Input required' : 'Details';
 }
 
 function controls() {
   for (const card of document.querySelectorAll('.target-option')) {
-    card.disabled = !settings || busy;
+    card.disabled = !settings || busy || boardVisit && card.dataset.target !== 'physical';
     card.setAttribute('aria-pressed', String(card.dataset.target === target));
   }
   for (const field of form.querySelectorAll('#configuration :is(input,select,button)')) {
@@ -196,58 +209,57 @@ function controls() {
   renderChecks();
 }
 async function saveForm(changes = {}) {
-  const fields = form.elements, mode = target, version = selectedVersion;
-  const profile = mode === 'qemu' ? {board:fields.board.value,os:fields.os.value} : profileOptions();
-  const values = {target:mode,build_jobs:mode === 'native' ? Number(fields.build_jobs.value) : settings.build_jobs,
-    board:profile.board,os:profile.os,connection:settings.connection || {},emulator:settings.emulator,...changes};
-  // Serialize saves from rapid selections so the last click is the saved target.
-  const result = saving.then(()=>api('infrastructure',values));
-  saving=result.catch(()=>{});
-  const next=await result;
+  const mode = target, version = selectedVersion;
+  const {board, os, ...values} = changes;
+  if (board !== undefined && (board !== settings.board || os !== settings.os)) {
+    await api('mission/profile', {board, os});
+  }
+  if (mode === 'native') values.build_jobs = Number(form.elements.build_jobs.value);
+  if (mode === 'qemu' && !values.emulator) values.emulator = settings.emulator;
+  if (mode === 'physical' && !values.connection) values.connection = settings.connection || {};
+  const next = await api('infrastructure', {target:mode, ...values});
   if (version === selectedVersion) {
     settings = next;
-    // The mission profile can only be written after the checkout has been installed.
-    if (mode !== 'native' && !next.sources_ready) Object.assign(settings,{board:values.board,os:values.os});
     dirty = false;
   }
 }
+
 function abortChecks(mode) {
   checkRequests.get(mode)?.abort();
   checkRequests.delete(mode);
 }
-async function runChecks(groupName) {
-  if (!settings || !form.reportValidity()) return;
-  const mode=target,version=selectedVersion;
+async function runChecks() {
+  if (!target || !settings || !form.reportValidity()) return;
+  const mode = target, version = selectedVersion;
   abortChecks(mode);
-  const controller=new AbortController();
-  checkRequests.set(mode,controller);
+  const controller = new AbortController();
+  checkRequests.set(mode, controller);
+  controls();
   feedback();
+  let complete = false;
   try {
-    // Persist connection values before SSH checks. Mission profile changes wait for the NASA checkout.
-    if(dirty || !settings.target_saved || mode!==settings.target) await saveForm();
-    if(controller.signal.aborted || version!==selectedVersion)return;
-    const report=reportFor(mode);
-    const batch=groupsByTarget[mode].filter(([name])=>!groupName || name===groupName)
-      .flatMap(([name])=>report.filter(row=>groupFor(mode,row.label)===name));
-    for(const stage of batch) Object.assign(stage,{status:'pending',detail:'',duration_ms:null,exit_code:null});
-    for(const stage of batch){
-      if(controller.signal.aborted)return;
-      stage.status='running';renderChecks();
-      const response=await request('infrastructure/check',{target:mode,label:stage.label},{signal:controller.signal});
-      const result=await response.json();
-      if(controller.signal.aborted)return;
-      if(result.label!==stage.label || !['passed','failed'].includes(result.status)) throw Error('Invalid check result');
-      Object.assign(stage,result);
-      if(result.source){settings.source=result.source;settings.sources_ready=result.source.state==='ready';}
+    for await (const frame of checkFrames(mode, controller.signal)) {
+      if (controller.signal.aborted || version !== selectedVersion) return;
+      checksByTarget.set(mode, frame.checks);
+      const source = frame.checks.find(row => row.source)?.source;
+      if (source) Object.assign(settings, {source, sources_ready:source.state === 'ready'});
+      complete = frame.status === 'complete';
       renderChecks();
     }
+    if (!complete) throw Error('Setup checks interrupted');
     window.dispatchEvent(new Event('flight:updated'));
     return true;
-  }catch(error){if(!controller.signal.aborted)feedback(error.message,true);}
-  finally{if(checkRequests.get(mode)===controller){checkRequests.delete(mode);controls();}}
+  } catch (error) {
+    if (!controller.signal.aborted) feedback(error.message, true);
+  } finally {
+    if (checkRequests.get(mode) === controller) {
+      checkRequests.delete(mode);
+      controls();
+    }
+  }
 }
-function verify(groupName) {
-  verification = runChecks(groupName);
+function verify() {
+  verification = runChecks();
   return verification;
 }
 
@@ -277,26 +289,13 @@ async function followInstaller(session, groupName, recheck = true) {
   }
   const success = installation.status === 'succeeded';
   $('#terminal-state').textContent = success ? 'Completed' : 'Exit ' + installation.exit_code;
-  // Cloning can change the active mission profile. Keep the user's selected board.
-  const preferred = {board:settings.board, os:settings.os};
   settings = await api('infrastructure');
   if (!recheck) {
     checksByTarget.delete(target);
     controls();
     return success;
   }
-  if (session.setup_action === 'clone-cfs' && target !== 'native') {
-    Object.assign(settings,preferred);
-    dirty = true;
-  }
-  // A missing dependency can affect several groups. Keep already verified rings steady.
-  const pending = groups(target).filter(group => group.state !== 'ready');
-  let checked = true;
-  if (dirty || !pending.length) checked = await verify();
-  else for (const group of pending) {
-    checked = await verify(group.name);
-    if (!checked) break;
-  }
+  const checked = await verify();
   if (!success) feedback(installerLabels[session.setup_action] + ' · exit ' + installation.exit_code, true);
   return success && checked;
 }
@@ -404,18 +403,36 @@ async function installRequirements(groupName) {
 }
 
 function showError(error) { feedback(error.message,true); controls(); }
-$('#targets').addEventListener('click', event => {
+$('#targets').addEventListener('click', async event => {
   const mode = event.target.closest('[data-target]')?.dataset.target;
-  if (!mode || !settings || busy) return;
+  if (!mode || !settings || busy || boardVisit && mode !== 'physical') return;
   abortChecks(target);
   selectedVersion++;
-  dirty = dirty || mode !== settings.target;
-  target = mode;
-  checksByTarget.delete(mode);
-  renderFields();
-  verify().catch(showError);
+  busy = true;
+  controls();
+  try {
+    if (!boardVisit) {
+      const choice = await api('hardware/target', {target:mode});
+      settings.target = choice.target;
+      settings.target_saved = true;
+    }
+    dirty = false;
+    target = mode;
+    checksByTarget.delete(mode);
+    renderFields();
+  } catch (error) {
+    showError(error);
+    return;
+  } finally {
+    busy = false;
+    controls();
+  }
+  await verify();
 });
-$('#install').addEventListener('click', () => installRequirements().catch(showError));
+$('#install').addEventListener('click', () => {
+  if (boardVisit && $('#install').textContent === 'Check connection') verify().catch(showError);
+  else installRequirements().catch(showError);
+});
 $('#inspect').addEventListener('click', () => {
   if (installation?.target === target && installation.status === 'running') showTerminal();
   else inspect(groups(target).find(group => group.state === 'missing')?.name);
@@ -466,25 +483,50 @@ form.addEventListener('input', () => {
   checksByTarget.delete(target);
   controls();
 });
-form.addEventListener('change', event => {
+form.addEventListener('change', async event => {
+  if (!form.reportValidity()) return;
   dirty = true;
   if (event.target.name === 'board') updateOperatingSystems(form.elements);
-  verify().catch(showError);
+  const fields = form.elements;
+  const profile = target === 'qemu' ? {board:fields.board.value, os:fields.os.value} : {};
+  busy = true;
+  controls();
+  try {
+    await saveForm(profile);
+  } catch (error) {
+    showError(error);
+    return;
+  } finally {
+    busy = false;
+    controls();
+  }
+  await verify();
 });
-form.addEventListener('submit', event => {
+form.addEventListener('submit', async event => {
   event.preventDefault();
-  if (!$('#enter').disabled && !$('#enter').hidden) navigate(stepUrl('boot', location, target));
+  if ($('#enter').disabled || $('#enter').hidden) return;
+  if (!boardVisit) {
+    navigate(stepUrl('boot', location, target));
+    return;
+  }
+  try {
+    if (settings.target !== 'physical') {
+      await api('hardware/target', {target:'physical', use_board:true});
+      settings.target = 'physical';
+      controls();
+    } else {
+      await api('job', {action:'build', options:{target:'physical'}});
+    }
+  } catch (error) {showError(error);}
 });
 (async () => {
   settings = await api('infrastructure');
-  const requested = requestedTarget();
-  if (pageStep() === 'board') {
+  if (boardVisit) {
     const state = await readJourney(null, true);
     const redirect = redirectForStep('board', state);
     if (redirect) {navigate(redirect, true); return;}
   }
-  const explicitSelection = targets.includes(requested);
-  target = explicitSelection ? requested : settings.target;
+  target = boardVisit ? 'physical' : settings.target;
   const jobs = await api('jobs');
   const running = jobs.find(job => job.setup_action && job.status === 'running');
   if (running) {

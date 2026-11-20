@@ -136,7 +136,7 @@ class Studio:
             raise ValueError('Invalid operation')
         if set(options) - {'target', 'connection', 'sensorless', 'kind', 'board', 'os', 'device', 'model', 'retry', 'scenario'}:
             raise ValueError('Invalid operation parameters')
-        if options.get('target', self.hardware.default_target()) not in ('native', 'qemu', 'physical'):
+        if (options.get('target') or selected_target(self.hardware.root)) not in ('native', 'qemu', 'physical'):
             raise ValueError('Invalid target')
         if 'scenario' in options:
             from sensors.scenarios import SCENARIOS
@@ -145,7 +145,7 @@ class Studio:
                 raise ValueError('Select a local sensor scenario')
         if 'sensorless' in options and type(options['sensorless']) is not bool:
             raise ValueError('Invalid sensor profile')
-        if 'retry' in options and (type(options['retry']) is not bool or action != 'boot' or options.get('target', 'qemu') != 'qemu'):
+        if 'retry' in options and (type(options['retry']) is not bool or action != 'boot' or (options.get('target') or selected_target(self.hardware.root)) != 'qemu'):
             raise ValueError('Retry applies only to QEMU startup')
         if 'connection' in options and not isinstance(options['connection'], dict):
             raise ValueError('Invalid connection')
@@ -154,7 +154,8 @@ class Studio:
         if any(key in options and options[key] is not None and (not isinstance(options[key], str) or not options[key]) for key in ('board', 'os')):
             raise ValueError('Invalid board or operating system')
         options = dict(options)
-        target = options.setdefault('target', self.hardware.default_target())
+        target = options.get('target') or selected_target(self.hardware.root)
+        options['target'] = target
         kind = 'boot' if action == 'boot' else options.get('kind', 'flight')
         script = None
         if action in {'simulate', 'simulate-preview'}:
@@ -346,7 +347,7 @@ class Studio:
         fingerprint = state.get('fingerprint', '')
         if len(fingerprint) != 64 or any(c not in '0123456789abcdef' for c in fingerprint):
             raise ValueError('Invalid build identifier')
-        target = state.get('target', self.hardware.default_target())
+        target = state.get('target') or selected_target(self.hardware.root, required=True)
         profile = 'native' if target == 'native' else 'flight'
         filename = 'catalog-' + profile + '-' + fingerprint + ('-sensorless' if sensorless else '') + '.json'
         cached = self.hardware._load(filename)
@@ -370,7 +371,9 @@ class Studio:
         return catalog
 
     def ground_catalog(self, target=None):
-        target = target or self.hardware.default_target()
+        target = target or selected_target(self.hardware.root)
+        if target is None:
+            return {'packets': [], 'commands': [], 'transport': {}, 'errors': []}
         if target not in ('native', 'qemu', 'physical'):
             raise ValueError('Invalid target')
         deployment = self.hardware._load('deployed.json', {}).get(target)
@@ -387,7 +390,7 @@ class Studio:
             raise ValueError('Invalid ground station configuration')
         if 'connection' in options and not isinstance(options['connection'], dict):
             raise ValueError('Invalid connection')
-        target = options.get('target', self.hardware.default_target())
+        target = (options.get('target') or selected_target(self.hardware.root))
         deployment = self.hardware._load('deployed.json', {}).get(target)
         if not deployment:
             raise ValueError('Build and run cFS on this target before connecting the ground station.')
@@ -524,7 +527,7 @@ class Handler(BaseHTTPRequestHandler):
                 '/api/files/search': lambda: app.workspace.search_files(query.get('root', 'cFS'), query.get('q', '')),
                 '/api/file': lambda: app.workspace.read_file(query['path']),
                 '/api/hardware': app.hardware.status,
-                '/api/first-boot': lambda: first_boot.snapshot(app, query.get('target', app.hardware.default_target()), journal=app.boot_journal_snapshot),
+                '/api/first-boot': lambda: first_boot.snapshot(app, query.get('target') or selected_target(app.hardware.root), journal=app.boot_journal_snapshot),
                 '/api/infrastructure': lambda: infrastructure.snapshot(app.hardware, verify_source=query.get('verify_source') == '1'),
                 '/api/simulation': app.workspace.simulation_snapshot,
                 '/api/simulation/orbit': lambda: orbit_preview(json.loads(query['parameters'])),

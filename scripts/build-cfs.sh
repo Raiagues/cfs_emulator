@@ -13,7 +13,7 @@ if [[ $# -gt 0 && ( $# -ne 2 || "$1" != "--target" ) ]]; then
     exit 2
 fi
 if [[ -z "$MISSION_TARGET" ]]; then
-    MISSION_TARGET=$(python3 -c 'import json; from pathlib import Path; p=Path("hardware/.runtime/target.json"); c=json.load(open("project/config.json")); print(json.loads(p.read_text())["target"] if p.is_file() else "native" if c.get("board") is None else "qemu")')
+    MISSION_TARGET=$(python3 -c 'from hardware.targets import selected_target; print(selected_target(".", required=True))')
 fi
 case "$MISSION_TARGET" in
     native) MISSION_PROFILE=native ;;

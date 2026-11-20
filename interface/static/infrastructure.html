@@ -35,15 +35,15 @@
           <span class="target-caption"><strong>Board</strong><small>SSH</small></span>
         </button>
     </div>
-    <section class="setup-panel" aria-label="Target configuration">
+    <section class="setup-panel" hidden aria-label="Target configuration">
       <div class="configuration-row">
         <div id="configuration"></div>
         <div class="group-summary"><span id="group-summary" role="status"></span><div id="requirements" role="group" aria-label="Setup checks"></div></div>
       </div>
     </section>
-    <footer class="setup-footer">
+    <footer class="setup-footer" hidden>
       <button type="button" id="install" class="primary" disabled>Install requirements</button>
-      <button type="submit" class="primary" id="enter" hidden disabled>Continue to boot</button>
+      <button type="submit" class="primary" id="enter" hidden disabled>Continue · first boot</button>
       <button type="button" id="inspect" class="quiet" disabled>Details</button>
     </footer>
     <p id="feedback" role="status" aria-live="polite"></p>

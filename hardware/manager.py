@@ -87,13 +87,6 @@ class HardwareManager:
             temp = Path(file.name)
         temp.replace(self.runtime / name)
 
-    def default_target(self):
-        selected = selected_target(self.root)
-        if selected:
-            return selected
-        config = json.loads((self.root / "project/config.json").read_text())
-        return "native" if config.get("board") is None and config.get("os") is None else "qemu"
-
     def select_target(self, target, *, board_visit=False):
         if not isinstance(target, str) or target not in {"native", "qemu", "physical"}:
             raise HardwareError("Invalid execution target.")
@@ -460,7 +453,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
         Callers hold execution.lock and call this before changing a deployment.
         """
         checks = [('this workspace on the local host', self._local_flight_state())]
-        target = target or self.default_target()
+        target = target or selected_target(self.root)
         deployed = self._load('deployed.json', {})
         running = self._qemu_running()
         qemu_active = deployed.get('qemu') and not deployed['qemu'].get('stopped_at')
@@ -672,11 +665,11 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
                 flight_running = False
                 service = "inactive"
                 linux_ready = False
-        default_target = self.default_target()
+        default_target = selected_target(self.root)
         active = self._load("active.json", {})
         deployed = self._load("deployed.json", {})
         physical_active = deployed.get('physical') and not deployed['physical'].get('stopped_at')
-        physical = self._physical_status() if default_target != 'native' or physical_active else None
+        physical = self._physical_status() if default_target == 'physical' or physical_active or self._load('connection.json') else None
         local = self._local_flight_state()
         qemu_active = deployed.get("qemu") and not deployed["qemu"].get("stopped_at")
         if flight_running is None and not qemu_active and running is not True:
@@ -717,7 +710,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
                 "execution": execution, "tools": tools,
                 "native": dict(local, last_operational=self._load("operational-native.json", {}).get("time"), log_path="hardware/.runtime/native.log", os=platform.system(), architecture=platform.machine()),
                 "docker": {"available": code == 0, "error": docker if code else None},
-                "qemu": qemu, "build": builds[default_target], "builds": builds,
+                "qemu": qemu, "build": builds.get(default_target), "builds": builds,
                 "physical": board, "deployed": deployed}
 
     def probe(self, connection=None, emit=lambda line: None, cancel=None):
@@ -813,7 +806,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
         return destination
 
     def _require_build(self, sensorless=False, target=None):
-        target = target or self.default_target()
+        target = target or selected_target(self.root)
         state = self.build_state(target, sensorless)
         if state.get("fingerprint") != self.fingerprint():
             raise HardwareError("Build this profile before running; some changes have not been compiled.")
@@ -922,12 +915,13 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
         Build, boot, run, stop and shutdown also hold hardware/.runtime/execution.lock,
         shared by every Studio process that uses this checkout.
         """
-        target = target or self.default_target()
-        if target not in ("native", "qemu", "physical"):
+        preview = action == "simulate-preview" and options.get("model")
+        target = target or selected_target(self.root, required=not preview)
+        if not preview and target not in ("native", "qemu", "physical"):
             raise HardwareError("Invalid target.")
         if sensorless and target != "physical":
             raise HardwareError("The sensorless profile applies only to a physical board.")
-        if target == "native" and action in {"boot", "shutdown", "connect", "probe", "setup", "values", "simulate"}:
+        if target == "native" and action in {"boot", "shutdown", "connect", "probe", "values"}:
             raise HardwareError("Native cFS runs on this computer. Use Build, Run cFS, Stop or Output.")
         if action in {"build", "boot", "run"}:
             self._validate_profile(target, options.get("board"), options.get("os"))
@@ -959,7 +953,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
             if action == "setup" and target == "physical":
                 return self.prepare_board(connection, emit, cancel)
             if action == "setup":
-                return self._stream(["bash", "scripts/setup.sh"], emit, cancel)
+                return self._stream(["bash", "scripts/setup-native.sh" if target == "native" else "scripts/setup.sh"], emit, cancel)
             if action == "build":
                 return self._build(target, sensorless, emit, cancel, reuse=options.get("reuse_build", False))
             if action == "boot":

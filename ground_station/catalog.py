@@ -136,8 +136,9 @@ def run(argv, **kwargs):
 def resolve_build(root, build_dir=None):
     root = Path(root).resolve()
     if build_dir is None:
-        from project.model import load_config
-        build_dir = 'mission/build-flight' if load_config(root)['board'] else 'mission/build-native'
+        from hardware.targets import selected_target
+        from hardware.manager import HardwareManager
+        build_dir = HardwareManager.build_directory(selected_target(root, required=True))
     path = Path(build_dir)
     path = (path if path.is_absolute() else root / path).resolve()
     if not path.is_relative_to(root / 'mission'):

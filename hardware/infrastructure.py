@@ -2,6 +2,7 @@
 from project.qemu.generate import fingerprint
 from project.nasa_source import OFFICIAL_URL, source_status
 from hardware.host_tools import package_manager
+from hardware.targets import selected_target
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
@@ -97,7 +98,8 @@ def snapshot(hardware, verify_source=False):
         receipt = hardware._load("checks-" + mode + ".json", {})
         if receipt.get("identity") == _identity(hardware, mode, plan):
             results[mode] = receipt.get("checks", {})
-    return {"source": source, "target_saved": bool(hardware._load("target.json")), "check_plan": plans, "check_results": results, "build_jobs": hardware._load("native-build-settings.json", {}).get("jobs", 4), "sources_ready": source["state"] in {"installed", "ready"}, "project": hardware.root.name, "target": hardware._load("target.json", {}).get("target", "native"),
+    target = selected_target(hardware.root)
+    return {"source": source, "target_saved": target is not None, "check_plan": plans, "check_results": results, "build_jobs": hardware._load("native-build-settings.json", {}).get("jobs", 4), "sources_ready": source["state"] in {"installed", "ready"}, "project": hardware.root.name, "target": target,
             "board": config["board"], "os": config["os"], "profiles": hardware.profiles(),
             "host": {"os": platform.system(), "architecture": platform.machine(),
                      "package_manager": package_manager()},
@@ -110,10 +112,6 @@ def save(studio, body):
     target = body.get("target")
     if target not in ("native", "qemu", "physical"):
         raise ValueError("Select an execution target.")
-    config = json.loads((hardware.root / "project/config.json").read_text())
-    board, system = body.get("board"), body.get("os")
-    if target != "native" and not any(p["board"] == board and p["os"] == system and target in p["targets"] for p in hardware.profiles()):
-        raise ValueError("Select a supported board and operating system.")
     emulator = validate_emulator(body.get("emulator")) if target == "qemu" else None
     jobs = body.get("build_jobs", hardware._load("native-build-settings.json", {}).get("jobs", 4))
     if type(jobs) is not int or not 1 <= jobs <= 64:
@@ -130,9 +128,6 @@ def save(studio, body):
             if not prior_board or hardware._flight_state("physical", prior_board)["running"] is not False:
                 raise ValueError("Stop cFS on the previous board before changing its connection.")
             hardware._mark_stopped("physical", prior_board)
-    profile_changed = target != "native" and (board, system) != (config["board"], config["os"])
-    if profile_changed and _source_inventory(hardware.root)["state"] == "installed":
-        studio.workspace.select_profile(board, system, hardware=hardware)
     if emulator is not None:
         save_emulator(hardware, emulator)
     if target == "physical" and connection != previous:
@@ -145,7 +140,6 @@ def save(studio, body):
         hardware._physical_observation = None
     if target == "native":
         hardware._save("native-build-settings.json", {"jobs": jobs})
-    hardware.select_target(target)
     return snapshot(hardware)
 
 
@@ -277,7 +271,7 @@ def _receipt(hardware, target, identity, row):
         if receipt.get("identity") != identity:
             receipt = {"identity": identity, "checks": {}}
         receipt["checks"][row["label"]] = row["ready"]
-        if hardware._load("target.json", {}).get("target") == target:
+        if selected_target(hardware.root) == target:
             receipt["selected"] = True
         hardware._save(path, receipt)
         if row["ready"] and receipt.get("selected") and target_verified(hardware, target):
@@ -293,7 +287,7 @@ def checks_verified(hardware, target, receipt):
 
 
 def target_verified(hardware, target):
-    if target not in ("native", "qemu", "physical") or hardware._load("target.json", {}).get("target") != target:
+    if target not in ("native", "qemu", "physical") or selected_target(hardware.root) != target:
         return False
     return checks_verified(hardware, target, hardware._load("checks-" + target + ".json", {}))
 

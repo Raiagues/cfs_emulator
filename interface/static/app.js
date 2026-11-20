@@ -824,7 +824,7 @@ function updateGround(snapshot){
 let catalogRequest=null;
 function groundRefresh(){
  const target=state.target;
- if(catalogRequest?.target===target)return catalogRequest.promise;
+ if(catalogRequest && catalogRequest.target===target)return catalogRequest.promise;
  const request={target};
  catalogRequest=request;
  request.promise=loadGround(request);
@@ -834,7 +834,7 @@ async function loadGround(request){
  const {target}=request;
  state.catalogLoading=true;state.groundError='';if(state.view==='ground')renderView();
  try{
-  const [catalog,ground,plans]=await Promise.all([api('ground/catalog?target='+target),api('ground'),api('ground/tests')]);
+  const [catalog,ground,plans]=await Promise.all([api(target ? 'ground/catalog?target='+encodeURIComponent(target) : 'ground/catalog'),api('ground'),api('ground/tests')]);
   if(catalogRequest!==request || target!==state.target)return;
   state.catalog=catalog;state.catalogTarget=target;state.ground=ground;state.testPlans=plans;
   const running=ground.target===target && ground.runs?.find(run=>run.status==='waiting');
@@ -1155,7 +1155,7 @@ async function configureProfile(){
   requireSavedMission();
   const result=await api('mission/profile',{board:state.board,os:state.os,expected_hash:state.workspace.mission.source.hash});
   workspaceRequest++;state.workspace.mission=result.mission;await reloadMissionFiles(result.changed,result.deleted);
-  await api('hardware/target',{target:state.target});await hardwareRefresh(true);renderView();feedback(state.board?'Board and toolchain configured':'Native execution selected');
+  await hardwareRefresh(true);renderView();feedback(state.board?'Board and toolchain configured':'Native execution selected');
  }catch(error){state.board=state.workspace.project.board;state.os=state.workspace.project.os;throw error;}
  finally{state.profileBusy=false;renderToolbar();}
 }
@@ -1163,7 +1163,8 @@ function adoptTarget(target){
  catalogRequest=null;
  Object.assign(state,{target,catalog:null,catalogTarget:null,catalogLoading:false,groundError:'',groundApp:'',
   groundSelection:null,groundPacket:null,commandLaunch:null,groundQuery:'',groundDrafts:{},selectedTests:{},inspectedSend:null});
- document.body.dataset.flightTarget=target;
+ if(target)document.body.dataset.flightTarget=target;
+ else delete document.body.dataset.flightTarget;
 }
 async function selectTarget(target){
  await api('hardware/target',{target});

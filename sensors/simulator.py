@@ -156,7 +156,7 @@ def simulate(root, sensor_ids=(), interval=1.0, steps=None, waveforms=None, trac
         return
 
     from hardware.targets import selected_target
-    target = target or selected_target(root) or "qemu"
+    target = target or selected_target(root, required=True)
     if target == "physical":
         from sensors.observations import read_board
         return read_board(root, devices, on_sample, steps)
