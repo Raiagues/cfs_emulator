@@ -168,7 +168,7 @@ async function loadTrack(el,cycle,key,responses,materials){
     const batches=[];
     for(let i=0;i<Math.max(1,responses.length,materials.length);i+=32)
       batches.push({elements:el,cycle,responses:responses.slice(i,i+32),materials:materials.slice(i,i+32)});
-    const parts=await Promise.all(batches.map(batch=>context.api('simulation/orbit',batch)));
+    const parts=await Promise.all(batches.map(batch=>context.api('simulation/orbit?' + new URLSearchParams({parameters:JSON.stringify(batch)}))));
     const thermal=new Map(parts.flatMap((part,i)=>(part.thermal||[]).map((curve,j)=>[materialKey(batches[i].materials[j]),curve])));
     const data=parts[0];
     data.thermal=thermal;

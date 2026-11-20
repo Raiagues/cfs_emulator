@@ -97,7 +97,10 @@ function updateOperatingSystems(fields) {
 
 function reportFor(mode) {
   if (!checksByTarget.has(mode)) {
-    checksByTarget.set(mode,(settings.check_plan[mode]||[]).map(entry => ({...entry,status:'pending'})));
+    checksByTarget.set(mode,(settings.check_plan[mode]||[]).map(entry => {
+      const result = settings.check_results[mode]?.[entry.label];
+      return {...entry, status:result == null ? 'pending' : result ? 'passed' : 'failed'};
+    }));
   }
   return checksByTarget.get(mode);
 }
@@ -278,7 +281,7 @@ function inspect(name) {
   renderChecks();
 }
 
-async function followInstaller(session, groupName) {
+async function followInstaller(session, groupName, recheck = true) {
   installation = {...session, group: groupName};
   $('#terminal-title').textContent = installerLabels[session.setup_action];
   if ($('#setup-terminal').open) shells.select(session);
@@ -296,6 +299,11 @@ async function followInstaller(session, groupName) {
   // Cloning can change the active mission profile. Keep the user's selected board.
   const preferred = {board:settings.board, os:settings.os};
   settings = await api('infrastructure');
+  if (!recheck) {
+    checksByTarget.delete(target);
+    controls();
+    return success;
+  }
   if (session.setup_action === 'clone-cfs' && target !== 'native') {
     Object.assign(settings,preferred);
     dirty = true;
@@ -499,10 +507,9 @@ form.addEventListener('submit', event => {
     busy = true;
     renderFields();
     const row = reportFor(target).find(item => repairFor(target,item) === running.setup_action);
-    try { await followInstaller(running, row && groupFor(target,row.label)); }
+    try { await followInstaller(running, row && groupFor(target,row.label), false); }
     finally { busy = false; controls(); }
   } else {
     renderFields();
-    if (explicitSelection) await verify();
   }
 })().catch(showError);

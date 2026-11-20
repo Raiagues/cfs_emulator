@@ -108,8 +108,7 @@ async function loadTree(path, parent) {
 let fileOpenRequest=0;
 async function openFile(path, line, reveal=true, inspection=null) {
   const request=++fileOpenRequest;
-  if(state.view==='simulation'&&state.simulationDirty)await saveSimulation();
-   if(!state.files.has(path)) {
+    if(!state.files.has(path)) {
     const data=await api('file?path='+encodeURIComponent(path));
     if(data.binary) throw Error(data.reason || 'Binary file · open externally');
     if(!state.files.has(path))state.files.set(path,{...data,saved:data.content});
@@ -940,15 +939,7 @@ async function openFlightStep(step,entry={}){
  if(step==='command'){
   const last=authoredCommand();
   if(last)return resumeCommand(last);
-  const app=state.workspace.apps.find(a=>a.managed);
-  if(!app){
-   // The wizard owns the App step. Its completion opens the Command activity.
-   if(location.hash==='#command'){const url=new URL(location.href);url.hash='app';history.replaceState(null,'',url);}
-   if(await openFlightStep('app'))newMissionApp();
-   return;
-  }
-  if(await selectView('code',app.entry,1,null,'command'))newCodeCommand(app.name);
-  return;
+  return selectView('code',undefined,undefined,null,'command');
  }
  if(step==='send'){
   const last=authoredCommand();
@@ -964,6 +955,7 @@ function authoredCommand(){
   commands.find(c=>c.id===history.state?.flightCommand) || commands.at(-1);
 }
 function followLocation(){
+ for (const dialog of document.querySelectorAll('dialog[open]')) dialog.close();
  const route=workspaceRoute(location.hash);
  if(location.hash!=='#'+route.id){const url=new URL(location.href);url.hash=route.id;history.replaceState(history.state,'',url);}
  if(!workspaceReady)return openWorkspace();

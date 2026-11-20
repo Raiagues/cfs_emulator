@@ -168,7 +168,7 @@ function clock(milliseconds) {
   return [Math.floor(seconds/60), seconds%60].map(x=>String(x).padStart(2,'0')).join(':');
 }
 export function mountFirstBoot(container,{api,target}) {
-  let disposed=false,timer=null,requested=false,data=null,pick='',pickKey='',lastCue='',consoleOpen=false,err='';
+  let disposed=false,timer=null,starting=false,data=null,pick='',pickKey='',lastCue='',consoleOpen=false,err='';
   let readError='';
   let live=null, pausedAt=null, pausedIndex=null, replayStart=null, replayTimer=null;
   function publishRunning(running) {
@@ -205,6 +205,16 @@ export function mountFirstBoot(container,{api,target}) {
     const output=container.querySelector('.boot-console pre:not([hidden])');
     const oldScroll=output?.scrollTop||0,atEnd=!output||output.scrollTop+output.clientHeight>=output.scrollHeight-4;
     const title=[names[target],data.hardware,data.os].join(' · ');
+    const idle = !job.id || failed || live.stopped;
+    let action = '';
+    if (data === live && !running && idle) {
+      if (!live.verified || live.unverified) {
+        action = `<a href="${stepUrl('target', location, target)}">Check target</a>`;
+      } else {
+        const label = failed || live.stopped || err ? 'Retry first boot' : 'Start first boot';
+        action = `<button class="fs-coach" data-start-boot data-boot-focus="start" ${starting ? 'disabled' : ''}>${label}</button>`;
+      }
+    }
     const fragment=document.createElement('template');
     fragment.innerHTML=`<section class="first-boot">
       <header class="boot-title"><h1>First boot</h1><span>${icon(target==='native'?'monitor':'cpu')}${escape(title)}</span><a href="${stepUrl('target', location, target)}">Change</a>
@@ -231,7 +241,7 @@ export function mountFirstBoot(container,{api,target}) {
           <pre id="boot-console-output" aria-label="Boot log" tabindex="0" ${consoleOpen?'':'hidden'}>${consoleOpen?escape(data.lines.join('\n')):''}</pre>
         </div>
       </section>
-      <footer>${running?`<span class="boot-success">${drawnCheck}cFS is running</span>`:data!==live?'':(!live.verified||live.unverified)?`<a href="${stepUrl('target', location, target)}">Check target</a>`:failed||live.stopped||err?'<button data-retry data-boot-focus="retry">Retry first boot</button>':''}<output>${escape(readError||err||job.error||'')}</output></footer></section>`;
+      <footer>${running?`<span class="boot-success">${drawnCheck}cFS is running</span>`:action}<output>${escape(readError||err||job.error||'')}</output></footer></section>`;
     const next=fragment.content.firstElementChild, existing=container.firstElementChild;
     if(existing?.classList.contains('first-boot'))updateNode(existing,next);
     else container.replaceChildren(next);
@@ -244,9 +254,13 @@ export function mountFirstBoot(container,{api,target}) {
     }
   };
   async function start(){
-    requested=true;err='';
-    try{await api('job',{action:'first-boot',options:{target}});}
-    catch(error){err=error.message;}
+    if(starting)return;
+    starting=true;err='';draw();
+    try{
+      await api('job',{action:'first-boot',options:{target}});
+      live=await api('first-boot?target='+encodeURIComponent(target));
+    }catch(error){err=error.message;}
+    finally{starting=false;}
   }
   async function poll(){
     try{
@@ -255,7 +269,6 @@ export function mountFirstBoot(container,{api,target}) {
       live=next;readError='';
       publishRunning(next.running);
       draw();
-      if(next.verified&&!requested&&!next.running&&!next.job.id&&!next.stopped&&!next.unverified){await start();draw();}
     }catch(error){
       if(disposed)return;
       publishRunning(false);
@@ -294,8 +307,14 @@ export function mountFirstBoot(container,{api,target}) {
         pausedAt=null;pausedIndex=null;pick='';pickKey='';
       }
     }
-    else if(button.hasAttribute('data-console'))consoleOpen=!consoleOpen;
-    else if(button.hasAttribute('data-retry')){button.disabled=true;await start();}
+    else if(button.hasAttribute('data-console')){
+      consoleOpen=!consoleOpen;
+      if(consoleOpen && target!=='native' && live.running && !live.job.id) {
+        try { await api('job',{action:'logs',options:{target,kind:'current-flight'}}); }
+        catch(error){err=error.message;}
+      }
+    }
+    else if(button.hasAttribute('data-start-boot')){button.disabled=true;await start();}
     draw();
   };
   container.innerHTML=`<section class="first-boot"><header class="boot-title"><h1>First boot</h1><span>${icon(target==='native'?'monitor':'cpu')}${escape(names[target])}</span></header><p class="boot-load-status" role="status" aria-busy="true">Reading boot status…</p></section>`;

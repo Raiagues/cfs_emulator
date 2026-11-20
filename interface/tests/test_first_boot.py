@@ -198,11 +198,14 @@ class BootTest(unittest.TestCase):
             stopped.set()
 
         def read():
-            return snapshot(studio, "qemu", journal=studio.follow_boot_journal)
+            return snapshot(studio, "qemu", journal=studio.boot_journal_snapshot)
 
         with patch.object(h, "profiles", return_value=[]), patch.object(h, "observed_flight", return_value=confirmed) as probe, \
              patch.object(h, "execute", side_effect=journal_only) as execute:
             self.assertTrue(read()["running"])
+            self.assertEqual(studio.jobs_snapshot(), [])
+            execute.assert_not_called()
+            studio.job("logs", {"target": "qemu", "kind": "current-flight"})
             self.assertTrue(received.wait(2))
             for _ in range(3):
                 boot = read()
@@ -215,7 +218,9 @@ class BootTest(unittest.TestCase):
             self.assertFalse(superseded["running"])
             self.assertEqual(superseded["lines"], [])
             self.assertNotIn("MD", superseded["flight"]["initialized"])
-            self.assertTrue(stopped.wait(2))
+            self.assertFalse(stopped.is_set())
+            studio.close()
+            self.assertTrue(stopped.is_set())
             execute.assert_called_once()
 
     def test_journal_rechecks_invocation_after_the_live_probe(self):
@@ -225,14 +230,16 @@ class BootTest(unittest.TestCase):
         self.addCleanup(studio.close)
         h = studio.hardware
         h._save("target.json", {"target": "qemu"})
-        with patch.object(h, "ssh_argv", return_value=["ssh", "guest"]), \
+        h._save("operational-qemu.json", {"instance": "a" * 32})
+        current = {"instance": "a" * 32, "service": "active"}
+        with patch.object(h, "observed_flight", return_value=current), patch.object(h, "ssh_argv", return_value=["ssh", "guest"]), \
              patch.object(h, "_capture", return_value=(0, "b" * 32)), patch.object(h, "_stream") as open_journal:
-            studio.follow_boot_journal("qemu", None, "a" * 32)
+            studio.job("logs", {"target": "qemu", "kind": "current-flight"})
             reader, = list(studio.jobs.values())
             reader["thread"].join(2)
             self.assertEqual(reader["status"], "failed")
             self.assertIn("invocation changed", reader["error"])
-            studio.follow_boot_journal("qemu", None, "a" * 32)
+            studio.job("logs", {"target": "qemu", "kind": "current-flight"})
             self.assertEqual(len(studio.jobs), 1)
             open_journal.assert_not_called()
 

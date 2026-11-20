@@ -124,14 +124,19 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--crawl', metavar='LOCAL_URL', help='also inspect rendered controls on a local test instance')
     parser.add_argument('--check', action='store_true', help='fail if the committed inventory is stale or mismatches remain')
+    parser.add_argument('--verify-routes', action='store_true', help='exercise direct entry, a step link and browser history')
     args = parser.parse_args()
+    flags = ['--verify-routes'] if args.verify_routes else []
     if args.crawl:
-        observations = js_report([args.crawl])
+        observations = js_report([args.crawl, *flags])
     else:
         sys.path.insert(0, str(ROOT))
         from interface.tests.browser.lab import lab
         with lab(ROOT) as instance:
-            observations = js_report([instance])
+            observations = js_report([instance, *flags])
+    if args.verify_routes:
+        print('Direct routes, step navigation and browser history passed.')
+        return
     result = generate(observations)
     output = PACK / 'NAVIGATION_MAP.md'
     if args.check:

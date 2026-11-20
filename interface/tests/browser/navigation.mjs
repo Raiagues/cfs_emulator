@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import assert from 'node:assert/strict';
 import path from 'node:path';
 import {parse} from 'acorn';
 import * as walk from 'acorn-walk';
@@ -149,20 +150,21 @@ function compare() {
   return results;
 }
 
-async function crawl(url) {
+async function crawl(url, verifyRoutes) {
   const base = new URL(url);
   if (!['127.0.0.1', 'localhost', '[::1]'].includes(base.hostname)) throw Error('Use a local test instance');
   const browser = await chromium.launch(process.env.PLAYWRIGHT_CHANNEL ? {channel: process.env.PLAYWRIGHT_CHANNEL} : {});
   const rows = [];
+  const faults = [];
   try {
     const context = await browser.newContext({viewport:{width:1440,height:900}});
     const page = await context.newPage();
     // Inventory visits never install software or deploy the lab being inspected.
     let visiting = '';
-    page.on('pageerror', e => console.error(visiting, e.message));
+    page.on('pageerror', e => faults.push(visiting + ' ' + e.message));
     page.on('response', async response => {
       if (response.status() >= 400 && response.request().method() === 'GET') {
-        console.error(visiting, response.status(), new URL(response.url()).pathname, await response.text());
+        faults.push(visiting + ' ' + response.status() + ' ' + new URL(response.url()).pathname);
       }
     });
     await context.route('**/api/**', route => {
@@ -171,12 +173,22 @@ async function crawl(url) {
       rows.push([visiting, 'Route entry', request.method() + ' ' + new URL(request.url()).pathname]);
       return route.fulfill({status:409, contentType:'application/json',body:'{"error":"Inventory captured this action"}'});
     });
+    const saved = async () => {
+      const read = async endpoint => (await context.request.get(new URL('/api/' + endpoint, base).href)).json();
+      const [setup, jobs] = await Promise.all([read('infrastructure'), read('jobs')]);
+      return [setup.target_saved, setup.target, setup.board, setup.os, setup.check_results, jobs.map(job => job.id)];
+    };
+    const before = verifyRoutes && await saved();
+    async function ready() {
+      await page.waitForFunction(() => document.querySelector('#targets button:not(:disabled),body:not(.workspace-loading) #studio') ||
+        document.querySelector('#feedback')?.innerText || document.querySelector('#workspace-opening button:not([hidden])'));
+      assert.equal(await page.locator('dialog[open]').count(), 0, visiting);
+    }
     for (const route of ['/#target','/?target=physical#board', ...['boot','event','app','command','send','sensor','test',
           'architecture','bench','code','ground','simulation'].map(id => '/studio?target=native#' + id)]) {
       visiting = route;
       await page.goto(new URL(route, base).href);
-      await page.waitForFunction(() => document.querySelector('#targets button:not(:disabled),body:not(.workspace-loading) #studio') ||
-        document.querySelector('#feedback')?.innerText || document.querySelector('#workspace-opening button:not([hidden])'));
+      await ready();
       const failure = await page.locator('body.workspace-loading #workspace-opening p, #feedback').allInnerTexts();
       if (failure.some(text => text.trim())) rows.push([route, 'Page feedback', failure.join(' ')]);
       const controls = await page.locator('button:visible,a:visible,summary:visible,input:visible,select:visible,[role=button]:visible')
@@ -186,8 +198,22 @@ async function crawl(url) {
         ]));
       for (const [label, destination] of controls) rows.push([route,label,destination]);
     }
+    if (verifyRoutes) {
+      visiting = 'Step bar and history';
+      await page.locator('#flight-guide a[data-flight=target]').click();
+      await ready();
+      await page.goBack();
+      await ready();
+      await page.goForward();
+      await ready();
+      assert.deepEqual(rows.filter(([, label]) => label === 'Route entry' || label === 'Page feedback'), []);
+      assert.deepEqual(await saved(), before, 'a passive view changed the target, checks, profile, or jobs');
+      assert.deepEqual(faults, []);
+    } else if (faults.length) {
+      for (const fault of faults) rows.push(['Browser', 'Page error', fault]);
+    }
   } finally {await browser.close();}
   return rows;
 }
 
-console.log(JSON.stringify(process.argv[2] ? await crawl(process.argv[2]) : staticMap()));
+console.log(JSON.stringify(process.argv[2] ? await crawl(process.argv[2], process.argv.includes('--verify-routes')) : staticMap()));

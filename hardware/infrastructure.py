@@ -90,9 +90,14 @@ def snapshot(hardware, verify_source=False):
         if probe.get("admin_setup_command"):
             commands["authorize_service"] = probe["admin_setup_command"]
     source = source_status(hardware.root) if verify_source else _source_inventory(hardware.root)
-    plans = {mode: [probe.describe() for probe in _check_plan(hardware, mode)]
-             for mode in ("native", "qemu", "physical")}
-    return {"source": source, "target_saved": bool(hardware._load("target.json")), "check_plan": plans, "build_jobs": hardware._load("native-build-settings.json", {}).get("jobs", 4), "sources_ready": source["state"] in {"installed", "ready"}, "project": hardware.root.name, "target": hardware._load("target.json", {}).get("target", "native"),
+    plans, results = {}, {}
+    for mode in ("native", "qemu", "physical"):
+        plan = list(_check_plan(hardware, mode))
+        plans[mode] = [probe.describe() for probe in plan]
+        receipt = hardware._load("checks-" + mode + ".json", {})
+        if receipt.get("identity") == _identity(hardware, mode, plan):
+            results[mode] = receipt.get("checks", {})
+    return {"source": source, "target_saved": bool(hardware._load("target.json")), "check_plan": plans, "check_results": results, "build_jobs": hardware._load("native-build-settings.json", {}).get("jobs", 4), "sources_ready": source["state"] in {"installed", "ready"}, "project": hardware.root.name, "target": hardware._load("target.json", {}).get("target", "native"),
             "board": config["board"], "os": config["os"], "profiles": hardware.profiles(),
             "host": {"os": platform.system(), "architecture": platform.machine(),
                      "package_manager": package_manager()},

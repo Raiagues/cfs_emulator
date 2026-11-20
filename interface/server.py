@@ -22,6 +22,7 @@ from interface.backend.hardware_settings import device_settings, update_device
 from hardware.manager import HardwareManager
 from hardware import infrastructure
 from hardware.ground_link import resolve_ground_link
+from sensors.orbit import preview as orbit_preview
 from ground_station.station import GroundStation
 from ground_station.catalog import apply_overrides, CATALOG_VERSION
 
@@ -58,8 +59,17 @@ class Studio:
         finally:
             self.operation.release()
 
-    def job(self, action, options, *, journal_instance=None):
+    def job(self, action, options):
         options, kind, script, connection = self._job_request(action, options)
+        journal_instance = None
+        if action == 'logs' and kind == 'current-flight' and options['target'] != 'native':
+            target = options['target']
+            receipt = self.hardware._load('operational-' + target + '.json', {})
+            current = self.hardware.observed_flight(target, connection)
+            journal_instance = receipt.get('instance')
+            if not journal_instance or current.get('instance') != journal_instance or current['service'] != 'active':
+                raise ValueError('The cFS service invocation changed.')
+
         target = options['target']
         exclusive = action not in self.BACKGROUND
         with self.lock:
@@ -137,7 +147,7 @@ class Studio:
             raise ValueError('Retry applies only to QEMU startup')
         if 'connection' in options and not isinstance(options['connection'], dict):
             raise ValueError('Invalid connection')
-        if options.get('kind', 'flight') not in ('boot', 'flight'):
+        if options.get('kind', 'flight') not in (('boot', 'flight', 'current-flight') if action == 'logs' else ('boot', 'flight')):
             raise ValueError('Invalid log type')
         if any(key in options and options[key] is not None and (not isinstance(options[key], str) or not options[key]) for key in ('board', 'os')):
             raise ValueError('Invalid board or operating system')
@@ -317,24 +327,15 @@ class Studio:
         if not record['cancel'].is_set():
             self.hardware.execute('logs', emit, cancel=record['cancel'], **follow)
 
-    def follow_boot_journal(self, target, connection, instance):
-        """Share one bounded console buffer for the systemd invocation verified by the boot receipt."""
-        with self.lock:
-            for reader in self.jobs.values():
-                if (reader.get('journal_instance') and reader['target'] == target and
-                    (reader['journal_instance'] != instance or reader['connection'] != connection)):
-                    reader['cancel'].set()
-        if not instance:
-            return [], {}
-        options = {'target': target}
-        if connection:
-            options['connection'] = connection
-        follower = self.job('logs', options, journal_instance=instance)
-        with self.lock:
-            reader = self.jobs.get(follower['id'])
-            if not reader or reader.get('journal_instance') != instance:
-                return [], {}
-            return list(reader['lines'])[-300:], dict(reader['journal_apps'])
+    def boot_journal_snapshot(self, target, connection, instance):
+        """Read an existing invocation's log buffer without creating or cancelling readers."""
+        if instance:
+            with self.lock:
+                for reader in reversed(self.jobs.values()):
+                    if (reader.get('journal_instance') == instance and reader['target'] == target
+                            and reader['connection'] == connection):
+                        return list(reader['lines'])[-300:], dict(reader['journal_apps'])
+        return [], {}
 
     def cancel(self, ident):
         with self.lock:
@@ -358,7 +359,7 @@ class Studio:
                 jobs.append(public)
         return jobs + self.shells.snapshots()
 
-    def freeze_catalog(self, state, sensorless=False):
+    def freeze_catalog(self, state, sensorless=False, *, persist=True):
         """Catalog of one build, saved per build fingerprint.
 
         Packet layouts come from that build's compiler output, so later source
@@ -386,7 +387,8 @@ class Studio:
         catalog['build_fingerprint'] = fingerprint
         catalog['sensorless'] = sensorless
         catalog['build_target'] = target
-        self.hardware._save(filename, catalog)
+        if persist:
+            self.hardware._save(filename, catalog)
         return catalog
 
     def ground_catalog(self, target=None):
@@ -400,7 +402,7 @@ class Studio:
         if not state:
             return {'packets': [], 'commands': [], 'transport': {},
                     'errors': ['Build and run the flight software to prepare the catalog.']}
-        return apply_overrides(self.freeze_catalog(dict(state, target=target), sensorless), self.workspace.root)
+        return apply_overrides(self.freeze_catalog(dict(state, target=target), sensorless, persist=False), self.workspace.root)
 
     def ground_start(self, options):
         if set(options) - {'target', 'connection', 'journey_reset_at'}:
@@ -552,9 +554,10 @@ class Handler(BaseHTTPRequestHandler):
                 '/api/files/search': lambda: app.workspace.search_files(query.get('root', 'cFS'), query.get('q', '')),
                 '/api/file': lambda: app.workspace.read_file(query['path']),
                 '/api/hardware': app.hardware.status,
-                '/api/first-boot': lambda: first_boot.snapshot(app, query.get('target', app.hardware.default_target()), journal=app.follow_boot_journal),
+                '/api/first-boot': lambda: first_boot.snapshot(app, query.get('target', app.hardware.default_target()), journal=app.boot_journal_snapshot),
                 '/api/infrastructure': lambda: infrastructure.snapshot(app.hardware, verify_source=query.get('verify_source') == '1'),
                 '/api/simulation': app.workspace.simulation_snapshot,
+                '/api/simulation/orbit': lambda: orbit_preview(json.loads(query['parameters'])),
                 '/api/hardware/device': lambda: device_settings(app.workspace, query.get('id')),
                 '/api/jobs': app.jobs_snapshot,
                 '/api/ground/catalog': lambda: app.exclusive(app.ground_catalog, query.get('target'), wait=3),
@@ -655,8 +658,7 @@ class Handler(BaseHTTPRequestHandler):
                 result = app.exclusive(app.workspace.select_profile, body.get('board'), body.get('os'),
                                        body.get('expected_hash'), app.hardware)
             elif path == '/api/simulation/orbit':
-                from sensors.orbit import preview
-                result = preview(body)
+                result = orbit_preview(body)
             elif path == '/api/simulation':
                 if any(job['action'] in {'simulate', 'simulate-preview'} and job['status'] == 'running' for job in app.jobs_snapshot()):
                     raise ValueError('Stop synthetic data before changing its session settings')
