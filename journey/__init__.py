@@ -2,6 +2,7 @@
 from contextlib import closing
 from dataclasses import dataclass
 import json
+import fcntl
 import math
 from pathlib import Path
 import sqlite3
@@ -66,12 +67,15 @@ class Store:
         if not math.isfinite(at) or at <= 0:
             raise ValueError("Invalid observation time")
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        with closing(sqlite3.connect(self.path)) as db, db:
-            db.execute("""CREATE TABLE IF NOT EXISTS evidence
-                          (target TEXT NOT NULL, step TEXT NOT NULL, at REAL NOT NULL, ref TEXT NOT NULL,
-                           UNIQUE (target, step, at, ref))""")
-            db.execute("INSERT OR IGNORE INTO evidence VALUES (?, ?, ?, ?)",
-                       (target, step, at, json.dumps(ref, sort_keys=True)))
+        with self.path.with_suffix(".lock").open("a") as writer:
+            fcntl.flock(writer, fcntl.LOCK_EX)
+            with closing(sqlite3.connect(self.path)) as db, db:
+                db.execute("BEGIN IMMEDIATE")
+                db.execute("""CREATE TABLE IF NOT EXISTS evidence
+                              (target TEXT NOT NULL, step TEXT NOT NULL, at REAL NOT NULL, ref TEXT NOT NULL,
+                               UNIQUE (target, step, at, ref))""")
+                db.execute("INSERT OR IGNORE INTO evidence VALUES (?, ?, ?, ?)",
+                           (target, step, at, json.dumps(ref, sort_keys=True)))
         return at
 
     def events(self, target):
