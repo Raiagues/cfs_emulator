@@ -3,9 +3,10 @@ import re
 
 
 class FirstEvent:
-    def __init__(self, catalog=None, destination=None, authored=None):
+    def __init__(self, catalog=None, destination=None, authored=None, information_ids=None):
         catalog = catalog or {}
         self.authored = authored
+        self.information_ids = information_ids or {}
         self.noops = {}
         self.enable = None
         self.destination = destination
@@ -54,10 +55,7 @@ class FirstEvent:
         attempt = self.pending
         if self.answer is not None or not attempt or packet['event_id'] <= attempt['send_id']:
             return
-        if (packet['app'] == 'cfe_evs' and values.get('PacketID.EventID') is not None
-                and self.information is not None and values.get('PacketID.EventType') == self.information
-                and str(values.get('PacketID.AppName', '')).casefold() == attempt['app'].casefold()
-                and (self.authored is not None or re.search(r'\bno[ -]?op\b', str(values.get('Message', '')), re.I))):
+        if self.matches_event(packet, attempt['command'], attempt['app']):
             if not attempt['reply']:
                 attempt.update(reply=packet['event_id'], message=values['Message'], event_mid=packet['mid'])
             self.event = self.event or packet['received_at']
@@ -67,6 +65,15 @@ class FirstEvent:
                 attempt.update(increase=packet['event_id'], count=count)
         if attempt['reply'] and attempt['increase']:
             self.answer = packet['received_at']
+
+    def matches_event(self, packet, command, app):
+        values = packet['values']
+        event_id = values.get('PacketID.EventID')
+        declared = self.information_ids.get(command)
+        return (not packet['errors'] and packet['app'] == 'cfe_evs' and event_id is not None and (not declared or event_id in declared)
+                and self.information is not None and values.get('PacketID.EventType') == self.information
+                and str(values.get('PacketID.AppName', '')).casefold() == app.casefold()
+                and (self.authored is not None or re.search(r'\bno[ -]?op\b', str(values.get('Message', '')), re.I)))
 
     def snapshot(self, automatic=False):
         standard = next((key for key, app in self.noops.items() if app == 'sample_app'), None)

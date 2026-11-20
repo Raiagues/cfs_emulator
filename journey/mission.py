@@ -36,8 +36,25 @@ def built(root, state):
         installed = root / state["build_dir"] / "exe/cpu1/cf" / (name + ".so")
         if installed.is_file():
             for command in implemented(root, name):
-                store.observe(target, "command", {"app": name, "command": command, "build": state["fingerprint"]},
-                              state["built_at"])
+                reference = {"app": name, "command": command, "build": state["fingerprint"]}
+                ids = information_ids(root, name, command)
+                if ids:
+                    reference["information_ids"] = ids
+                store.observe(target, "command", reference, state["built_at"])
+
+
+def information_ids(root, app, command):
+    """Freeze the information event IDs the compiled handler actually emits."""
+    function = command.removeprefix(app.upper() + "_").removesuffix("_CC").lower()
+    base = root / "mission/apps" / app / "fsw"
+    header = base / "inc" / (app + "_eventids.h")
+    if not header.is_file():
+        return []
+    from project.c_source import blank_lexemes
+    source = blank_lexemes((base / "src/commands" / f"{app}_{function}_cmd.c").read_text())
+    symbols = set(re.findall(r"\bCFE_EVS_SendEvent\s*\(\s*(\w+)\s*,\s*CFE_EVS_EventType_INFORMATION\b", source))
+    ids = re.findall(r"^\s*#define\s+(\w+)\s+(0[xX][0-9a-fA-F]+|\d+)\b", header.read_text(), re.M)
+    return sorted({int(value, 0) for symbol, value in ids if symbol in symbols})
 
 
 def linked_devices(root, target):

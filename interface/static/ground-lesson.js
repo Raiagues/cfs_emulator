@@ -1,5 +1,6 @@
-import {api} from './api.js';
+import {api, readJourney} from './api.js';
 import {guide} from './coach.js';
+import {deploymentControls} from './deployment-controls.js';
 import {escapeHtml as esc, paint} from './dom.js';
 import {drawPath, packetFlight} from './lesson-path.js';
 import {onUpdate} from './updates.js';
@@ -10,7 +11,7 @@ const NOOP = {app:'sample_app', name:'NOOP'};
 const check = '<svg class="fs-draw" viewBox="0 0 16 16" aria-hidden="true"><path pathLength="1" d="m3 8 3 3 7-7"/></svg>';
 function row(command, selected) {
   return `<button type="button" class="lesson-row" data-pick="${esc(command.name)}" aria-pressed="${command===selected}">
-    ${icon('send')}<span><small>${esc(command.app)}</small><strong>${esc(command.name)}</strong></span></button>`;
+    ${icon('send')}<span><small>${esc(command.app)}</small><strong>${esc(command.name)}</strong>${command.authored?'<small>NEW</small>':''}</span></button>`;
 }
 
 function telemetry(station, contact, app) {
@@ -28,18 +29,22 @@ function telemetry(station, contact, app) {
   </aside>`;
 }
 
-export function mountGroundLesson(root, {state}) {
-  const target = state.target;
+export function mountGroundLesson(root, {state, advanceDeployment}) {
+  const target = state.target, sendMode = state.activity === 'send';
+  let main = sendMode ? null : NOOP;
+  const deploy = () => sendMode ? deploymentControls(state) : {};
+  const choices = () => [ENABLE,main].filter(Boolean);
   let station, selected, draft = '', busy = false, disposed = false, error = '', waiting, timer;
   let version = 0, responseSeen = 0, lastSession;
   const flights = new Set();
   const local = () => station?.target === target && station.connected;
-  const first = () => local() ? station.first_flight : {};
+  const first = () => local() ? (sendMode ? station.authored_reply : station.first_flight) : {};
   function packet(nodes, label, returning) {
     const cancel = packetFlight(root.querySelector('.lesson-track'), nodes, label, returning);
     flights.add(cancel);
   }
   function valid() {
+    if(selected?.field==='Rate_Hz')return /^\d+$/.test(draft) && Number(draft)>=1 && Number(draft)<=50;
     return selected && (!selected.field || /^\d{1,3}(\.\d{1,3}){3}$/.test(draft) && draft.split('.').every(part=>+part<=255));
   }
   function stopWait() {
@@ -48,43 +53,47 @@ export function mountGroundLesson(root, {state}) {
   function cue() {
     const flight = first();
     let action;
-    if (!station || busy || waiting) action = null;
+    const {plan, button, working}=deploy();
+    if (!station || !main || busy || waiting || working) action = null;
+    else if(plan) {guide(button || root.querySelector('[data-deploy]'));return;}
     else if (!local()) action = '[data-connect]';
     else if (!flight.downlink_receipt && selected !== ENABLE) action = '[data-pick="ENABLE_OUTPUT"]';
-    else if (flight.downlink_receipt && selected !== NOOP) action = '[data-pick="NOOP"]';
+    else if (flight.downlink_receipt && selected !== main) action = '[data-pick="'+CSS.escape(main.name)+'"]';
     else if (!valid()) action = '[data-argument]';
-    else if (selected !== NOOP || flight.baseline_apps?.includes('sample_app')) action = '[data-send]';
+    else if (selected !== main || flight.baseline_apps?.includes(main?.app)) action = '[data-send]';
     guide(action && root.querySelector(action));
   }
   function draw() {
     if (disposed) return;
     const flight = first(), connected = local();
+    const {plan,button,working,failure}=deploy();
     const stage = [!!flight.downlink_receipt, !!flight.receipt?.send_id, !!flight.answer];
-    const cards = ['Telemetry on', 'First command', 'Answer'].map((label,i) =>
-      `<li class="fs-panel" data-done="${stage[i]}" ${error && (i===0 && selected===ENABLE || i===2 && selected===NOOP)?'data-failed':''}>
+    const cards = ['Telemetry on', sendMode?'Your command':'First command', 'Answer'].map((label,i) =>
+      `<li class="fs-panel" data-done="${stage[i]}" ${error && (i===0 && selected===ENABLE || i===2 && selected===main)?'data-failed':''}>
         <i>${stage[i]?check:i+1}</i><strong>${label}</strong></li>`).join('');
-    const active = selected || (flight.downlink_receipt ? NOOP : ENABLE);
-    const destination = flight.return_host;
+    const active = selected || (flight.downlink_receipt && main ? main : ENABLE);
+    const destination = selected?.authored ? '1…50' : flight.return_host;
     const commands = connected ? station.commands : [];
     const sent = commands.at(-1);
-    const ready = valid() && (selected !== NOOP || flight.baseline_apps?.includes('sample_app') && flight.downlink_receipt);
-    const field = selected?.field ? `<label class="lesson-field">${selected.field}<input data-argument autocomplete="off" spellcheck="false"
+    const ready = valid() && (selected !== main || flight.baseline_apps?.includes(main?.app) && flight.downlink_receipt);
+    const field = selected?.field ? `<label class="lesson-field" data-scene="arg-${esc(selected.app)}-${esc(selected.field)}">${selected.field}<input data-argument autocomplete="off" spellcheck="false"
         value="${esc(draft)}" placeholder="${esc(destination || '')}" aria-label="${selected.field}"></label>` : '';
-    const cli = !connected ? './start --no-ui ground connect --target '+target :
-      './start --no-ui ground send '+ active.app+' '+active.name+(active===ENABLE?' --arg dest_IP='+(draft || destination):'');
+    const cli = plan && ['boot','stop','build','run'].includes(plan.action) ? './start --no-ui '+plan.action+' --target '+target :
+      !connected ? './start --no-ui ground connect --target '+target :
+      './start --no-ui ground send '+ active.app+' '+active.name+(active.field?' --arg '+active.field+'='+(draft || destination || '<value>'):'');
     paint(root, `<section class="ground-lesson fs-in">
-      <aside class="lesson-list"><h2>Commands</h2>${[ENABLE,NOOP].map(command=>row(command,selected)).join('')}</aside>
+      <aside class="lesson-list"><h2>Commands</h2>${choices().map(command=>row(command,selected)).join('')}</aside>
       <div class="lesson-body"><ol class="lesson-cards">${cards}</ol>
       <form class="lesson-form fs-panel" novalidate>
         ${selected?`<span><small>${esc(selected.app)}</small><strong>${esc(selected.name)}</strong></span>`:''}
-        ${field}${!connected?`<button type="button" class="primary" data-connect ${!station||busy?'disabled':''}>Connect</button>`:
+        ${field}${plan ? (button ? '' : `<button type="button" class="primary" data-deploy ${working?'disabled':''}>${esc(plan.label)}</button>`) : !connected?`<button type="button" class="primary" data-connect ${!station||busy?'disabled':''}>Connect</button>`:
           selected?`<button type="submit" class="primary" data-send ${!ready||busy||waiting?'disabled':''}>Send</button>`:''}
-        ${error?`<output role="alert">${esc(error)}</output>`:''}
+        ${error||failure?`<output role="alert">${esc(error||failure)}</output>`:''}
       </form>
       ${drawPath(active.app, connected)}
       ${sent?`<details class="lesson-bytes fs-panel fs-in"><summary>See the bytes</summary><code>${esc(sent.hex.match(/../g).join(' '))}</code><small>${sent.bytes} B · CCSDS</small></details>`:''}
       <details class="terminal-twin"><summary>In the terminal</summary><pre>${esc(cli)}</pre></details></div>
-      ${telemetry(station,flight,'sample_app')}</section>`);
+      ${telemetry(station,flight,main?.app)}</section>`);
     cue();
   }
   async function read() {
@@ -96,12 +105,12 @@ export function mountGroundLesson(root, {state}) {
     }
     station=next;lastSession=next.communication.since;
     const flight=first();
-    if (waiting===ENABLE && flight.downlink_receipt || waiting===NOOP && flight.answer) {stopWait();error='';}
+    if (waiting===ENABLE && flight.downlink_receipt || waiting===main && flight.answer) {stopWait();error='';}
     draw();
     const reply = flight.receipt?.reply || flight.downlink_receipt?.send_id || 0;
     if (reply > responseSeen) {
       responseSeen = reply;
-      packet(flight.receipt?.reply ? ['sample_app','to_lab','Ground'] : ['to_lab','Ground'],
+      packet(flight.receipt?.reply ? [main?.app,'to_lab','Ground'] : ['to_lab','Ground'],
         flight.receipt?.reply ? 'Flight event' : 'Housekeeping', true);
     }
   }
@@ -131,9 +140,10 @@ export function mountGroundLesson(root, {state}) {
   function click(event) {
     const button=event.target.closest('button');
     if (!button || busy || waiting) return;
+    if (button.hasAttribute('data-deploy'))advanceDeployment(deploy().plan).catch(fail);
     if (button.hasAttribute('data-connect')) operate('connect');
     if (button.dataset.pick) {
-      selected=[ENABLE,NOOP].find(command => command.name===button.dataset.pick);
+      selected=choices().find(command => command.name===button.dataset.pick);
       draft='';error='';draw();
       root.querySelector('[data-argument]')?.focus({preventScroll:true});
     }
@@ -145,8 +155,18 @@ export function mountGroundLesson(root, {state}) {
   function submit(event) {event.preventDefault();if(valid()&&!waiting) operate('send');}
   root.addEventListener('click',click);root.addEventListener('submit',submit);root.addEventListener('input',input);
   const unsubscribe=onUpdate(['ground','jobs'],()=>read().catch(fail));
-  draw();read().catch(fail);
-  return {close() {
+  async function open() {
+    if(sendMode) {
+      const journey=await readJourney(target);
+      const evidence=journey.steps.command.ref;
+      if(!evidence?.command)throw Error('Build your command first.');
+      const name=evidence.command.slice(evidence.app.length+1).replace(/_CC$/,'');
+      main={app:evidence.app,name,field:name==='SET_RATE'?'Rate_Hz':null,authored:true};
+    }
+    await read();
+  }
+  draw();open().catch(fail);
+  return {update:draw,close() {
     disposed=true;unsubscribe();stopWait();flights.forEach(cancel=>cancel());
     root.removeEventListener('click',click);root.removeEventListener('submit',submit);root.removeEventListener('input',input);
   }};

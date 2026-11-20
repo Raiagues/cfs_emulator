@@ -78,6 +78,22 @@ class FirstEventTest(unittest.TestCase):
         self.assertEqual(flight.snapshot()['downlink_receipt'],
                          {'send_id': 2, 'mid': 2179, 'sequence': 5, 'received_at': 4.5})
 
+    def test_authored_command_requires_its_compiled_event_and_counter_increment(self):
+        catalog = copy.deepcopy(CATALOG)
+        catalog['packets'][0]['app'] = 'orbit_demo'
+        command = 'ORBIT_DEMO_SET_RATE_CC'
+        flight = FirstEvent(catalog, authored={command:'orbit_demo'}, information_ids={command:[15]})
+        flight.received(packet(1, 'orbit_demo', {'CommandCounter': 9}, 2179))
+        flight.sent({'id':command, 'event_id':2, 'values':{'Rate_Hz':17}})
+        event = {'PacketID.AppName':'ORBIT_DEMO', 'PacketID.EventType':2, 'PacketID.EventID':1,
+                 'Message':'Initialized'}
+        flight.received(packet(3, 'cfe_evs', event))
+        flight.received(packet(4, 'orbit_demo', {'CommandCounter':10}, 2179))
+        self.assertFalse(flight.snapshot()['answer'])
+        flight.received(packet(5, 'cfe_evs', {**event, 'PacketID.EventID':15, 'Message':'Rate set to 17 Hz'}))
+        self.assertEqual(flight.snapshot()['receipt']['reply'], 5)
+        self.assertTrue(flight.snapshot()['answer'])
+
     def test_only_the_first_app_command_reply_and_its_hk_advance(self):
         flight = FirstEvent(CATALOG)
         self.assertNotIn('OTHER_NOOP_CC', flight.noops)

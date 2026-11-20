@@ -370,7 +370,7 @@ function renderToolbar(){
  const buildButton=$('.build-action');
  const stale=build?.exists && build?.stale;
  buildButton.classList.toggle('needs-build',!!stale);
- buildButton.lastElementChild.textContent=stale?'Rebuild cFS':'Build cFS';
+ buildButton.lastElementChild.textContent='Build cFS';
  $('.run-action').disabled=!build?.exists||!build.current||busy||!targets.includes(state.target)||state.hardware?.execution?.can_start!==true;
  $('.run-action').title=!build?.exists||!build.current?'Build this target first':state.hardware?.execution?.block_reason||(native?'Run on this computer':'Run on target');
  buildButton.title=stale?'Mission sources changed':native?'Build for this computer':'Build for selected target';
@@ -499,16 +499,16 @@ async function advanceCommandLaunch(action){
  intent.error='';
  try{
   if(action==='catalog')await groundRefresh();
-  else if(action==='setup')navigate(stepUrl('target', location, intent.target));
-  else if(action==='active'){
-   const active=state.hardware.execution.target;
-   if(active){await selectTarget(active);await openFlightStep('boot');}
-  }
   else if(action==='source')return resumeCommand(intent);
-  else if(action==='check')await hardwareRefresh(true);
-  else await startJob(action,{target:intent.target},false);
+  else await advanceDeployment(commandLaunchStep(state,intent));
  }catch(error){intent.error=error.message;}
  if(state.commandLaunch===intent)renderView();
+}
+async function advanceDeployment(plan){
+ if(plan.action==='setup')return navigate(stepUrl(state.target==='physical'?'board':'target',location,state.target));
+ if(plan.action==='active')return navigate(stepUrl('boot',location,plan.target));
+ if(plan.action==='check')return hardwareRefresh(true);
+ return startJob(plan.action,{},false);
 }
 async function resumeCommand(intent){
  state.commandLaunch=null;
@@ -533,7 +533,7 @@ function showFirstBoot(){
 function leaveBoot(){
  bootCleanup?.();bootCleanup=null;bootTarget=null;
 }
-const activities = {event: mountGroundLesson, app: mountMissionLesson, command: mountCommandLesson};
+const activities = {event: mountGroundLesson, app: mountMissionLesson, command: mountCommandLesson, send: mountGroundLesson};
 let activity;
 function guidedView() {
  const mount = activities[state.activity];
@@ -545,7 +545,7 @@ function guidedView() {
   const pane = document.createElement('section');
   pane.className = 'activity-view';
   $('#view').replaceChildren(pane);
-  const controller = mount(pane, {state,startJob,openApp:done=>newMissionApp('',done)});
+  const controller = mount(pane, {state,startJob,advanceDeployment,openApp:done=>newMissionApp('',done)});
   activity = {step:state.activity, target:state.target, ...controller};
  } else activity.update?.();
  $('#visual-heading').hidden=true;
@@ -939,10 +939,6 @@ async function openFlightStep(step,entry={}){
  state.commandLaunch=null;
  if(step==='app'){
   state.archApp='';state.archLibrary='';state.archOverview=true;state.mapMode=state.workspace.apps.some(app=>app.managed&&!app.example)?'3d':'2d';state.mapSection='mission';
- }
- if(step==='send'){
-  const last=authoredCommand();
-  if(last)return openGroundRoute(last.app,last.id,true);
  }
  if(step==='code')state.commandTask=null;
  if(step==='sensor'||step==='test'||step==='simulation')state.signalView=step==='test'?'test':entry.signalTab||'signals';
@@ -1424,7 +1420,7 @@ document.addEventListener('click',guarded(async e=>{
  else if(d.inspect){state.inspected=d.inspect;renderView();}
  else if('closeInspection' in d){state.inspected=null;renderView();}
  else if(d.target)await selectTarget(d.target);
- else if(d.job){if(d.job==='connect')connect();else{$('#dialog').close();await startJob(d.job,d.kind?{kind:d.kind}:{});}}
+ else if(d.job){if(d.job==='connect')connect();else{$('#dialog').close();await startJob(d.job,d.kind?{kind:d.kind}:{},!state.activity);}}
  else if('designSensor' in d){$('#dialog').close();designSensor({dialog,api,refresh,feedback});}
  else if(d.testModel)await startJob('model-test',{device:d.testModel});
  else if(d.testDevice)await startJob('sensor-test',{device:d.testDevice});

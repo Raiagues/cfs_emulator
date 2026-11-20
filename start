@@ -341,7 +341,7 @@ def main(argv=None):
     try:
         if args.command == 'status':
             snapshot = manager.status()
-            state = snapshot[args.target] if args.target else snapshot
+            state = dict(snapshot[args.target], next_action=snapshot['launch'][args.target]) if args.target else snapshot
             if args.json:
                 print(json.dumps(state))
             elif args.target == 'native':

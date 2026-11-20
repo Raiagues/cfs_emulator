@@ -6,7 +6,7 @@ const actionLabels = {run:'Run cFS',build:'Build cFS',stop:'Stop cFS',connect:'P
 export function actionLabel(action,target){
  if(action==='boot')return target==='physical'?'Connect board':'Start emulator';
  if(action==='shutdown')return target==='physical'?'Shut down board':'Stop emulator';
- if(action==='setup')return target==='physical'?'Set up board':'Set up QEMU';
+ if(action==='setup')return target==='physical'?'Set up board':'Set up emulator';
  return actionLabels[action]||action;
 }
 

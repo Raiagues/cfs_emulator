@@ -121,10 +121,12 @@ class GroundStation:
         target = catalog.get('build_target')
         self._journey_cutoff = self.journey.snapshot(target)['reset_at']
         self.sensor_telemetry = SensorTelemetry(self.root, target)
-        commands = {ref['command']: ref['app'] for ref in self.journey.references(target, 'command')
-                    if ref['build'] == catalog.get('build_fingerprint')}
+        compiled = [ref for ref in self.journey.references(target, 'command')
+                    if ref.get('build') == catalog.get('build_fingerprint') and 'command' in ref]
+        commands = {ref['command']: ref['app'] for ref in compiled}
+        information_ids = {ref['command']: ref['information_ids'] for ref in compiled if ref.get('information_ids')}
         self.first_contact = FirstEvent(catalog, destination)
-        self.command_reply = FirstEvent(catalog, destination, authored=commands)
+        self.command_reply = FirstEvent(catalog, destination, authored=commands, information_ids=information_ids)
 
     def reset_journey(self, target):
         with self._lock:
@@ -260,24 +262,27 @@ class GroundStation:
             command = self.resolve_command(app, name)
             noop = command['id'].endswith('_NOOP_CC')
             enable = command['id'] == self.first_contact.enable
-            counter = self.first_contact.counter
-            if noop and app == 'sample_app':
-                self.wait_for(lambda: app in counter, timeout, 'sample_app housekeeping')
+            authored = command['id'] in self.command_reply.authored
+            counter = (self.command_reply if authored else self.first_contact).counter
+            needs_counter = authored or noop and app == 'sample_app'
+            if needs_counter:
+                self.wait_for(lambda: app in counter, timeout, app + ' housekeeping')
             before = counter.get(app)
             uplink = self.send(command['id'], arguments)
             if enable:
                 self.wait_for(lambda: any(p['event_id'] > uplink['event_id'] for p in self._history),
                               timeout, 'TO_LAB telemetry')
-            if not noop:
+            if not (noop or authored):
                 return {'sent': uplink, 'telemetry': enable}
 
             def reply():
                 return next((packet for packet in self._events if packet['event_id'] > uplink['event_id']
-                             and noop_event(packet, app)), None)
+                             and (self.command_reply.matches_event(packet, command['id'], app)
+                                  if authored else noop_event(packet, app))), None)
 
-            packet = self.wait_for(reply, timeout, app + ' NOOP event')
+            packet = self.wait_for(reply, timeout, app + ' ' + name + ' event')
             result = {'sent': uplink, 'event': packet['values']['Message']}
-            if app == 'sample_app':
+            if needs_counter:
                 self.wait_for(lambda: counter.get(app) == before + 1, timeout, 'CommandCounter increase')
                 result.update(before=before, after=counter[app])
             return result

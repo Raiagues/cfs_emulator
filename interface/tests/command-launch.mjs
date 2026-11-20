@@ -1,6 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {commandLaunchStep} from '../static/command-launch.js';
+import {spawnSync} from 'node:child_process';
+import {commandLaunchStep as presentStep} from '../static/command-launch.js';
+
+// Exercise the CLI/HTTP decision and its browser presentation with the same snapshots.
+function commandLaunchStep(state, intent, busy) {
+ const snapshot = {...state.hardware,builds:state.workspace.builds};
+ const script = "import json,sys; from hardware.deployment import next_action; print(json.dumps(next_action(json.load(sys.stdin),sys.argv[1])))";
+ const plan = spawnSync('python3',['-c',script,intent.target],{input:JSON.stringify(snapshot),encoding:'utf8'});
+ assert.equal(plan.status,0,plan.stderr);
+ state.hardware.launch = {[intent.target]:JSON.parse(plan.stdout)};
+ return presentStep(state,intent,busy);
+}
 
 const intent={target:'native',app:'orbit_demo',id:'ORBIT_DEMO_STAMP_CC'};
 function session(){

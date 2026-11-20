@@ -40,11 +40,13 @@ def derive(target, events):
             cutoff = max(cutoff, event.at)
             facts.clear()
         elif event.at > cutoff and (event.ref.get("sent_at") or event.at) > cutoff and event.step not in facts:
-            facts[event.step] = event.at
+            facts[event.step] = event
     current, reachable, steps = None, True, {}
     for step in STEPS:
         done = reachable and step in facts
-        steps[step] = {"done": done, "observed_at": facts.get(step), "reachable": reachable,
+        fact = facts.get(step)
+        steps[step] = {"done": done, "observed_at": fact.at if fact else None, "reachable": reachable,
+                       "ref": fact.ref if fact else None,
                        "route": route(step, target)}
         if reachable and not done:
             current = step

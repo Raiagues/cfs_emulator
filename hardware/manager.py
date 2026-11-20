@@ -699,12 +699,15 @@ class HardwareManager:
                 "can_retry_boot": running is True and linux_ready is False, "boot_error": boot_error,
                 "ssh_configured": (Path(network(self.root).keys) / "config").is_file()}
         board = {"connection": self.state.read("connection.json"), "candidates": self.ssh_candidates(), "last_probe": physical}
-        return {"board": config["board"], "os": config["os"], "profiles": self.profiles(),
+        from hardware.deployment import next_action
+        snapshot = {"board": config["board"], "os": config["os"], "profiles": self.profiles(),
                 "execution": execution, "tools": tools,
                 "native": dict(local, last_operational=self.state.read("operational-native.json", {}).get("time"), log_path="hardware/.runtime/native.log", os=platform.system(), architecture=platform.machine()),
                 "docker": {"available": code == 0, "error": docker if code else None},
                 "qemu": qemu, "build": builds.get(default_target), "builds": builds,
                 "physical": board, "deployed": deployed}
+        snapshot["launch"] = {target: next_action(snapshot, target) for target in builds}
+        return snapshot
 
     def probe(self, connection=None, emit=lambda line: None, cancel=None):
         argv = self.ssh_argv("physical", connection)
