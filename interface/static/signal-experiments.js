@@ -20,7 +20,7 @@ export function pythonPanel(state,esc,active,reason) {
 }
 
 function matchingReads(state,device,key,latestJob) {
-  if(state.ground?.target!=='qemu'||!state.ground?.connected)return [];
+  if(state.ground?.target!==state.target||!state.ground?.connected)return [];
   const current=state.workspace?.builds?.qemu;
   if(current && (!current.current||state.ground.build_fingerprint!==current.fingerprint))return [];
   const prop=device.properties[key], values=[];
@@ -41,7 +41,7 @@ export function qemuPanel(state,esc) {
   const devices=state.simulation?.available||[];
   const enabled=new Set((state.simulation?.settings.sensors||[]).filter(d=>d.enabled).map(d=>d.device));
   const buses=state.workspace?.project?.buses||[];
-  const last=state.jobs.filter(j=>j.target==='qemu'&&j.action==='simulate'&&j.samples).at(-1);
+  const last=state.jobs.filter(j=>j.target===state.target&&j.action==='simulate'&&j.samples).at(-1);
   const rows=devices.map(device=>{
     const active=last?.samples.devices?.find(d=>d.id===device.id);
     const cell=(label,text)=>`<div><b>${esc(label)}</b><small>${esc(text)}</small></div>`;

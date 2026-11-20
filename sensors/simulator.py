@@ -6,6 +6,8 @@ import copy
 import fcntl
 import importlib.util
 import math
+import os
+import selectors
 from contextlib import ExitStack
 from pathlib import Path
 import json
@@ -110,7 +112,7 @@ def sample_values(devices, elapsed_s, waveforms=None, configurations=None, root=
 
 
 def simulate(root, sensor_ids=(), interval=1.0, steps=None, waveforms=None, trace_qmp=False,
-             initial_values=None, on_sample=None, dry_run=False):
+             initial_values=None, on_sample=None, dry_run=False, target=None):
     if not math.isfinite(interval) or interval <= 0:
         raise ValueError("--interval must be finite and positive")
     if steps is not None and (type(steps) is not int or steps < 1):
@@ -153,6 +155,50 @@ def simulate(root, sensor_ids=(), interval=1.0, steps=None, waveforms=None, trac
             if steps is None: time.sleep(interval)
         return
 
+    from hardware.targets import selected_target
+    target = target or selected_target(root) or "qemu"
+    if target == "physical":
+        from sensors.observations import read_board
+        return read_board(root, devices, on_sample, steps)
+    if target == "native":
+        from sensors.observations import instance, remember_write
+        from sensors.registers import register_file, write
+        from project.sensor_models import load, model_paths
+        flight = instance(root, target)
+        if not flight:
+            raise ValueError("Run native cFS before starting sensor data")
+        paths = model_paths(root)
+        specs = {d["model"]: load(paths[d["model"]]) for d in devices}
+        live = json.loads((root / "hardware/.runtime/native.json").read_text())
+        if live["instance"] != flight:
+            raise ValueError("Wait for native cFS to become operational")
+        with ExitStack() as resources:
+            pid = resources.enter_context(os.fdopen(os.pidfd_open(live["pid"]), "rb", buffering=0))
+            monitor = resources.enter_context(selectors.DefaultSelector())
+            monitor.register(pid, selectors.EVENT_READ)
+            for device in sorted(devices, key=lambda d: d["id"]):
+                path = register_file(root, device, catalog)
+                lock = resources.enter_context(path.with_suffix(".lock").open("a"))
+                try:
+                    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                except BlockingIOError:
+                    raise ValueError(f"Synthetic data is already running for {device['id']}") from None
+            started, count = time.monotonic(), 0
+            while steps is None or count < steps:
+                elapsed = time.monotonic() - started
+                samples = sample_values(devices, elapsed, waveforms, configurations, root, catalog)
+                for device, values in samples:
+                    tolerance = write(register_file(root, device, catalog), specs[device["model"]], values)
+                    remember_write(root, device["id"], flight, values, tolerance)
+                if on_sample:
+                    on_sample(elapsed, samples)
+                else:
+                    print_samples(samples, elapsed, catalog)
+                count += 1
+                if steps is None or count < steps:
+                    if monitor.select(max(0, started + count*interval - time.monotonic())):
+                        raise ValueError("Native cFS stopped during the sensor session")
+        return
     check_record(root, config)
     with ExitStack() as lifetime:
         # A device has one writer, even if a second CLI or Studio is opened.
@@ -218,6 +264,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("ids", nargs="*", help="configured sensor IDs; defaults to the selected session")
     parser.add_argument("--root", type=Path, default=ROOT)
+    parser.add_argument("--target", choices=("native", "qemu", "physical"))
     parser.add_argument("--interval", type=float, help="seconds between updates; defaults to SESSION")
     parser.add_argument("--steps", type=int, help="stop after this many updates")
     parser.add_argument("--dry-run", action="store_true", help="preview samples without connecting to QEMU")
@@ -227,7 +274,7 @@ def main():
     try:
         from sensors.session import run_session
         run_session(args.root, sensor_ids=args.ids, interval=args.interval, steps=args.steps,
-                    trace_qmp=args.trace_qmp, dry_run=args.dry_run, events=args.events)
+                    trace_qmp=args.trace_qmp, dry_run=args.dry_run, events=args.events, target=args.target)
     except KeyboardInterrupt:
         print("Synthetic data stopped.", flush=True)
     except (OSError, ValueError, RuntimeError) as error:

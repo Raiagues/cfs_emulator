@@ -386,8 +386,10 @@ class HardwareManager:
         emit("$ " + shlex.join(argv))
         log = self.runtime / "native.log"
         started = time.time()
+        from sensors.registers import prepare
+        env = dict(os.environ, FLIGHT_STUDIO_NATIVE_DEVICES=str(prepare(self.root)))
         with log.open("wb") as output:
-            process = subprocess.Popen(argv, cwd=payload, stdin=subprocess.DEVNULL, stdout=output,
+            process = subprocess.Popen(argv, cwd=payload, env=env, stdin=subprocess.DEVNULL, stdout=output,
                                        stderr=subprocess.STDOUT, start_new_session=True)
         instance = secrets.token_hex(16)
         try:
@@ -1015,10 +1017,8 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
         return self._stream(argv + [command], emit, cancel)
 
     def _simulate(self, action, target, device, model, emit, cancel, scenario=None):
-        """Write synthetic sensor values to QEMU, or print a local preview for simulate-preview."""
+        """Run the selected sensor transport or a local register-level test."""
         preview = action == "simulate-preview"
-        if not preview and target != "qemu":
-            raise HardwareError("Sensor simulation is only available on QEMU.")
         if model is not None:
             from sensors.simulator import simulation_scripts
             if not preview or model not in simulation_scripts(self.root):
@@ -1029,8 +1029,10 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
             from sensors.scenarios import SCENARIOS
             if not preview or scenario not in SCENARIOS or not device:
                 raise HardwareError("Select a local sensor scenario")
-            return self._stream([sys.executable, "-u", "-m", "sensors.scenarios", device, scenario], emit, cancel)
-        if not preview and not self._qemu_running():
+            return self._stream([sys.executable, "-u", "-m", "sensors.scenarios", device, scenario, "--target", target], emit, cancel)
+        if not preview and target == "native" and not self._local_flight_state()["running"]:
+            raise HardwareError("Run native cFS before starting synthetic data.")
+        if not preview and target == "qemu" and not self._qemu_running():
             raise HardwareError("Boot QEMU Linux before running synthetic data.")
         if preview:
             command = [sys.executable, "-u", "-m", "sensors.session", "--dry-run", "--events", "--steps", "24"]
@@ -1040,7 +1042,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
             command = [sys.executable, "-u", "-m", "sensors.session", "--events", "--device", device]
         else:
             command = [sys.executable, "-u", "-m", "sensors.session", "--events"]
-        return self._stream(command, emit, cancel)
+        return self._stream([*command, "--target", target], emit, cancel)
 
     def _installed_digest(self, root, target):
         """Identify the exact deployable tree, permissions and generated build configuration."""

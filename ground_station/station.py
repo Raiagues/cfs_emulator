@@ -10,6 +10,7 @@ from .catalog import build_catalog, apply_overrides
 from . import official
 from .first_event import FirstEvent
 from journey import Store
+from sensors.observations import SensorTelemetry
 from .round_trip import PassedTests, RoundTrips, TestPlans
 
 
@@ -111,6 +112,7 @@ class GroundStation:
     def _start_observations(self, catalog, destination):
         target = catalog.get('build_target')
         self._journey_cutoff = self.journey.snapshot(target)['reset_at']
+        self.sensor_telemetry = SensorTelemetry(self.root, target)
         commands = {ref['command']: ref['app'] for ref in self.journey.references(target, 'command')
                     if ref['build'] == catalog.get('build_fingerprint')}
         self.first_contact = FirstEvent(catalog, destination)
@@ -181,6 +183,7 @@ class GroundStation:
             self._latest[mid] = packet
             if not any(p['mid'] == mid and p['sequence'] == packet['sequence'] and
                        p['hex'] == packet['hex'] for p in reversed(self._history)):
+                self.sensor_telemetry.received(packet)
                 self._observe_reply(packet, self.first_contact, 'event')
                 self._observe_reply(packet, self.command_reply, 'send')
                 if self.trips.active:

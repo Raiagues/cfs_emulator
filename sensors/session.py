@@ -178,12 +178,10 @@ def load_session(root=ROOT):
         model = models[device["model"]]
         signals = _device_settings(device, catalog, model)
         spec = model["spec"]
-        fields = spec.get("abi", {}).get("fields")
-        scalar = spec.get("abi", {}).get("sample") == "int32"
-        channels = {}
-        for index, output in enumerate(spec.get("outputs", [])):
-            field = "Value" if scalar else "Value." + (fields[index] if fields else "Value_" + output["name"].replace("-", "_"))
-            channels[output["name"]] = {"register": output.get("register"), "telemetry_field": field}
+        from sensors.observations import fields
+        names = fields(spec)
+        channels = {output["name"]: {"register": output.get("register"), "telemetry_field": names[output["name"]]}
+                    for output in spec.get("outputs", [])}
         entry = {"device": device["id"], "enabled": True, "signals": signals}
         available.append({"id": device["id"], "name": device["name"], "model": device["model"], "bus": device["bus"],
                           "address": device["address"], "qom_path": "/machine/peripheral/" + device["id"],
@@ -340,7 +338,7 @@ def waveform_for(root, device, settings, catalog=None, orbit=None):
 
 
 def run_session(root=ROOT, steps=None, events=False, dry_run=False, device_id=None,
-                sensor_ids=(), interval=None, trace_qmp=False):
+                sensor_ids=(), interval=None, trace_qmp=False, target=None):
     root = Path(root)
     session = load_session(root)
     selected = [sensor for sensor in session["settings"]["sensors"] if sensor["enabled"]]
@@ -371,7 +369,7 @@ def run_session(root=ROOT, steps=None, events=False, dry_run=False, device_id=No
                             "units": {name: display_units(props[name]["unit"])[1] for name in values}})
         print("@sensor " + json.dumps({"elapsed": elapsed, "devices": payload}), flush=True)
     simulate(root, list(waveforms), interval if interval is not None else session["settings"]["interval"],
-             steps, waveforms, trace_qmp=trace_qmp, on_sample=report if events else None, dry_run=dry_run)
+             steps, waveforms, trace_qmp=trace_qmp, on_sample=report if events else None, dry_run=dry_run, target=target)
 
 
 def sensor_main(filename):
@@ -408,11 +406,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--steps", type=int)
     parser.add_argument("--events", action="store_true")
+    parser.add_argument("--target", choices=("native", "qemu", "physical"))
     parser.add_argument("--dry-run", action="store_true", help="preview samples without connecting or sending to QEMU")
     parser.add_argument("--device", help="preview or send only this configured device ID")
     args = parser.parse_args()
     try:
-        run_session(steps=args.steps, events=args.events, dry_run=args.dry_run, device_id=args.device)
+        run_session(steps=args.steps, events=args.events, dry_run=args.dry_run, device_id=args.device, target=args.target)
     except KeyboardInterrupt:
         print("Synthetic data stopped.", flush=True)
     except (OSError, ValueError, RuntimeError) as error:

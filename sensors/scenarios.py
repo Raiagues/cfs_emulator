@@ -8,7 +8,7 @@ from pathlib import Path
 
 from project.model import board_catalog, load_config
 from project.sensor_driver import register_profile
-from project.sensor_models import identity_bytes, load, model_paths, output_limits
+from project.sensor_models import load, model_paths, output_limits
 from sensors.orbit import Orbit
 from sensors.runtime import ROOT
 from sensors.session import load_session, waveform_for
@@ -47,33 +47,15 @@ class RegisterBench:
         self.reader = ctypes.CDLL(str(lib)).read_sample
         self.reader.argtypes = [ctypes.POINTER(ctypes.c_uint8), ctypes.c_bool, ctypes.POINTER(ctypes.c_int32), ctypes.c_size_t]
         self.reader.restype = ctypes.c_int32
-        self.registers = (ctypes.c_uint8*256)()
-        for i, byte in enumerate(identity_bytes(spec)):
-            self.registers[spec['id_register']+i] = byte
-        ready = spec.get('ready', {})
-        if ready:
-            self.registers[ready['register']] = ready['mask']
-        for control in spec['controls']:
-            self.registers[control['register']] = control['setup']
+        from sensors.registers import initial_registers
+        self.spec = spec
+        self.registers = (ctypes.c_uint8*256)(*initial_registers(spec))
         self.outputs = spec['outputs']
         self.values = (ctypes.c_int32*len(self.outputs))()
 
     def measure(self, sent, disconnected):
-        tolerance = {}
-        for output in self.outputs:
-            name = output['name']
-            if name not in sent:
-                continue
-            gain = output.get('counts')
-            if 'range_register' in output:
-                selector = self.registers[output['range_register']] >> output['range_shift']
-                gains = output.get('gain_counts')
-                gain = gains[selector & (len(gains)-1)] if gains else gain / (1 << (selector & 3))
-            quantum = 1 + output.get('reserved_mask', 0)
-            raw = round((sent[name]-output['offset'])*gain/output['divisor']/quantum)*quantum
-            raw = max(-32768, min(32767 & ~(quantum-1), raw))
-            self.registers[output['register']:output['register']+2] = raw.to_bytes(2, 'big', signed=True)
-            tolerance[name] = .5*quantum*output['divisor']/gain + 1  # HAL returns integer engineering units.
+        from sensors.registers import encode_values
+        tolerance = encode_values(self.registers, self.spec, sent)
         status = self.reader(self.registers, disconnected, self.values, len(self.outputs))
         return status, {o['name']: self.values[i] for i,o in enumerate(self.outputs) if o['name'] in sent}, tolerance
 
@@ -134,11 +116,19 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('device')
     parser.add_argument('scenario', choices=SCENARIOS)
+    parser.add_argument('--target', choices=('native', 'qemu', 'physical'))
     args = parser.parse_args()
     try:
         report = run_scenario(ROOT, args.device, args.scenario)
         print('@scenario ' + json.dumps(report, allow_nan=False, separators=(',', ':')), flush=True)
         if not all(report['checks'].values()):
             parser.exit(1, 'Some signal checks failed\n')
+        from hardware.targets import selected_target
+        from journey.mission import record_signal
+        import time
+        target = args.target or selected_target(ROOT)
+        if target:
+            record_signal(ROOT, {"target":target, "action":"simulate-preview", "status":"succeeded",
+                                 "scenario_result":report, "ended":time.time()})
     except (OSError, ValueError, subprocess.SubprocessError) as error:
         parser.exit(1, f'{error}\n')

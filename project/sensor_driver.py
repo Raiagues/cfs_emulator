@@ -90,6 +90,9 @@ def library_cmake(module, sources, dependencies=()):
                 f"target_include_directories({module} PUBLIC fsw/public_inc)\n")
     if dependencies:
         contents += f"add_cfe_app_dependency({module} {' '.join(dependencies)})\n"
+    if module == "linux_i2c_lib":
+        contents += ('if(TARGETSYSTEM MATCHES "^native_")\n'
+                     '    target_compile_definitions(linux_i2c_lib PRIVATE FLIGHT_STUDIO_NATIVE_I2C)\nendif()\n')
     return contents
 
 

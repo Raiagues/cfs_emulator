@@ -19,7 +19,7 @@ import {renderArchitecture,renderGround,renderTelemetry,renderGroundRoute,waitin
 import {editTrip} from './trip-editor.js';
 import {planFor} from './round-trip-view.js';
 import {layoutArchitecture} from './architecture.js';
-import {renderSimulationBoard,renderSimulationSettings,chartPageForDevice,changePattern,updateSignalValues,selectSeries} from './simulation.js';
+import {sensorAvailability,renderSimulationBoard,renderSimulationSettings,chartPageForDevice,changePattern,updateSignalValues,selectSeries} from './simulation.js';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const state = {showLibraries:localStorage.getItem('mission.showLibraries')!=='false',workspace:null, hardware:null, ground:null, catalog:null, catalogTarget:null, catalogLoading:false, groundBusy:false, groundError:'', groundApp:'', mapMode:'3d', view:workspaceRoute().view, files:new Map(), path:null, target:null, sensorless:false, jobs:[], selectedJob:null, selectedDevice:null, inspected:null, archApp:'', simulation:null,simulationDirty:false, groundTab:'commands', groundSelection:null, groundPacket:null, terminalStream:null, history:new Map()};
@@ -190,8 +190,8 @@ function renderSimulationPanel(force=false){
  $('[data-simulation-test]').disabled=!!job||state.simulationSaving||!state.selectedDevice;
  const saveButton=$('#simulation-toolbar [data-simulation-save]');saveButton.textContent=state.simulationSaving?'Saving…':state.simulationDirty?'Save •':'Save';saveButton.disabled=!!job||previewBusy||state.simulationSaving;
  $('[data-simulation-start]').hidden=!!job;$('[data-simulation-stop]').hidden=!job;
- $('#simulation-reason').textContent=state.target==='physical'?'Physical sensors':state.target==='native'?'Emulator required':!state.hardware?.qemu?.running?'Emulator stopped':'';
- $('[data-simulation-start]').disabled=previewBusy||state.target!=='qemu'||!state.hardware?.qemu?.running||!!operation();
+ $('#simulation-reason').textContent=sensorAvailability(state);
+ $('[data-simulation-start]').disabled=previewBusy||Boolean(sensorAvailability(state))||!!operation();
  const orbitSave=$('#simulation-form [data-simulation-save]');
  if(orbitSave)orbitSave.disabled=!state.simulationDirty||state.simulationSaving||Boolean(job)||previewBusy;
  const fields=$('#simulation-fields'),viewKey=[state.target,state.simulation?.available.map(d=>d.id).join(','),state.selectedDevice,state.signalOutput,!!job,previewBusy,state.simulationSaving].join('/');
@@ -242,7 +242,7 @@ function addSimulationSensor(id){
 async function startSimulation(){
  if(!state.simulationDirty)await refreshSimulation();
  if(!state.simulation.settings.sensors.some(sensor=>sensor.enabled))throw Error('Select a sensor first');
- if(state.target!=='qemu'||!state.hardware?.qemu?.running)throw Error('Start the emulator first');
+ const reason=sensorAvailability(state);if(reason)throw Error(reason);
  if(state.simulationDirty)await saveSimulation();
  for(const path of state.files.keys())if(path.startsWith('sensors/'))await saveFile(path);
  await startJob('simulate',{},false);
@@ -1085,7 +1085,7 @@ async function reloadMissionFiles(changed=[],deleted=[],moved={}){
   if(cached.content===cached.saved){state.files.set(path,{...latest,saved:latest.content});if(state.path===path)await openFile(path,state.activeLine,false,state.sourcePreview);}
  }
  await refresh(true);
- if(state.target==='qemu' && !state.simulationDirty && changed.includes('project/config.json')){await refreshSimulation();renderToolbar();}
+ if(!state.simulationDirty && changed.includes('project/config.json')){await refreshSimulation();renderToolbar();}
 }
 async function saveMissionDraft(){
  if(state.missionBusy||!state.missionDraft)return;
@@ -1169,7 +1169,7 @@ async function selectTarget(target){
  await api('hardware/target',{target});
  adoptTarget(target);
  displayTarget(target);
- if(target==='qemu' && !state.simulationDirty)await refreshSimulation();
+ if(!state.simulationDirty)await refreshSimulation();
  renderToolbar();selectTargetTerminal();await hardwareRefresh();renderView();if(state.view==='ground')await groundRefresh();
 }
 $('#toggle-editor').onclick=()=>{document.body.classList.toggle('no-editor');renderView();};
@@ -1264,9 +1264,10 @@ document.addEventListener('click',guarded(async e=>{
  else if('signalSidebar' in d){state.signalSidebar=state.signalSidebar===false;renderView();}
  else if(d.signalDevice){await selectSimulationDevice(d.signalDevice);}
  else if('signalHardware' in d){
-  if(!await selectView('bench')||state.target==='native')return;
-  if(state.workspace.project.board){if(Object.keys(state.workspace.catalog.buses||{}).length)create('device');else document.querySelector('[data-add-bus]')?.click();}
-  else navigate(stepUrl('target', location, 'qemu'));
+  const own=state.workspace.apps.find(app=>app.managed&&!app.example);
+  if(own && state.workspace.project.devices.length)create('sensor',own.name);
+  else if(Object.keys(state.workspace.catalog.buses||{}).length)create('device');
+  else busDialog(state.workspace,hardwareActions());
  }
  else if('backSensors' in d){state.selectedDevice=null;renderView();}
  else if('simulationSave' in d)await saveSimulation();

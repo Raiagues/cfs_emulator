@@ -31,6 +31,12 @@ function chartHtml({sensor,device,unit,keys},esc){
   return `<section class="signal-plot" data-series="${esc(id)}"><header><div class="series-title"><strong>${esc(device.name||device.id)}</strong><small>${identity(device,esc)}</small></div><small data-series-status></small>${keys.some(k=>['script','custom'].includes(sensor.signals[k]?.function))?`<button class="series-model-test" data-signal-preview-device="${esc(device.id)}" title="Run the Python model locally">Test Python</button>`:''}<div class="series-right">${keys.length>1?`<div class="series-channels" role="group" aria-label="Chart channels">${['',...keys].map(key=>`<button type="button" data-series-channel="${esc(key)}" data-series-id="${esc(id)}" aria-pressed="${chosen===key}" title="${esc(key||'All channels')}">${esc(key?key.replace(/.*[-_]/,''):'all')}</button>`).join('')}</div>`:''}<output></output></div></header><canvas class="wave-chart" data-device-id="${esc(sensor.device)}" data-unit="${esc(unit)}" role="img" aria-label="${esc(sensor.device+' waveform in '+unit)}"></canvas><div class="plot-empty" hidden></div></section>`;
 }
 
+export function sensorAvailability(state) {
+  if (state.target === 'native') return state.hardware?.native?.running ? '' : 'Run cFS';
+  if (state.target === 'physical') return state.ground?.connected && state.ground.target === 'physical' ? '' : 'Connect ground station';
+  return state.hardware?.qemu?.running ? '' : 'Emulator stopped';
+}
+
 export function renderSimulationBoard(state,{esc}){
   const active=state.jobs.find(job=>['simulate','simulate-preview'].includes(job.action)&&job.status==='running');
   const tab=state.signalView||'signals', session=state.simulation, available=session?.available||[], sensors=session?.settings.sensors||[];
@@ -39,11 +45,11 @@ export function renderSimulationBoard(state,{esc}){
     const sensor=sensors.find(s=>s.device===item.id);
     return `<div class="signal-entry" data-selected="${item.id===state.selectedDevice}"><input type="checkbox" data-simulation-enable="${esc(item.id)}" aria-label="Include ${esc(item.id)} in session" ${sensor?.enabled?'checked':''} ${active||state.simulationSaving?'disabled':''}><button class="signal-pick" data-signal-device="${esc(item.id)}" aria-pressed="${item.id===state.selectedDevice}"><span>${esc(item.name||item.id)}<small>${identity(item,esc)}</small></span><output data-sensor-reading="${esc(item.id)}"></output></button></div>`;
   }).join('');
-  const reason=state.target!=='qemu'?'Emulator required':!state.hardware?.qemu?.running?'Emulator stopped':!selected.length?'No sensors selected':'';
+  const reason=sensorAvailability(state) || (!selected.length?'No sensors selected':'');
   const stream=active?.action==='simulate' && active;
   const count=selected.length+' sensor'+(selected.length===1?'':'s')+' enabled';
-  const action=stream?'<button data-board-stop="simulate">Stop</button>':`<button data-signal-begin ${reason||active?'disabled':''} title="${esc(reason||(active?'Local test running':'Send samples to QEMU'))}">Start</button>`;
-  const streamStatus=`<div class="signal-session-state" data-active="${Boolean(stream)}"><i></i><strong>${stream?(stream.samples?.devices?.length?'Sending to QEMU':'Starting QEMU session'):'Synthetic data is off'}</strong><small>${esc([count,stream?'':active?'Local test running':reason].filter(Boolean).join(' · '))}</small>${action}</div>`;
+  const action=stream?'<button data-board-stop="simulate">Stop</button>':`<button data-signal-begin ${reason||active?'disabled':''} title="${esc(reason||(active?'Local test running':'Start sensor data'))}">Start</button>`;
+  const streamStatus=`<div class="signal-session-state" data-active="${Boolean(stream)}"><i></i><strong>${stream?(stream.samples?.devices?.length?'Sensor data is on':'Starting sensor data'):'Synthetic data is off'}</strong><small>${esc([count,stream?'':active?'Local test running':reason].filter(Boolean).join(' · '))}</small>${action}</div>`;
   let content;
   if(tab==='signals'){
     const charts=sessionCharts(session);

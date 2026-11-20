@@ -158,8 +158,6 @@ class Studio:
         kind = 'boot' if action == 'boot' else options.get('kind', 'flight')
         script = None
         if action in {'simulate', 'simulate-preview'}:
-            if action == 'simulate' and target != 'qemu':
-                raise ValueError('Synthetic data is only available in QEMU emulation.')
             if 'device' in options and not isinstance(options['device'], str):
                 raise ValueError('Invalid sensor selection')
             if 'model' in options:
@@ -269,8 +267,6 @@ class Studio:
                 if record['cancel'].is_set():
                     record['status'] = 'cancelled'
                 record['ended'] = time.time()
-                if record['action'] == 'simulate-preview':
-                    evidence.record_signal(self.hardware.root, record)
             if owns_operation:
                 self.operation.release()
 
