@@ -5,6 +5,7 @@ import {navigate, pageStep, redirectForStep, stepUrl} from './router.js';
 import {icon} from './ui.js';
 import {mountShells} from './shell.js';
 import {nextRepair} from './setup-plan.js';
+import {boardProgress} from './board-setup.js';
 import {guide} from './coach.js';
 
 for (const art of document.querySelectorAll('[data-art]')) art.innerHTML = targetDrawing(art.dataset.art);
@@ -17,6 +18,13 @@ const boardVisit = pageStep() === 'board';
 const checksByTarget = new Map();
 const checkRequests = new Map();
 let settings = null, target = null, busy = false, dirty = false;
+let boardHardware, boardJobs=[], boardJourney;
+function boardAction() {return boardProgress(settings.target, boardHardware, boardJobs, boardJourney);}
+async function readBoard() {
+  if(!boardVisit || settings?.target!=='physical')return;
+  [boardHardware,boardJobs,boardJourney]=await Promise.all([api('hardware'),api('jobs?lines=0'),readJourney('physical')]);
+  controls();
+}
 let activeGroup = '', installation = null, selectedVersion = 0;
 
 function feedback(message = '', error = false) {
@@ -194,7 +202,14 @@ function renderChecks() {
   $('#show-terminal').hidden = !installation || installation.target !== target;
   const details = $('#inspect');
   details.textContent = fixing && installation.input_required ? 'Input required' : 'Details';
-  if (boardVisit) $('#enter').textContent = settings.target === 'physical' ? 'Build cFS' : 'Use this board';
+  if (boardVisit) {
+    const board=boardAction();
+    $('#enter').textContent = board.label;
+    $('#enter').disabled = !ready || !board.action;
+    const latest=boardJobs.findLast(job=>job.target==='physical' && ['run','build','probe'].includes(job.action));
+    if(latest?.status==='failed')feedback(latest.error,true);
+    else if(board.complete)feedback('CFE_ES_Main entering OPERATIONAL state');
+  }
   const next = nextRepair(reportFor(target), settings.check_repairs[target]);
   const plus = next && Array.from(parent.children).find(el => el.dataset.group === next.group);
   let cue = failedInstall ? details : ready ? $('#enter') : plus || check;
@@ -542,15 +557,20 @@ form.addEventListener('submit', async event => {
     navigate(stepUrl('boot', location, target));
     return;
   }
+  const board=boardAction();
+  if(!board.action || busy)return;
+  if(board.action==='check') {await verify().catch(showError);return;}
+  busy=true;controls();
   try {
-    if (settings.target !== 'physical') {
+    if (board.action==='use') {
       await api('hardware/target', {target:'physical', use_board:true});
-      settings.target = 'physical';
-      controls();
+      settings.target='physical';
     } else {
-      await api('job', {action:'build', options:{target:'physical'}});
+      await api('job', {action:board.action,options:{target:board.target||'physical'}});
     }
-  } catch (error) {showError(error);}
+    await readBoard();
+  } catch(error) {showError(error);}
+  finally {busy=false;controls();}
 });
 (async () => {
   settings = await api('infrastructure');
@@ -560,6 +580,10 @@ form.addEventListener('submit', async event => {
     if (redirect) {navigate(redirect, true); return;}
   }
   target = boardVisit ? 'physical' : settings.target;
+  if(boardVisit) {
+    onUpdate(['hardware','jobs','journey'],()=>readBoard().catch(showError));
+    await readBoard();
+  }
   const jobs = await api('jobs?lines=0');
   const running = jobs.find(job => job.setup_action && job.status === 'running');
   if (running) {

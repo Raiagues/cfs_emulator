@@ -28,8 +28,19 @@ def lab(root, *, completed=False):
             if completed:
                 from journey import STEPS
                 server.studio.hardware.select_target('native')
+                workspace = server.studio.workspace
+                app = 'nav_demo'
+                workspace.mutate('add-app', {'name': app})
+                workspace.mutate('link-hal', {'app': app, 'name': 'temp', 'device': 'temp'})
+                view = workspace.command_lesson('native', app)
+                for stage in range(5):
+                    view = workspace.mutate('command-step', {'app': app, 'target': 'native', 'stage': stage,
+                                             'source_hash': view['source_hash']}, view['expected_hash'])
+                workspace.save_command_line('native', app, view['path'], view['content'].replace(view['stub'], view['ghost']),
+                                            view['file_hash'])
                 for index, step in enumerate(STEPS[:-1], 1):
-                    server.studio.hardware.journey.observe('native', step, {'fixture': step}, index)
+                    server.studio.hardware.journey.observe('native', step, {'fixture': step, 'app': app,
+                        'command': 'NAV_DEMO_SET_RATE_CC', 'device': 'temp'}, index)
             worker = threading.Thread(target=server.serve_forever)
             worker.start()
             try:
