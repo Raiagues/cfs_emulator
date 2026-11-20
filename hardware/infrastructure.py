@@ -107,8 +107,7 @@ def snapshot(hardware, verify_source=False):
             "emulator": emulator_config(hardware.root), "commands": commands}
 
 
-def save(studio, body):
-    hardware = studio.hardware
+def save(hardware, body):
     target = body.get("target")
     if target not in ("native", "qemu", "physical"):
         raise ValueError("Select an execution target.")
@@ -137,7 +136,7 @@ def save(studio, body):
             (hardware.runtime / "connection.json").unlink(missing_ok=True)
         (hardware.runtime / "probe.json").unlink(missing_ok=True)
         hardware._last_probe = None
-        hardware._physical_observation = None
+        hardware._invalidate_observation("physical")
     if target == "native":
         hardware._save("native-build-settings.json", {"jobs": jobs})
     return snapshot(hardware)

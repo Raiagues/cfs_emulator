@@ -25,10 +25,10 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | #check | `infrastructure.html:63` | infrastructure.js:452 | button | POST /api/infrastructure/check | infrastructure.check_one, self.stream_checks, infrastructure.check |
 | #delete-trip | `trip-editor.js:22` | trip-editor.js:76 | close, state.coreServices, state.groundApp, state.groundQuery, state.groundSelection, state.selectedTests, state.selectedTests[body.plan.command], state.testPlans, state.workspace | GET /api/workspace, POST /api/ground/tests | app.ground_plan, {**app.workspace.snapshot(), 'builds': app.hardware.builds_status()} |
 | #enter | `infrastructure.html:46` | infrastructure.js:507 | button | — | — |
-| #fix-group | `infrastructure.html:63` | infrastructure.js:451 | close, showModal | GET /api/infrastructure, GET /api/jobs, POST /api/infrastructure/check, POST /api/terminal/create | app.jobs_snapshot, app.shells.create, infrastructure.check_one, self.stream_checks, infrastructure.check, infrastructure.snapshot(app.hardware, verify_source=query.get('verify_source') == '1') |
+| #fix-group | `infrastructure.html:63` | infrastructure.js:451 | close, showModal | GET /api/infrastructure, GET /api/jobs, POST /api/infrastructure/check, POST /api/terminal/create | app.jobs_snapshot(include_lines=query.get('lines') != '0'), app.shells.create, infrastructure.check_one, self.stream_checks, infrastructure.check, infrastructure.snapshot(app.hardware, verify_source=query.get('verify_source') == '1') |
 | #ground-packet | `panels.js:217` | app.js:1047 | state.groundPacket | — | — |
 | #inspect | `infrastructure.html:47` | infrastructure.js:436 | showModal | — | — |
-| #install | `infrastructure.html:45` | infrastructure.js:432, infrastructure.js:433 | close, showModal | GET /api/infrastructure, GET /api/jobs, POST /api/infrastructure/check, POST /api/terminal/create | app.jobs_snapshot, app.shells.create, infrastructure.check_one, self.stream_checks, infrastructure.check, infrastructure.snapshot(app.hardware, verify_source=query.get('verify_source') == '1') |
+| #install | `infrastructure.html:45` | infrastructure.js:432, infrastructure.js:433 | close, showModal | GET /api/infrastructure, GET /api/jobs, POST /api/infrastructure/check, POST /api/terminal/create | app.jobs_snapshot(include_lines=query.get('lines') != '0'), app.shells.create, infrastructure.check_one, self.stream_checks, infrastructure.check, infrastructure.snapshot(app.hardware, verify_source=query.get('verify_source') == '1') |
 | #operation-output | `index.html:47` | app.js:1198 | button | — | — |
 | #orbit-{…} data-orbit-element | `orbit-preview.js:69` | orbit-preview.js:222 | input | — | — |
 | #settings-cancel | `infrastructure.html:56` | infrastructure.js:329 | close | — | — |
@@ -81,7 +81,7 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | Next page | `mission-diagram.js:92` | HTML / enclosing form or listener | button | — | — |
 | Next result | `index.html:77` | app.js:1182 | button | — | — |
 | Observation type | `trip-editor.js:12` | HTML / enclosing form or listener | select | — | — |
-| Open command source | `panels.js:87` | app.js:1380 | selectView('code') | GET /api/ground/source | app.exclusive(app.ground_source, query, wait=3) |
+| Open command source | `panels.js:87` | app.js:1380 | selectView('code') | GET /api/ground/source | app.ground_source(query) |
 | Open hardware workbench | `mission-diagram.js:125` | app.js:1226, app.js:1402 | close, selectView(d.view), state.commandLaunch, state.commandTask, state.inspected, state.selectedDevice | — | — |
 | Open library {…} | `mission-diagram.js:87` | app.js:1228, app.js:1229 | state.archApp, state.archFollowSource, state.archLibrary, state.archOverview, state.archSource | — | — |
 | Open source | `signal-experiments.js:15` | app.js:1262 | selectView('code') | — | — |
@@ -175,8 +175,8 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | data-ground | `panels.js:89` | app.js:1417 | state.catalog, state.catalogLoading, state.catalogTarget, state.ground, state.groundApp, state.groundBusy, state.groundError, state.groundSelection, state.testPlans | GET /api/ground, GET /api/ground/tests | app.ground.plans.read, app.ground_snapshot |
 | data-ground-pane | `panels.js:125` | app.js:1369 | state.groundPane | — | — |
 | data-ground-summary | `panels.js:217` | app.js:1368 | state.groundPacket | — | — |
-| data-gs-source data-source-kind data-source-section | `panels.js:167` | app.js:1380 | selectView('code') | GET /api/ground/source | app.exclusive(app.ground_source, query, wait=3) |
-| data-gs-source data-source-kind data-source-section | `panels.js:88` | app.js:1380 | selectView('code') | GET /api/ground/source | app.exclusive(app.ground_source, query, wait=3) |
+| data-gs-source data-source-kind data-source-section | `panels.js:167` | app.js:1380 | selectView('code') | GET /api/ground/source | app.ground_source(query) |
+| data-gs-source data-source-kind data-source-section | `panels.js:88` | app.js:1380 | selectView('code') | GET /api/ground/source | app.ground_source(query) |
 | data-hardware-source data-line | `hardware-links.js:36` | app.js:1398 | selectView('code') | — | — |
 | data-hardware-source data-line | `hardware-links.js:75` | app.js:1398 | selectView('code') | — | — |
 | data-link-hal | `hardware-links.js:79` | app.js:1388, app.js:1391 | close, selectView('bench'), showModal, state.activeLine, state.coreServices, state.groundApp, state.inspected, state.jumpLine, state.path, state.selectedDevice, state.simulation, state.simulationDirty, state.simulationError, state.sourceCommand, state.sourcePreview, state.sourceStep, state.workspace | GET /api/file, GET /api/simulation, GET /api/workspace, POST /api/mutate | app.workspace.mutate, app.workspace.read_file(query['path']), app.workspace.simulation_snapshot, {**app.workspace.snapshot(), 'builds': app.hardware.builds_status()} |
@@ -673,13 +673,13 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | GET /api/files/search | `app.workspace.search_files(query.get('root', 'cFS'), query.get('q', ''))` |
 | GET /api/first-boot | `first_boot.snapshot(app, query.get('target') or selected_target(app.hardware.root), journal=app.boot_journal_snapshot)` |
 | GET /api/ground | `app.ground_snapshot` |
-| GET /api/ground/catalog | `app.exclusive(app.ground_catalog, query.get('target'), wait=3)` |
-| GET /api/ground/source | `app.exclusive(app.ground_source, query, wait=3)` |
+| GET /api/ground/catalog | `app.ground_catalog(query.get('target'))` |
+| GET /api/ground/source | `app.ground_source(query)` |
 | GET /api/ground/tests | `app.ground.plans.read` |
 | GET /api/hardware | `app.hardware.status` |
 | GET /api/hardware/device | `device_settings(app.workspace, query.get('id'))` |
 | GET /api/infrastructure | `infrastructure.snapshot(app.hardware, verify_source=query.get('verify_source') == '1')` |
-| GET /api/jobs | `app.jobs_snapshot` |
+| GET /api/jobs | `app.jobs_snapshot(include_lines=query.get('lines') != '0')` |
 | GET /api/journey | `app.hardware.journey.snapshot((app.hardware._load('target.json', {}).get('journey_origin') if query.get('view') == 'board' else None) or query.get('target') or selected_target(app.hardware.root))` |
 | GET /api/session | `{'token': app.token}` |
 | GET /api/simulation | `app.workspace.simulation_snapshot` |
@@ -699,6 +699,7 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | POST /api/infrastructure/check | `infrastructure.check_one, self.stream_checks, infrastructure.check` |
 | POST /api/job | `app.job` |
 | POST /api/job/cancel | `app.cancel` |
+| POST /api/jobs/stream | `self.stream_records, app.job_updates` |
 | POST /api/journey/reset | `app.ground.reset_journey` |
 | POST /api/mission/app | `app.workspace.delete_app, app.workspace.mission_app` |
 | POST /api/mission/draft | `app.workspace.mission_draft` |
@@ -930,7 +931,7 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#bench | Include temp in session | simulationEnable=temp |
 | /studio?target=native#bench | Inertial sensormpu6050 · 0x681.04 g | signalDevice=imu |
 | /studio?target=native#bench | J2 | orbitModel=J2 |
-| /studio?target=native#bench | Magnetometerlsm303dlhc_mag · 0x1e12.26 µT | signalDevice=mag |
+| /studio?target=native#bench | Magnetometerlsm303dlhc_mag · 0x1e12.37 µT | signalDevice=mag |
 | /studio?target=native#bench | Mean anomaly at epoch in ° | orbitNumber=anomaly |
 | /studio?target=native#bench | Molniya | orbitPreset=molniya |
 | /studio?target=native#bench | One orbitFull period | signalScenario=orbit |
@@ -1026,7 +1027,7 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#code | Include temp in session | simulationEnable=temp |
 | /studio?target=native#code | Inertial sensormpu6050 · 0x681.04 g | signalDevice=imu |
 | /studio?target=native#code | J2 | orbitModel=J2 |
-| /studio?target=native#code | Magnetometerlsm303dlhc_mag · 0x1e12.26 µT | signalDevice=mag |
+| /studio?target=native#code | Magnetometerlsm303dlhc_mag · 0x1e12.37 µT | signalDevice=mag |
 | /studio?target=native#code | Mean anomaly at epoch in ° | orbitNumber=anomaly |
 | /studio?target=native#code | Molniya | orbitPreset=molniya |
 | /studio?target=native#code | One orbitFull period | signalScenario=orbit |
@@ -1154,7 +1155,7 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#ground | Include temp in session | simulationEnable=temp |
 | /studio?target=native#ground | Inertial sensormpu6050 · 0x681.04 g | signalDevice=imu |
 | /studio?target=native#ground | J2 | orbitModel=J2 |
-| /studio?target=native#ground | Magnetometerlsm303dlhc_mag · 0x1e12.26 µT | signalDevice=mag |
+| /studio?target=native#ground | Magnetometerlsm303dlhc_mag · 0x1e12.37 µT | signalDevice=mag |
 | /studio?target=native#ground | Mean anomaly at epoch in ° | orbitNumber=anomaly |
 | /studio?target=native#ground | Molniya | orbitPreset=molniya |
 | /studio?target=native#ground | One orbitFull period | signalScenario=orbit |
@@ -1287,7 +1288,7 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#simulation | Include temp in session | simulationEnable=temp |
 | /studio?target=native#simulation | Inertial sensormpu6050 · 0x681.04 g | signalDevice=imu |
 | /studio?target=native#simulation | J2 | orbitModel=J2 |
-| /studio?target=native#simulation | Magnetometerlsm303dlhc_mag · 0x1e12.35 µT | signalDevice=mag |
+| /studio?target=native#simulation | Magnetometerlsm303dlhc_mag · 0x1e12.37 µT | signalDevice=mag |
 | /studio?target=native#simulation | Mean anomaly at epoch in ° | orbitNumber=anomaly |
 | /studio?target=native#simulation | Molniya | orbitPreset=molniya |
 | /studio?target=native#simulation | One orbitFull period | signalScenario=orbit |

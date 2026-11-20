@@ -16,7 +16,7 @@ from project.flight_sources import module_directories
 
 from ground_station.c_source import (arguments, blank_lexemes, calls, closing, entry_routes,
                                      mid_aliases, mid_regions, mids_at)
-from interface.backend.source_index import SourceIndex, mask_source
+from project.source_index import SourceIndex, mask_source
 
 
 _FILES = {}

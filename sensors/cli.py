@@ -3,7 +3,7 @@ import argparse
 import json
 from pathlib import Path
 
-from interface.backend.workspace import Workspace
+from project.workspace import Workspace
 from sensors.orbit import from_tle
 from sensors.runtime import ROOT
 from sensors.session import FUNCTIONS

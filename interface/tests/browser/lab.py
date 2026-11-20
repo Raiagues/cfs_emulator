@@ -17,7 +17,7 @@ def lab(root, *, completed=False):
     with tempfile.TemporaryDirectory(prefix='flight-browser-') as temp:
         mission_root = Path(temp)
         ignore = shutil.ignore_patterns('__pycache__', '.runtime', '.state', 'build-native', 'build-flight', '.prepare*')
-        for folder in ('cFS', 'mission', 'project', 'hardware', 'journey', 'ground_station', 'sensors', 'config', 'scripts'):
+        for folder in ('cFS', 'mission', 'project', 'hardware', 'jobs', 'journey', 'ground_station', 'sensors', 'config', 'scripts'):
             shutil.copytree(root / folder, mission_root / folder, ignore=ignore, symlinks=True)
         shutil.copy2(root / 'Dockerfile', mission_root)
         prepare_mission(mission_root)

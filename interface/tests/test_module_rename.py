@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from interface.backend.module_rename import ModuleNames, _startup
+from project.module_rename import ModuleNames, _startup
 from project.appgen.native_startup import parse_startup
 from project.cfs_config import module_limits_plan
 
@@ -22,7 +22,7 @@ class ModuleRenameTest(unittest.TestCase):
     def setUp(self):
         # A one-character module exercises collisions with .c and with local
         # variables, while c_aux is a distinct module with a shared prefix.
-        with patch('interface.backend.module_rename.copy_sample', library_template):
+        with patch('project.module_rename.copy_sample', library_template):
             self.names = ModuleNames(Path('.'), 'c', 'camera', None, {'c_aux'})
         self.names.prepare({
             Path('fsw/public_inc/c.h'): 'int C_Init(void);\n',

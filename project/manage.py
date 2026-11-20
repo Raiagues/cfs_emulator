@@ -226,7 +226,7 @@ def parser():
 def run(args):
     root = args.root.resolve()
     if args.action in {"remove-sensor", "remove-command", "remove-telemetry"}:
-        from interface.backend.workspace import Workspace
+        from project.workspace import Workspace
         return Workspace(root).mutate(args.action, {"app": args.app, "name": args.name}), 0
     if args.action == "register-model":
         from project.sensor_models import register

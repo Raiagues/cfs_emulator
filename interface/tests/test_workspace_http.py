@@ -49,7 +49,7 @@ class WorkspaceHTTPTest(unittest.TestCase):
         self.addCleanup(tmp.cleanup)
         self.root = Path(tmp.name)
         ignore = shutil.ignore_patterns(".git", "__pycache__", ".runtime", ".state", "build-native", "build-flight")
-        for directory in ("cFS", "project", "scripts", "sensors", "interface", "hardware", "ground_station", "journey"):
+        for directory in ("cFS", "project", "scripts", "sensors", "interface", "hardware", "ground_station", "journey", "jobs"):
             shutil.copytree(ROOT / directory, self.root / directory, symlinks=True, ignore=ignore)
         shutil.copy2(ROOT / "Dockerfile", self.root / "Dockerfile")
         # Start from a new mission even if the developer has an active mission here.

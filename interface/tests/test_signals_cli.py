@@ -8,7 +8,7 @@ import tempfile
 import sys
 import unittest
 
-from interface.backend.workspace import Workspace
+from project.workspace import Workspace
 from sensors.cli import execute, parser
 from sensors.session import run_session
 

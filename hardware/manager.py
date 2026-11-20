@@ -6,6 +6,7 @@ user's OpenSSH configuration and agent, and sudo never prompts for a password.
 """
 from __future__ import annotations
 
+from contextlib import ExitStack
 import hashlib
 import fcntl
 import json
@@ -57,7 +58,6 @@ class HardwareManager:
         self.runtime.mkdir(parents=True, exist_ok=True)
         self.journey = Store(self.root)
         self._import_boot_receipts()
-        self._lock = threading.Lock()
         self._fingerprint_cache = None
         self._last_probe = self._load("probe.json")
         self._observation_lock = threading.Lock()
@@ -774,9 +774,9 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
             shutil.rmtree(destination)
         destination.mkdir()
         def ignore(directory, names):
-            return [name for name in names if name in (".git", "__pycache__")
+            return [name for name in names if name in (".git", ".runtime", ".state", "__pycache__")
                     or (name.startswith("build") and (Path(directory) / name).is_dir())]
-        for directory in ("cFS", "mission", "project", "scripts", "sensors", "config", "interface/backend"):
+        for directory in ("cFS", "mission", "project", "scripts", "sensors", "config", "journey", "hardware", "ground_station"):
             shutil.copytree(self.root / directory, destination / directory, ignore=ignore, symlinks=True)
         for path in destination.rglob("*"):
             if path.is_symlink() and (Path(os.readlink(path)).is_absolute() or not path.resolve().is_relative_to(destination)):
@@ -940,16 +940,20 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
             return self._logs(target, connection, options.get("kind"), options.get("tail", 100), emit, cancel, options.get("on_invocation"))
         if action in {"simulate", "simulate-preview"}:
             return self._simulate(action, target, options.get("device"), options.get("model"), emit, cancel, options.get("scenario"))
-        if not self._lock.acquire(blocking=False):
-            raise HardwareError("Another build or runtime operation is running.")
-        execution_lock = None
-        try:
-            if action in {"build", "boot", "run", "stop", "shutdown"}:
-                execution_lock = (self.runtime / "execution.lock").open("a")
+        with ExitStack() as locks:
+            # QEMU and Board consume the same ARM build. Only flight transitions
+            # need the checkout-wide guard that enforces a single running instance.
+            names = [f"target-{target}"]
+            if action in {"build", "run"}:
+                names.append("payload-native" if target == "native" else "payload-flight")
+            if action in {"boot", "run", "stop", "shutdown"}:
+                names.append("execution")
+            for name in names:
+                resource = locks.enter_context((self.runtime / (name + ".lock")).open("a"))
                 try:
-                    fcntl.flock(execution_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    fcntl.flock(resource, fcntl.LOCK_EX | fcntl.LOCK_NB)
                 except BlockingIOError:
-                    raise HardwareError("Another Flight Studio instance is building or changing runtime state.") from None
+                    raise HardwareError(f"Another operation is using {name}.") from None
             if action == "setup" and target == "physical":
                 return self.prepare_board(connection, emit, cancel)
             if action == "setup":
@@ -967,10 +971,6 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
             if action == "values" and target == "qemu":
                 return self._stream(["bash", "scripts/project.sh", "values"], emit, cancel, timeout=30)
             raise HardwareError("Unsupported hardware action: " + str(action))
-        finally:
-            if execution_lock:
-                execution_lock.close()
-            self._lock.release()
 
     def _logs(self, target, connection, kind, tail, emit, cancel, on_invocation=None):
         """Follow the flight software output, or the Linux boot log when kind is "boot"."""

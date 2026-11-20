@@ -156,7 +156,7 @@ def main(argv=None):
     if args.command == 'profile':
         if bool(args.board) != bool(args.os):
             parser.error('Select both --board and --os, or use --native')
-        from interface.backend.workspace import Workspace
+        from project.workspace import Workspace
         workspace = Workspace(ROOT)
         try:
             from hardware.manager import HardwareManager
@@ -181,7 +181,7 @@ def main(argv=None):
                     if getattr(args, key, None) is not None}
         if args.action not in {'new', 'edit'} and (settings or args.preview):
             parser.error('Configuration options apply to app new/edit or library new')
-        from interface.backend.workspace import Workspace
+        from project.workspace import Workspace
         workspace = Workspace(ROOT)
         try:
             mission = workspace.mission.snapshot()

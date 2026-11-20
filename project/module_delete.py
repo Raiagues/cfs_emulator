@@ -4,8 +4,8 @@ import json
 from pathlib import Path
 import tempfile
 
-from interface.backend.mission_tables import table_membership_plan
-from interface.backend.module_rename import assert_no_module_references
+from project.mission_tables import table_membership_plan
+from project.module_rename import assert_no_module_references
 from project import model
 
 

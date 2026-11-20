@@ -3,9 +3,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from interface.backend.workspace import nasa_module_title
+from project.workspace import nasa_module_title
 from project.manage import command_source_changes
-from interface.backend.architecture_details import Constants, _calls, _command_sources, _read, _ref
+from project.architecture_details import Constants, _calls, _command_sources, _read, _ref
 
 
 class EditorTrailTests(unittest.TestCase):

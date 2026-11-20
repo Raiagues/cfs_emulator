@@ -106,8 +106,8 @@ class MissionConfig:
 
     def dependents(self, name, compiled=None):
         """Find included native CMake/API consumers before removing a module."""
-        from interface.backend.source_index import SourceIndex
-        from interface.backend.library_index import inspect_libraries
+        from project.source_index import SourceIndex
+        from project.library_index import inspect_libraries
         from project.driver_catalog import dependencies
         compiled = set(compiled if compiled is not None else self._evaluate(self._revision())["compiled"])
         index = SourceIndex(self.root)
@@ -244,7 +244,7 @@ class MissionConfig:
             plan = planned_project_files(self.root, config, read_manifests(self.root, config),
                                          excluded=removed, selected=added)
             if kind == "CFE_APP" and action == "remove":
-                from interface.backend.mission_tables import table_membership_plan
+                from project.mission_tables import table_membership_plan
                 plan.update(table_membership_plan(self.root, sources=plan))
             plan.update(self.selection_plan(add=added, remove=removed,
                                            forget=selection["added"] - added | selection["removed"] - removed, sources=plan))
@@ -441,7 +441,7 @@ class MissionConfig:
 
     @contextmanager
     def _write_lock(self):
-        directory = self._path("interface/.runtime")
+        directory = self._path("hardware/.runtime")
         directory.mkdir(parents=True, exist_ok=True)
         with (directory / "mission.lock").open("a") as handle:
             fcntl.flock(handle, fcntl.LOCK_EX)
@@ -473,7 +473,7 @@ class MissionConfig:
         if path.exists() and path.read_text() == content:
             return
         plan = bootstrap_plan(self.root)
-        from interface.backend.mission_tables import table_membership_plan
+        from project.mission_tables import table_membership_plan
         plan.update(table_membership_plan(self.root, sources=plan))
         plan[self.STARTUP] = content
         self.assert_revision(revision)

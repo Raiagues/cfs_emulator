@@ -6,7 +6,7 @@ import json
 import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from threading import Lock
+from threading import Condition
 from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
@@ -122,7 +122,7 @@ class JourneyTest(unittest.TestCase):
         with redirect_stdout(stream), patch("sensors.runtime.time.time", side_effect=[11.5, 12.5]):
             with self.assertRaisesRegex(ValueError, "disconnected"):
                 apply_values(config, qmp, report=True)
-        studio = SimpleNamespace(lock=Lock(), hardware=HardwareManager(self.root))
+        studio = SimpleNamespace(lock=Condition(), hardware=HardwareManager(self.root))
         job = {"target": "qemu", "action": "values", "lines": [], "line_count": 0, "status": "failed"}
         for line in stream.getvalue().splitlines():
             Studio._emit(studio, job, line)

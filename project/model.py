@@ -99,7 +99,7 @@ def planned_project_files(root, config, manifests, excluded=None, selected=None)
     # existing mission, including missions with archived application records.
     install = root / "mission/sample_defs/cpu1/install_custom.cmake"
     if (root / "mission/modules.cmake").is_file() or (install.is_file() and "CFS_CPU1_MODULE_SELECTION" in install.read_text()):
-        from interface.backend.mission_tables import table_membership_plan
+        from project.mission_tables import table_membership_plan
         files.update(table_membership_plan(root, sources=files))
     files.update(plan_drivers(root, libraries))
     for manifest in manifests:

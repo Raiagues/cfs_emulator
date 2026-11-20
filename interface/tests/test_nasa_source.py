@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from interface.backend.workspace import Workspace
+from project.workspace import Workspace
 from project.flight_sources import nasa_module_names, prepare_mission
 from project.nasa_source import OFFICIAL_URL, install, source_status
 
@@ -40,6 +40,13 @@ class NasaSourceTest(unittest.TestCase):
             self.assertFalse(nasa["editable"])
             with self.assertRaisesRegex(ValueError, "not editable"):
                 workspace.write_file(nasa["path"], "changed", nasa["hash"])
+            internal = root / "hardware/manager.py"
+            internal.parent.mkdir(exist_ok=True)
+            internal.write_text("print('studio')\n")
+            info = workspace.read_file("hardware/manager.py")
+            self.assertFalse(info["editable"])
+            with self.assertRaisesRegex(ValueError, "not editable"):
+                workspace.write_file(info["path"], "changed", info["hash"])
             local.write_text("set(MISSION_NAME MyMission)\n")
             prepare_mission(root)
             self.assertIn("MyMission", local.read_text())

@@ -7,7 +7,7 @@ import re
 from project.flight_sources import module_directories
 
 from ground_station.c_source import blank_lexemes
-from interface.backend.source_index import parse_functions
+from project.source_index import parse_functions
 from project import model
 from project.appgen.native_startup import parse_startup
 from project.appgen.sample import copy_sample

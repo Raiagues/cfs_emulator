@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
-from interface.backend.first_boot import CATALOG_ACTIVITY, boot_observed, console_text, observe, parse_boot_line, snapshot
+from journey.first_boot import CATALOG_ACTIVITY, boot_observed, console_text, observe, parse_boot_line, snapshot
 from hardware.manager import HardwareManager
 from hardware import infrastructure
 
@@ -36,7 +36,7 @@ class BootTest(unittest.TestCase):
         self.job["started"] = 100
         lines = ["[ 12%] Building demo", "[ 10%] Building other", "CFE_PSP: startup",
                  "EVS Port1 2000-001 9/2/TEST 4: Initialized", "CFE_ES_Main entering OPERATIONAL state"]
-        with patch("interface.backend.first_boot.time.time", return_value=102):
+        with patch("journey.first_boot.time.time", return_value=102):
             for line in lines[:2]:
                 observe(self.hardware, self.job, line)
             self.job["phase"] = "run"

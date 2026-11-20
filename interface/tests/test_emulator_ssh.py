@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 
 from hardware import emulator_ssh
 from hardware.manager import HardwareManager
-from interface.backend import first_boot
+from journey import first_boot
 
 
 def result(stdout="", error="", code=0):

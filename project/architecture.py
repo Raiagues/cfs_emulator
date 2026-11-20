@@ -8,8 +8,8 @@ from collections import defaultdict, deque
 from pathlib import Path
 import re
 
-from interface.backend.source_index import mask_source
-from interface.backend.architecture_details import describe_application
+from project.source_index import mask_source
+from project.architecture_details import describe_application
 
 
 RECEIVE = {'CFE_SB_ReceiveBuffer', 'CFE_SB_RcvMsg'}

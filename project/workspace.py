@@ -39,7 +39,6 @@ class Workspace:
     """Filesystem operations and cFS metadata, serialized against source mutations."""
 
     HIDDEN = {".git", ".ssh", ".aws", ".agents", ".codex", "__pycache__", "node_modules", ".state", ".runtime", ".prepare.lock"}
-    EDIT_ROOTS = {"mission", "project", "sensors", "ground_station", "hardware", "interface"}
     MAX_TEXT = 2 * 1024 * 1024
     FLIGHT_SOURCES = {
         "mission": "Mission",
@@ -55,8 +54,8 @@ class Workspace:
         sys.dont_write_bytecode = True
         sys.path.insert(0, str(self.root))
         from project import model
-        from interface.backend.source_index import SourceIndex
-        from interface.backend.mission_config import MissionConfig
+        from project.source_index import SourceIndex
+        from project.mission_config import MissionConfig
         self.model = model
         self.source_index = SourceIndex(self.root)
         self.mission = MissionConfig(self.root)
@@ -73,7 +72,7 @@ class Workspace:
     def editable(self, relative):
         parts = Path(relative).parts
         generated = any(part.startswith("build") or part in (".venv", "dist") for part in parts)
-        return bool(parts and parts[0] in self.EDIT_ROOTS and not generated)
+        return bool(parts and parts[0] == "mission" and not generated)
 
     def _read_bytes(self, relative):
         path = self.path(relative)
@@ -98,7 +97,7 @@ class Workspace:
         directory = self.path(path)
         if not directory.is_dir():
             raise ValueError("Expected a directory")
-        from interface.backend.library_index import _changes, _module_change
+        from project.library_index import _changes, _module_change
         repo = directory
         while repo != self.root and not (repo / ".git").exists():
             repo = repo.parent
@@ -174,14 +173,7 @@ class Workspace:
                 raise ValueError("File is not editable")
             if not expected_hash or expected_hash != current["hash"]:
                 raise ValueError("File changed on disk; reopen it before saving")
-            if target.match("project/drivers/models/*/model.json"):
-                from project.sensor_models import validate
-                from project.manage import commit
-                spec = validate(json.loads(content))
-                if spec["name"] != target.parent.name:
-                    raise ValueError("The model ID must match its directory")
-                commit(self.root, {path: content}, validate=lambda: self.model.load_config(self.root))
-            elif current.get('virtual') or path == self.mission.STARTUP:
+            if current.get('virtual') or path == self.mission.STARTUP:
                 from project.cfs_config import bootstrap_plan
                 from project.manage import commit
                 plan = bootstrap_plan(self.root)
@@ -224,8 +216,8 @@ class Workspace:
 
     def snapshot(self):
         from sensors.simulator import simulation_scripts, binding
-        from interface.backend.architecture import summarize_application
-        from interface.backend.library_index import inspect_libraries, hardware_changes
+        from project.architecture import summarize_application
+        from project.library_index import inspect_libraries, hardware_changes
         with self.lock:
             config = self.model.load_config(self.root)
             generator = self.model.appgen(self.root)
@@ -280,12 +272,12 @@ class Workspace:
             return self.mission.change_library(action, name, expected_hash)
 
     def rename_module(self, kind, name, new_name, expected_hash):
-        from interface.backend.module_rename import rename_module
+        from project.module_rename import rename_module
         with self.lock, self.mission.transaction(expected_hash) as revision:
             return rename_module(self, kind, name, new_name, revision)
 
     def delete_app(self, name, expected_hash):
-        from interface.backend.module_delete import delete_app
+        from project.module_delete import delete_app
         with self.lock, self.mission.transaction(expected_hash) as revision:
             return delete_app(self, name, revision)
 

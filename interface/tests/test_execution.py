@@ -12,7 +12,7 @@ from unittest.mock import Mock, patch
 
 from hardware import activate_release
 from hardware.manager import HardwareError, HardwareManager
-from interface.backend.terminal import Shell, Shells
+from jobs.terminal import Shell, Shells
 
 
 ROOT = Path(__file__).resolve().parents[2]
