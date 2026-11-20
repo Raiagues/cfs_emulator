@@ -821,3 +821,14 @@
 .command-line input {font:inherit;color:var(--fs-text);border:1px solid var(--fs-accent);background:var(--fs-bg)}
 .command-line input::placeholder {color:var(--fs-muted)}
 .command-lesson [role=alert] {color:var(--fs-danger);overflow-wrap:anywhere}
+
+.signal-lesson :is(h2,h3) {margin:0;font-size:var(--fs-heading)}
+.signal-tabs a,.signal-tabs span {color:var(--fs-muted);text-decoration:none;padding-block:6px}
+.signal-tabs [aria-current] {color:var(--fs-accent);border-bottom:2px solid var(--fs-accent)}
+.signal-strip>i {border-radius:50%;background:var(--fs-muted)}
+.signal-strip>i.fs-pulse {background:var(--fs-success)}
+.signal-lesson small {color:var(--fs-muted)}
+.signal-lesson [aria-pressed=true] {color:var(--fs-accent);border-color:var(--fs-accent);background:var(--fs-accent-bg)}
+.signal-line polyline,.case-results li svg {fill:none;stroke:var(--fs-success);stroke-width:1.7}
+.case-results .fs-draw path {animation-delay:calc(var(--check)*.14s)}
+.signal-lesson [role=alert] {color:var(--fs-danger)}

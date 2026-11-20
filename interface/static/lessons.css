@@ -58,3 +58,22 @@
 .command-line input {width:38ch;max-width:100%;margin-inline-start:2ch}
 .command-insight {align-self:start;display:grid;gap:12px;padding:16px}
 .command-insight label,.command-insight input[type=range] {display:block;width:100%}
+
+.signal-lesson {display:grid;grid-template-columns:minmax(165px,19%) minmax(0,1fr) minmax(160px,22%);height:100%;min-height:0;gap:16px;padding:16px;overflow:auto}
+.signal-devices,.signal-content,.signal-orbit {min-width:0;min-height:0}
+.signal-devices,.signal-content,.signal-chooser,.case-results,.signal-devices article,.signal-orbit details[open] {display:flex;flex-direction:column;gap:10px}
+.signal-devices article,.signal-chooser,.signal-strip,.case-results,.reading {padding:12px}
+.signal-strip,.signal-tabs,.scenario-choices,.signal-readings,.case-results li {display:flex;align-items:center;gap:10px}
+.signal-strip strong,.signal-strip small {display:block}
+.signal-strip>div {margin-inline-end:auto}
+.signal-strip i {height:9px;width:9px}
+.signal-content .orbit-card {min-height:110px;max-height:26vh}
+.signal-content .orbit-card canvas {max-height:22vh}
+.scenario-choices {flex-wrap:wrap}
+.signal-readings {flex-wrap:wrap;min-height:0;overflow:auto}
+.reading {min-width:120px;flex:1}
+.reading strong {display:block}
+.signal-line {width:100%;height:64px}
+.case-results ul {margin:0;padding:0;display:grid;gap:8px}
+.case-results li svg {width:16px;height:16px}
+.signal-orbit {overflow:auto}

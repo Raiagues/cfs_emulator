@@ -7,6 +7,7 @@ import {openAppWizard} from './app-wizard.js';
 import {mountMissionLesson} from './mission-lesson.js';
 import {mountGroundLesson} from './ground-lesson.js';
 import {mountCommandLesson} from './command-lesson.js';
+import {mountSignalLesson} from './signal-lesson.js';
 import {mountFirstBoot} from './first-boot.js';
 import {refreshJourney} from './journey.js';
 import {drawOrbit,mountOrbit} from './orbit-preview.js';
@@ -184,7 +185,7 @@ async function refreshSimulation(){
  finally{renderSimulationPanel(true);}
 }
 function renderSimulationPanel(force=false){
- const visible=state.view==='simulation',job=simulationJob();
+ const visible=state.view==='simulation' && !state.activity,job=simulationJob();
  document.body.classList.toggle('editing-signals',visible&&state.signalSidebar!==false);
  $('#simulation-toolbar').hidden=!visible||!state.selectedDevice;
  $('#simulation-fields').hidden=!visible||state.signalSidebar===false;
@@ -533,7 +534,8 @@ function showFirstBoot(){
 function leaveBoot(){
  bootCleanup?.();bootCleanup=null;bootTarget=null;
 }
-const activities = {event: mountGroundLesson, app: mountMissionLesson, command: mountCommandLesson, send: mountGroundLesson};
+const activities = {event: mountGroundLesson, app: mountMissionLesson, command: mountCommandLesson,
+ send: mountGroundLesson, sensor: mountSignalLesson, test: mountSignalLesson};
 let activity;
 function guidedView() {
  const mount = activities[state.activity];
@@ -545,7 +547,8 @@ function guidedView() {
   const pane = document.createElement('section');
   pane.className = 'activity-view';
   $('#view').replaceChildren(pane);
-  const controller = mount(pane, {state,startJob,advanceDeployment,openApp:done=>newMissionApp('',done)});
+  const controller = mount(pane, {state,startJob,advanceDeployment,saveSimulation,openApp:done=>newMissionApp('',done),
+    refreshMission:()=>Promise.all([refresh(true),hardwareRefresh(true)])});
   activity = {step:state.activity, target:state.target, ...controller};
  } else activity.update?.();
  $('#visual-heading').hidden=true;
@@ -563,7 +566,7 @@ function renderView(){
  if(!oldBoard&&boardRenderer){boardRenderer.destroy();boardRenderer=null;}
  document.body.dataset.view=state.view;
  document.body.classList.toggle('simulation-mode',state.view==='simulation');
- document.body.classList.toggle('simulation-widgets',state.view==='simulation');
+ document.body.classList.toggle('simulation-widgets',state.view==='simulation' && !state.activity);
  if(state.view!=='boot' && bootCleanup)leaveBoot();
  if(guidedView())return;
  if(state.view==='boot'){showFirstBoot();return;}

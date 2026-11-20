@@ -179,6 +179,10 @@ class Laboratory:
             if record.get('scenario') and str(line).startswith('@scenario '):
                 record['scenario_result'] = json.loads(line[len('@scenario '):])
                 return
+            if record.get('scenario') and str(line).startswith('@check '):
+                check = json.loads(line[len('@check '):])
+                record['checks'] = {**record.get('checks', {}), check['name']: check['passed']}
+                return
             if record['action'] in {'simulate', 'simulate-preview'} and str(line).startswith('@sensor '):
                 try:
                     samples = json.loads(str(line)[8:])

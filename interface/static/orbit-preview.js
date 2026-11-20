@@ -282,7 +282,7 @@ export function mountOrbit(options){
   document.addEventListener('pointerup',()=>{drag=null;});document.addEventListener('pointercancel',()=>{drag=null;});
   document.addEventListener('dblclick',e=>{if(e.target.hasAttribute('data-orbit-globe')){Object.assign(viewport,{lon:18,lat:20,zoom:1});drawOrbit();}});
   window.addEventListener('resize',drawOrbit);
-  setInterval(()=>{if(context.state.view==='simulation'&&!document.hidden)drawOrbit();},200);
+  setInterval(()=>{if(context.state.view==='simulation'&&!document.hidden)drawOrbit();},100);
 }
 function sunNode(epoch){
   const days=Date.parse(epoch)/86400000-10957.5, g=(357.528+.9856003*days)*rad;

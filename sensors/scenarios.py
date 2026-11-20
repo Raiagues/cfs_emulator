@@ -60,7 +60,7 @@ class RegisterBench:
         return status, {o['name']: self.values[i] for i,o in enumerate(self.outputs) if o['name'] in sent}, tolerance
 
 
-def run_scenario(root, device_id, name):
+def run_scenario(root, device_id, name, on_check=None):
     root = Path(root)
     session = load_session(root)
     config = load_config(root)
@@ -109,6 +109,9 @@ def run_scenario(root, device_id, name):
                             'read':{} if status else {k:v/scales[k] for k,v in read.items()}, 'status':status})
     for key, label in labels.items():
         checks[label] &= key in observed
+    if on_check:
+        for label, passed in checks.items():
+            on_check(label, passed)
     return dict(device=device_id, scenario=name, units=units, ranges=ranges, checks=checks, samples=samples)
 
 
@@ -119,7 +122,9 @@ if __name__ == '__main__':
     parser.add_argument('--target', choices=('native', 'qemu', 'physical'))
     args = parser.parse_args()
     try:
-        report = run_scenario(ROOT, args.device, args.scenario)
+        def checked(label, passed):
+            print('@check ' + json.dumps({'name': label, 'passed': passed}), flush=True)
+        report = run_scenario(ROOT, args.device, args.scenario, checked)
         print('@scenario ' + json.dumps(report, allow_nan=False, separators=(',', ':')), flush=True)
         if not all(report['checks'].values()):
             parser.exit(1, 'Some signal checks failed\n')

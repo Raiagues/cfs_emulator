@@ -22,6 +22,11 @@ def update_device(workspace, payload):
     """Save address/bus and regenerate bound readers; user-owned C files are kept."""
     from project.manage import commit
 
+    if isinstance(payload, dict) and payload.get("action") == "link":
+        if set(payload) != {"action", "app", "id", "expected_hash"} or not isinstance(payload["expected_hash"], str):
+            raise ValueError("Choose an app and device from the current mission.")
+        return workspace.mutate("link-hal", {"app": payload["app"], "name": payload["id"], "device": payload["id"]},
+                                payload["expected_hash"])
     if not isinstance(payload, dict) or set(payload) - {"pins"} != {"id", "bus", "address", "expected_hash"}:
         raise ValueError("Sensor settings require id, bus, address and expected_hash")
     device_id = workspace.model.identifier(payload["id"])
