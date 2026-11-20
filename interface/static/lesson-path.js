@@ -34,7 +34,9 @@ export function packetFlight(track, nodes, text, downlink = false) {
     pill.remove();
   };
   const timer = setInterval(() => {
-    if (!track.isConnected || ++step > (path.length-1)*7+2) {clear();return;}
+    if (!track.isConnected) {clear();return;}
+    if (document.hidden) return;
+    if (++step > (path.length-1)*7+2) {clear();return;}
     const segment = Math.min(path.length-2,Math.floor((step-1)/7));
     position(path[segment],path[segment+1],Math.min(1,(step-segment*7)/7));
     if (step % 7 === 0) {

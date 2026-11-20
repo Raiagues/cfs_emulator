@@ -900,9 +900,6 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#app | Target, complete | /#target |
 | /studio?target=native#app | Terminal | toggle-terminal |
 | /studio?target=native#app | Test, complete | /studio?target=native#test |
-| /studio?target=native#architecture | + New | moduleGroup=mission moduleAction=new |
-| /studio?target=native#architecture | 2D | mapMode=2d |
-| /studio?target=native#architecture | 3D | mapMode=3d |
 | /studio?target=native#architecture | App, complete | /studio?target=native#app |
 | /studio?target=native#architecture | Architecture | view=architecture |
 | /studio?target=native#architecture | Board | /?target=physical#board |
@@ -911,67 +908,21 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#architecture | Build this target first | job=run |
 | /studio?target=native#architecture | Code | view=code |
 | /studio?target=native#architecture | Command, complete | /studio?target=native#command |
-| /studio?target=native#architecture | ES | cadNode=service:es archSource=cFS/cfe/modules/es/fsw/src/cfe_es_task.c symbol=Executive |
-| /studio?target=native#architecture | EVS | cadNode=service:evs archSource=cFS/cfe/modules/evs/fsw/src/cfe_evs_task.c symbol=Events |
 | /studio?target=native#architecture | Event, complete | /studio?target=native#event |
-| /studio?target=native#architecture | FS | cadNode=service:fs archSource=cFS/cfe/modules/fs/fsw/src/cfe_fs_api.c symbol=Files |
 | /studio?target=native#architecture | Flight studio | SUMMARY |
 | /studio?target=native#architecture | Ground station | view=ground |
 | /studio?target=native#architecture | Hardware | view=bench |
-| /studio?target=native#architecture | Hide libraries | toggleLibraries= |
-| /studio?target=native#architecture | Linux | cadNode=os view=bench inspect=board |
-| /studio?target=native#architecture | OSAL | cadNode=OSAL archSource=cFS/osal/README.md symbol=OSAL |
-| /studio?target=native#architecture | Open Libraries in 2D | mapSection=library |
-| /studio?target=native#architecture | Open Linux in 2D | mapSection=platform |
-| /studio?target=native#architecture | Open OSAL · PSP in 2D | mapSection=platform |
-| /studio?target=native#architecture | Open This computer in 2D | mapSection=hardware |
-| /studio?target=native#architecture | Open Your apps in 2D | mapSection=mission |
-| /studio?target=native#architecture | Open cFE in 2D | mapSection=core |
-| /studio?target=native#architecture | Open cFS apps in 2D | mapSection=cfs |
-| /studio?target=native#architecture | Orbit | camera=orbit |
-| /studio?target=native#architecture | PSP | cadNode=PSP archSource=cFS/psp/README.md symbol=PSP |
-| /studio?target=native#architecture | Pan | camera=pan |
-| /studio?target=native#architecture | Reset view | camera=fit |
 | /studio?target=native#architecture | Run cFS on this computer | target=native |
 | /studio?target=native#architecture | Run in the QEMU emulator | target=qemu |
 | /studio?target=native#architecture | Run on the physical board | target=physical |
-| /studio?target=native#architecture | SB | cadNode=service:sb archSource=cFS/cfe/modules/sb/fsw/src/cfe_sb_task.c symbol=Software Bus |
 | /studio?target=native#architecture | Send, complete | /studio?target=native#send |
 | /studio?target=native#architecture | Sensor, complete | /studio?target=native#sensor |
 | /studio?target=native#architecture | Start over | flight=reset |
 | /studio?target=native#architecture | Switch to light theme | themeToggle= |
 | /studio?target=native#architecture | Synthetic data | view=simulation |
-| /studio?target=native#architecture | TBL | cadNode=service:tbl archSource=cFS/cfe/modules/tbl/fsw/src/cfe_tbl_task.c symbol=Tables |
-| /studio?target=native#architecture | TIME | cadNode=service:time archSource=cFS/cfe/modules/time/fsw/src/cfe_time_task.c symbol=Time |
 | /studio?target=native#architecture | Target, complete | /#target |
 | /studio?target=native#architecture | Terminal | toggle-terminal |
 | /studio?target=native#architecture | Test, complete | /studio?target=native#test |
-| /studio?target=native#architecture | This computer | cadNode=board view=bench inspect=board |
-| /studio?target=native#architecture | Zoom in | camera=in |
-| /studio?target=native#architecture | Zoom out | camera=out |
-| /studio?target=native#architecture | cf | cadNode=app:cf archApp=cf |
-| /studio?target=native#architecture | ci_lab | cadNode=app:ci_lab archApp=ci_lab |
-| /studio?target=native#architecture | cs | cadNode=app:cs archApp=cs |
-| /studio?target=native#architecture | ds | cadNode=app:ds archApp=ds |
-| /studio?target=native#architecture | fm | cadNode=app:fm archApp=fm |
-| /studio?target=native#architecture | hal_mag | cadNode=app:hal_mag archApp=hal_mag |
-| /studio?target=native#architecture | hal_mpu | cadNode=app:hal_mpu archApp=hal_mpu |
-| /studio?target=native#architecture | hal_sensor | cadNode=library:hal_sensor archLibrary=hal_sensor |
-| /studio?target=native#architecture | hal_temp | cadNode=app:hal_temp archApp=hal_temp |
-| /studio?target=native#architecture | hk | cadNode=app:hk archApp=hk |
-| /studio?target=native#architecture | hs | cadNode=app:hs archApp=hs |
-| /studio?target=native#architecture | lc | cadNode=app:lc archApp=lc |
-| /studio?target=native#architecture | linux_i2c_lib | cadNode=library:linux_i2c_lib archLibrary=linux_i2c_lib |
-| /studio?target=native#architecture | lsm303dlhc_mag_lib | cadNode=library:lsm303dlhc_mag_lib archLibrary=lsm303dlhc_mag_lib |
-| /studio?target=native#architecture | md | cadNode=app:md archApp=md |
-| /studio?target=native#architecture | mpu6050_lib | cadNode=library:mpu6050_lib archLibrary=mpu6050_lib |
-| /studio?target=native#architecture | nav_demo | cadNode=app:nav_demo archApp=nav_demo |
-| /studio?target=native#architecture | sample_app | cadNode=app:sample_app archApp=sample_app |
-| /studio?target=native#architecture | sample_lib | cadNode=library:sample_lib archLibrary=sample_lib |
-| /studio?target=native#architecture | sc | cadNode=app:sc archApp=sc |
-| /studio?target=native#architecture | sch_lab | cadNode=app:sch_lab archApp=sch_lab |
-| /studio?target=native#architecture | tmp105_lib | cadNode=library:tmp105_lib archLibrary=tmp105_lib |
-| /studio?target=native#architecture | to_lab | cadNode=app:to_lab archApp=to_lab |
 | /studio?target=native#bench | App, complete | /studio?target=native#app |
 | /studio?target=native#bench | Architecture | view=architecture |
 | /studio?target=native#bench | Board | /?target=physical#board |
@@ -1003,25 +954,11 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#boot | App, complete | /studio?target=native#app |
 | /studio?target=native#boot | Board | /?target=physical#board |
 | /studio?target=native#boot | Boot, complete | /studio?target=native#boot |
-| /studio?target=native#boot | Build cFS, Waiting | stage=build stageLayer=build state=waiting bootFocus=stage-build |
-| /studio?target=native#boot | Change | /?target=native#target |
-| /studio?target=native#boot | Check target | /?target=native#target |
 | /studio?target=native#boot | Command, complete | /studio?target=native#command |
-| /studio?target=native#boot | Core Flight Executive | layer=cfe bootFocus=cfe current=false lit=false |
 | /studio?target=native#boot | Event, complete | /studio?target=native#event |
-| /studio?target=native#boot | Execution hardware | layer=hw bootFocus=hw current=false lit=false |
 | /studio?target=native#boot | Flight studio | SUMMARY |
-| /studio?target=native#boot | In the terminal | SUMMARY |
-| /studio?target=native#boot | Mission applications | layer=apps bootFocus=apps current=false lit=false |
-| /studio?target=native#boot | Open console | console= bootFocus=console |
-| /studio?target=native#boot | Operating System Abstraction Layer | layer=osal bootFocus=osal current=false lit=false |
-| /studio?target=native#boot | Operating system | layer=os bootFocus=os current=false lit=false |
-| /studio?target=native#boot | Pause view | pause= bootFocus=pause |
-| /studio?target=native#boot | Platform Support Package | layer=psp bootFocus=psp current=false lit=false |
-| /studio?target=native#boot | Replay boot | replay= bootFocus=replay |
 | /studio?target=native#boot | Send, complete | /studio?target=native#send |
 | /studio?target=native#boot | Sensor, complete | /studio?target=native#sensor |
-| /studio?target=native#boot | Start cFS, Waiting | stage=run stageLayer=cfe state=waiting bootFocus=stage-run |
 | /studio?target=native#boot | Start over | flight=reset |
 | /studio?target=native#boot | Switch to light theme | themeToggle= |
 | /studio?target=native#boot | Target, complete | /#target |
@@ -1042,31 +979,21 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#code | Find in file | find-toggle |
 | /studio?target=native#code | Flight studio | SUMMARY |
 | /studio?target=native#code | Ground station | view=ground |
-| /studio?target=native#code | HAL sensor templates | SUMMARY |
 | /studio?target=native#code | Hardware | view=bench |
 | /studio?target=native#code | Hide sidebar | hide-explorer |
-| /studio?target=native#code | Mission | SUMMARY |
-| /studio?target=native#code | NASA cFS | SUMMARY |
 | /studio?target=native#code | New command | codeCommand=hal_mag |
 | /studio?target=native#code | Packet | sourceTab=packet |
 | /studio?target=native#code | Run cFS on this computer | target=native |
 | /studio?target=native#code | Run in the QEMU emulator | target=qemu |
 | /studio?target=native#code | Run on the physical board | target=physical |
 | /studio?target=native#code | Send, complete | /studio?target=native#send |
-| /studio?target=native#code | Sensor drivers | SUMMARY |
 | /studio?target=native#code | Sensor, complete | /studio?target=native#sensor |
 | /studio?target=native#code | Start over | flight=reset |
 | /studio?target=native#code | Switch to light theme | themeToggle= |
-| /studio?target=native#code | Synthetic data | SUMMARY |
 | /studio?target=native#code | Synthetic data | view=simulation |
 | /studio?target=native#code | Target, complete | /#target |
 | /studio?target=native#code | Terminal | toggle-terminal |
 | /studio?target=native#code | Test, complete | /studio?target=native#test |
-| /studio?target=native#code | apps | SUMMARY |
-| /studio?target=native#code | build-native | SUMMARY |
-| /studio?target=native#code | libs | SUMMARY |
-| /studio?target=native#code | mission/cpu1_cfe_es_startup.scr | file=mission/cpu1_cfe_es_startup.scr |
-| /studio?target=native#code | sample_defs | SUMMARY |
 | /studio?target=native#command | App, complete | /studio?target=native#app |
 | /studio?target=native#command | Architecture | view=architecture |
 | /studio?target=native#command | Board | /?target=physical#board |
@@ -1123,17 +1050,24 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#ground | Boot, complete | /studio?target=native#boot |
 | /studio?target=native#ground | Build for this computer | job=build |
 | /studio?target=native#ground | Build this target first | job=run |
+| /studio?target=native#ground | Bus traffic | groundMode=system |
+| /studio?target=native#ground | Catalog details · 1 | SUMMARY |
 | /studio?target=native#ground | Code | view=code |
 | /studio?target=native#ground | Command, complete | /studio?target=native#command |
+| /studio?target=native#ground | Connect | ground=start |
 | /studio?target=native#ground | Event, complete | /studio?target=native#event |
 | /studio?target=native#ground | Flight studio | SUMMARY |
 | /studio?target=native#ground | Ground station | view=ground |
 | /studio?target=native#ground | Hardware | view=bench |
+| /studio?target=native#ground | New command in code | codeCommand=hal_temp |
+| /studio?target=native#ground | Refresh catalog | ground=catalog |
+| /studio?target=native#ground | Round trip | groundMode=trip |
 | /studio?target=native#ground | Run cFS on this computer | target=native |
 | /studio?target=native#ground | Run in the QEMU emulator | target=qemu |
 | /studio?target=native#ground | Run on the physical board | target=physical |
 | /studio?target=native#ground | Send, complete | /studio?target=native#send |
 | /studio?target=native#ground | Sensor, complete | /studio?target=native#sensor |
+| /studio?target=native#ground | Show all NASA apps | allGroundApps= |
 | /studio?target=native#ground | Start over | flight=reset |
 | /studio?target=native#ground | Switch to light theme | themeToggle= |
 | /studio?target=native#ground | Synthetic data | view=simulation |
@@ -1177,7 +1111,6 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#sensor | Flight studio | SUMMARY |
 | /studio?target=native#sensor | Ground station | view=ground |
 | /studio?target=native#sensor | Hardware | view=bench |
-| /studio?target=native#sensor | In the terminal | SUMMARY |
 | /studio?target=native#sensor | Run cFS on this computer | target=native |
 | /studio?target=native#sensor | Run in the QEMU emulator | target=qemu |
 | /studio?target=native#sensor | Run on the physical board | target=physical |
@@ -1189,17 +1122,11 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#sensor | Target, complete | /#target |
 | /studio?target=native#sensor | Terminal | toggle-terminal |
 | /studio?target=native#sensor | Test, complete | /studio?target=native#test |
-| /studio?target=native#sensor | nav_demoSET_RATENEW | pick=SET_RATE |
-| /studio?target=native#sensor | to_labENABLE_OUTPUT | pick=ENABLE_OUTPUT |
 | /studio?target=native#simulation | 1× | orbitRate=1 |
 | /studio?target=native#simulation | 600× | orbitRate=600 |
 | /studio?target=native#simulation | 60× | orbitRate=60 |
-| /studio?target=native#simulation | All channels | seriesChannel= seriesId=imu\|g |
-| /studio?target=native#simulation | All channels | seriesChannel= seriesId=mag\|µT |
-| /studio?target=native#simulation | Apogee altitude in km | orbitNumber=apogee |
 | /studio?target=native#simulation | App, complete | /studio?target=native#app |
 | /studio?target=native#simulation | Architecture | view=architecture |
-| /studio?target=native#simulation | Argument of perigee in ° | orbitNumber=argument |
 | /studio?target=native#simulation | Board | /?target=physical#board |
 | /studio?target=native#simulation | Boot, complete | /studio?target=native#boot |
 | /studio?target=native#simulation | Build for this computer | job=build |
@@ -1207,36 +1134,19 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#simulation | Close settings | signalSidebar= |
 | /studio?target=native#simulation | Code | view=code |
 | /studio?target=native#simulation | Command, complete | /studio?target=native#command |
-| /studio?target=native#simulation | Elements | orbitSource=elements |
 | /studio?target=native#simulation | Event, complete | /studio?target=native#event |
 | /studio?target=native#simulation | Flight studio | SUMMARY |
 | /studio?target=native#simulation | Ground station | view=ground |
 | /studio?target=native#simulation | Hardware | signalHardware= |
 | /studio?target=native#simulation | Hardware | view=bench |
-| /studio?target=native#simulation | ISS-like | orbitPreset=iss |
-| /studio?target=native#simulation | Inclination in ° | orbitNumber=inclination |
-| /studio?target=native#simulation | Include imu in session | simulationEnable=imu |
-| /studio?target=native#simulation | Include mag in session | simulationEnable=mag |
-| /studio?target=native#simulation | Include temp in session | simulationEnable=temp |
-| /studio?target=native#simulation | Inertial sensormpu6050 · 0x681.04 g | signalDevice=imu |
-| /studio?target=native#simulation | J2 | orbitModel=J2 |
-| /studio?target=native#simulation | Magnetometerlsm303dlhc_mag · 0x1e12.36 µT | signalDevice=mag |
-| /studio?target=native#simulation | Mean anomaly at epoch in ° | orbitNumber=anomaly |
-| /studio?target=native#simulation | Molniya | orbitPreset=molniya |
-| /studio?target=native#simulation | Next charts | signalPage=1 |
-| /studio?target=native#simulation | OrbitSSO 550 · 97.6° · 96 min | signalOrbit= |
+| /studio?target=native#simulation | Orbit | signalOrbit= |
 | /studio?target=native#simulation | Pause orbit preview | orbitPlay= |
-| /studio?target=native#simulation | Perigee altitude in km | orbitNumber=perigee |
-| /studio?target=native#simulation | Previous charts | signalPage=-1 |
 | /studio?target=native#simulation | Python | signalView=python |
 | /studio?target=native#simulation | QEMU | signalView=qemu |
-| /studio?target=native#simulation | RAAN in ° | orbitNumber=node |
 | /studio?target=native#simulation | Run cFS | signalBegin= |
 | /studio?target=native#simulation | Run cFS on this computer | target=native |
 | /studio?target=native#simulation | Run in the QEMU emulator | target=qemu |
 | /studio?target=native#simulation | Run on the physical board | target=physical |
-| /studio?target=native#simulation | SSO 550 | orbitPreset=sso |
-| /studio?target=native#simulation | Save settings | simulationSave= |
 | /studio?target=native#simulation | Send, complete | /studio?target=native#send |
 | /studio?target=native#simulation | Sensor, complete | /studio?target=native#sensor |
 | /studio?target=native#simulation | Signal settings | signalSidebar= |
@@ -1244,26 +1154,10 @@ Template parameters are shown as `{…}`. Endpoint lists include conditional cal
 | /studio?target=native#simulation | Start over | flight=reset |
 | /studio?target=native#simulation | Switch to light theme | themeToggle= |
 | /studio?target=native#simulation | Synthetic data | view=simulation |
-| /studio?target=native#simulation | TLE | orbitSource=tle |
 | /studio?target=native#simulation | Target, complete | /#target |
-| /studio?target=native#simulation | Temperaturetmp105 · 0x48— | signalDevice=temp |
 | /studio?target=native#simulation | Terminal | toggle-terminal |
 | /studio?target=native#simulation | Test | signalView=test |
 | /studio?target=native#simulation | Test, complete | /studio?target=native#test |
-| /studio?target=native#simulation | Two-body | orbitModel=Two-body |
-| /studio?target=native#simulation | accel-x | seriesChannel=accel-x seriesId=imu\|g |
-| /studio?target=native#simulation | accel-y | seriesChannel=accel-y seriesId=imu\|g |
-| /studio?target=native#simulation | accel-z | seriesChannel=accel-z seriesId=imu\|g |
-| /studio?target=native#simulation | interval | INPUT |
-| /studio?target=native#simulation | mag-x | seriesChannel=mag-x seriesId=mag\|µT |
-| /studio?target=native#simulation | mag-y | seriesChannel=mag-y seriesId=mag\|µT |
-| /studio?target=native#simulation | mag-z | seriesChannel=mag-z seriesId=mag\|µT |
-| /studio?target=native#simulation | orbit-anomaly | orbitElement=anomaly |
-| /studio?target=native#simulation | orbit-apogee | orbitElement=apogee |
-| /studio?target=native#simulation | orbit-argument | orbitElement=argument |
-| /studio?target=native#simulation | orbit-inclination | orbitElement=inclination |
-| /studio?target=native#simulation | orbit-node | orbitElement=node |
-| /studio?target=native#simulation | orbit-perigee | orbitElement=perigee |
 | /studio?target=native#test | App, complete | /studio?target=native#app |
 | /studio?target=native#test | Architecture | view=architecture |
 | /studio?target=native#test | Board | /?target=physical#board |
