@@ -49,7 +49,7 @@ export function renderArchitecture(state,{esc}){
   actions='';
  }else{
   detail=library?libraryDiagram(state,library,esc):sensorsForApp(state,app,esc)+renderAppDiagram(state,app,{esc});
-  actions=`${app?.managed?`<button data-mission-configure="${esc(app.name)}">Configure app</button>`:''}<button data-arch-follow aria-pressed="${!!state.archFollowSource}">${icon('code')}${state.archFollowSource?'Hide source':'Show source'}</button><button data-arch-clear title="Close detail" aria-label="Close detail">${icon('close')}</button>`;
+  actions=`${app?.managed?`<button data-mission-configure="${esc(app.name)}">Configure app</button>`:''}<button data-arch-follow>${icon('code')}Show source</button><button data-arch-clear title="Close detail" aria-label="Close detail">${icon('close')}</button>`;
  }
  const panel=`<section class="architecture-pane architecture-detail"><header><span>${icon(library?'files':'code')}${esc(selected)}</span><div>${actions}</div></header><div class="architecture-pane-content">${detail}</div></section>`;
  const overview=!!state.archOverview&&!draft;

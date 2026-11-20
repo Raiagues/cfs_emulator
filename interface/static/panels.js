@@ -7,7 +7,7 @@ const context=helpers=>({icon:fallbackIcon,...helpers});
 function stationCatalog(state) {
   const catalog = state.catalog || {}, app = state.groundApp || '';
   const allowed = new Set(['to_lab','sample_app',...state.workspace.project.apps.map(item=>item.name)]);
-  const all = state.allGroundApps || stationState(state).first_flight?.event;
+  const all = Boolean(state.allGroundApps);
   const commands = (catalog.commands || []).filter(command => {
     if (app) return command.app === app;
     if (all || command.id === state.groundSelection) return true;
@@ -127,7 +127,7 @@ export function renderGround(state,helpers){
   ${!firstContact || state.groundQuery ? `<label class="ground-search">${icon('search')}<input id="gs-search" type="search" aria-label="Search commands" placeholder="Search commands" value="${esc(state.groundQuery||'')}"></label>`:''}
   ${!firstContact || state.groundApp ? `<label class="ground-app-filter"><select id="ground-app" aria-label="Application"><option value="">Applications</option>${catalog.appNames.map(app=>`<option ${state.groundApp===app?'selected':''}>${esc(app)}</option>`).join('')}</select></label>` : ''}
   <nav class="gs-definition-list" aria-label="Commands">${selected?commandTree(visible,selected,state.groundQuery,managed,esc,firstContact):''}
-  ${!ground.first_flight?.event?`<button class="ground-new-command" data-all-ground-apps aria-pressed="${!!state.allGroundApps}">${icon('layers')} All apps</button>`:''}</nav>
+  <button class="ground-new-command" data-all-ground-apps aria-pressed="${!!state.allGroundApps}">${icon('layers')} ${state.allGroundApps?'Hide other NASA apps':'Show all NASA apps'}</button></nav>
   ${managed.size?`<button class="ground-new-command" data-code-command="${esc([...managed].find(app=>app===state.groundApp)||[...managed][0])}">${icon('plus')} New command in code</button>`:''}
   <div class="ground-link"><span data-live="${!!ground.connected}">${ground.connected?'Connected':'Disconnected'}</span><button data-ground="${ground.connected?'stop':'start'}" ${state.groundBusy||state.catalogLoading?'disabled':''}>${ground.connected?'Disconnect':'Connect'}</button></div></aside>
   <main class="flight-command-column">${state.groundError?`<div class="gs-error" role="alert">${esc(state.groundError)}</div>`:''}
@@ -179,6 +179,18 @@ export function renderTelemetry(state, helpers) {
   const {esc, hex, icon} = context(helpers), ground = stationState(state), catalog = stationCatalog(state);
   const error = ground.error && ground.error !== state.groundError ? `<div class="gs-error" role="alert">${esc(ground.error)}</div>` : '';
 
+  const inspected=(ground.commands || []).find(item=>item.event_id===state.inspectedSend);
+  if(inspected) {
+    const receipt=[ground.first_flight?.receipt,ground.authored_reply?.receipt].find(r=>r?.send_id===inspected.event_id);
+    const downlink=ground.first_flight?.downlink_receipt;
+    const reply=(ground.history || []).find(p=>p.event_id===receipt?.reply ||
+      (downlink?.send_id===inspected.event_id && p.mid===downlink.mid && p.sequence===downlink.sequence));
+    const run=(ground.runs||[]).find(r=>r.id===inspected.event_id);
+    const fields=reply?.values||run?.steps?.find(s=>s.observation)?.observation?.values;
+    return `<article class="fs-panel send-inspector"><h2>Flight observation</h2><h3>${esc(inspected.id)}</h3>
+      <p>${esc(receipt?.message||reply?.name||(run?run.status:'Sent'))}</p>${receipt?.increase?`<p>CommandCounter ${receipt.baseline} → ${receipt.count}</p>`:''}
+      ${fields?`<pre>${esc(JSON.stringify(fields,null,2))}</pre>`:''}<code>${esc(inspected.hex)}</code><button data-ground-summary>Back to telemetry</button></article>`;
+  }
   const packets = (ground.packets || []).filter(packet => !state.groundApp || packet.app === state.groundApp);
   const definitions = [...catalog.packets];
   for (const packet of packets) if (!definitions.some(definition => definition.mid === packet.mid)) definitions.push(packet);

@@ -1,29 +1,31 @@
-// Traffic totals are recorded by the UDP sender and decoder in this session.
-const services={SB:'Software Bus',ES:'Executive Services',EVS:'Event Services',TBL:'Table Services',TIME:'Time Services',FS:'File Services'};
+// Traffic comes from the UDP receiver's thirty one-second counters.
+const services={cfe_sb:'Software Bus',cfe_es:'Executive Services',cfe_evs:'Event Services',cfe_tbl:'Table Services',cfe_time:'Time Services',cfe_fs:'File Services'};
 export function stationState(state) {
-  return state.ground?.target === state.target ? state.ground : {};
+  const ground=state.ground;
+  if(ground?.target!==state.target)return {};
+  if(ground.connected)return ground;
+  return {connected:false,target:ground.target,error:ground.error,commands:[],packets:[],events:[],history:[]};
 }
-export function renderCommunication(state,{esc,icon}){
-  const ground=stationState(state);
-  const catalog=state.catalog||{}, mission=state.workspace.mission;
-  const traffic=new Map((ground.communication?.apps||[]).map(row=>[row.app,row]));
-  const apps=[...(mission.included||mission.enabled||[])].sort();
-  const commands=state.systemTraffic==='commands';
-  const unit=commands?'sent':'received', key=commands?'commands_sent':'telemetry_received';
-  function block(app,title=app,desc=''){
-    const total=traffic.get(app)?.[key]||0;
-    return '<button class="comm-app-block '+(app==='cfe_sb'?'comm-bus':'')+'" data-comm-app="'+esc(app)+'" aria-expanded="'+(state.commApp===app)+'" data-live="'+Boolean(total)+'"><strong>'+esc(title)+'</strong><small>'+esc(desc?desc+' · ':'')+total+' '+unit+'</small></button>';
+function spark(bins) {
+  const max=Math.max(1,...bins);
+  const points=bins.map((n,i)=>i+','+(16-15*n/max)).join(' ');
+  return '<svg class="traffic-spark" viewBox="0 0 29 17" preserveAspectRatio="none" aria-hidden="true"><polyline vector-effect="non-scaling-stroke" points="'+points+'"/></svg>';
+}
+export function renderCommunication(state,{esc}) {
+  const ground=stationState(state), commands=state.systemTraffic==='commands';
+  const rows=(ground.communication?.recent || []).filter(r=>r.kind===(commands?'command':'telemetry') && r.app).sort((a,b)=>b.rate-a.rate || a.app.localeCompare(b.app));
+  const mission=state.workspace.mission;
+  const quiet=[...new Set([...(mission.included||mission.enabled||[]),...Object.keys(services)])].filter(app=>!rows.some(r=>r.app===app)).sort();
+  const records=commands?ground.commands||[]:ground.history||[];
+  const defs=(commands?state.catalog?.commands:state.catalog?.packets)||[];
+  function row(r) {
+    const packet=records.findLast(p=>p.app===r.app)||defs.find(p=>p.app===r.app);
+    const action=packet?(commands?'data-open-trip-command="'+esc(packet.id)+'"':'data-system-packet="'+esc(packet.mid)+'"'):'disabled title="Packet details unavailable"';
+    return `<li><button ${action}><span>${esc(services[r.app]||r.app)}</span>${spark(r.bins)}<output>${r.rate.toFixed(2)} pkt/s</output></button></li>`;
   }
-  const selected=state.commApp;
-  const source=commands?ground.commands||[]:ground.history||[];
-  const recent=source.filter(record=>record.app===selected).slice(-12).reverse();
-  const defs=(commands?catalog.commands:catalog.packets)||[];
-  const relevant=defs.filter(d=>d.app===selected);
-  const browser=selected?'<article class="system-detail"><header><strong>'+esc(selected)+'</strong><button data-comm-app="'+esc(selected)+'" aria-label="Close application">×</button></header>'+
-    (recent.length?'<ol>'+recent.map(r=>'<li><time>'+new Date((r.received_at||r.sent_at)*1000).toLocaleTimeString()+'</time> '+esc(r.name||r.id)+' · '+r.bytes+' B</li>').join('')+'</ol>':'<p>No session traffic</p>')+
-    '<div class="comm-source-links">'+relevant.map(d=>commands?'<button data-open-trip-command="'+esc(d.id)+'">'+icon('antenna')+esc(d.id)+'</button>':'<button data-system-packet="'+d.mid+'">'+icon('wave')+esc(d.id)+'</button>').join('')+'</div></article>':'';
-  return '<section class="system-traffic"><header class="system-title"><strong>NASA cFS</strong><div role="group" aria-label="Traffic direction">'+
-    ['commands','telemetry'].map(v=>'<button data-system-traffic="'+v+'" aria-pressed="'+((commands?'commands':'telemetry')===v)+'">'+(v==='commands'?'Commands':'Telemetry')+'</button>').join('')+'</div></header>'+
-    '<section class="system-group"><h3>cFS apps</h3><div class="system-nodes">'+apps.map(app=>block(app)).join('')+'</div></section>'+
-    '<section class="system-group"><h3>Core Flight Executive</h3><div class="system-nodes">'+(mission.core_services||[]).map(({name})=>block('cfe_'+name.toLowerCase(),name,services[name]||'')).join('')+'</div></section>'+browser+'</section>';
+  const apps=rows.filter(r=>!services[r.app]),core=rows.filter(r=>services[r.app]);
+  return `<section class="system-traffic"><header class="system-title"><strong>Bus traffic · 30 s</strong><div role="group" aria-label="Traffic direction">
+    ${['commands','telemetry'].map(mode=>`<button data-system-traffic="${mode}" aria-pressed="${(commands?'commands':'telemetry')===mode}">${mode==='commands'?'Commands':'Telemetry'}</button>`).join('')}</div></header>
+    <ul class="traffic-list">${apps.map(row).join('')}</ul>${core.length?`<h3>cFE services</h3><ul class="traffic-list core">${core.map(row).join('')}</ul>`:''}
+    ${quiet.length?`<details><summary>${quiet.length} quiet apps and services</summary>${quiet.map(app=>`<span class="quiet-app">${esc(services[app]||app)}</span>`).join('')}</details>`:''}</section>`;
 }

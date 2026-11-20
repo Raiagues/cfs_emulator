@@ -3,6 +3,7 @@ import { guide } from './coach.js';
 import { escapeHtml as esc, paint } from './dom.js';
 import { highlight, icon } from './ui.js';
 import { refreshJourney } from './journey.js';
+import { stepUrl } from './router.js';
 
 const titles = [
   'Function code',
@@ -70,6 +71,11 @@ export function mountCommandLesson(root, { state, startJob }) {
     if (disposed) return;
     if (!lesson) {
       if (error) paint(root, `<p role="alert">${esc(error)}</p>`);
+      return;
+    }
+    if (lesson.needs_app) {
+      paint(root, `<section class="fs-panel"><a href="${esc(stepUrl('app',location,target))}">Create your first app</a></section>`);
+      guide(root.querySelector('a'));
       return;
     }
     const { stage, steps, path, app } = lesson;

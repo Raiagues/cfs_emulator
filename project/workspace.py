@@ -163,9 +163,12 @@ class Workspace:
         return {'files': results, 'limited': False}
 
     def command_lesson(self, target, app=None):
-        from project.command_lesson import CommandLesson
+        from project.command_lesson import CommandLesson, MissingApp
         with self.lock:
-            return CommandLesson(self, target, app).snapshot()
+            try:
+                return CommandLesson(self, target, app).snapshot()
+            except MissingApp:
+                return {"needs_app": True, "target": target}
 
     def save_command_line(self, target, app, path, content, expected_hash):
         from project.command_lesson import CommandLesson

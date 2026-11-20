@@ -617,3 +617,17 @@ button svg,.visual svg:not(.mission-map-board-drawing),#source-guide svg{stroke:
 #workspace-opening strong {font-weight:500}
 .workspace-loader {width:16px;height:16px;border:2px solid var(--fs-line);border-top-color:var(--fs-accent);border-radius:var(--fs-radius-pill);animation:operation-spin .8s linear infinite}
 @media (prefers-reduced-motion:reduce){.workspace-loader{animation:none}}
+
+.tab-overflow {flex:none;position:relative;min-width:35px}
+.tab-overflow>div {display:grid;position:fixed;z-index:8;max-width:min(440px,80vw);max-height:50vh;overflow:auto}
+.tab-overflow summary {display:grid;place-items:center;height:100%}
+.send-inspector {display:grid;gap:12px;padding:14px;overflow:auto}
+.send-inspector code {overflow-wrap:anywhere}
+
+body .topbar .toolbar-action:is(.build-action,.run-action,.stop-action):not(.fs-coach) {background:transparent;color:var(--fs-text);border-color:var(--fs-line)}
+body .topbar .toolbar-action.fs-coach {color:var(--fs-accent);background:var(--fs-accent-bg);border-color:var(--fs-accent)}
+body .topbar .toolbar-action:disabled {opacity:.4}
+body[data-activity]:not(.no-terminal) .lesson-path {min-height:102px;height:14vh}
+body[data-activity]:not(.no-terminal) .lesson-body {overflow:auto}
+.svg-icon,.gs-empty-list svg {max-width:100%;max-height:100%}
+.gs-empty-list svg {width:16px;height:16px}

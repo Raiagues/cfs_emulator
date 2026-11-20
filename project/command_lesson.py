@@ -15,6 +15,9 @@ from project.manage import commit
 STOPS = ('Code', 'Struct', 'Prototype', 'Dispatch', 'Events', 'Handler', 'Test')
 STUB = 'return CFE_STATUS_NOT_IMPLEMENTED;'
 
+class MissingApp(ValueError):
+    """A previously observed application may have been removed from the mission."""
+
 
 def before_guard(source, addition):
     guard = list(re.finditer(r'^#endif\b', source, re.M))
@@ -38,10 +41,12 @@ class CommandLesson:
                 (
                     ref['app']
                     for ref in reversed(Store(self.root).references(target, 'app'))
-                    if ref['app'] in mine
+                    if ref.get('app') in mine
                 ),
                 None,
             )
+        if app is None:
+            raise MissingApp('Create your mission app first.')
         if app not in mine:
             raise ValueError('Create your mission app first.')
         self.app, self.manifest = model.identifier(app), mine[app]

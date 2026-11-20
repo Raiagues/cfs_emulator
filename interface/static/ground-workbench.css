@@ -283,3 +283,8 @@ body[data-view="ground"] .visual,body[data-view="ground"] #view {min-width:0;min
 .trip-idle-node text{text-anchor:middle;fill:var(--fs-muted);font:var(--fs-small) var(--fs-mono)}
 .trip-journal summary strong{font:500 var(--fs-label) var(--fs-mono);overflow-wrap:anywhere}
 .trip-journal details+details{border-top:1px solid var(--fs-line)}
+
+.traffic-list {display:grid;gap:3px;list-style:none;margin:0;padding:0}
+.traffic-list button {display:grid;width:100%;grid-template-columns:minmax(10ch,1fr) 84px 10ch;align-items:center;gap:12px;text-align:left}
+.traffic-spark {width:84px;height:17px}
+.quiet-app {display:inline-block;margin:3px 6px}

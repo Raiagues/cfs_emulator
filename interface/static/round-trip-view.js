@@ -129,7 +129,7 @@ export function tripPanel(state,command,helpers){
     outputOff(state)?'to_lab output off':
     last?'Ground → ci_lab · MID '+hex(last.mid):'';
   const header='<header class="trip-modes"><div role="group" aria-label="Ground view">'+
-    ['trip','system'].map((mode,i)=>'<button data-ground-mode="'+mode+'" aria-pressed="'+((system?'system':'trip')===mode)+'">'+(i?'System overview':'Round trip')+'</button>').join('')+'</div>'+(system?'':'<span class="trip-legend"><i></i> Command <i></i> Telemetry</span>')+'</header>';
+    ['trip','system'].map((mode,i)=>'<button data-ground-mode="'+mode+'" aria-pressed="'+((system?'system':'trip')===mode)+'">'+(i?'Bus traffic':'Round trip')+'</button>').join('')+'</div>'+(system?'':'<span class="trip-legend"><i></i> Command <i></i> Telemetry</span>')+'</header>';
   if(system)return '<div class="trip-card system">'+header+renderCommunication(state,helpers)+'</div>';
   return '<div class="trip-card">'+header+(command?testSelector(state,command,esc,icon):'')+
     '<div class="trip-canvas">'+routeDiagram(state,command,steps,last,esc,hex,icon)+'</div>'+

@@ -39,6 +39,7 @@ class GroundStation:
         self.receipts = PassedTests(self.root)
         self.trips = RoundTrips()
         self._communication = {}
+        self._traffic_seconds = {}
         self._session_started = None
         self._event_sequence = 0
         self._error = None
@@ -94,6 +95,7 @@ class GroundStation:
                 self._commands.clear()
                 self.trips = RoundTrips()
                 self._communication.clear()
+                self._traffic_seconds.clear()
                 self._session_started = time.time()
                 self._event_sequence = 0
                 self._received = self._malformed = 0
@@ -156,6 +158,12 @@ class GroundStation:
 
     def _record_communication(self, app, kind, size, timestamp):
         """Count observed UDP traffic independently of the bounded message history."""
+        bins = self._traffic_seconds.setdefault((app or '', kind), deque(maxlen=30))
+        second = int(timestamp)
+        if bins and bins[-1][0] == second:
+            bins[-1][1] += 1
+        else:
+            bins.append([second, 1])
         counters = self._communication.setdefault(app or '', {
             'app': app, 'telemetry_received': 0, 'commands_sent': 0,
             'telemetry_bytes': 0, 'command_bytes': 0,
@@ -341,6 +349,13 @@ class GroundStation:
         with self._lock:
             self.trips.expire()
             connected = bool(self._connected())
+            start = int(time.time()) - 29
+            recent = []
+            for (app, kind), bins in self._traffic_seconds.items():
+                activity = dict(bins)
+                series = [activity.get(start + index, 0) for index in range(30)]
+                if connected and sum(series):
+                    recent.append({'app': app, 'kind': kind, 'bins': series, 'rate': sum(series) / len(series)})
             return copy.deepcopy({'connected': connected,
                                   'build_fingerprint': (self._active_catalog or {}).get('build_fingerprint'),
                                   'receiving': connected and self._last_received is not None and time.time() - self._last_received < 10,
@@ -349,7 +364,7 @@ class GroundStation:
                                   'reply_timeout': sensor_timeout(),
                                   'received': self._received, 'malformed': self._malformed,
                                   'last_received': self._last_received,
-                                  'communication': {'since': self._session_started,
+                                  'communication': {'since': self._session_started, 'recent': recent,
                                                     'apps': list(self._communication.values())},
                                   'events': list(self._events), 'packets': list(self._latest.values()), 'history': list(self._history),
                                   'commands': list(self._commands), 'runs': list(self.trips.runs)})

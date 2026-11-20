@@ -2,6 +2,7 @@
 export function editTrip(state, commandId, testId, {api,dialog,esc,icon,refresh}) {
   const catalog=state.catalog, target=state.target;
   const current=state.testPlans.plans.find(p=>p.id===testId);
+  const appCommands=catalog.commands.filter(c=>c.app===catalog.commands.find(selected=>selected.id===commandId)?.app);
   const originalRevision=state.testPlans.revision;
   const defaultEvent=()=>({kind:'event',app:catalog.commands.find(c=>c.id===commandId)?.app.toUpperCase()||'',event_id:null,message:''});
   let steps=current?structuredClone(current.steps):[defaultEvent()];
@@ -19,7 +20,7 @@ export function editTrip(state, commandId, testId, {api,dialog,esc,icon,refresh}
       (step.op==='equals'?input('Expected value','value','text',step.value,'required'):'');
     return '<fieldset data-step-index="'+index+'">'+title+'<div class="test-step-fields">'+fields+'</div></fieldset>';
   }
-  const form='<div class="test-fields"><label>Test name<input name="testName" maxlength="80" required value="'+esc(current?.name||'')+'"></label><label>Timeout (s)<input type="number" min="1" max="300" required name="timeout" value="'+(current?.timeout||15)+'"></label></div><label>Command<select name="command">'+options(catalog.commands,commandId)+'</select></label><div id="test-steps"></div><div class="test-actions"><button type="button" id="append-step">+ Observation</button>'+(current?'<button type="button" id="delete-trip">'+icon('trash')+' Delete test</button>':'')+'</div>';
+  const form='<div class="test-fields"><label>Test name<input name="testName" maxlength="80" required value="'+esc(current?.name||'')+'"></label><label>Timeout (s)<input type="number" min="1" max="300" required name="timeout" value="'+(current?.timeout||15)+'"></label></div><label>Command<select name="command">'+options(appCommands,commandId)+'</select></label><div id="test-steps"></div><div class="test-actions"><button type="button" id="append-step">+ Observation</button>'+(current?'<button type="button" id="delete-trip">'+icon('trash')+' Delete test</button>':'')+'</div>';
   async function save(body){
     const result=await api('ground/tests',{...body,id:current?.id,revision:originalRevision,target});
     state.testPlans=result;

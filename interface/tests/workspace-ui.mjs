@@ -53,7 +53,12 @@ test('Ground opens a mission NOOP and respects explicit selection, packet filter
  const initial=renderTelemetry(state,helpers);
  assert.match(initial,/No telemetry/);assert.doesNotMatch(initial,/SCIENCE_HK/);
  const comm=renderCommunication(state,helpers);
- assert.match(comm,/data-comm-app="sample_app"/);assert.match(comm,/Software Bus/);
+ assert.match(comm,/quiet apps and services/);assert.match(comm,/sample_app/);assert.match(comm,/Software Bus/);
+ const traffic={...state,systemTraffic:'telemetry',ground:{target:state.target,connected:true,
+  communication:{recent:[{app:'science',kind:'telemetry',bins:[0,1,3],rate:0.13}]},
+  history:[{app:'science',mid:2600}]}};
+ assert.match(renderCommunication(traffic,helpers),/data-system-packet="2600"/);
+ assert.match(renderCommunication(traffic,helpers),/0.13 pkt.s/);
  assert.doesNotMatch(comm,/data-module-action|data-create/);
 });
 

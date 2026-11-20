@@ -585,7 +585,7 @@
 @keyframes fs-fade { from { opacity:0 } to { opacity:1 } }
 @keyframes fs-wait { 50% { opacity:.65 } }
 .fs-tick { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2; }
-.fs-tick path { stroke-dasharray:1; stroke-dashoffset:0; ; }
+.fs-tick path { stroke-dasharray:1; stroke-dashoffset:0; }
 @media (prefers-reduced-motion: reduce) { .fs-tick path { stroke-dashoffset:0; } }
 
 :root {
@@ -832,3 +832,8 @@
 .signal-line polyline,.case-results li svg {fill:none;stroke:var(--fs-success);stroke-width:1.7}
 .case-results .fs-draw path {animation-delay:calc(var(--check)*.14s)}
 .signal-lesson [role=alert] {color:var(--fs-danger)}
+
+.traffic-spark polyline {fill:none;stroke:var(--fs-success);stroke-width:1.6}
+.traffic-list.core,.quiet-app {color:var(--fs-muted)}
+
+.tab-overflow>div {border:1px solid var(--fs-line);background:var(--fs-panel);border-radius:var(--fs-radius-card)}

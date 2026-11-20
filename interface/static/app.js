@@ -40,7 +40,7 @@ const hex = n => Number.isInteger(n) ? '0x'+n.toString(16).toUpperCase().padStar
 function paintIcons(root=document){root.querySelectorAll('[data-icon]').forEach(node=>{node.innerHTML=icon(node.dataset.icon);});}
 function fileType(path){const ext=path.split('.').pop();return ({c:'C',h:'H',py:'PY',json:'{}',cmake:'CM',md:'M',sh:'SH',js:'JS',css:'#'})[ext]||'·';}
 let feedbackTimer;
-function feedback(message, error=false) { clearTimeout(feedbackTimer);$('#feedback').textContent=message; $('#feedback').classList.toggle('error',error);if(!error)feedbackTimer=setTimeout(()=>{$('#feedback').textContent='';},5000); }
+function feedback(message, error=false) { clearTimeout(feedbackTimer);$('#feedback').textContent=state.activity&&!error?'':message; $('#feedback').classList.toggle('error',error);if(!error)feedbackTimer=setTimeout(()=>{$('#feedback').textContent='';},5000); }
 function backendState(connected){
  const wasOffline=document.body.classList.contains('backend-offline');
  document.body.classList.toggle('backend-offline',!connected);
@@ -121,13 +121,17 @@ async function openFile(path, line, reveal=true, inspection=null) {
   $('#source-location').hidden=!inspection && file.editable;
   $('#source-location span').textContent=inspection ? inspection.symbol+' · '+path.split('/').at(-1)+':'+line : path;
   $('#source-location small').hidden=file.editable;
-  if(reveal||document.body.classList.contains('code-only'))document.body.classList.remove('no-editor');
+  if(reveal||(state.view==='code' && !state.activity))document.body.classList.remove('no-editor');
  renderTabs(); lineNumbers(); markFiles(); renderView();renderToolbar();
   if(line){const offset=file.content.split('\n').slice(0,line-1).join('\n').length+(line>1?1:0);$('#code').setSelectionRange(offset,offset);$('#code').scrollTop=Math.max(0,(line-4)*parseFloat(getComputedStyle($('#code')).lineHeight));syncScroll();}
  if(reveal && request===fileOpenRequest)await revealFile(path);document.body.classList.remove('mobile-tree');
 }
 function renderTabs() {
- $('#tabs').innerHTML=[...state.files].map(([p,f])=>`<div class="file-tab ${state.path===p?'active':''}"><button data-file="${esc(p)}" title="${esc(p)}"><span class="file-type">${fileType(p)}</span><span class="tab-label">${esc(p.split('/').pop())}</span>${f.content!==f.saved?'<i class="tab-dirty"></i>':''}</button><button data-close-file="${esc(p)}" title="Close file" aria-label="Close ${esc(p.split('/').pop())}">${icon('close')}</button></div>`).join('');
+ const all=[...state.files];
+ const visible=all.slice(-5);
+ if(state.path && !visible.some(([path])=>path===state.path) && state.files.has(state.path))visible[0]=[state.path,state.files.get(state.path)];
+ const overflow=all.filter(([path])=>!visible.some(([v])=>v===path));
+ $('#tabs').innerHTML=visible.map(([p,f])=>`<div class="file-tab ${state.path===p?'active':''}"><button data-file="${esc(p)}" title="${esc(p)}"><span class="file-type">${fileType(p)}</span><span class="tab-label">${esc(p.split('/').pop())}</span>${f.content!==f.saved?'<i class="tab-dirty"></i>':''}</button><button data-close-file="${esc(p)}" title="Close file" aria-label="Close ${esc(p.split('/').pop())}">${icon('close')}</button></div>`).join('')+(overflow.length?`<details class="tab-overflow"><summary aria-label="More open files">+${overflow.length}</summary><div>${overflow.map(([p])=>`<button data-file="${esc(p)}" title="${esc(p)}">${esc(p.split('/').at(-1))}</button>`).join('')}</div></details>`:'');
 }
 async function revealFile(path){
  const request=fileOpenRequest,parts=path.split('/');
@@ -421,7 +425,7 @@ function sensorReadings(device){
   `<p class="sensor-sleep">${target==='qemu'?'Emulator':'Board'} · ID ${esc(hex(job.result.identity))} verified · asleep · start flight reader</p>`).join('');
  if(!names.length)return sleepNotice;
  const value=(job,name)=>{const sample=job?.result.values[name];return sample?esc(sample.value.toFixed(3)+' '+sample.unit):'—';};
- const stamp=job=>job?`<small>${esc(new Date(job.ended*1000).toLocaleTimeString())}</small>`:'';
+ const stamp=job=>job?`<small>${esc(new Date(job.ended*1000).toLocaleTimeString('en-GB',{hour12:false}))}</small>`:'';
  return sleepNotice+`<table class="sensor-comparison"><caption>Last measured samples</caption><thead><tr><th>Output</th><th>Emulator${stamp(readings.qemu)}</th><th title="${esc(readings.physical?.connection?.host||'')}">Board${stamp(readings.physical)}</th></tr></thead><tbody>${names.map(name=>`<tr><th>${esc(name)}</th><td>${value(readings.qemu,name)}</td><td>${value(readings.physical,name)}</td></tr>`).join('')}</tbody></table>`;
 }
 function syncBenchActions(){
@@ -570,7 +574,7 @@ function renderView(){
  if(state.view!=='boot' && bootCleanup)leaveBoot();
  if(guidedView())return;
  if(state.view==='boot'){showFirstBoot();return;}
- const html=({architecture,bench,simulation:()=>renderSimulationBoard(state,{esc}),ground}[state.view])();
+ const html=({architecture,code:()=>'',bench,simulation:()=>renderSimulationBoard(state,{esc}),ground}[state.view])();
  if(oldBoard && html.includes('id="board-stage"')){
   // Keep the canvas connected while hardware status and sensor settings refresh.
   const next=document.createElement('template');next.innerHTML=html;
@@ -584,10 +588,10 @@ function renderView(){
  }else $('#view').innerHTML=html;
  if(state.view==='bench')syncBenchActions();
  $('#visual-heading').hidden=isWorkbench()||state.view==='ground';
- $('#visual-title').innerHTML=isWorkbench()?'':icon({architecture:'layers',ground:'antenna',communication:'link'}[state.view])+({architecture:'Architecture',ground:'Ground Station',communication:'Communication'}[state.view]);
+ $('#visual-title').innerHTML=isWorkbench()?'':icon({architecture:'layers',code:'code',ground:'antenna',communication:'link'}[state.view])+({architecture:'Architecture',code:'Code',ground:'Ground station',communication:'Communication'}[state.view]);
  syncNavigation();
  const guide=$('#source-guide');
- const browsing=document.body.classList.contains('code-only');
+ const browsing=(state.view==='code' && !state.activity);
  const ctx=browsing && commandContext(state);
  guide.hidden=!(ctx && state.commandTask?.app===ctx.app.name && state.commandTask.id===ctx.selected.id);
  if(!guide.hidden)guide.innerHTML=renderSourceGuide(state,esc);
@@ -727,7 +731,7 @@ function create(kind,app,preferredBus) {
  if(kind==='device')body+='<button type="button" data-design-sensor>New I²C model</button>';
  dialog(kind==='sensor'?'Add sensor to '+app:'Add '+labels[kind],body,async values=>{requireSavedMission();const result=await api('mutate',{expected_hash:revision,action:'add-'+kind,payload:{...values,...(app?{app}:{})}});if(kind==='device'){state.selectedDevice=values.id;state.inspected=values.id;}
  await reloadMissionFiles(result.changed,result.deleted);
- if(kind==='app' && document.body.classList.contains('code-only')){
+ if(kind==='app' && (state.view==='code' && !state.activity)){
   const module=state.workspace.apps.find(item=>item.name===values.name && item.managed);
   if(module?.entry)await openFile(module.entry);
  }
@@ -943,7 +947,7 @@ async function openFlightStep(step,entry={}){
  if(step==='app'){
   state.archApp='';state.archLibrary='';state.archOverview=true;state.mapMode=state.workspace.apps.some(app=>app.managed&&!app.example)?'3d':'2d';state.mapSection='mission';
  }
- if(step==='code')state.commandTask=null;
+ if(step==='code'){state.commandTask=null;return selectView('code',entry.file,entry.line,entry.inspection||null);}
  if(step==='sensor'||step==='test'||step==='simulation')state.signalView=step==='test'?'test':entry.signalTab||'signals';
  return selectView(workspaceRoute(step).view,undefined,undefined,null,step);
 }
@@ -973,15 +977,14 @@ async function selectView(view,sourceFile,sourceLine,inspection=null,route=view)
  if(view==='communication'){view='ground';route='ground';state.groundMode='system';}
  if(view!=='ground' && state.view==='ground' && state.ground?.first_flight?.answer)state.coachDismissed=true;
  if(view!==state.view && state.groundError){state.groundError='';feedback('');}
- const codeOnly=view==='code',next=codeOnly?'architecture':view,previous=state.view;
+ const codeOnly=view==='code',next=view,previous=state.view;
  state.activity=activities[route] ? route : null;
  if(state.activity)document.body.dataset.activity=route;else delete document.body.dataset.activity;
  document.body.classList.toggle('code-only',codeOnly && !state.activity);state.view=next;state.inspected=null;
- state.archFollowSource=false;
  document.body.classList.toggle('no-editor',!codeOnly || !!state.activity);
  document.body.classList.toggle('no-tree',!codeOnly || !!state.activity);
  if(next==='simulation' && state.signalSidebar==null)state.signalSidebar=window.innerWidth>760;
- recordRoute(route);
+ recordRoute(route,codeOnly && sourceFile ? {file:sourceFile,line:sourceLine,inspection} : {});
  if(!state.activity && next==='ground' && !state.commandLaunch && state.catalogTarget!==state.target)state.catalogLoading=true;
  renderToolbar();renderView();
  document.body.classList.remove('workspace-loading');
@@ -1044,7 +1047,7 @@ $('#source-inspector-dialog').addEventListener('click',e=>{
 });
 function inspectCursorCommand() {
  const editor=$('#code'),file=state.files.get(state.path);
- if(!document.body.classList.contains('code-only') || !file || file.content!==file.saved || editor.selectionStart!==editor.selectionEnd)return;
+ if(!(state.view==='code' && !state.activity) || !file || file.content!==file.saved || editor.selectionStart!==editor.selectionEnd)return;
  const line=editor.value.slice(0,editor.selectionStart).split('\n').length;
  if(!state.commandTask || !syncCommandToFile(state,line))return;
  state.activeLine=line;state.jumpLine=true;
@@ -1084,7 +1087,7 @@ async function prepareMissionDraft(kind,name,mode='create',revision=state.worksp
   requireSavedMission();
   state.missionDraft=await api('mission/draft',{kind,name,mode,expected_hash:revision});state.archOverview=false;
   state.archLibrary='';state.archApp='';
-  document.body.classList.add('no-editor');state.archFollowSource=false;
+  document.body.classList.add('no-editor');
  }catch(error){if(!$('#dialog').open)state.missionError=error.message;throw error;}
  finally{state.missionBusy=null;renderView();$('.architecture-scroll')?.scrollTo(0,0);}
 }
@@ -1121,7 +1124,7 @@ async function saveMissionDraft(){
   await reloadMissionFiles(result.changed,result.deleted);
   if(result.app)state.archApp=result.app.name;
   if(result.library)state.archLibrary=result.library.name;
-  document.body.classList.add('no-editor');state.archFollowSource=false;
+  document.body.classList.add('no-editor');
   feedback(payload.name+' saved · rebuild required');
  }catch(error){state.missionError=error.message;feedback(error.message,true);}
  finally{state.missionBusy=null;renderTabs();renderView();}
@@ -1194,14 +1197,14 @@ async function selectTarget(target){
  if(!state.simulationDirty)await refreshSimulation();
  renderToolbar();selectTargetTerminal();await hardwareRefresh();renderView();if(state.view==='ground')await groundRefresh();
 }
-$('#toggle-editor').onclick=()=>{document.body.classList.toggle('no-editor');renderView();};
+$('#toggle-editor').onclick=guarded(()=>selectView(state.view==='code'?'architecture':'code',state.path));
 $('#close-dialog').onclick=$('#cancel-dialog').onclick=()=>$('#dialog').close();
 window.addEventListener('beforeunload',e=>{if([...state.files.values()].some(f=>f.content!==f.saved)){e.preventDefault();e.returnValue='';}});
 document.addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey){if(e.key==='s'){e.preventDefault();guarded(save)();}if(e.key==='f'&&document.activeElement===$('#code')){e.preventDefault();openFind();}}});
 function openFind(){$('#find-bar').classList.remove('hidden');$('#find-query').focus();}
 function findNext(){const query=$('#find-query').value;if(!query)return;const editor=$('#code');let at=editor.value.indexOf(query,editor.selectionEnd);if(at<0)at=editor.value.indexOf(query);if(at>=0){editor.focus();editor.setSelectionRange(at,at+query.length);editor.scrollTop=Math.max(0,(editor.value.slice(0,at).split('\n').length-4)*24);syncScroll();}}
 $('#find-toggle').onclick=openFind;$('#find-close').onclick=()=>$('#find-bar').classList.add('hidden');$('#find-next').onclick=findNext;$('#find-query').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();findNext();}if(e.key==='Escape')$('#find-bar').classList.add('hidden');};
-$('#editor-expand').onclick=()=>{document.body.classList.toggle('code-only');document.body.classList.remove('no-editor');renderView();};
+$('#editor-expand').onclick=guarded(()=>selectView(state.view==='code'?'architecture':'code',state.path));
 paintIcons();
 document.addEventListener('keydown',event=>{
  if(event.target.matches('.stack-pick')&&['Enter',' '].includes(event.key)){
@@ -1222,26 +1225,15 @@ document.addEventListener('click',guarded(async e=>{
  const b=e.target.closest('button,.stack-pick[role=button]');if(!b||b.disabled)return;
  const d=b.dataset;
  if('archFollow' in d){
-  state.archFollowSource=!state.archFollowSource;
-  document.body.classList.toggle('no-editor',!state.archFollowSource);
-  document.body.classList.toggle('no-tree',!state.archFollowSource);
-  if(state.archFollowSource){
-   const app=state.workspace.apps.find(item=>item.name===state.archApp);
-   const lib=state.workspace.libraries.find(item=>item.name===state.archLibrary);
-   await openFile(app?.entry||lib?.exports?.[0]?.path||state.workspace.mission.source.path,lib?.exports?.[0]?.line||1,true);
-  }
-  renderView();
+  const app=state.workspace.apps.find(item=>item.name===state.archApp);
+  const lib=state.workspace.libraries.find(item=>item.name===state.archLibrary);
+  await selectView('code',app?.entry||lib?.exports?.[0]?.path||state.workspace.mission.source.path,lib?.exports?.[0]?.line||1);
  }
  else if(d.archSource){
-  document.body.classList.remove('no-tree','code-only');
-  state.archFollowSource=true;
-  e.preventDefault();
-  const details=b.closest('details');if(details)details.open=true;
   const source={path:d.archSource,line:Number(d.line)||1,end_line:Number(d.endLine)||Number(d.line)||1,symbol:d.symbol||'Source'};
-  state.archSource=source.path+':'+source.line;
-  await openFile(source.path,source.line,true,source);
+  await selectView('code',source.path,source.line,source);
  }
- else if('chooseBoard' in d){$('#board-select').click();}
+ else if('chooseBoard' in d){boardSelector.open();}
  else if(d.modelDefinition){await selectView('code',d.modelDefinition);}
  else if(d.file){state.inspected=null;$('#dialog').close();await openFile(d.file,Number(d.line)||undefined);}
  else if(d.view){state.commandLaunch=null;if(d.view==='code')state.commandTask=null;if($('#dialog').open)$('#dialog').close();if(!await selectView(d.view))return;if(d.device)state.selectedDevice=d.device;if(d.inspect){state.inspected=d.inspect;renderView();}}
@@ -1251,8 +1243,7 @@ document.addEventListener('click',guarded(async e=>{
    state.archApp=d.archApp||'';state.archLibrary=d.archLibrary||'';
   }
   state.archOverview=d.archTab==='overview';
-  state.archFollowSource=false;state.archSource='';
-  document.body.classList.remove('code-only','mobile-tree');
+  document.body.classList.remove('mobile-tree');
   document.body.classList.add('no-editor','no-tree');renderView();
   $('.architecture-scroll')?.scrollTo(0,0);
  }
@@ -1379,29 +1370,24 @@ document.addEventListener('click',guarded(async e=>{
  else if(d.missionConfigure){await prepareMissionDraft('app',d.missionConfigure,'edit');}
  else if('missionDraftCancel' in d){state.missionDraft=null;state.missionError='';renderView();}
  else if('missionErrorClose' in d){state.missionError='';renderView();}
- else if('expandPanel' in d){document.body.classList.toggle('no-editor');renderView();}
+ else if('expandPanel' in d){await selectView('code',state.path);}
  else if(d.inspectSend){
   const sent=state.ground?.commands.find(item=>item.event_id===Number(d.inspectSend));
-  if(sent){Object.assign(state,{inspectedSend:sent.event_id,groundSelection:sent.id,groundMode:'trip',groundQuery:'',groundApp:''});renderView();}
+  if(sent){Object.assign(state,{inspectedSend:sent.event_id,groundPane:'telemetry',groundSelection:sent.id,groundMode:'trip',groundQuery:'',groundApp:''});renderView();}
  }
  else if(d.groundMode){state.groundMode=d.groundMode;renderView();}
  else if('allGroundApps' in d){state.allGroundApps=!state.allGroundApps;state.groundApp='';renderView();}
- else if('groundSummary' in d){state.groundPacket=null;updateTelemetry();}
+ else if('groundSummary' in d){state.inspectedSend=null;state.groundPacket=null;updateTelemetry();}
  else if(d.groundPane){state.groundPane=d.groundPane;renderView();}
  else if(d.systemTraffic){state.systemTraffic=d.systemTraffic;renderView();}
  else if(d.openTripCommand){state.groundSelection=d.openTripCommand;state.groundMode='trip';state.groundApp='';state.groundQuery='';renderView();}
- else if(d.systemPacket){state.groundApp='';state.groundPacket=Number(d.systemPacket);state.groundPane='telemetry';renderView();}
+ else if(d.systemPacket){state.inspectedSend=null;state.groundApp='';state.groundPacket=Number(d.systemPacket);state.groundPane='telemetry';renderView();}
  else if(d.editTrip){if(!state.testPlans)await groundRefresh();editTrip(state,d.editTrip,d.testId,{api,dialog,esc,icon,refresh:renderView});}
  else if(d.stopTrip){await api('ground/tests/cancel',{id:Number(d.stopTrip),session:state.ground.communication.since,target:state.target});await pollGround();}
- else if(d.commApp){
-  state.commApp=state.commApp===d.commApp?null:d.commApp;
-  renderView();
-  document.querySelector('[data-comm-app="'+CSS.escape(d.commApp)+'"]')?.focus({preventScroll:true});
- }
  else if(d.gsSource){await inspectGroundSource(d.sourceKind,d.gsSource,d.sourceSection);}
  else if(d.gsTab){state.groundTab=d.gsTab;state.groundQuery='';renderView();}
  else if(d.gsActivity){state.groundActivity=d.gsActivity;renderView();}
- else if(d.gsSelect){state.groundSelection=d.gsSelect;state.groundMode='trip';state.groundPane='route';state.groundPacket=null;renderView();}
+ else if(d.gsSelect){state.inspectedSend=null;state.groundSelection=d.gsSelect;state.groundMode='trip';state.groundPane='route';state.groundPacket=null;renderView();}
  else if(d.gsPacket){state.groundPacket=Number(d.gsPacket);updateTelemetry();}
  else if(d.device){state.selectedDevice=d.device;renderView();}
  else if(d.simulationFile){if(await selectView('simulation'))await openFile(d.simulationFile);}
@@ -1494,11 +1480,10 @@ onUpdate(['workspace'], () => workspaceReady && !state.missionBusy && !state.pro
  refresh().catch(error => feedback(error.message,true)));
 
 function syncNavigation(){
- const onlyCode=document.body.classList.contains('code-only');
+ const onlyCode=(state.view==='code' && !state.activity);
  const active={code:onlyCode,bench:!onlyCode&&state.view==='bench',simulation:!onlyCode&&state.view==='simulation',architecture:!onlyCode&&state.view==='architecture',ground:!onlyCode&&state.view==='ground'};
  document.querySelectorAll('.rail-button[data-view]').forEach(button=>{const visible=!!active[button.dataset.view];button.classList.toggle('active',visible);button.setAttribute('aria-pressed',String(visible));});
 }
-new MutationObserver(syncNavigation).observe(document.body,{attributes:true,attributeFilter:['class']});
 function mountSidebar(){
  const setVisible=visible=>{
   document.body.classList.toggle('no-tree',!visible);document.body.classList.toggle('mobile-tree',visible&&window.innerWidth<=760);

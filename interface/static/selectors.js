@@ -29,8 +29,8 @@ export function mountSelector(id, onChange, esc) {
   if(event.key==='Tab')close();
  });
  document.addEventListener('click',event=>{if(!trigger.parentElement.contains(event.target))close();});
- return {update(next,selected,disabled){
-  trigger.disabled=disabled;
+ return {open,update(next,selected,disabled){
+  trigger.disabled=disabled || (next.length===1 && next[0].value===selected);
   if(disabled)close();
   if(value===selected&&JSON.stringify(options)===JSON.stringify(next))return;
   options=next;value=selected;
