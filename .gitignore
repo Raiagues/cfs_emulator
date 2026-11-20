@@ -2,6 +2,7 @@ board/
 logs/
 .ssh/
 __pycache__/
+node_modules/
 .venv/
 project/generated/build*.json
 /cFS/

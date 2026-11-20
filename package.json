@@ -1,0 +1,9 @@
+{
+  "name": "flight-studio-browser-tests",
+  "private": true,
+  "devDependencies": {
+    "acorn": "8.15.0",
+    "acorn-walk": "8.3.4",
+    "playwright": "1.65.1"
+  }
+}
