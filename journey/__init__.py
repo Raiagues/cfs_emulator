@@ -54,7 +54,8 @@ def derive(target, events):
 
 class Store:
     def __init__(self, root):
-        self.path = Path(root).resolve() / "hardware/.runtime/journey.sqlite3"
+        from project.defaults import runtime_dir
+        self.path = runtime_dir(root) / "journey.sqlite3"
 
     def observe(self, target, step, ref, at=None):
         if target not in TARGETS or step not in (*STEPS, "reset"):

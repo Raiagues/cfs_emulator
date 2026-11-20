@@ -43,7 +43,7 @@ class BootTest(unittest.TestCase):
             for line in lines[2:]:
                 observe(self.hardware, self.job, line)
                 observe(self.hardware, self.job, line)
-        trace = self.hardware._load("operational-native.json")["boot_trace"]
+        trace = self.hardware.state.read("operational-native.json")["boot_trace"]
         self.assertEqual([event["line"] for event in trace], [lines[0], *lines[2:]])
         self.assertTrue(all(event["ms"] == 2000 for event in trace))
         self.assertEqual(trace[-2]["fact"]["spacecraft"], 9)
@@ -127,7 +127,7 @@ class BootTest(unittest.TestCase):
         # Capture the installed manifest independently of edits to the next mission.
         self.job.update(phase="run", started=1, boot_apps=[{"name": "sample_app", "task": "SAMPLE_APP"}])
         observe(h, self.job, "CFE_ES_Main: CFE_ES_Main entering OPERATIONAL state")
-        h._save("deployed.json", {"native": {"pid": 42, "deployed_at": 1}})
+        h.state.write("deployed.json", {"native": {"pid": 42, "deployed_at": 1}})
         with patch.object(h, "profiles", return_value=[]), patch.object(h, "_local_flight_state", return_value={"pids": [42]}) as processes:
             running = snapshot(studio, "native")
             self.assertEqual(running["apps"], [{"name": "sample_app", "task": "SAMPLE_APP"}])
@@ -148,7 +148,7 @@ class BootTest(unittest.TestCase):
             with self.subTest(target=target):
                 connection = {"host": "flight-board", "port": 22} if target == "physical" else None
                 if connection:
-                    h._save("connection.json", connection)
+                    h.state.write("connection.json", connection)
                 job = dict(self.job, phase="run", started=1, instance=instances[0], connection=connection,
                            boot_apps=[], target=target)
                 observe(h, job, "CFE_ES_Main: CFE_ES_Main entering OPERATIONAL state")
@@ -179,10 +179,10 @@ class BootTest(unittest.TestCase):
         self.addCleanup(studio.close)
         h = studio.hardware
         instance = "a" * 32
-        h._save("target.json", {"target": "qemu"})
-        h._save("operational-qemu.json", {"time": 5, "target": "qemu", "instance": instance, "apps": [],
+        h.state.write("target.json", {"target": "qemu"})
+        h.state.write("operational-qemu.json", {"time": 5, "target": "qemu", "instance": instance, "apps": [],
                   "boot_trace": [], "flight": {"states": ["OPERATIONAL"], "initialized": {}}})
-        h._save("deployed.json", {"qemu": {"deployed_at": 3}})
+        h.state.write("deployed.json", {"qemu": {"deployed_at": 3}})
         confirmed = {"running": True, "service": "active", "pids": [71], "instance": instance}
         received = threading.Event()
         stopped = threading.Event()
@@ -229,8 +229,8 @@ class BootTest(unittest.TestCase):
         studio = Studio(self.hardware.root)
         self.addCleanup(studio.close)
         h = studio.hardware
-        h._save("target.json", {"target": "qemu"})
-        h._save("operational-qemu.json", {"instance": "a" * 32})
+        h.state.write("target.json", {"target": "qemu"})
+        h.state.write("operational-qemu.json", {"instance": "a" * 32})
         current = {"instance": "a" * 32, "service": "active"}
         with patch.object(h, "observed_flight", return_value=current), patch.object(h, "ssh_argv", return_value=["ssh", "guest"]), \
              patch.object(h, "_capture", return_value=(0, "b" * 32)), patch.object(h, "_stream") as open_journal:

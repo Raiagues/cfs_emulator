@@ -14,7 +14,7 @@ import sys
 import threading
 
 from hardware.targets import selected_target
-from project.defaults import sensor_timeout
+from project.defaults import runtime_dir, sensor_timeout
 
 
 def address(root):
@@ -139,7 +139,7 @@ def channel(root, start):
         else:
             yield sock
             return
-    runtime = root / 'hardware/.runtime'
+    runtime = runtime_dir(root)
     runtime.mkdir(exist_ok=True, parents=True)
     with closing(socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)) as sock:
         with (runtime / 'ground-cli.lock').open('a') as lock:

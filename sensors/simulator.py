@@ -169,11 +169,12 @@ def simulate(root, sensor_ids=(), interval=1.0, steps=None, waveforms=None, trac
             raise ValueError("Run native cFS before starting sensor data")
         paths = model_paths(root)
         specs = {d["model"]: load(paths[d["model"]]) for d in devices}
-        live = json.loads((root / "hardware/.runtime/native.json").read_text())
-        if live["instance"] != flight:
+        from hardware.state import RuntimeState
+        live = RuntimeState(root).native_flight()
+        if live.instance != flight:
             raise ValueError("Wait for native cFS to become operational")
         with ExitStack() as resources:
-            pid = resources.enter_context(os.fdopen(os.pidfd_open(live["pid"]), "rb", buffering=0))
+            pid = resources.enter_context(os.fdopen(os.pidfd_open(live.pid), "rb", buffering=0))
             monitor = resources.enter_context(selectors.DefaultSelector())
             monitor.register(pid, selectors.EVENT_READ)
             for device in sorted(devices, key=lambda d: d["id"]):

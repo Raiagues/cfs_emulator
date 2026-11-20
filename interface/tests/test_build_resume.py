@@ -72,6 +72,6 @@ class FirstBootBuildResumeTest(unittest.TestCase):
         for count, state in enumerate(({k: v for k, v in current.items() if k != "installed_sha256"},
                                        dict(current, target="physical")), 2):
             with self.subTest(count=count):
-                self.hardware._save("build-flight.json", state)
+                self.hardware.state.write("build-flight.json", state)
                 self.build(resume=True)
                 self.assertEqual(self.compilations, count)

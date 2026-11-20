@@ -81,7 +81,7 @@ def check(target, apps, expected_invalid, count):
                                     "at": packet["received_at"], "fields": values})
                     previous = packet["sequence"]
                     after = packet["received_at"]
-        return {"target": target, "build": studio.hardware._load("deployed.json")[target]["fingerprint"],
+        return {"target": target, "build": studio.hardware.state.read("deployed.json")[target]["fingerprint"],
                 "observations": records}
     finally:
         studio.ground.stop()

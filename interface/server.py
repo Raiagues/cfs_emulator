@@ -91,7 +91,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.stream_records(app.job_updates(query.get('id'), int(query.get('cursor', 0))))
             routes = {
                 '/api/journey': lambda: app.hardware.journey.snapshot(
-                    (app.hardware._load('target.json', {}).get('journey_origin') if query.get('view') == 'board' else None)
+                    (app.hardware.state.read('target.json', {}).get('journey_origin') if query.get('view') == 'board' else None)
                     or query.get('target') or selected_target(app.hardware.root)),
                 '/api/session': lambda: {'token': app.token},
                 '/api/workspace': lambda: {**app.workspace.snapshot(), 'builds': app.hardware.builds_status()},

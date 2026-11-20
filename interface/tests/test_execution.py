@@ -97,13 +97,13 @@ class ExecutionTest(unittest.TestCase):
             manager = HardwareManager(temporary)
             board_a = {"host": "pi-a.local", "port": 22, "user": "pi"}
             manager._save_active("physical", board_a, "running")
-            manager._save("deployed.json", {"physical": {"connection": board_a}})
+            manager.state.write("deployed.json", {"physical": {"connection": board_a}})
             manager._mark_stopped("physical", {**board_a, "host": "pi-b.local"})
-            self.assertEqual(manager._load("active.json")["phase"], "running")
-            self.assertNotIn("stopped_at", manager._load("deployed.json")["physical"])
+            self.assertEqual(manager.state.read("active.json")["phase"], "running")
+            self.assertNotIn("stopped_at", manager.state.read("deployed.json")["physical"])
             manager._mark_stopped("physical", {**board_a, "host": "PI-A.LOCAL"})
-            self.assertEqual(manager._load("active.json")["phase"], "stopped")
-            self.assertIn("stopped_at", manager._load("deployed.json")["physical"])
+            self.assertEqual(manager.state.read("active.json")["phase"], "stopped")
+            self.assertIn("stopped_at", manager.state.read("deployed.json")["physical"])
 
     def test_recheck_authorization_before_upload_and_reuse_board_probe(self):
         with tempfile.TemporaryDirectory() as temporary:

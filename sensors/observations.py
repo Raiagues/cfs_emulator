@@ -23,11 +23,8 @@ def fields(spec):
 
 
 def instance(root, target):
-    path = Path(root) / f"hardware/.runtime/operational-{target}.json"
-    try:
-        return json.loads(path.read_bytes()).get("instance")
-    except FileNotFoundError:
-        return None
+    from hardware.state import RuntimeState
+    return RuntimeState(root).read(f"operational-{target}.json", {}).get("instance")
 
 
 def remember_write(root, device, flight, expected, tolerance):

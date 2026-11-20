@@ -132,16 +132,16 @@ def observe(hardware, job, line):
         _record(job, line, fact=fact)
     if new_state and fact["state"] == "OPERATIONAL":
         run = job.get("instance") or job["id"]
-        previous = hardware._load("operational-" + job["target"] + ".json", {})
+        previous = hardware.state.read("operational-" + job["target"] + ".json", {})
         at = previous["time"] if previous.get("run_id") == run else time.time()
         reference = {"run": run, "line": line}
         hardware.journey.observe(job["target"], "boot", reference, at)
         if job["target"] == "physical":
             hardware.journey.observe("physical", "board", reference, at)
-            origin = hardware._load("target.json", {}).get("journey_origin")
+            origin = hardware.state.read("target.json", {}).get("journey_origin")
             if origin in ("native", "qemu"):
                 hardware.journey.observe(origin, "board", reference, at)
-        hardware._save("operational-" + job["target"] + ".json",
+        hardware.state.write("operational-" + job["target"] + ".json",
                        {"run_id": run, "time": at, "target": job["target"],
                         "started": job.get("started"), "boot_trace": job["boot_trace"],
                         "connection": job.get("connection"), "instance": job.get("instance"),
@@ -156,8 +156,8 @@ def app_records(startup):
 def boot_observed(hardware, target):
     if target not in {"native", "physical", "qemu"}:
         return False
-    receipt = hardware._load("operational-" + target + ".json", {})
+    receipt = hardware.state.read("operational-" + target + ".json", {})
     return "OPERATIONAL" in receipt.get("flight", {}).get("states", []) and (
-        target != "physical" or hardware.same_board(receipt.get("connection"), hardware._load("connection.json")))
+        target != "physical" or hardware.same_board(receipt.get("connection"), hardware.state.read("connection.json")))
 
 

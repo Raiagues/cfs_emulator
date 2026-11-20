@@ -2,6 +2,7 @@
 import math
 import os
 import platform
+from pathlib import Path
 
 
 def boot_timeout():
@@ -12,8 +13,7 @@ def boot_timeout():
 
 
 def native_devices(root):
-    from pathlib import Path
-    return Path(os.environ.get("FLIGHT_STUDIO_NATIVE_DEVICES", Path(root) / "hardware/.runtime/devices")).resolve()
+    return Path(os.environ.get("FLIGHT_STUDIO_NATIVE_DEVICES", runtime_dir(root) / "devices")).resolve()
 
 
 def sensor_timeout():
@@ -28,3 +28,6 @@ def docker_platform():
     if selected not in {'linux/amd64', 'linux/arm64'}:
         raise ValueError('Choose linux/amd64 or linux/arm64 for FLIGHT_STUDIO_PLATFORM')
     return selected
+
+def runtime_dir(root):
+    return Path(os.environ.get('FLIGHT_STUDIO_RUNTIME', Path(root) / 'hardware/.runtime')).resolve()

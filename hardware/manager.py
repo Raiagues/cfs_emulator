@@ -32,6 +32,7 @@ import time
 from hardware import boot_trace
 from hardware.readiness import StartupError, wait_native
 from hardware.targets import selected_target
+from hardware.state import RuntimeState, Selection
 from project.defaults import boot_timeout
 from journey import Store
 from journey import mission as evidence
@@ -54,19 +55,20 @@ class HardwareError(RuntimeError):
 class HardwareManager:
     def __init__(self, root):
         self.root = Path(root).resolve()
-        self.runtime = self.root / "hardware/.runtime"
+        self.state = RuntimeState(self.root)
+        self.runtime = self.state.directory
         self.runtime.mkdir(parents=True, exist_ok=True)
         self.journey = Store(self.root)
         self._import_boot_receipts()
         self._fingerprint_cache = None
-        self._last_probe = self._load("probe.json")
+        self._last_probe = self.state.read("probe.json")
         self._observation_lock = threading.Lock()
         self._flight_observations = {}
 
     def _import_boot_receipts(self):
         """Older releases retained boot observations with time and invocation, before the event log."""
         for target in ("native", "qemu", "physical"):
-            receipt = self._load("operational-" + target + ".json", {})
+            receipt = self.state.read("operational-" + target + ".json", {})
             stamp, run = receipt.get("time"), receipt.get("run_id")
             if not run or not stamp or "OPERATIONAL" not in receipt.get("flight", {}).get("states", []):
                 continue
@@ -75,29 +77,17 @@ class HardwareManager:
                 if target == "physical":
                     self.journey.observe(target, "board", {"run": run}, stamp)
 
-    def _load(self, name, fallback=None):
-        try:
-            return json.loads((self.runtime / name).read_text())
-        except (OSError, ValueError):
-            return fallback
-
-    def _save(self, name, value):
-        with tempfile.NamedTemporaryFile(mode="w", dir=self.runtime, delete=False) as file:
-            json.dump(value, file, indent=2)
-            temp = Path(file.name)
-        temp.replace(self.runtime / name)
-
     def select_target(self, target, *, board_visit=False):
         if not isinstance(target, str) or target not in {"native", "qemu", "physical"}:
             raise HardwareError("Invalid execution target.")
         saved = {"target": target}
         if board_visit:
             from hardware.infrastructure import checks_verified
-            if target != "physical" or not checks_verified(self, target, self._load("checks-physical.json", {})):
+            if target != "physical" or not checks_verified(self, target, self.state.read("checks-physical.json", {})):
                 raise HardwareError("Check the board connection before using this board.")
-            previous = self._load("target.json", {})
+            previous = self.state.read("target.json", {})
             saved["journey_origin"] = previous.get("journey_origin") or previous.get("target") or target
-        self._save("target.json", saved)
+        self.state.choose(Selection(**saved))
         return {"target": target}
 
     @staticmethod
@@ -110,7 +100,7 @@ class HardwareManager:
         return "build-" + profile + ("-sensorless" if sensorless else "") + ".json"
 
     def build_state(self, target, sensorless=False):
-        return self._load(self.build_state_file(target, sensorless), {})
+        return self.state.read(self.build_state_file(target, sensorless), {})
 
     @staticmethod
     def _capture(argv, timeout=10, input=None):
@@ -234,13 +224,13 @@ class HardwareManager:
                 for alias in shlex.split(match.group(1), comments=True):
                     if not any(char in alias for char in "*?!"):
                         candidates.append({"host": alias, "source": "ssh_config"})
-        saved = self._load("connection.json")
+        saved = self.state.read("connection.json")
         if saved:
             candidates.insert(0, dict(saved, source="saved"))
         return candidates
 
     def connection(self, value=None):
-        value = value or self._load("connection.json", {})
+        value = value or self.state.read("connection.json", {})
         if not isinstance(value, dict):
             raise HardwareError("Enter the board's SSH connection.")
         host = str(value.get("host", "")).strip()
@@ -326,8 +316,8 @@ class HardwareManager:
             self._flight_observations.pop(target, None)
 
     def _physical_status(self):
-        previous = self._load("probe.json", self._last_probe)
-        connection = self._load("connection.json")
+        previous = self.state.read("probe.json", self._last_probe)
+        connection = self.state.read("connection.json")
         if not connection:
             return None
         flight = self.observed_flight("physical", connection)
@@ -356,7 +346,7 @@ class HardwareManager:
 
     def _native_command_port(self, state):
         from ground_station.catalog import CATALOG_VERSION, build_catalog
-        cached = self._load("catalog-native-" + state["fingerprint"] + ".json", {})
+        cached = self.state.read("catalog-native-" + state["fingerprint"] + ".json", {})
         if cached.get("catalog_version") != CATALOG_VERSION:
             cached = build_catalog(self.root, build_dir=state["build_dir"])
         transport = cached.get("transport") or {}
@@ -386,7 +376,7 @@ class HardwareManager:
                                        stderr=subprocess.STDOUT, start_new_session=True)
         instance = secrets.token_hex(16)
         try:
-            self._save("native.json", {"pid": process.pid, "instance": instance, "started_at": started})
+            self.state.write("native.json", {"pid": process.pid, "instance": instance, "started_at": started})
             emit("@cfs-instance " + instance)
             wait_native(process, log, emit, boot_timeout(), cancel)
             return self._deploy_record("native", state, pid=process.pid, instance=instance, deployed_at=started)
@@ -454,18 +444,18 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
         """
         checks = [('this workspace on the local host', self._local_flight_state())]
         target = target or selected_target(self.root)
-        deployed = self._load('deployed.json', {})
+        deployed = self.state.read('deployed.json', {})
         running = self._qemu_running()
         qemu_active = deployed.get('qemu') and not deployed['qemu'].get('stopped_at')
         if running:
             checks.append(('the emulator', self._flight_state('qemu')))
         elif running is None and (target == 'qemu' or qemu_active):
             checks.append(('the emulator', {'running': None}))
-        previous = self._load('active.json', {})
+        previous = self.state.read('active.json', {})
         physical_active = deployed.get('physical') and not deployed['physical'].get('stopped_at')
         candidates = []
         if target == 'physical':
-            candidates.append(connection or self._load('connection.json'))
+            candidates.append(connection or self.state.read('connection.json'))
         if physical_active:
             candidates.append(deployed['physical'].get('connection'))
         if previous.get('target') == 'physical' and previous.get('phase') != 'stopped':
@@ -601,13 +591,13 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
 
     def _switch_target(self, target, connection, emit, cancel=None):
         """Stop cFS on the other targets before booting this one."""
-        previous = self._load("active.json", {})
-        deployed = self._load("deployed.json", {})
+        previous = self.state.read("active.json", {})
+        deployed = self.state.read("deployed.json", {})
         previous_running = previous.get("phase") != "stopped"
         previous_board = previous.get("connection") if previous.get("target") == "physical" else None
         deployed_board = deployed.get("physical", {}).get("connection")
         boards = []
-        for candidate in (self._load("connection.json"), previous_board, deployed_board):
+        for candidate in (self.state.read("connection.json"), previous_board, deployed_board):
             other = target == "qemu" or not self.same_board(candidate, connection)
             if candidate and other and not any(self.same_board(candidate, existing) for existing in boards):
                 boards.append(candidate)
@@ -633,17 +623,16 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
     def _save_active(self, target, connection, phase):
         """Record the target before and after starting it; an interrupted start can leave a live service."""
         active = {"target": target, "connection": connection, "phase": phase, "updated_at": time.time()}
-        self._save("active.json", active)
+        self.state.write("active.json", active)
 
     def _mark_stopped(self, target, connection=None):
         self._invalidate_observation(target)
-        previous = self._load("active.json", {})
+        previous = self.state.read("active.json", {})
         if previous.get("target") == target and (target != "physical" or self.same_board(previous.get("connection"), connection)):
-            self._save("active.json", dict(previous, phase="stopped", updated_at=time.time()))
-        deployed = self._load("deployed.json", {})
-        if target in deployed and (target != "physical" or self.same_board(deployed[target].get("connection"), connection)):
-            deployed[target]["stopped_at"] = time.time()
-            self._save("deployed.json", deployed)
+            self.state.write("active.json", dict(previous, phase="stopped", updated_at=time.time()))
+        with self.state.edit("deployed.json") as deployed:
+            if target in deployed and (target != "physical" or self.same_board(deployed[target].get("connection"), connection)):
+                deployed[target]["stopped_at"] = time.time()
 
     def status(self):
         config = json.loads((self.root / "project/config.json").read_text())
@@ -666,10 +655,10 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
                 service = "inactive"
                 linux_ready = False
         default_target = selected_target(self.root)
-        active = self._load("active.json", {})
-        deployed = self._load("deployed.json", {})
+        active = self.state.read("active.json", {})
+        deployed = self.state.read("deployed.json", {})
         physical_active = deployed.get('physical') and not deployed['physical'].get('stopped_at')
-        physical = self._physical_status() if default_target == 'physical' or physical_active or self._load('connection.json') else None
+        physical = self._physical_status() if default_target == 'physical' or physical_active or self.state.read('connection.json') else None
         local = self._local_flight_state()
         qemu_active = deployed.get("qemu") and not deployed["qemu"].get("stopped_at")
         if flight_running is None and not qemu_active and running is not True:
@@ -705,10 +694,10 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
                 "linux_ready": linux_ready, "can_boot": running is False,
                 "can_retry_boot": running is True and linux_ready is False, "boot_error": boot_error,
                 "ssh_configured": (Path.home() / ".ssh/cfs-emulator/config").is_file()}
-        board = {"connection": self._load("connection.json"), "candidates": self.ssh_candidates(), "last_probe": physical}
+        board = {"connection": self.state.read("connection.json"), "candidates": self.ssh_candidates(), "last_probe": physical}
         return {"board": config["board"], "os": config["os"], "profiles": self.profiles(),
                 "execution": execution, "tools": tools,
-                "native": dict(local, last_operational=self._load("operational-native.json", {}).get("time"), log_path="hardware/.runtime/native.log", os=platform.system(), architecture=platform.machine()),
+                "native": dict(local, last_operational=self.state.read("operational-native.json", {}).get("time"), log_path="hardware/.runtime/native.log", os=platform.system(), architecture=platform.machine()),
                 "docker": {"available": code == 0, "error": docker if code else None},
                 "qemu": qemu, "build": builds.get(default_target), "builds": builds,
                 "physical": board, "deployed": deployed}
@@ -731,12 +720,12 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
             raise HardwareError("The platform supports Raspberry Pi 4B with Raspberry Pi OS ARM64: " + str(result))
         result["connected"] = True
         result["checked_at"] = time.time()
-        self._save("connection.json", self.connection(connection))
+        self.state.write("connection.json", self.connection(connection))
         directory = self.board_directory(result, connection) + "/studio/current/cpu1"
         result["ready"] = result["authorized"] and result["service_installed"] and result["service_directory"] == directory
         result["service_ready"] = result["ready"]
         self._last_probe = result
-        self._save("probe.json", result)
+        self.state.write("probe.json", result)
         self._invalidate_observation("physical")
         emit(f"SSH connected: {result['model']} · {result['arch']} · cFS {result['service']}")
         return result
@@ -761,7 +750,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
         result["setup_required"] = not board["ready"]
         board["admin_setup_command"] = result["setup_command"] if not board["ready"] or not board.get("shutdown_authorized") else None
         self._last_probe = board
-        self._save("probe.json", board)
+        self.state.write("probe.json", board)
         emit(json.dumps(result, ensure_ascii=False))
         return result
 
@@ -818,9 +807,8 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
 
     def _deploy_record(self, target, state, **extra):
         self._invalidate_observation(target)
-        records = self._load("deployed.json", {})
-        records[target] = {**state, "target": target, "deployed_at": time.time(), **extra}
-        self._save("deployed.json", records)
+        with self.state.edit("deployed.json") as records:
+            records[target] = {**state, "target": target, "deployed_at": time.time(), **extra}
         return records[target]
 
     def _run_physical(self, emit, cancel, connection, sensorless, board):
@@ -1087,7 +1075,7 @@ print(json.dumps({'service':state or 'unknown','pids':pids,'running':running,'in
             raise HardwareError("Sources changed during the build; build again.")
         state = {"fingerprint": source, "built_at": time.time(), "sensorless": sensorless, "target": target,
                  "build_dir": self.build_directory(target), "installed_sha256": self._installed_digest(root, target)}
-        self._save(self.build_state_file(target, sensorless), state)
+        self.state.write(self.build_state_file(target, sensorless), state)
         evidence.built(root, state)
         return state
 

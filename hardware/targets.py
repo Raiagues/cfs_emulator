@@ -1,17 +1,9 @@
 """Read the operator's last explicit target selection."""
-import json
-from pathlib import Path
-
-from journey import TARGETS
+from hardware.state import RuntimeState
 
 
 def selected_target(root, *, required=False):
-    try:
-        selected = json.loads((Path(root) / "hardware/.runtime/target.json").read_text())["target"]
-    except FileNotFoundError:
-        if required:
-            raise ValueError("Choose an execution target or pass --target.") from None
-        return None
-    if selected not in TARGETS:
-        raise ValueError("Invalid saved execution target")
-    return selected
+    choice = RuntimeState(root).selection()
+    if choice is None and required:
+        raise ValueError("Choose an execution target or pass --target.")
+    return choice.target if choice else None

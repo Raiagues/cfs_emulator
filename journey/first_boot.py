@@ -13,7 +13,7 @@ def snapshot(studio, target, *, journal=None):
     hardware = studio.hardware
     if target not in {"native", "physical", "qemu"}:
         raise ValueError("Invalid boot target")
-    connection = hardware._load("connection.json") if target == "physical" else None
+    connection = hardware.state.read("connection.json") if target == "physical" else None
     jobs = [j for j in studio.jobs_snapshot(boot_trace=True)
             if j["target"] == target and j["action"] in {"first-boot", "run"}
             and (target != "physical" or hardware.same_board(j.get("connection"), connection))]
@@ -21,9 +21,9 @@ def snapshot(studio, target, *, journal=None):
     config_data = load_config(hardware.root)
     profile = next((p for p in hardware.profiles() if target in p["targets"]
                     and (p["board"], p["os"]) == (config_data.get("board"), config_data.get("os"))), {})
-    receipt = hardware._load("operational-" + target + ".json", {})
+    receipt = hardware.state.read("operational-" + target + ".json", {})
     # A stopped or superseded deployment is still journey history, never a live completion.
-    deployed = hardware._load("deployed.json", {}).get(target, {})
+    deployed = hardware.state.read("deployed.json", {}).get(target, {})
     stopped_at = deployed.get("stopped_at") or 0
     stopped = stopped_at > (job.get("started") or receipt.get("time") or 0)
     matching_receipt = bool(receipt.get("time") and receipt["time"] >= deployed.get("deployed_at", 0)

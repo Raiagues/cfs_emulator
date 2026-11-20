@@ -38,7 +38,7 @@ class Laboratory:
         journal_instance = None
         if action == 'logs' and kind == 'current-flight' and options['target'] != 'native':
             target = options['target']
-            receipt = self.hardware._load('operational-' + target + '.json', {})
+            receipt = self.hardware.state.read('operational-' + target + '.json', {})
             current = self.hardware.observed_flight(target, connection)
             journal_instance = receipt.get('instance')
             if not journal_instance or current.get('instance') != journal_instance or current['service'] != 'active':
@@ -351,7 +351,7 @@ class Laboratory:
         target = state.get('target') or selected_target(self.hardware.root, required=True)
         profile = 'native' if target == 'native' else 'flight'
         filename = 'catalog-' + profile + '-' + fingerprint + ('-sensorless' if sensorless else '') + '.json'
-        cached = self.hardware._load(filename)
+        cached = self.hardware.state.read(filename)
         if cached and cached.get('catalog_version') == CATALOG_VERSION:
             # Board and emulator share ARM layouts. Receipts belong to this deployment.
             return dict(cached, build_target=target)
@@ -368,7 +368,7 @@ class Laboratory:
         catalog['sensorless'] = sensorless
         catalog['build_target'] = target
         if persist:
-            self.hardware._save(filename, catalog)
+            self.hardware.state.write(filename, catalog)
         return catalog
 
     def ground_catalog(self, target=None):
@@ -377,7 +377,7 @@ class Laboratory:
             return {'packets': [], 'commands': [], 'transport': {}, 'errors': []}
         if target not in ('native', 'qemu', 'physical'):
             raise ValueError('Invalid target')
-        deployment = self.hardware._load('deployed.json', {}).get(target)
+        deployment = self.hardware.state.read('deployed.json', {}).get(target)
         active = deployment if deployment and not deployment.get('stopped_at') else None
         sensorless = bool(active and active.get('sensorless'))
         state = active or self.hardware.build_state(target)
@@ -392,7 +392,7 @@ class Laboratory:
         if 'connection' in options and not isinstance(options['connection'], dict):
             raise ValueError('Invalid connection')
         target = (options.get('target') or selected_target(self.hardware.root))
-        deployment = self.hardware._load('deployed.json', {}).get(target)
+        deployment = self.hardware.state.read('deployed.json', {}).get(target)
         if not deployment:
             raise ValueError('Build and run cFS on this target before connecting the ground station.')
         hardware = self.hardware.status()

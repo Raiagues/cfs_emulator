@@ -34,7 +34,7 @@ fi
 MISSION_BUILD="build-$MISSION_PROFILE"
 BUILD_JOBS=4
 if [[ "$MISSION_TARGET" == native ]]; then
-    BUILD_JOBS=$(python3 -c 'import json; from pathlib import Path; p=Path("hardware/.runtime/native-build-settings.json"); print(json.loads(p.read_text())["jobs"] if p.is_file() else 4)')
+    BUILD_JOBS=$(python3 -c 'from hardware.state import RuntimeState; print(RuntimeState(".").build_settings().jobs)')
     [[ "$BUILD_JOBS" =~ ^([1-9]|[1-5][0-9]|6[0-4])$ ]] || { echo "Invalid native build jobs" >&2; exit 1; }
 fi
 # Use cFE's external mission definitions and module search path on both hosts.

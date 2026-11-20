@@ -91,10 +91,10 @@ class SetupChecksTest(unittest.TestCase):
             self.assertTrue(all(row['duration_ms'] >= 0 for row in final['checks']))
 
     def test_target_settings_are_captured_and_failure_is_local(self):
-        self.hardware._save('emulator.json', {'image': 'old:image', 'ssh_port': 24229})
+        self.hardware.state.write('emulator.json', {'image': 'old:image', 'ssh_port': 24229})
         checks = infrastructure.check_progress(self.hardware, 'qemu')
         initial = next(checks)
-        self.hardware._save('emulator.json', {'image': 'new:image', 'ssh_port': 24230})
+        self.hardware.state.write('emulator.json', {'image': 'new:image', 'ssh_port': 24230})
         with patch('hardware.infrastructure.subprocess.run', side_effect=OSError('Docker unavailable')):
             frames = list(checks)
         final = {item['label']: item for item in frames[-1]['checks']}

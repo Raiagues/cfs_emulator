@@ -3,6 +3,8 @@ from project.qemu.generate import fingerprint
 from project.nasa_source import OFFICIAL_URL, source_status
 from hardware.host_tools import package_manager
 from hardware.targets import selected_target
+from hardware.state import BuildSettings, Emulator, RuntimeState
+from dataclasses import asdict
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
@@ -21,7 +23,6 @@ import time
 
 CODE_ROOT = Path(__file__).resolve().parents[1]
 _port_probe_lock = threading.Lock()
-_receipt_lock = threading.Lock()
 
 
 def sources_ready(root):
@@ -33,9 +34,7 @@ def emulator_config(root):
     image = (root / "config/image").read_text().strip()
     if "{fingerprint}" in image:
         image = image.replace("{fingerprint}", fingerprint())
-    defaults = {"ssh_port": 2222, "image": image}
-    path = root / "hardware/.runtime/emulator.json"
-    return validate_emulator({**defaults, **(json.loads(path.read_text()) if path.exists() else {})})
+    return validate_emulator(asdict(RuntimeState(root).emulator(Emulator(image, 2222))))
 
 
 def validate_emulator(value):
@@ -54,7 +53,7 @@ def save_emulator(hardware, value):
     value = validate_emulator(value)
     if emulator_config(hardware.root) != value:
         hardware.require_stopped_emulator_for_configuration()
-        hardware._save("emulator.json", value)
+        hardware.state.write("emulator.json", value)
     return value
 
 
@@ -76,7 +75,7 @@ def snapshot(hardware, verify_source=False):
     config = json.loads((hardware.root / "project/config.json").read_text())
     keys = sorted(str(p.with_suffix("")) for p in (Path.home() / ".ssh").glob("*.pub")
                   if p.with_suffix("").is_file())
-    connection = hardware._load("connection.json")
+    connection = hardware.state.read("connection.json")
     commands = {"install_native": "./scripts/setup-native.sh"}
     if connection:
         connection = hardware.connection(connection)
@@ -90,7 +89,7 @@ def snapshot(hardware, verify_source=False):
             commands["create_key"] = shlex.join(["ssh-keygen", "-t", "ed25519", "-f", str(key), "-C", "flight-studio"])
         destination = (connection["user"] + "@" if connection["user"] else "") + connection["host"]
         commands["authorize_key"] = shlex.join(copy + [destination])
-        probe = hardware._load("probe.json", {})
+        probe = hardware.state.read("probe.json", {})
         if probe.get("admin_setup_command"):
             commands["authorize_service"] = probe["admin_setup_command"]
     source = source_status(hardware.root) if verify_source else _source_inventory(hardware.root)
@@ -98,11 +97,11 @@ def snapshot(hardware, verify_source=False):
     for mode in ("native", "qemu", "physical"):
         plan = list(_check_plan(hardware, mode))
         plans[mode] = [probe.describe() for probe in plan]
-        receipt = hardware._load("checks-" + mode + ".json", {})
+        receipt = hardware.state.read("checks-" + mode + ".json", {})
         if receipt.get("identity") == _identity(hardware, mode, plan):
             results[mode] = receipt.get("checks", {})
     target = selected_target(hardware.root)
-    return {"source": source, "target_saved": target is not None, "check_plan": plans, "check_results": results, "build_jobs": hardware._load("native-build-settings.json", {}).get("jobs", 4), "sources_ready": source["state"] in {"installed", "ready"}, "project": hardware.root.name, "target": target,
+    return {"source": source, "target_saved": target is not None, "check_plan": plans, "check_results": results, "build_jobs": hardware.state.build_settings().jobs, "sources_ready": source["state"] in {"installed", "ready"}, "project": hardware.root.name, "target": target,
             "board": config["board"], "os": config["os"], "profiles": hardware.profiles(),
             "host": {"os": platform.system(), "architecture": platform.machine(),
                      "package_manager": package_manager()},
@@ -115,16 +114,16 @@ def save(hardware, body):
     if target not in ("native", "qemu", "physical"):
         raise ValueError("Select an execution target.")
     emulator = validate_emulator(body.get("emulator")) if target == "qemu" else None
-    jobs = body.get("build_jobs", hardware._load("native-build-settings.json", {}).get("jobs", 4))
+    jobs = body.get("build_jobs", hardware.state.build_settings().jobs)
     if type(jobs) is not int or not 1 <= jobs <= 64:
         raise ValueError("Choose 1 to 64 parallel build jobs.")
     value = body.get("connection", {})
     if not isinstance(value, dict):
         raise ValueError("Invalid SSH connection.")
     connection = hardware.connection(value) if target == "physical" and value.get("host") else None
-    previous = hardware._load("connection.json")
+    previous = hardware.state.read("connection.json")
     if target == "physical" and connection != previous:
-        deployed = hardware._load("deployed.json", {}).get("physical", {})
+        deployed = hardware.state.read("deployed.json", {}).get("physical", {})
         prior_board = deployed.get("connection") or previous
         if deployed and not deployed.get("stopped_at") and not hardware.same_board(connection, prior_board):
             if not prior_board or hardware._flight_state("physical", prior_board)["running"] is not False:
@@ -134,14 +133,14 @@ def save(hardware, body):
         save_emulator(hardware, emulator)
     if target == "physical" and connection != previous:
         if connection:
-            hardware._save("connection.json", connection)
+            hardware.state.write("connection.json", connection)
         else:
-            (hardware.runtime / "connection.json").unlink(missing_ok=True)
-        (hardware.runtime / "probe.json").unlink(missing_ok=True)
+            hardware.state.write("connection.json", None)
+        hardware.state.write("probe.json", None)
         hardware._last_probe = None
         hardware._invalidate_observation("physical")
     if target == "native":
-        hardware._save("native-build-settings.json", {"jobs": jobs})
+        hardware.state.write("native-build-settings.json", asdict(BuildSettings(jobs)))
     return snapshot(hardware)
 
 
@@ -238,7 +237,7 @@ def _check_plan(hardware, target):
                     partial(_version_at_least, (23, 0)))
         yield Probe("Docker Buildx ≥ 0.10", ("docker", "buildx", "version"), partial(_version_at_least, (0, 10)))
     if target == "physical":
-        connection = hardware._load("connection.json", {}) or {}
+        connection = hardware.state.read("connection.json", {}) or {}
         key = connection.get("identity_file")
         if key:
             yield Probe("Board SSH identity", ("ssh-keygen", "-lf", key))
@@ -260,25 +259,24 @@ def _identity(hardware, target, plan=None):
     plan = [probe.describe() for probe in (plan or _check_plan(hardware, target))]
     profile = hardware.root / "project/config.json"
     config = json.loads(profile.read_text()) if profile.is_file() else {}
-    specific = hardware._load("connection.json") if target == "physical" else None
+    specific = hardware.state.read("connection.json") if target == "physical" else None
     data = [target, plan, specific, [config.get("board"), config.get("os")] if target != "native" else None]
     return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
 
 
 def _receipt(hardware, target, identity, row):
-    with _receipt_lock:
-        path = "checks-" + target + ".json"
+    path = "checks-" + target + ".json"
+    with hardware.state.edit(path) as receipt:
         if _identity(hardware, target) != identity:
-            return  # A concurrent settings change superseded this result.
-        receipt = hardware._load(path, {})
+            return
         if receipt.get("identity") != identity:
-            receipt = {"identity": identity, "checks": {}}
+            receipt.clear()
+            receipt.update(identity=identity, checks={})
         receipt["checks"][row["label"]] = row["ready"]
         if selected_target(hardware.root) == target:
             receipt["selected"] = True
-        hardware._save(path, receipt)
-        if row["ready"] and receipt.get("selected") and target_verified(hardware, target):
-            hardware.journey.observe(target, "target", {"checks": identity})
+    if row["ready"] and receipt.get("selected") and target_verified(hardware, target):
+        hardware.journey.observe(target, "target", {"checks": identity})
 
 
 def checks_verified(hardware, target, receipt):
@@ -292,7 +290,7 @@ def checks_verified(hardware, target, receipt):
 def target_verified(hardware, target):
     if target not in ("native", "qemu", "physical") or selected_target(hardware.root) != target:
         return False
-    return checks_verified(hardware, target, hardware._load("checks-" + target + ".json", {}))
+    return checks_verified(hardware, target, hardware.state.read("checks-" + target + ".json", {}))
 
 
 def _run(probe):

@@ -21,7 +21,7 @@ class RoundTripTest(unittest.TestCase):
         from interface.server import Studio, CATALOG_VERSION
         studio = Mock()
         stored = {'build_target': 'qemu', 'catalog_version': CATALOG_VERSION}
-        studio.hardware._load.return_value = stored
+        studio.hardware.state.read.return_value = stored
         state = {'target': 'physical', 'fingerprint': 'a' * 64}
         self.assertEqual(Studio.freeze_catalog(studio, state)['build_target'], 'physical')
         self.assertEqual(stored['build_target'], 'qemu')
