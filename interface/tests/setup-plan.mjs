@@ -1,6 +1,15 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {nextRepair} from '../static/setup-plan.js';
+import {execFileSync} from 'node:child_process';
+import {nextRepair as select} from '../static/setup-plan.js';
+
+function nextRepair(target, rows, group) {
+  const labels = rows.map(row => row.label);
+  const metadata = JSON.parse(execFileSync('python3', ['-c',
+    'import json, sys; from hardware.setup_plan import repair; print(json.dumps({label: repair(sys.argv[1], label) for label in sys.argv[2:]}))',
+    target, ...labels], {encoding: 'utf8'}));
+  return select(rows, metadata, group);
+}
 
 const failure = label => ({label, status:'failed'});
 
@@ -10,7 +19,8 @@ test('setup repairs shared prerequisites before the emulator image and re-evalua
   rows[2].status = rows[3].status = 'passed';
   assert.equal(nextRepair('qemu',rows).action,'clone-cfs');
   rows[1].status = 'passed';
-  assert.deepEqual(nextRepair('qemu',rows),{action:'emulator-image',group:'Image',label:'Emulator image'});
+  const {action, group, label} = nextRepair('qemu', rows);
+  assert.deepEqual({action, group, label}, {action:'emulator-image',group:'Image',label:'Emulator image'});
   rows[0].status = 'passed';
   assert.equal(nextRepair('qemu',rows),null);
 });

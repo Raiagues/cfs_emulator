@@ -19,7 +19,7 @@
     <div class="header-actions"><span id="save-state" role="status"></span><button type="button" data-theme-toggle aria-label="Switch theme"></button></div>
   </header>
   <nav id="flight-guide" aria-label="First flight"></nav>
-  <main><form id="infrastructure-form">
+  <main><form id="infrastructure-form" novalidate>
     <h1>Choose target</h1>
     <div id="targets" role="group" aria-label="Execution target">
         <button type="button" class="target-option" data-target="native" aria-pressed="false" disabled>
@@ -44,15 +44,16 @@
       </div>
     </section>
     <footer class="setup-footer" hidden>
-      <button type="button" id="install" class="primary" disabled>Install requirements</button>
+      <button type="button" id="verify-target" hidden>Check target</button>
       <button type="submit" class="primary" id="enter" hidden disabled>Continue · first boot</button>
       <button type="button" id="inspect" class="quiet" disabled>Details</button>
     </footer>
+    <details class="terminal-twin"><summary>In the terminal</summary><pre id="target-cli"></pre></details>
     <p id="feedback" role="status" aria-live="polite"></p>
   </form></main>
   <dialog id="settings-sheet" aria-labelledby="settings-title">
     <header><h2 id="settings-title">Target settings</h2><button type="button" class="close-dialog" aria-label="Close settings">×</button></header>
-    <form id="target-settings-form">
+    <form id="target-settings-form" novalidate>
       <div id="advanced"></div>
       <output id="settings-error" role="alert"></output>
       <footer><button id="settings-cancel" type="button">Cancel</button><button type="submit" class="primary">Save settings</button></footer>
@@ -62,6 +63,7 @@
     <header><h2 id="check-status">Setup details</h2><button type="button" class="close-dialog" aria-label="Close details">×</button></header>
     <div id="check-groups" role="group" aria-label="Check group"></div>
     <div id="checks"></div>
+    <label id="jobs-detail" hidden>Parallel build jobs <input id="build-jobs" name="build_jobs" type="number" min="1" max="64" required><small role="alert"></small></label>
     <footer><button id="show-terminal" class="quiet" type="button" hidden>Installer log</button><button id="check" type="button">Check again</button><button id="fix-group" class="primary" type="button" hidden></button></footer>
   </dialog>
   <dialog id="setup-terminal" class="output-panel" aria-labelledby="terminal-title">

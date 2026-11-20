@@ -3,7 +3,8 @@ from project.qemu.generate import fingerprint
 from project.nasa_source import OFFICIAL_URL, source_status
 from hardware.host_tools import package_manager
 from hardware.targets import selected_target
-from project.defaults import loopback, network
+from hardware.setup_plan import GROUPS, repair
+from project.defaults import BOARD_DIRECTORY, BOARD_PORT, loopback, network
 from hardware.state import BuildSettings, Emulator, RuntimeState
 from dataclasses import asdict
 from collections.abc import Callable
@@ -11,6 +12,7 @@ from dataclasses import dataclass
 from functools import partial
 import hashlib
 import json
+import os
 import platform
 from pathlib import Path
 import re
@@ -94,19 +96,24 @@ def snapshot(hardware, verify_source=False):
         if probe.get("admin_setup_command"):
             commands["authorize_service"] = probe["admin_setup_command"]
     source = source_status(hardware.root) if verify_source else _source_inventory(hardware.root)
-    plans, results = {}, {}
+    plans, results, actions, observations = {}, {}, {}, {}
     for mode in ("native", "qemu", "physical"):
         plan = list(_check_plan(hardware, mode))
         plans[mode] = [probe.describe() for probe in plan]
+        actions[mode] = {probe.label: repair(mode, probe.label) for probe in plan}
         receipt = hardware.state.read("checks-" + mode + ".json", {})
         if receipt.get("identity") == _identity(hardware, mode, plan):
             results[mode] = receipt.get("checks", {})
+            observations[mode] = receipt.get("observations", {})
     target = selected_target(hardware.root)
-    return {"source": source, "target_saved": target is not None, "check_plan": plans, "check_results": results, "build_jobs": hardware.state.build_settings().jobs, "sources_ready": source["state"] in {"installed", "ready"}, "project": hardware.root.name, "target": target,
+    return {"source": source, "target_saved": target is not None, "check_plan": plans, "check_results": results,
+            "check_groups": GROUPS, "check_repairs": actions, "check_observations": observations,
+            "build_jobs": hardware.state.build_settings().jobs, "sources_ready": source["state"] in {"installed", "ready"}, "project": hardware.root.name, "target": target,
             "board": config["board"], "os": config["os"], "profiles": hardware.profiles(),
             "host": {"os": platform.system(), "architecture": platform.machine(),
                      "package_manager": package_manager()},
-            "connection": connection, "ssh_hosts": hardware.ssh_candidates(), "ssh_keys": keys,
+            "connection": connection, "connection_defaults": {"port": BOARD_PORT, "directory": BOARD_DIRECTORY},
+            "ssh_hosts": hardware.ssh_candidates(), "ssh_keys": keys,
             "emulator": emulator_config(hardware.root), "commands": commands}
 
 
@@ -233,6 +240,8 @@ def _check_plan(hardware, target):
         yield Probe("ssh", ("ssh", "-V"), _tool_version)
         yield Probe("scp", (*local, "check-scp"))
     yield Probe("Python", (sys.executable, "--version"), _tool_version)
+    if target == "native":
+        yield Probe("POSIX message queues", (*local, "check-queues", str(hardware.root)))
     if target != "native":
         yield Probe("Docker engine ≥ 23", ("docker", "version", "--format", "{{.Server.Version}}"),
                     partial(_version_at_least, (23, 0)))
@@ -274,6 +283,8 @@ def _receipt(hardware, target, identity, row):
             receipt.clear()
             receipt.update(identity=identity, checks={})
         receipt["checks"][row["label"]] = row["ready"]
+        receipt.setdefault("observations", {})[row["label"]] = {
+            name: row.get(name) for name in ("detail", "exit_code", "duration_ms")}
         if selected_target(hardware.root) == target:
             receipt["selected"] = True
     if row["ready"] and receipt.get("selected") and target_verified(hardware, target):
@@ -336,6 +347,18 @@ def check_progress(hardware, target):
 
 
 def _cli(args):
+    if len(args) == 2 and args[0] == "check-queues":
+        maximum = int(Path("/proc/sys/fs/mqueue/msg_max").read_text())
+        source = Path(args[1]) / "cFS/osal/default_config.cmake"
+        if os.geteuid() == 0 and source.is_file():
+            default = re.search(r"set\(OSAL_CONFIG_QUEUE_MAX_DEPTH\s+(\d+)", source.read_text())
+            if not default:
+                raise ValueError("Cannot read the OSAL queue depth.")
+            capabilities = re.search(r"^CapEff:\s*(\w+)", Path("/proc/self/status").read_text(), re.M)
+            if not int(capabilities[1], 16) & (1 << 24) and maximum < int(default[1]):
+                raise ValueError(f"fs.mqueue.msg_max={maximum}. Start Flight Studio as your normal user.")
+        print(f"POSIX queues available · fs.mqueue.msg_max={maximum}")
+        return 0
     if len(args) == 3 and args[0] == "check-board":
         from hardware.manager import HardwareManager
         hardware = HardwareManager(args[2])

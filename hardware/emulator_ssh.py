@@ -1,6 +1,7 @@
 """Pin the SSH identity reached by QEMU inside this workspace's Docker container."""
 import argparse
 import base64
+import fcntl
 import json
 import os
 import selectors
@@ -139,6 +140,36 @@ def wait_for_guest(root, port, timeout):
     print("[emulator] Linux SSH ready.", flush=True)
 
 
+def config_text(root, port):
+    key = str(Path(network(root).keys) / 'id_ed25519').replace('%', '%%').replace('\\', '\\\\').replace('"', '\\"')
+    lines = [f"Port {port}", "User root", f'IdentityFile "{key}"',
+             "IdentitiesOnly yes", "BatchMode yes", "ConnectTimeout 5", *trust_settings(root)]
+    return "Host " + network(root).ssh_alias + "\n" + "".join("    " + line + "\n" for line in lines)
+
+
+def prepare_identity(root):
+    directory = Path(network(root).keys)
+    directory.mkdir(parents=True, mode=0o700, exist_ok=True)
+    key = directory / "id_ed25519"
+    with (directory / ".identity.lock").open("a") as lock, tempfile.TemporaryDirectory(dir=directory) as temp:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        staged = Path(temp) / key.name
+        if not key.exists():
+            if (root / "board/raspios.qcow2").exists():
+                raise ValueError(f"Restore this guest's SSH key to {directory} before continuing.")
+            subprocess.run(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-C", "cfs-emulator", "-f", str(staged)], check=True)
+            os.replace(staged, key)
+        key.chmod(0o600)
+        public = subprocess.check_output(["ssh-keygen", "-y", "-f", str(key)], stdin=subprocess.DEVNULL)
+        staged.with_suffix(".pub").write_bytes(public)
+        os.replace(staged.with_suffix(".pub"), key.with_suffix(".pub"))
+        config = Path(temp) / "config"
+        config.write_text(config_text(root, emulator_config(root)["ssh_port"]))
+        config.chmod(0o600)
+        os.replace(config, directory / "config")
+    return {"identity": str(key)}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="mode", required=True)
@@ -149,12 +180,7 @@ def main():
     args = parser.parse_args()
     port = emulator_config(ROOT)["ssh_port"]
     if args.mode == "config":
-        key = str(Path(network(ROOT).keys) / 'id_ed25519').replace('%', '%%').replace('\\', '\\\\').replace('"', '\\"')
-        lines = [f"Port {port}", "User root", f'IdentityFile "{key}"',
-                 "IdentitiesOnly yes", "BatchMode yes", "ConnectTimeout 5", *trust_settings(ROOT)]
-        print("Host " + network(ROOT).ssh_alias)
-        for line in lines:
-            print("    " + line)
+        print(config_text(ROOT, port), end="")
     elif args.mode == "wait":
         wait_for_guest(ROOT, port, args.timeout)
     elif args.mode == "pin":

@@ -36,5 +36,6 @@ def lab(root, *, completed=False):
             finally:
                 server.shutdown()
                 worker.join()
-                server.studio.close()
+                server.studio.changes.close()
                 server.server_close()
+                server.studio.close()

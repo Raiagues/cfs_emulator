@@ -24,7 +24,8 @@ SETUP_COMMANDS = {
     'board-service': ('Prepare cFS service', [sys.executable, '-m', 'hardware.infrastructure', 'prepare-service']),
     'native-tools': ('Install native tools', ['./scripts/setup-native.sh']),
     'dependencies': ('Install dependencies', ['./scripts/setup.sh', '--build-only']),
-    'emulator-image': ('Install emulator image', ['./scripts/setup.sh']),
+    'emulator-image': ('Install emulator image', ['./start', '--no-ui', 'emulator', 'image']),
+    'emulator-key': ('Prepare SSH identity', ['./start', '--no-ui', 'emulator', 'key']),
 }
 
 
@@ -119,7 +120,15 @@ class Shell:
                 'input_required': bool(self.setup_action and code is None and self.waiting_for_input()),
                 'operation_complete': not self.setup_action or code is not None,
                 'status': 'running' if code is None else 'succeeded' if code == 0 else 'cancelled' if self.interrupted else 'failed',
-                'exit_code': code, 'lines': []}
+                'exit_code': code, 'error': self.last_diagnostic() if self.setup_action and code else None, 'lines': []}
+
+    def last_diagnostic(self):
+        with self.lock:
+            tail = b"".join(list(self.chunks)[-4:])[-8192:]
+        plain = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", tail.decode(errors="replace"))
+        lines = [line.strip() for line in plain.splitlines() if line.strip()]
+        return next((line for line in reversed(lines) if re.search(r"(error|failed|denied|unable|^E:)", line, re.I)),
+                    lines[-1] if lines else "")[:360]
 
     def wait_read(self, cursor):
         with self.output:

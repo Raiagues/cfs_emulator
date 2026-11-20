@@ -4,7 +4,8 @@ import {api, checkFrames, readJourney} from './api.js';
 import {navigate, pageStep, redirectForStep, stepUrl} from './router.js';
 import {icon} from './ui.js';
 import {mountShells} from './shell.js';
-import {groupsByTarget, groupFor, repairFor, nextRepair} from './setup-plan.js';
+import {nextRepair} from './setup-plan.js';
+import {guide} from './coach.js';
 
 for (const art of document.querySelectorAll('[data-art]')) art.innerHTML = targetDrawing(art.dataset.art);
 const $ = selector => document.querySelector(selector);
@@ -17,7 +18,7 @@ const checksByTarget = new Map();
 const checkRequests = new Map();
 let settings = null, target = null, busy = false, dirty = false;
 let activeGroup = '', installation = null, selectedVersion = 0;
-let verification = null;
+
 function feedback(message = '', error = false) {
   $('#feedback').textContent = message;
   $('#feedback').classList.toggle('error', error);
@@ -54,6 +55,8 @@ function renderFields() {
   else delete document.body.dataset.flightTarget;
   $('.setup-panel').hidden = !target;
   $('.setup-footer').hidden = !target;
+  $('#project-name').textContent = settings.project;
+  $('#target-cli').textContent = target ? './start --no-ui target ' + target + '\n./start --no-ui setup --target ' + target + ' --check' : './start --no-ui target --help';
   if (!target) {
     $('#configuration').replaceChildren();
     controls();
@@ -62,10 +65,7 @@ function renderFields() {
   const configure = `<button type="button" class="settings-button" id="advanced-toggle" aria-haspopup="dialog" aria-controls="settings-sheet">${icon('sliders')}Configure</button>`;
   let fields;
   if (target === 'native') {
-    fields = `<div class="stepper-field"><label for="build-jobs">Jobs</label><div class="stepper">
-      <button type="button" data-step="-1" aria-label="Fewer build jobs">−</button>
-      <input id="build-jobs" title="Parallel build jobs" aria-label="Parallel build jobs" name="build_jobs" type="number" value="${settings.build_jobs}" min="1" max="64" required>
-      <button type="button" data-step="1" aria-label="More build jobs">+</button></div></div>`;
+    fields = '';
   } else if (target === 'qemu') {
     fields = profileFields() + configure;
   } else {
@@ -74,7 +74,8 @@ function renderFields() {
       connectionButton('user','terminal','SSH user',connection.user || (connection.host ? 'SSH config' : '')) + configure;
   }
   $('#configuration').innerHTML = fields;
-  $('#project-name').textContent = settings.project;
+  $('#jobs-detail').hidden = target !== 'native';
+  $('#build-jobs').value = settings.build_jobs;
   controls();
 }
 
@@ -87,30 +88,31 @@ function reportFor(mode) {
   if (!checksByTarget.has(mode)) {
     checksByTarget.set(mode,(settings.check_plan[mode]||[]).map(entry => {
       const result = settings.check_results[mode]?.[entry.label];
-      return {...entry, status:result == null ? 'pending' : result ? 'passed' : 'failed'};
+      return {...entry, ...settings.check_observations[mode]?.[entry.label], status:result == null ? 'pending' : result ? 'passed' : 'failed'};
     }));
   }
   return checksByTarget.get(mode);
 }
 function groups(mode) {
   const rows = reportFor(mode);
-  return groupsByTarget[mode].map(([name,glyph]) => {
-    const entries = rows.filter(x=>groupFor(mode,x.label) === name);
+  return settings.check_groups[mode].map(([name,glyph]) => {
+    const entries = rows.filter(x=>settings.check_repairs[mode][x.label].group === name);
     const failed = entries.find(x=>x.status === 'failed');
-    const action = failed && repairFor(mode,failed);
+    const fix = nextRepair(entries, settings.check_repairs[mode]);
+    const action = fix?.action;
     let state = 'pending';
     if (installation?.target === mode && installation.group === name && installation.status === 'running') state = 'installing';
     else if (entries.some(x=>x.status==='running')) state = 'running';
     else if (failed) state = 'missing';
     else if (entries.length && entries.every(x=>x.status==='passed')) state = 'ready';
-    return {name,glyph,entries,state,action};
+    return {name,glyph,entries,state,action,failed};
   });
 }
-const tick = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10" pathLength="1"/></svg>';
-const spin = '<svg class="spin-arc" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" pathLength="100"/></svg>';
+const tick = '<svg class="fs-draw" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10" pathLength="1"/></svg>';
+const spin = '<svg class="spin-arc fs-spin" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" pathLength="100"/></svg>';
 const installerLabels = {
   'clone-cfs':'NASA cFS', 'native-tools':'Native tools', dependencies:'Toolchain',
-  'emulator-image':'Emulator image', 'board-service':'cFS service', 'board-key':'SSH key'
+  'emulator-image':'Emulator image', 'emulator-key':'SSH key', 'board-service':'cFS service', 'board-key':'SSH key'
 };
 
 function updateDetails(plans) {
@@ -130,7 +132,7 @@ function updateDetails(plans) {
   for (const button of tabs.children) button.setAttribute('aria-pressed', String(button.dataset.group === group.name));
   const locked = busy || checkRequests.has(target);
   $('#check').disabled = locked;
-  $('#fix-group').hidden = group.state !== 'missing';
+  $('#fix-group').hidden = group.state !== 'missing' || group.action === 'queue-limit';
   $('#fix-group').disabled = locked;
   $('#fix-group').textContent = group.action === 'settings' ? 'Target settings' : 'Install';
   const list = $('#checks');
@@ -157,9 +159,10 @@ function renderChecks() {
   const fixing = installation?.target === target && installation.status === 'running';
   const ready = !dirty && !checking && !busy && plans.every(x => x.state === 'ready');
   const probe = reportFor(target).find(row => row.status === 'running');
-  const note = fixing ? 'Installing ' + installerLabels[installation.setup_action] :
-    probe ? 'Checking ' + probe.label : missing ? 'Click + to fix' : '';
-  $('#group-summary').textContent = note;
+  const failedInstall = installation?.target === target && installation.status === 'failed';
+  $('#group-summary').classList.toggle('fs-pulse', Boolean(probe));
+  $('#group-summary').textContent = fixing ? 'Installing ' + installerLabels[installation.setup_action] :
+    probe ? 'Checking ' + probe.label : '';
   const parent = $('#requirements');
   if (parent.dataset.target !== target) {
     parent.dataset.target = target;
@@ -171,29 +174,35 @@ function renderChecks() {
       button.dataset.state = group.state;
       button.querySelector('.tool-glyph').innerHTML = icon(group.glyph);
     }
+    const fault = failedInstall && group.name === installation.group;
+    button.classList.toggle('install-failed', Boolean(fault));
+    const cause = fault ? installation.error || group.failed?.detail || 'Exit ' + installation.exit_code : '';
+    let caption = button.querySelector('.check-cause');
+    if (!caption) {caption = document.createElement('small'); caption.className = 'check-cause'; button.append(caption);}
+    caption.hidden = !cause; caption.textContent = cause;
     const repair = group.state === 'missing' && !checking && !busy;
-    button.title = repair ? (group.action === 'settings' ? 'Configure ' : 'Install ') + group.name : 'Inspect ' + group.name;
+    button.title = cause || (repair ? (group.action === 'queue-limit' ? 'Inspect ' : group.action === 'settings' ? 'Configure ' : 'Install ') + group.name : 'Inspect ' + group.name);
     button.setAttribute('aria-label', button.title);
   });
   updateDetails(plans);
   $('#enter').hidden = !ready;
   $('#enter').disabled = !ready;
-  const install = $('#install');
-  install.hidden = ready;
-  install.disabled = busy;
-  install.textContent = busy ? (fixing ? 'Installing' : 'Checking') : 'Install requirements';
-  const terminal = $('#show-terminal');
-  terminal.hidden = !installation || installation.target !== target;
+  const check = $('#verify-target');
+  check.hidden = checking || missing > 0 || ready || fixing;
+  check.disabled = busy || checking;
+  check.textContent = target === 'physical' ? 'Check connection' : 'Check target';
+  $('#show-terminal').hidden = !installation || installation.target !== target;
   const details = $('#inspect');
-  details.dataset.input = String(fixing && Boolean(installation.input_required));
-  if (boardVisit) {
-    $('#enter').textContent = settings.target === 'physical' ? 'Build cFS' : 'Use this board';
-    if (!ready && !checking && !missing) {
-      install.hidden = false;
-      install.textContent = 'Check connection';
-    }
-  }
-  details.textContent = details.dataset.input === 'true' ? 'Input required' : 'Details';
+  details.textContent = fixing && installation.input_required ? 'Input required' : 'Details';
+  if (boardVisit) $('#enter').textContent = settings.target === 'physical' ? 'Build cFS' : 'Use this board';
+  const next = nextRepair(reportFor(target), settings.check_repairs[target]);
+  const plus = next && Array.from(parent.children).find(el => el.dataset.group === next.group);
+  let cue = failedInstall ? details : ready ? $('#enter') : plus || check;
+  if (checking || busy) cue = fixing && installation.input_required ? details : null;
+  if ($('#verification').open) cue = activeGroup && !$('#fix-group').hidden ? $('#fix-group') : $('#verification .close-dialog');
+  if (settingsDialog.open) cue = settingsForm.querySelector('[aria-invalid="true"]') || (target === 'physical' && !settingsForm.elements.host.value ? settingsForm.elements.host : settingsForm.querySelector('[type=submit]'));
+  if ($('#setup-terminal').open) cue = installation?.input_required ? $('#shell-terminal textarea') : fixing ? null : $('#setup-terminal .close-dialog');
+  guide(cue);
 }
 
 function controls() {
@@ -207,7 +216,8 @@ function controls() {
   $('#inspect').disabled = !settings;
   $('#save-state').textContent = dirty ? 'Unsaved' : '';
   $('#save-state').dataset.state = dirty ? 'dirty' : '';
-  renderChecks();
+  if (target) renderChecks();
+  else guide(settings && !busy ? $('.target-option') : null);
 }
 async function saveForm(changes = {}) {
   const mode = target, version = selectedVersion;
@@ -215,7 +225,7 @@ async function saveForm(changes = {}) {
   if (board !== undefined && (board !== settings.board || os !== settings.os)) {
     await api('mission/profile', {board, os});
   }
-  if (mode === 'native') values.build_jobs = Number(form.elements.build_jobs.value);
+
   if (mode === 'qemu' && !values.emulator) values.emulator = settings.emulator;
   if (mode === 'physical' && !values.connection) values.connection = settings.connection || {};
   const next = await api('infrastructure', {target:mode, ...values});
@@ -230,7 +240,7 @@ function abortChecks(mode) {
   checkRequests.delete(mode);
 }
 async function runChecks() {
-  if (!target || !settings || !form.reportValidity()) return;
+  if (!target || !settings || !form.checkValidity()) return;
   const mode = target, version = selectedVersion;
   abortChecks(mode);
   const controller = new AbortController();
@@ -260,8 +270,7 @@ async function runChecks() {
   }
 }
 function verify() {
-  verification = runChecks();
-  return verification;
+  return runChecks();
 }
 
 const shells = mountShells({api, onError: showError, onExit: () => true});
@@ -275,10 +284,11 @@ function inspect(name) {
   renderChecks();
 }
 
-async function followInstaller(session, groupName, recheck = true) {
+async function followInstaller(session, groupName, recheck = true, openTerminal = false) {
   installation = {...session, group: groupName};
   $('#terminal-title').textContent = installerLabels[session.setup_action];
-  if ($('#setup-terminal').open) shells.select(session);
+  if (openTerminal) showTerminal();
+  else if ($('#setup-terminal').open) shells.select(session);
   if (installation.status === 'running') {
     await new Promise((resolve, reject) => {
       const read = async () => {
@@ -305,7 +315,7 @@ async function followInstaller(session, groupName, recheck = true) {
     return success;
   }
   const checked = await verify();
-  if (!success) feedback(installerLabels[session.setup_action] + ' · exit ' + installation.exit_code, true);
+  if (!success && $('#setup-terminal').open) $('#setup-terminal').close();
   return success && checked;
 }
 
@@ -319,7 +329,7 @@ function openSettings(field) {
       ${profileFields(true)}
       <label>Host or SSH alias<input name="host" required value="${escapeHtml(connection.host)}" list="ssh-hosts" autocomplete="off" spellcheck="false"></label>
       <label>SSH user<input name="user" value="${escapeHtml(connection.user)}" placeholder="From SSH config" autocomplete="off" spellcheck="false"></label>
-      <label>SSH port<input name="port" type="number" min="1" max="65535" required value="${connection.port || 22}"></label>
+      <label>SSH port<input name="port" type="number" min="1" max="65535" required value="${connection.port || settings.connection_defaults.port}"></label>
       <label>SSH private key<input name="identity_file" value="${escapeHtml(connection.identity_file)}" placeholder="From SSH config" list="ssh-keys" spellcheck="false"></label>
     </div>
     <datalist id="ssh-hosts">${settings.ssh_hosts.map(h => `<option value="${escapeHtml(h.host)}">`).join('')}</datalist>
@@ -329,9 +339,36 @@ function openSettings(field) {
       <label>Emulator image<input name="image" required value="${escapeHtml(settings.emulator.image)}" spellcheck="false"></label>
     </div>`;
   showDialog('#settings-sheet');
+  controls();
   settingsForm.elements[field || (target === 'physical' ? 'host' : 'ssh_port')].focus();
 }
 
+function validateSettings() {
+  let first;
+  for (const input of settingsForm.querySelectorAll('input')) {
+    const invalid = !input.validity.valid;
+    input.setAttribute('aria-invalid', String(invalid));
+    let message = input.parentNode.querySelector('small');
+    if (!message) {message = document.createElement('small'); input.after(message);}
+    message.textContent = invalid ? input.validationMessage : '';
+    if (invalid && !first) first = input;
+  }
+  if (first) first.focus();
+  controls();
+  return !first;
+}
+settingsForm.addEventListener('input', event => {
+  if (event.target.hasAttribute('aria-invalid')) validateSettings();
+  else controls();
+});
+$('#build-jobs').addEventListener('change', async event => {
+  const input = event.target;
+  $('#jobs-detail small').textContent = input.validity.valid ? '' : input.validationMessage;
+  if (input.validity.valid) {
+    try {await saveForm({build_jobs:Number(input.value)});}
+    catch (error) {$('#jobs-detail small').textContent = error.message;}
+  }
+});
 settingsForm.addEventListener('change', event => {
   if (event.target.name === 'board') updateOperatingSystems(settingsForm.elements);
 });
@@ -342,10 +379,11 @@ settingsDialog.addEventListener('cancel', event => {
 settingsForm.addEventListener('submit', async event => {
   event.preventDefault();
   if (busy) return;
+  if (!validateSettings()) return;
   const f = settingsForm.elements;
   const changes = target === 'physical' ? {board:f.board.value, os:f.os.value,
     connection:{host:f.host.value.trim(), user:f.user.value.trim(), port:Number(f.port.value),
-      identity_file:f.identity_file.value.trim(), directory:settings.connection?.directory || 'cfs-arm64'}} :
+      identity_file:f.identity_file.value.trim(), directory:settings.connection?.directory || settings.connection_defaults.directory}} :
     {emulator:{ssh_port:Number(f.ssh_port.value),image:f.image.value.trim()}};
   abortChecks(target);
   selectedVersion++;
@@ -375,36 +413,26 @@ settingsForm.addEventListener('submit', async event => {
 });
 
 async function installRequirements(groupName) {
-  if (!settings || busy || !form.reportValidity()) return;
+  if (!settings || busy || checkRequests.has(target)) return;
+  const repair = nextRepair(reportFor(target), settings.check_repairs[target], groupName);
+  if (!repair) return;
+  const {action, group} = repair;
+  if (action === 'queue-limit') {
+    inspect(group);
+    const row = Array.from($('#checks').children).find(el => el.dataset.label === repair.label);
+    if (row) row.open = true;
+    return;
+  }
+  if (action === 'settings' || (!settings.connection?.host && ['board-key','board-service'].includes(action))) {
+    openSettings();
+    return;
+  }
   busy = true;
-  const mode = target;
   try {
     controls();
-    if (checkRequests.has(mode)) {
-      if (!await verification) return;
-    }
-    if (dirty || reportFor(mode).some(row => row.status === 'pending')) {
-      if (!await verify()) return;
-    }
-    const attempted = new Set();
-    for (;;) {
-      const repair = nextRepair(mode,reportFor(mode),groupName);
-      if (!repair) break;
-      const {action,group,label} = repair;
-      if (action === 'settings' || (!settings.connection?.host && ['board-key','board-service'].includes(action))) {
-        busy = false;
-        controls();
-        openSettings();
-        break;
-      }
-      if (attempted.has(action)) {
-        feedback('Check ' + label, true);
-        break;
-      }
-      attempted.add(action);
-      const session = await api('terminal/create',{target:mode,setup_action:action});
-      if (!await followInstaller(session,group)) break;
-    }
+    const session = await api('terminal/create', {target, setup_action:action});
+    if ($('#verification').open) $('#verification').close();
+    await followInstaller(session, group, true, true);
   } finally {
     busy = false;
     controls();
@@ -438,12 +466,9 @@ $('#targets').addEventListener('click', async event => {
   }
   await verify();
 });
-$('#install').addEventListener('click', () => {
-  if (boardVisit && $('#install').textContent === 'Check connection') verify().catch(showError);
-  else installRequirements().catch(showError);
-});
+$('#verify-target').addEventListener('click', () => verify().catch(showError));
 $('#inspect').addEventListener('click', () => {
-  if (installation?.target === target && installation.status === 'running') showTerminal();
+  if (installation?.target === target && ['running', 'failed'].includes(installation.status)) showTerminal();
   else inspect(groups(target).find(group => group.state === 'missing')?.name);
 });
 $('#requirements').addEventListener('click', event => {
@@ -460,6 +485,7 @@ $('#check-groups').addEventListener('click', event => {
 $('#fix-group').addEventListener('click', () => installRequirements(activeGroup).catch(showError));
 $('#check').addEventListener('click', () => verify(activeGroup).catch(showError));
 for (const dialog of document.querySelectorAll('dialog')) {
+  dialog.addEventListener('close', controls);
   dialog.querySelector('.close-dialog').addEventListener('click', () => dialog.close());
   dialog.addEventListener('click', event => {
     if (event.target !== dialog || dialog.getAttribute('aria-busy') === 'true') return;
@@ -469,9 +495,11 @@ for (const dialog of document.querySelectorAll('dialog')) {
 }
 function showTerminal() {
   if (!installation) return;
+  for (const dialog of document.querySelectorAll('dialog[open]:not(#setup-terminal)')) dialog.close();
   showDialog('#setup-terminal');
   shells.select(installation);
   shells.focus();
+  controls();
 }
 $('#show-terminal').addEventListener('click', showTerminal);
 $('#setup-terminal').addEventListener('close', () => { if (!$('#setup-terminal').open) shells.select(null); });
@@ -479,11 +507,7 @@ form.addEventListener('click', event => {
   const button = event.target.closest('button');
   if (!button) return;
   if (button.id === 'advanced-toggle' || button.dataset.setting) openSettings(button.dataset.setting);
-  if (button.dataset.step) {
-    const input = form.elements.build_jobs;
-    if (button.dataset.step === '-1') input.stepDown(); else input.stepUp();
-    input.dispatchEvent(new Event('change',{bubbles:true}));
-  }
+
 });
 form.addEventListener('input', () => {
   abortChecks(target);
@@ -493,7 +517,7 @@ form.addEventListener('input', () => {
   controls();
 });
 form.addEventListener('change', async event => {
-  if (!form.reportValidity()) return;
+  if (!form.checkValidity()) return;
   dirty = true;
   if (event.target.name === 'board') updateOperatingSystems(form.elements);
   const fields = form.elements;
@@ -542,8 +566,8 @@ form.addEventListener('submit', async event => {
     target = running.target;
     busy = true;
     renderFields();
-    const row = reportFor(target).find(item => repairFor(target,item) === running.setup_action);
-    try { await followInstaller(running, row && groupFor(target,row.label), false); }
+    const row = reportFor(target).find(item => settings.check_repairs[target][item.label]?.action === running.setup_action);
+    try { await followInstaller(running, row && settings.check_repairs[target][row.label].group, false); }
     finally { busy = false; controls(); }
   } else {
     renderFields();

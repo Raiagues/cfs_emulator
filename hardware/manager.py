@@ -33,7 +33,7 @@ from hardware import boot_trace
 from hardware.readiness import StartupError, wait_native
 from hardware.targets import selected_target
 from hardware.state import RuntimeState, Selection
-from project.defaults import boot_timeout, network
+from project.defaults import BOARD_DIRECTORY, BOARD_PORT, boot_timeout, network
 from journey import Store
 from journey import mission as evidence
 
@@ -246,7 +246,7 @@ class HardwareManager:
         if user and not re.fullmatch(r"[a-zA-Z_][a-zA-Z0-9_.-]*", user):
             raise HardwareError("Invalid SSH user.")
         try:
-            port = int(value.get("port", 22))
+            port = int(value.get("port", BOARD_PORT))
         except (TypeError, ValueError):
             raise HardwareError("Invalid SSH port.") from None
         if not 1 <= port <= 65535:
@@ -260,14 +260,14 @@ class HardwareManager:
             if not key.is_absolute():
                 raise HardwareError("Use an absolute SSH key path on this computer, or a path starting with '~/'.")
             result["identity_file"] = str(key)
-        directory = value.get("directory", "cfs-arm64")
+        directory = value.get("directory", BOARD_DIRECTORY)
         if not isinstance(directory, str):
             raise HardwareError("Invalid board installation folder.")
         directory = directory.strip().removeprefix("~/").rstrip("/")
         if not re.fullmatch(r"[a-zA-Z0-9_][a-zA-Z0-9_./-]*", directory) or any(p in {".", ".."} for p in directory.split("/")):
             raise HardwareError("Choose an installation folder inside the board user's home, without '..'.")
         directory = str(Path(directory))
-        if directory != "cfs-arm64":
+        if directory != BOARD_DIRECTORY:
             result["directory"] = directory
         return result
 
@@ -277,7 +277,7 @@ class HardwareManager:
             return first == second
         def destination(value):
             normalized = self.connection(value)
-            return (normalized["host"].lower(), normalized["port"], normalized["user"], normalized.get("directory", "cfs-arm64"))
+            return (normalized["host"].lower(), normalized["port"], normalized["user"], normalized.get("directory", BOARD_DIRECTORY))
         return destination(first) == destination(second)
 
     def ssh_argv(self, target="qemu", connection=None, interactive=False):
@@ -338,7 +338,7 @@ class HardwareManager:
         self.remote_operation(target, connection, "unpack", [directory], emit, cancel, timeout=180)
 
     def board_directory(self, board, connection=None):
-        return board["home"] + "/" + self.connection(connection).get("directory", "cfs-arm64")
+        return board["home"] + "/" + self.connection(connection).get("directory", BOARD_DIRECTORY)
 
     def observed_flight(self, target, connection=None):
         """Share the last remote probe across status views; startup guards always check afresh."""
@@ -742,7 +742,7 @@ class HardwareManager:
         self.copy_to("physical", connection, self.root / "hardware/setup_board.py", remote, emit, cancel)
         argv = self.ssh_argv("physical", connection)
         config = self.connection(connection)
-        install = ["python3", remote, "--directory", config.get("directory", "cfs-arm64")]
+        install = ["python3", remote, "--directory", config.get("directory", BOARD_DIRECTORY)]
         interactive = self.ssh_argv("physical", connection, interactive=True) + [shlex.join(["sudo", *install])]
         if authorize is None:
             authorize = board["sudo"]

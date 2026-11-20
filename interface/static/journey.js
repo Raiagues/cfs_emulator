@@ -5,7 +5,7 @@ import {navigate, pageStep, stepUrl} from './router.js';
 const labels = {
   target:'Target', boot:'Boot', event:'Event', app:'App', command:'Command', send:'Send', sensor:'Sensor', test:'Test', board:'Board'
 };
-const tick = '<svg class="fs-tick" viewBox="0 0 16 16" aria-hidden="true"><path pathLength="1" d="m3 8 3 3 7-7"/></svg>';
+const tick = '<svg class="fs-tick fs-draw" viewBox="0 0 16 16" aria-hidden="true"><path pathLength="1" d="m3 8 3 3 7-7"/></svg>';
 const bar = globalThis.document?.getElementById('flight-guide');
 let observations, requestId = 0;
 
@@ -42,6 +42,7 @@ function render(snapshot) {
       stop.querySelector('.flight-number').innerHTML = status.done ? tick : String(index + 1);
     }
     stop.setAttribute('aria-label', status.done ? label + ', complete' : label);
+    stop.querySelector('.flight-number').classList.toggle('fs-ping2', current === id);
     if (current === id) stop.setAttribute('aria-current', 'step');
     else stop.removeAttribute('aria-current');
     if (index) stop.previousElementSibling.classList.toggle('complete', status.done);
@@ -49,7 +50,10 @@ function render(snapshot) {
   const forward = bar.querySelector('.flight-next');
   forward.hidden = !next;
   forward.classList.toggle('fs-coach', Boolean(next));
-  if (next) forward.href = next;
+  if (next) {
+    forward.href = next;
+    forward.textContent = 'Next · ' + labels[snapshot.current];
+  }
   else forward.removeAttribute('href');
   bar.querySelector('.flight-complete').hidden = !snapshot.optional_board && current !== null;
 }

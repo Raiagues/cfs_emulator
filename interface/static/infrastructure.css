@@ -71,18 +71,12 @@ h2 { margin: 0; font-size: var(--fs-body); font-weight: 600; }
   min-height: 0; flex: 0 1 auto; display: flex; flex-direction: column;
 }
 .configuration-row { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px 18px; flex-wrap: wrap; }
-#configuration, .stepper-field, .stepper { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+#configuration { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 #configuration { flex: 1 1 auto; }
-.stepper-field { color: var(--fs-muted); gap: 12px; }
-.stepper { flex-wrap: nowrap; gap: 0; border: 1px solid var(--fs-line); border-radius: var(--fs-radius-control); }
-.stepper button { width: 40px; height: 40px; border: 0; padding: 0; background: var(--fs-surface); font-size: var(--fs-heading); border-radius: var(--fs-radius-control); }
-.stepper button:hover { background: var(--fs-raised); }
 input, select {
   background: var(--fs-surface); border: 1px solid var(--fs-line); border-radius: var(--fs-radius-control); min-height: 40px;
   padding: 7px 10px; min-width: 0; max-width: 100%;
 }
-.stepper input { width: 46px; text-align: center; font: var(--fs-body) var(--fs-mono); appearance: textfield; background: transparent; border: 0; padding: 3px; }
-.stepper input::-webkit-inner-spin-button, .stepper input::-webkit-outer-spin-button { appearance: none; margin: 0; }
 .connection-value, .settings-button { display: inline-flex; align-items: center; min-height: 42px; gap: 9px; }
 .connection-value { text-align: left; padding: 5px 12px; background: var(--fs-surface); min-width: 108px; max-width: 260px; }
 .connection-value span { display: grid; min-width: 0; }
@@ -154,3 +148,10 @@ dialog > footer { justify-content: end; }
   .setup-panel { grid-row:1 / 3; grid-column:2; justify-content:center; }
   .setup-footer { grid-column:1 / -1; }
 }
+
+#infrastructure-form > .terminal-twin {align-self:center}
+#configuration:empty {display:none}
+.configuration-row:has(#configuration:empty) {justify-content:center}
+.check-cause {max-width:32ch;line-height:1.25}
+#jobs-detail {display:flex;align-items:center;gap:8px}
+#jobs-detail input {width:6em}

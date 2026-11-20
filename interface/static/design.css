@@ -585,7 +585,7 @@
 @keyframes fs-fade { from { opacity:0 } to { opacity:1 } }
 @keyframes fs-wait { 50% { opacity:.65 } }
 .fs-tick { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2; }
-.fs-tick path { stroke-dasharray:1; stroke-dashoffset:0; animation:fs-check .32s ease-out; }
+.fs-tick path { stroke-dasharray:1; stroke-dashoffset:0; ; }
 @media (prefers-reduced-motion: reduce) { .fs-tick path { stroke-dashoffset:0; } }
 
 :root {
@@ -656,7 +656,7 @@
   animation:fs-pop .32s ease-out,fs-ring .52s ease-out}
 .flight-number .fs-tick {width:12px;height:12px;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 .flight-stops [aria-current] {background:var(--fs-accent-bg);color:var(--fs-accent)}
-.flight-stops [aria-current]:not(.done) .flight-number {border-color:var(--fs-accent);animation:flight-wait 2s ease-out infinite}
+.flight-stops [aria-current]:not(.done) .flight-number {border-color:var(--fs-accent);}
 @keyframes flight-wait {0%,75%,100% {box-shadow:0 0 0 0 transparent} 35% {box-shadow:0 0 0 3px color-mix(in srgb,var(--fs-accent) 18%,transparent)}}
 .flight-next {justify-content:center;white-space:nowrap;height:28px;padding:0 12px;border-radius:var(--fs-radius-control);
   background:var(--fs-accent);color:var(--fs-on-accent);font:600 var(--fs-label) var(--fs-sans);text-decoration:none}
@@ -772,3 +772,11 @@
   padding:4px;border:1px solid var(--fs-line);border-radius:var(--fs-radius-card);background:var(--fs-panel)}
 [data-brand-menu] nav a {color:var(--fs-text);text-decoration:none;padding:8px 12px;font:var(--fs-body) var(--fs-sans)}
 [data-brand-menu] nav a:hover,[data-brand-menu] nav a:focus-visible {background:var(--fs-raised)}
+
+.flight-stops [data-flight="board"] .flight-number {border-style:dashed}
+.terminal-twin {color:var(--fs-muted);font:var(--fs-caption) var(--fs-sans)}
+.terminal-twin summary {cursor:pointer;width:fit-content}
+.terminal-twin pre {font:var(--fs-caption)/1.6 var(--fs-mono);color:var(--fs-text);white-space:pre-wrap}
+.requirement.install-failed .ring {border-color:var(--fs-danger);color:var(--fs-danger)}
+.check-cause,.fields label small[role=alert],.fields input[aria-invalid=true]+small,#jobs-detail small {color:var(--fs-danger)}
+.terminal-twin pre:empty,.fields label small:empty {display:none}

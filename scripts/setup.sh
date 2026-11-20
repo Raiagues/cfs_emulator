@@ -95,28 +95,10 @@ if [[ "${1:-}" == --build-only ]]; then
     exit 0
 fi
 
-# Generate an independent identity for this checkout.
-echo "Configuring the local SSH identity..."
-SSH_DIR=$(python3 -m project.defaults keys)
-mkdir -p "$SSH_DIR"
-chmod 0700 "$SSH_DIR"
-if [[ ! -f "$SSH_DIR/id_ed25519" ]]; then
-    if [[ -e board/raspios.qcow2 ]]; then
-        echo "Restore this guest's key to $SSH_DIR before continuing." >&2
-        exit 1
-    fi
-    ssh-keygen -q -t ed25519 -N "" -C cfs-emulator -f "$SSH_DIR/id_ed25519"
-fi
-ssh-keygen -y -f "$SSH_DIR/id_ed25519" > "$SSH_DIR/id_ed25519.pub"
-config_tmp="$(mktemp "$SSH_DIR/config.XXXXXX")"
-trap 'rm -f "$config_tmp"' EXIT
-python3 -m hardware.emulator_ssh config > "$config_tmp"
-mv "$config_tmp" "$SSH_DIR/config"
-trap - EXIT
-chmod 0600 "$SSH_DIR/config" "$SSH_DIR/id_ed25519"
+./start --no-ui emulator key
 
 echo "Preparing the emulator image..."
 ./start --no-ui emulator image
 
-echo "Setup complete. SSH is configured in $SSH_DIR."
+echo "Setup complete."
 echo "Next: ./start --no-ui boot --target qemu"

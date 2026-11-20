@@ -49,6 +49,7 @@ def replace(argv):
 
 def main(argv=None):
     from hardware.targets import selected_target
+    from project.defaults import BOARD_PORT
     argv = list(sys.argv[1:] if argv is None else argv)
     os.chdir(ROOT)
     if argv and argv[0] in {'-h', '--help'}:
@@ -101,7 +102,7 @@ def main(argv=None):
     selection.add_argument('--board', help='Board identifier from the hardware catalog')
     profile.add_argument('--os', help='Operating system identifier for the selected board')
     emulator = commands.add_parser('emulator', help='Show or select the Docker image and local SSH port')
-    emulator.add_argument('action', nargs='?', choices=('image', 'start', 'stop', 'logs', 'status'))
+    emulator.add_argument('action', nargs='?', choices=('image', 'key', 'start', 'stop', 'logs', 'status'))
     emulator.add_argument('--json', action='store_true')
     emulator.add_argument('--image', help='Docker image tag or registry reference')
     emulator.add_argument('--port', type=int, help='Local port forwarded to the emulated board')
@@ -130,7 +131,7 @@ def main(argv=None):
                              help='Defaults to the target selected in the interface or profile command')
         command.add_argument('--host', help='Physical board hostname, IP or SSH alias')
         command.add_argument('--user', help='SSH user; defaults to OpenSSH configuration')
-        command.add_argument('--ssh-port', type=int, default=22)
+        command.add_argument('--ssh-port', type=int, default=BOARD_PORT)
         command.add_argument('--identity-file', help='Local SSH private key path')
         command.add_argument('--directory', help="cFS installation folder relative to the board user's home")
         if action in {'build', 'run'}:
@@ -205,6 +206,10 @@ def main(argv=None):
                 from hardware.emulator_image import prepare
                 result = prepare(ROOT)
                 print(json.dumps(result) if args.json else result['image'])
+            elif args.action == 'key':
+                from hardware.emulator_ssh import prepare_identity
+                result = prepare_identity(ROOT)
+                print(json.dumps(result) if args.json else result['identity'])
             elif args.action == 'status':
                 state = HardwareManager(ROOT).status()['qemu']
                 print(json.dumps(state) if args.json else ('Emulator running' if state['running'] else 'Emulator stopped'))
@@ -288,12 +293,12 @@ def main(argv=None):
     manager = HardwareManager(ROOT)
     target = getattr(args, 'target', None) or selected_target(ROOT)
     host, user = getattr(args, 'host', None), getattr(args, 'user', None)
-    port = getattr(args, 'ssh_port', 22)
+    port = getattr(args, 'ssh_port', BOARD_PORT)
     identity, directory = getattr(args, 'identity_file', None), getattr(args, 'directory', None)
     sensorless = getattr(args, 'sensorless', False)
-    if (host or user or port != 22 or identity or directory) and target != 'physical':
+    if (host or user or port != BOARD_PORT or identity or directory) and target != 'physical':
         parser.error('SSH options require --target physical')
-    if (user or port != 22 or identity or directory) and not host:
+    if (user or port != BOARD_PORT or identity or directory) and not host:
         parser.error('SSH and installation options require --host')
     if sensorless and target != 'physical':
         parser.error('--sensorless requires --target physical')

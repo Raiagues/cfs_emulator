@@ -10,6 +10,10 @@ import platform
 from pathlib import Path
 
 
+BOARD_PORT = 22
+BOARD_DIRECTORY = "cfs-arm64"
+
+
 def boot_timeout():
     seconds = float(os.environ.get("FLIGHT_STUDIO_BOOT_TIMEOUT", "120"))
     if not math.isfinite(seconds) or seconds <= 0:

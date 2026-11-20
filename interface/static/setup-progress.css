@@ -7,16 +7,16 @@
 .requirement .tool-glyph { display:grid; place-items:center; }
 .requirement .tool-glyph > svg { width:19px; height:19px; }
 .requirement .spin-arc { position:absolute; inset:-1px; width:calc(100% + 2px); height:calc(100% + 2px); display:none; fill:none; stroke:var(--fs-accent); stroke-linecap:round; stroke-width:2; stroke-dasharray:25 75; }
-.requirement:is([data-state=running],[data-state=installing]) .spin-arc { display:block; animation:setup-spin .85s linear infinite; }
+.requirement:is([data-state=running],[data-state=installing]) .spin-arc { display:block;  }
 .requirement:is([data-state=running],[data-state=installing],[data-state=missing]) .ring { color:var(--fs-accent); }
 .requirement .badge { display:none; position:absolute; right:-3px; bottom:-2px; width:18px; height:18px; place-items:center; border:2px solid var(--fs-panel); border-radius:var(--fs-radius-pill); color:var(--fs-bg); }
-.requirement[data-state=ready] .ring { border-color:var(--fs-success); color:var(--fs-success); background:color-mix(in srgb,var(--fs-success) 8%,var(--fs-panel)); animation:setup-ring .7s ease-out; }
-.requirement[data-state=ready] .tool-glyph { animation:setup-pop .38s ease-out; }
-.requirement[data-state=ready] .check-badge { display:grid; background:var(--fs-success); animation:setup-pop .38s ease-out both; }
+.requirement[data-state=ready] .ring { border-color:var(--fs-success); color:var(--fs-success); background:color-mix(in srgb,var(--fs-success) 8%,var(--fs-panel));  }
+.requirement[data-state=ready] .tool-glyph { animation:fsPop .5s cubic-bezier(.2,.9,.3,1.25); }
+.requirement[data-state=ready] .check-badge { display:grid; background:var(--fs-success); animation:fsPop .5s cubic-bezier(.2,.9,.3,1.25) both; }
 .requirement .check-badge svg { width:12px; height:12px; stroke-width:2.4; }
-.check-badge path { stroke-dasharray:1; animation:setup-draw .45s .12s ease-out both; }
+.check-badge path { stroke-dasharray:1; animation:fsDraw .45s .12s ease-out forwards; }
 .requirement[data-state=missing] .ring { border:1px dashed var(--fs-accent); background:color-mix(in srgb,var(--fs-accent) 6%,var(--fs-surface)); }
-.requirement[data-state=missing] .repair-badge { display:grid; background:var(--fs-accent); font:600 var(--fs-body) var(--fs-sans); animation:setup-pop .38s ease-out; }
+.requirement[data-state=missing] .repair-badge { display:grid; background:var(--fs-accent); font:600 var(--fs-body) var(--fs-sans); animation:fsPop .5s cubic-bezier(.2,.9,.3,1.25); }
 .requirement:is(:hover,:focus-visible) .ring { box-shadow:0 0 0 3px var(--fs-panel),0 0 0 4px currentColor; }
 #check-groups { display:flex; gap:5px; }
 #check-groups button { border-color:transparent; color:var(--fs-muted); }
@@ -32,9 +32,5 @@
 #checks [data-outcome=failed] summary span:first-child { color:var(--fs-danger); }
 #checks [data-outcome=passed] summary span:first-child { color:var(--fs-success); }
 #checks pre { margin:0 0 10px; color:var(--fs-muted); font:var(--fs-caption)/1.5 var(--fs-mono); white-space:pre-wrap; overflow-wrap:anywhere; }
-@keyframes setup-spin { to {transform:rotate(1turn)} }
-@keyframes setup-pop { 0% {transform:scale(.4)} 70% {transform:scale(1.14)} 100% {transform:scale(1)} }
-@keyframes setup-draw { from {stroke-dashoffset:1} to {stroke-dashoffset:0} }
-@keyframes setup-ring { from {box-shadow:0 0 0 0 color-mix(in srgb,var(--fs-success) 45%,transparent)} to {box-shadow:0 0 0 9px transparent} }
 @media (max-width:520px) { .group-summary { width:100%; margin-block:20px 2px; } }
 @media (prefers-reduced-motion:reduce) { .requirement *, .requirement *::before { animation:none !important; } }
