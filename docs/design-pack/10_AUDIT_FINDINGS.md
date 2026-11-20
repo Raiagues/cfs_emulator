@@ -76,7 +76,7 @@ Full report with commands, timings, logs and exact patches: `audit/infra_report.
 4. **Board binaries need glibc 2.38** (built on Debian trixie; confirmed `__isoc23_strtol@GLIBC_2.38`) and will not start on Raspberry Pi OS Bookworm (glibc 2.36). Fix: build in `debian:bookworm-slim` and check the glibc requirement before upload.
 5. **`cfs-studio.service` runs a binary from the user's home as root, startable without a password.** Fix: run as the user with only the needed capabilities.
 6. **No ground station command in the CLI.** Add `./start --no-ui ground …` (the `GroundStation` class already does everything; the live tests prove it).
-7. **NASA cFS is cloned at HEAD with no pinned revision.** Pin a tag or commit in one place and show it in the README.
+7. **NASA cFS is cloned at HEAD with no pinned revision.** Installation and repeated clean-clone verification in `cc3023e`. Pin a tag or commit in one place and show it in the README.
 
 Should fix:
 

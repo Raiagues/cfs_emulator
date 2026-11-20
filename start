@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import sys
+import subprocess
 
 
 ROOT = Path(__file__).resolve().parent
@@ -61,6 +62,9 @@ def main(argv=None):
         print(HELP, file=sys.stderr)
         return 2
     argv = argv[1:]
+    if argv[:1] == ['ground']:
+        from ground_station.console import main as ground
+        return ground(ROOT, argv[1:])
     if argv[:1] == ['signals']:
         replace([sys.executable, '-m', 'sensors.cli', *argv[1:]])
         return 0
@@ -78,17 +82,25 @@ def main(argv=None):
     source = commands.add_parser('source', help='Manage the pinned official NASA checkout')
     source.add_argument('action', choices=('install', 'status'))
     source.add_argument('--json', action='store_true')
-    commands.add_parser('status', help='Show workspace and target status')
+    status = commands.add_parser('status', help='Show workspace and target status')
+    status.add_argument('--json', action='store_true')
+    target = commands.add_parser('target', help='Show or select the target')
+    target.add_argument('name', nargs='?', choices=('native', 'qemu', 'physical'))
+    target.add_argument('--use-board', action='store_true')
+    target.add_argument('--json', action='store_true')
     journey = commands.add_parser('journey', help='Show or reset first-flight observations')
     journey.add_argument('--target', choices=('native', 'qemu', 'physical'))
     journey.add_argument('--reset', action='store_true')
     journey.add_argument('--json', action='store_true')
     profile = commands.add_parser('profile', help='Show or select the native or board/OS profile')
+    profile.add_argument('--json', action='store_true')
     selection = profile.add_mutually_exclusive_group()
     selection.add_argument('--native', action='store_true', help='Use this computer without a board')
     selection.add_argument('--board', help='Board identifier from the hardware catalog')
     profile.add_argument('--os', help='Operating system identifier for the selected board')
     emulator = commands.add_parser('emulator', help='Show or select the Docker image and local SSH port')
+    emulator.add_argument('action', nargs='?', choices=('image', 'start', 'stop', 'logs', 'status'))
+    emulator.add_argument('--json', action='store_true')
     emulator.add_argument('--image', help='Docker image tag or registry reference')
     emulator.add_argument('--port', type=int, help='Local port forwarded to the emulated board')
     apps = commands.add_parser('app', help='Create or select mission applications')
@@ -100,13 +112,16 @@ def main(argv=None):
     apps.add_argument('--wakeup-hz', type=float)
     apps.add_argument('--hk-hz', type=float)
     apps.add_argument('--preview', action='store_true', help='Print the source/configuration plan without writing it')
+    apps.add_argument('--json', action='store_true')
     libraries = commands.add_parser('library', help='Create and manage native mission libraries')
     libraries.add_argument('action', choices=('list', 'new', 'add', 'remove', 'delete'),
                            help='remove excludes the library from the mission; delete also removes its sources')
     libraries.add_argument('name', nargs='?')
     libraries.add_argument('--preview', action='store_true')
-    for action in ('setup', 'build', 'boot', 'run', 'stop', 'shutdown', 'connect', 'probe', 'logs', 'values', 'simulate-preview'):
+    libraries.add_argument('--json', action='store_true')
+    for action in ('first-boot', 'model-test', 'sensor-test', 'setup', 'build', 'boot', 'run', 'stop', 'shutdown', 'connect', 'probe', 'logs', 'values', 'simulate-preview'):
         command = commands.add_parser(action)
+        command.add_argument('--json', action='store_true')
         command.add_argument('--target', choices=('native', 'qemu', 'physical'),
                              help='Defaults to the target selected in the interface or profile command')
         command.add_argument('--host', help='Physical board hostname, IP or SSH alias')
@@ -118,25 +133,41 @@ def main(argv=None):
             command.add_argument('--sensorless', action='store_true', help='Physical build without sensor apps')
         if action == 'setup':
             command.add_argument('--check', action='store_true', help='Report prerequisites without installing packages')
-            command.add_argument('--json', action='store_true')
         if action == 'run':
-            command.add_argument('--no-follow', action='store_true', help='Return after cFS starts')
+            follow = command.add_mutually_exclusive_group()
+            follow.add_argument('--follow', action='store_true', help='Follow the console after cFS reaches OPERATIONAL')
+            follow.add_argument('--no-follow', dest='follow', action='store_false')
+            command.set_defaults(follow=False)
         if action == 'logs':
             command.add_argument('--kind', choices=('boot', 'flight'), default='flight')
+        if action in {'sensor-test', 'model-test'}:
+            command.add_argument('--device', required=True)
         if action == 'simulate-preview':
+            command.add_argument('--scenario', help='Run a named register-level scenario for --device')
             source = command.add_mutually_exclusive_group()
             source.add_argument('--device', help='Configured sensor ID')
             source.add_argument('--model', help='Python sensor model; no board is needed')
     commands.add_parser('project', help='Project generator commands (project --help)')
+    commands.add_parser('ground', help='Connect, send a command or listen to flight telemetry')
     commands.add_parser('signals', help='Inspect and configure sensor signals and orbit (signals --help)')
     commands.add_parser('simulate', help='Synthetic sensor data (simulate --help)')
     args = parser.parse_args(argv)
     if not args.command:
         parser.print_help()
         return 0
+    if args.command == 'target':
+        from hardware.manager import HardwareManager
+        try:
+            if args.use_board and args.name != 'physical':
+                parser.error('--use-board requires target physical')
+            result = (HardwareManager(ROOT).select_target(args.name, board_visit=args.use_board)
+                      if args.name else {'target': selected_target(ROOT)})
+            print(json.dumps(result) if args.json else result['target'] or 'Choose an execution target')
+            return 0
+        except (OSError, RuntimeError, ValueError) as error:
+            parser.exit(1, f'Error: {error}\n')
     if args.command == 'source':
         from project.nasa_source import install, source_status
-        import subprocess
         try:
             result = install(ROOT) if args.action == 'install' else source_status(ROOT)
         except (OSError, ValueError, subprocess.CalledProcessError) as error:
@@ -165,9 +196,23 @@ def main(argv=None):
                 if args.port is not None:
                     config['ssh_port'] = args.port
                 config = save_emulator(HardwareManager(ROOT), config)
-            print(json.dumps(config, indent=2))
+            if args.action == 'image':
+                from hardware.emulator_image import prepare
+                result = prepare(ROOT)
+                print(json.dumps(result) if args.json else result['image'])
+            elif args.action == 'status':
+                state = HardwareManager(ROOT).status()['qemu']
+                print(json.dumps(state) if args.json else ('Emulator running' if state['running'] else 'Emulator stopped'))
+            elif args.action:
+                from jobs.cli import run
+                options = {'target':'qemu'}
+                if args.action == 'logs':
+                    options['kind'] = 'boot'
+                run(ROOT, {'start':'boot', 'stop':'shutdown', 'logs':'logs'}[args.action], options, args.json)
+            else:
+                print(json.dumps(config) if args.json else f'{config["image"]} · SSH {config["ssh_port"]}')
             return 0
-        except (OSError, ValueError, RuntimeError) as error:
+        except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as error:
             print(f'Error: {error}', file=sys.stderr)
             return 1
     if args.command == 'profile':
@@ -179,16 +224,17 @@ def main(argv=None):
             from hardware.manager import HardwareManager
             manager = HardwareManager(ROOT)
             if args.native:
-                print(json.dumps(manager.select_target('native'), indent=2))
+                result = manager.select_target('native')
             elif args.board:
                 result = workspace.select_profile(args.board, args.os, hardware=manager)
                 manager.select_target('qemu')
-                print(json.dumps({'board': args.board, 'os': args.os, 'changed': result['changed']}, indent=2))
+                result = {'target':'qemu', 'board': args.board, 'os': args.os, 'changed': result['changed']}
             else:
                 config = workspace.model.load_config(ROOT)
-                print(json.dumps({'target': selected_target(ROOT), 'board': config['board'], 'os': config['os'], 'profiles': manager.profiles()}, indent=2))
+                result = {'target': selected_target(ROOT), 'board': config['board'], 'os': config['os'], 'profiles': manager.profiles()}
+            print(json.dumps(result) if args.json else (result['target'] or 'Choose an execution target'))
             return 0
-        except (OSError, ValueError, RuntimeError) as error:
+        except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as error:
             print(f'Error: {error}', file=sys.stderr)
             return 1
     if args.command in {'app', 'library'}:
@@ -217,9 +263,16 @@ def main(argv=None):
                 result = workspace.delete_app(args.name, mission['source']['hash'])
             else:
                 result = workspace.mission_app(args.action, args.name, mission['source']['hash'])
-            print(json.dumps(result, indent=2))
+            if args.json or args.preview:
+                print(json.dumps(result, ensure_ascii=False))
+            elif args.action == 'list':
+                records = result if isinstance(result, list) else mission.get('available', [])
+                for item in records:
+                    print(item.get('name') if isinstance(item, dict) else item)
+            else:
+                print(f'{args.command} {args.action} · {args.name}')
             return 0
-        except (OSError, ValueError, RuntimeError) as error:
+        except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as error:
             print(f'Error: {error}', file=sys.stderr)
             return 1
     from hardware.manager import HardwareError, HardwareManager
@@ -258,7 +311,9 @@ def main(argv=None):
         return 0
     try:
         if args.command == 'status':
-            print(json.dumps(manager.status(), indent=2))
+            status = manager.status()
+            active = status['execution']['running_targets']
+            print(json.dumps(status) if args.json else ('Running · ' + ', '.join(active) if active else 'cFS stopped'))
             return 0
         connection = {'host': host, 'user': user or '', 'port': port} if host else None
         if connection is not None:
@@ -266,16 +321,21 @@ def main(argv=None):
                 connection['identity_file'] = identity
             if directory:
                 connection['directory'] = directory
-        options = {'target': target, 'connection': connection, 'sensorless': sensorless}
-        if args.command == 'logs':
-            options['kind'] = args.kind
-        if args.command == 'simulate-preview':
-            options.update({key: getattr(args, key) for key in ('model', 'device') if getattr(args, key) is not None})
-        result = manager.execute(args.command, emit=lambda line: print(line, flush=True), **options)
-        if result is not None:
-            print(json.dumps(result, indent=2), flush=True)
-        if args.command == 'run' and not args.no_follow:
-            manager.execute('logs', target=target, connection=connection)
+        from jobs.cli import run
+        options = {'target': target}
+        if connection is not None:
+            options['connection'] = connection
+        if sensorless:
+            options['sensorless'] = True
+        for key in ('kind', 'model', 'device', 'scenario'):
+            if getattr(args, key, None) is not None:
+                options[key] = getattr(args, key)
+        run(ROOT, args.command, options, args.json)
+        if args.command in {'stop', 'shutdown'}:
+            from ground_station.console import exchange
+            list(exchange(ROOT, {'action':'stop', 'target':target, 'if_active':True}))
+        if args.command == 'run' and args.follow:
+            run(ROOT, 'logs', {**options, 'kind':'flight'})
         return 0
     except (HardwareError, OSError, ValueError) as error:
         print(f'Error: {error}', file=sys.stderr)
@@ -285,4 +345,10 @@ def main(argv=None):
 
 
 if __name__ == '__main__':
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except BrokenPipeError:
+        sys.stdout = open(os.devnull, 'w')
+        raise SystemExit(0)
+    except (ValueError, OSError, RuntimeError) as error:
+        sys.exit(f'Error: {error}')

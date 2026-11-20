@@ -30,7 +30,10 @@ def sources_ready(root):
 
 def emulator_config(root):
     root = Path(root)
-    defaults = {"ssh_port": 2222, "image": (root / "config/image").read_text().strip()}
+    image = (root / "config/image").read_text().strip()
+    if "{fingerprint}" in image:
+        image = image.replace("{fingerprint}", fingerprint())
+    defaults = {"ssh_port": 2222, "image": image}
     path = root / "hardware/.runtime/emulator.json"
     return validate_emulator({**defaults, **(json.loads(path.read_text()) if path.exists() else {})})
 

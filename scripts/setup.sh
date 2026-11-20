@@ -115,23 +115,8 @@ mv "$config_tmp" "$SSH_DIR/config"
 trap - EXIT
 chmod 0600 "$SSH_DIR/config" "$SSH_DIR/id_ed25519"
 
-# Reuse the image, download it, or build locally if no published image is available.
 echo "Preparing the emulator image..."
-IMAGE="$(python3 -m hardware.infrastructure image)"
-if ! "${SUDO[@]}" docker image inspect "$IMAGE" >/dev/null 2>&1; then
-    echo "Downloading the emulator image..."
-    if ! "${SUDO[@]}" docker pull "$IMAGE"; then
-        echo "Image download failed. Building locally; this can take several minutes..."
-        "${SUDO[@]}" ./scripts/build.sh --network=host
-    fi
-else
-    echo "Using the installed emulator image."
-fi
-
-if [[ "$("${SUDO[@]}" docker image inspect --format '{{index .Config.Labels "org.flight-studio.register-models"}}' "$IMAGE")" != "$(python3 project/qemu/generate.py --fingerprint)" ]]; then
-    echo "Building the configured sensor models..."
-    "${SUDO[@]}" ./scripts/build.sh --network=host
-fi
+"${SUDO[@]}" ./start --no-ui emulator image
 
 echo "Setup complete. SSH is configured in $SSH_DIR."
 if ((${#SUDO[@]})); then

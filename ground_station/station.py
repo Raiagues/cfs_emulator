@@ -236,6 +236,65 @@ class GroundStation:
                 self.trips.start(prepared, event, test_id)
             return event
 
+    def resolve_command(self, app, name):
+        from .commands import command_for
+        with self._lock:
+            if not self._connected():
+                raise ValueError('Connect the ground station before selecting a command')
+            return command_for(self._active_catalog['commands'], app, name)
+
+    def send_observed(self, app, name, arguments, timeout):
+        """Send once. Wait for real downlink when this command has a known reply."""
+        from .commands import noop_event
+        with self._updates:
+            command = self.resolve_command(app, name)
+            noop = command['id'].endswith('_NOOP_CC')
+            enable = command['id'] == self.first_contact.enable
+            counter = self.first_contact.counter
+            if noop and app == 'sample_app':
+                self.wait_for(lambda: app in counter, timeout, 'sample_app housekeeping')
+            before = counter.get(app)
+            uplink = self.send(command['id'], arguments)
+            if enable:
+                self.wait_for(lambda: any(p['event_id'] > uplink['event_id'] for p in self._history),
+                              timeout, 'TO_LAB telemetry')
+            if not noop:
+                return {'sent': uplink, 'telemetry': enable}
+
+            def reply():
+                return next((packet for packet in self._events if packet['event_id'] > uplink['event_id']
+                             and noop_event(packet, app)), None)
+
+            packet = self.wait_for(reply, timeout, app + ' NOOP event')
+            result = {'sent': uplink, 'event': packet['values']['Message']}
+            if app == 'sample_app':
+                self.wait_for(lambda: counter.get(app) == before + 1, timeout, 'CommandCounter increase')
+                result.update(before=before, after=counter[app])
+            return result
+
+    def wait_for(self, predicate, timeout, observation):
+        """Wait for an observation or a closed receiver. Caller may already hold the condition."""
+        with self._updates:
+            arrived = self._updates.wait_for(lambda: predicate() or not self._connected(), timeout)
+            if not self._connected():
+                raise ValueError(self._failure or 'Ground receiver disconnected')
+            if not arrived:
+                raise ValueError('Timed out waiting for ' + observation)
+            return arrived
+
+    def observations_since(self, cursor, events, timeout):
+        with self._updates:
+            source = self._events if events else self._history
+            return self.wait_for(lambda: [packet for packet in source if packet['event_id'] > cursor],
+                                 timeout, 'a flight event' if events else 'flight telemetry')
+
+    def noops(self):
+        with self._lock:
+            if not self._connected():
+                raise ValueError('Connect the ground station before running NOOP tests')
+            return [(row['app'], row['id']) for row in self._active_catalog['commands']
+                    if row['id'].endswith('_NOOP_CC') and not row['fields']]
+
     def cancel_test(self, ident):
         with self._lock:
             self.trips.expire()

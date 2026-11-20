@@ -1,6 +1,7 @@
 """Checkout-independent defaults shared by the command line and server."""
 import math
 import os
+import platform
 
 
 def boot_timeout():
@@ -20,3 +21,10 @@ def sensor_timeout():
     if not math.isfinite(timeout) or timeout <= 0:
         raise ValueError("FLIGHT_STUDIO_SENSOR_TIMEOUT must be a positive number of seconds")
     return timeout
+
+def docker_platform():
+    system = {'x86_64': 'amd64', 'aarch64': 'arm64'}.get(platform.machine(), platform.machine())
+    selected = os.environ.get('FLIGHT_STUDIO_PLATFORM', 'linux/' + system)
+    if selected not in {'linux/amd64', 'linux/arm64'}:
+        raise ValueError('Choose linux/amd64 or linux/arm64 for FLIGHT_STUDIO_PLATFORM')
+    return selected

@@ -231,9 +231,10 @@ class Laboratory:
                 record['status'] = 'succeeded'
         except Exception as error:
             message = ('Log reader stopped: ' if record['operation_complete'] else '') + str(error)
-            if not record['cancel'].is_set():
-                emit(message)
             with self.lock:
+                if not record['cancel'].is_set():
+                    record['lines'].append(message)
+                    record['line_count'] += 1
                 record['error'] = message
                 record['exit_code'] = getattr(error, 'returncode', None)
                 record['status'] = 'failed'
@@ -441,6 +442,11 @@ class Laboratory:
         return location
 
     def ground_send(self, body):
+        if 'app' in body and 'command' in body:
+            if set(body) - {'app', 'command', 'args', 'target'}:
+                raise ValueError('Invalid command parameters')
+            command = self.ground.resolve_command(body['app'], body['command'])
+            body = {'target': body.get('target', self.ground_target), 'command_id': command['id'], 'values': body.get('args', {})}
         if set(body) - {'command_id', 'values', 'target', 'test_id'}:
             raise ValueError('Invalid command parameters')
         if body.get('target', self.ground_target) != self.ground_target:

@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-set -e
-
+set -euo pipefail
 cd "$(dirname "$0")/.."
-
-# Use the same image name for local builds and published releases.
-docker build --build-arg "REGISTER_MODELS=$(python3 project/qemu/generate.py --fingerprint)" -t "$(python3 -m hardware.infrastructure image)" "$@" .
+exec python3 -m hardware.emulator_image "$@"
