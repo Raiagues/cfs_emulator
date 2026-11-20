@@ -172,6 +172,12 @@ def parser(public=False):
     else:
         cli.add_argument("--root", type=Path, default=ROOT)
     commands = cli.add_subparsers(dest="action", required=True)
+    command = commands.add_parser("command-step", help="Read or confirm the next SET_RATE source change")
+    command.add_argument("app")
+    command.add_argument("--target", choices=("native", "qemu", "physical"))
+    edit = command.add_mutually_exclusive_group()
+    edit.add_argument("--confirm", choices=("Code", "Struct", "Prototype", "Dispatch", "Events"))
+    edit.add_argument("--line", help="C assignment to store the sampling rate")
     device = commands.add_parser("device", help="Read or update an existing device's bus, address and pins")
     device.add_argument("id")
     device.add_argument("--bus")
@@ -233,6 +239,21 @@ def parser(public=False):
 
 def run(args):
     root = args.root.resolve()
+    if args.action == "command-step":
+        from hardware.targets import selected_target
+        from project.workspace import Workspace
+        workspace = Workspace(root)
+        target = args.target or selected_target(root, required=True)
+        lesson = workspace.command_lesson(target, args.app)
+        if args.confirm:
+            changes = {"target": target, "app": args.app, "stage": lesson["steps"].index(args.confirm),
+                       "source_hash": lesson["source_hash"]}
+            lesson = workspace.mutate("command-step", changes, lesson["expected_hash"])
+        elif args.line is not None:
+            content = lesson["content"].replace(lesson["stub"], args.line, 1)
+            workspace.save_command_line(target, args.app, lesson["path"], content, lesson["file_hash"])
+            lesson = workspace.command_lesson(target, args.app)
+        return lesson, 0
     if args.action == "device":
         from hardware.device_settings import device_settings, update_device
         from project.workspace import Workspace
@@ -441,6 +462,9 @@ def main(argv=None, *, public=False):
         print("\n".join(app["name"] for app in result["project"]["apps"]) or "No project apps")
     elif args.action == "devices":
         print("\n".join(sorted(result["models"])))
+    elif args.action == "command-step":
+        print(f'{result["steps"][result["stage"]]} · {result["path"]}')
+        print(result["content"])
     elif args.action == "device":
         device = result["device"]
         print(f'{device["id"]} · {device["bus"]} · {device["address"]:#04x}')

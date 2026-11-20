@@ -139,6 +139,7 @@ class Handler(BaseHTTPRequestHandler):
                 '/api/tree': lambda: app.workspace.tree(query.get('path', '')),
                 '/api/files/search': lambda: app.workspace.search_files(query.get('root', 'cFS'), query.get('q', '')),
                 '/api/file': lambda: app.workspace.read_file(query['path']),
+                '/api/command/lesson': lambda: app.workspace.command_lesson(query.get('target'), query.get('app')),
                 '/api/hardware': lambda: app.monitor.snapshot(),
                 '/api/first-boot': lambda: first_boot.snapshot(app, query.get('target') or selected_target(app.hardware.root), journal=app.boot_journal_snapshot),
                 '/api/infrastructure': lambda: infrastructure.snapshot(app.hardware),
@@ -219,7 +220,11 @@ class Handler(BaseHTTPRequestHandler):
             if path == '/api/journey/reset':
                 result = app.ground.reset_journey(body.get('target') or selected_target(app.hardware.root))
             elif path == '/api/file':
-                result = app.workspace.write_file(body['path'], body['content'], body.get('expected_hash'))
+                if body.get('command_lesson'):
+                    result = app.workspace.save_command_line(body.get('target'), body.get('app'), body['path'],
+                                                             body['content'], body.get('expected_hash'))
+                else:
+                    result = app.workspace.write_file(body['path'], body['content'], body.get('expected_hash'))
             elif path == '/api/infrastructure':
                 result = infrastructure.save(app.hardware, body)
             elif path == '/api/infrastructure/check':

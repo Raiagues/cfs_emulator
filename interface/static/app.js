@@ -6,6 +6,7 @@ import {commandLaunchStep} from './command-launch.js';
 import {openAppWizard} from './app-wizard.js';
 import {mountMissionLesson} from './mission-lesson.js';
 import {mountGroundLesson} from './ground-lesson.js';
+import {mountCommandLesson} from './command-lesson.js';
 import {mountFirstBoot} from './first-boot.js';
 import {refreshJourney} from './journey.js';
 import {drawOrbit,mountOrbit} from './orbit-preview.js';
@@ -532,7 +533,7 @@ function showFirstBoot(){
 function leaveBoot(){
  bootCleanup?.();bootCleanup=null;bootTarget=null;
 }
-const activities = {event: mountGroundLesson, app: mountMissionLesson};
+const activities = {event: mountGroundLesson, app: mountMissionLesson, command: mountCommandLesson};
 let activity;
 function guidedView() {
  const mount = activities[state.activity];
@@ -544,7 +545,7 @@ function guidedView() {
   const pane = document.createElement('section');
   pane.className = 'activity-view';
   $('#view').replaceChildren(pane);
-  const controller = mount(pane, {state,openApp:done=>newMissionApp('',done)});
+  const controller = mount(pane, {state,startJob,openApp:done=>newMissionApp('',done)});
   activity = {step:state.activity, target:state.target, ...controller};
  } else activity.update?.();
  $('#visual-heading').hidden=true;
@@ -938,11 +939,6 @@ async function openFlightStep(step,entry={}){
  state.commandLaunch=null;
  if(step==='app'){
   state.archApp='';state.archLibrary='';state.archOverview=true;state.mapMode=state.workspace.apps.some(app=>app.managed&&!app.example)?'3d':'2d';state.mapSection='mission';
- }
- if(step==='command'){
-  const last=authoredCommand();
-  if(last)return resumeCommand(last);
-  return selectView('code',undefined,undefined,null,'command');
  }
  if(step==='send'){
   const last=authoredCommand();

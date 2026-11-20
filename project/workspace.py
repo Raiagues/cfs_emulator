@@ -162,6 +162,16 @@ class Workspace:
                     return {'files': results, 'limited': True}
         return {'files': results, 'limited': False}
 
+    def command_lesson(self, target, app=None):
+        from project.command_lesson import CommandLesson
+        with self.lock:
+            return CommandLesson(self, target, app).snapshot()
+
+    def save_command_line(self, target, app, path, content, expected_hash):
+        from project.command_lesson import CommandLesson
+        with self.lock, self.mission._write_lock():
+            return CommandLesson(self, target, app).save_handler(path, content, expected_hash)
+
     def write_file(self, path, content, expected_hash=None):
         if not isinstance(content, str) or len(content.encode()) > self.MAX_TEXT:
             raise ValueError("Invalid content or content exceeds 2 MiB")
@@ -534,6 +544,10 @@ class Workspace:
                 return self._mutate_components(action, payload)
 
     def _mutate_components(self, action, payload):
+        if action == "command-step":
+            from project.command_lesson import CommandLesson
+            lesson = CommandLesson(self, payload.get("target"), payload.get("app"))
+            return lesson.confirm(payload.get("stage"), payload.get("source_hash"))
         config = self.model.load_config(self.root)
         self.model.validate_config(self.root, config)
         if action.startswith("remove-") and action not in ("remove-bus", "remove-device"):

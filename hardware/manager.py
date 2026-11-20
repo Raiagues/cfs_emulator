@@ -897,7 +897,7 @@ class HardwareManager:
             raise HardwareError("The sensorless profile applies only to a physical board.")
         if target == "native" and action in {"boot", "shutdown", "connect", "probe", "values"}:
             raise HardwareError("Native cFS runs on this computer. Use Build, Run cFS, Stop or Output.")
-        if action in {"build", "boot", "run"}:
+        if action in {"build", "check-app", "boot", "run"}:
             self._validate_profile(target, options.get("board"), options.get("os"))
         if action == "model-test":
             from hardware.sensor_probe import validate_model
@@ -918,7 +918,7 @@ class HardwareManager:
             # QEMU and Board consume the same ARM build. Only flight transitions
             # need the checkout-wide guard that enforces a single running instance.
             names = [f"target-{target}"]
-            if action in {"build", "run"}:
+            if action in {"build", "check-app", "run"}:
                 names.append("payload-native" if target == "native" else "payload-flight")
             if action in {"boot", "run", "stop", "shutdown"}:
                 names.append("execution")
@@ -934,6 +934,11 @@ class HardwareManager:
                 return self._stream(["bash", "scripts/setup-native.sh" if target == "native" else "scripts/setup.sh"], emit, cancel)
             if action == "build":
                 return self._build(target, sensorless, emit, cancel, reuse=options.get("reuse_build", False))
+            if action == "check-app":
+                from project.model import identifier
+                app = identifier(options.get("app", ""))
+                return self._stream(["bash", "scripts/build-cfs.sh", "--target", target, "--check-app", app],
+                                    emit, cancel, cwd=self.root)
             if action == "boot":
                 return self._boot(target, connection, bool(options.get("retry")), emit, cancel)
             if action == "run":

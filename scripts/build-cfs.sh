@@ -8,8 +8,13 @@ if [[ -n "${SUDO_USER:-}" ]]; then
 fi
 
 MISSION_TARGET="${2:-}"
+CHECK_APP=""
+if [[ $# -eq 4 && "$3" == --check-app && "$4" =~ ^[a-z][a-z0-9_]{0,18}$ ]]; then
+    CHECK_APP="$4"
+    set -- "$1" "$2"
+fi
 if [[ $# -gt 0 && ( $# -ne 2 || "$1" != "--target" ) ]]; then
-    echo "Usage: scripts/build-cfs.sh [--target native|qemu|physical]" >&2
+    echo "Usage: scripts/build-cfs.sh [--target native|qemu|physical [--check-app NAME]]" >&2
     exit 2
 fi
 if [[ -z "$MISSION_TARGET" ]]; then
@@ -21,7 +26,9 @@ case "$MISSION_TARGET" in
     *) echo "Invalid build target: $MISSION_TARGET" >&2; exit 2 ;;
 esac
 
-"${AS_USER[@]}" python3 project/manage.py sync
+if [[ -z "$CHECK_APP" ]]; then
+    "${AS_USER[@]}" python3 project/manage.py sync
+fi
 if [[ "$MISSION_TARGET" == native ]]; then
     MISSION_ARCH=native
 else
@@ -57,6 +64,19 @@ BUILD_ROOT="$MISSION_ROOT/$MISSION_BUILD"
     "-DMISSION_DEFS=$MISSION_ROOT/sample_defs" "-DCFS_APP_PATH=$SOURCE_ROOT/apps:$SOURCE_ROOT/libs:$MISSION_ROOT/apps:$MISSION_ROOT/libs" \
     "-DSIMULATION=$MISSION_ARCH" -DMISSIONCONFIG=sample -DCFE_EDS_ENABLED=OFF -DENABLE_UNIT_TESTS=OFF \
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/exe
+if [[ -n "$CHECK_APP" ]]; then
+    # cFE names its sub-builds from the active toolchain and platform.
+    # The generated mission adds a person's app to cpu1 only.
+    shopt -s nullglob
+    app_dirs=(mission/"$MISSION_BUILD"/cache/*/*/apps/"$CHECK_APP")
+    if [[ ${#app_dirs[@]} -ne 1 ]]; then
+        echo "cFE did not configure a unique build for $CHECK_APP" >&2
+        exit 1
+    fi
+    cpu_dir=${app_dirs[0]%/apps/*}
+    "${RUN[@]}" cmake --build "$MISSION_ROOT/${cpu_dir#mission/}" --parallel "$BUILD_JOBS" --target "$CHECK_APP"
+    exit 0
+fi
 # Install a complete payload so removed modules cannot survive in the deployed image.
 "${AS_USER[@]}" rm -rf -- "mission/$MISSION_BUILD/exe"
 "${RUN[@]}" env "DESTDIR=$BUILD_ROOT" cmake --build "$BUILD_ROOT/cache" --parallel "$BUILD_JOBS" --target mission-install

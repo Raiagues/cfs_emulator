@@ -99,6 +99,36 @@ class WorkspaceHTTPTest(unittest.TestCase):
         self.assertIn(name, preview["preview"]["entry_point"].lower())
         return self.api("mission/save", {**body, "plan_hash": preview["plan_hash"]})["mission"]
 
+    def test_guided_command_checks_source_revision_and_rolls_back_a_compiler_error(self):
+        self.api("hardware/target", {"target": "native"})
+        self.create("app", "weather", self.api("workspace")["mission"]["source"]["hash"])
+        lesson = self.api("command/lesson?target=native&app=weather")
+        def confirm(index, status=200):
+            return self.api("mutate", {"action": "command-step", "expected_hash": lesson["expected_hash"],
+                            "payload": {"target": "native", "app": "weather", "stage": index,
+                                        "source_hash": lesson["source_hash"]}}, status)
+        self.assertEqual(lesson["stage"], 0)
+        confirm(1, 400)
+        for stage in range(5):
+            updated = confirm(stage)
+            if stage == 0:
+                confirm(stage, 400)
+            self.assertEqual(updated["stage"], stage + 1)
+            lesson = updated
+        path = lesson["path"]
+        file = self.file(path)
+        self.assertEqual(file["hash"], lesson["file_hash"])
+        save = {"target": "native", "command_lesson": True, "app": "weather", "path": path,
+                "expected_hash": file["hash"], "content": file["content"].replace(lesson["stub"], lesson["ghost"])}
+        self.api("file", {**save, "expected_hash": "stale"}, 400)
+        invalid = save["content"].replace(lesson["ghost"], lesson["ghost"] + " undeclared_variable++;")
+        error = self.api("file", {**save, "content": invalid}, 400)
+        self.assertIn("undeclared_variable", error["error"])
+        self.assertEqual(self.file(path)["hash"], file["hash"])
+        self.api("file", save)
+        self.assertEqual(self.api("command/lesson?target=native&app=weather")["stage"], 6)
+        self.assertFalse(self.api("journey?target=native")["steps"]["command"]["done"])
+
     def test_bus_and_optional_hal_lifecycle(self):
         workspace = self.api("workspace")
         bus = "i2c-bus.1"

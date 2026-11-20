@@ -30,6 +30,8 @@ def copy_sample(root, sample, name):
     if not (directory / 'CMakeLists.txt').is_file():
         raise ValueError(f"Download the cFS {sample} submodule first")
     def rename(text):
+        if sample == "sample_app":
+            text = text.replace('"SAMPLE:', '"' + name.upper() + ':')
         return (text.replace(sample.upper(), name.upper()).replace(sample, name)
                 .replace(sample.replace('_', ' ').title(), name.replace('_', ' ').title()))
     files = {}

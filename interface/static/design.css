@@ -811,3 +811,13 @@
 .mission-level code,.mission-route code {font:var(--fs-label) var(--fs-mono);border:1px solid var(--fs-line);border-radius:var(--fs-radius-control);background:var(--fs-surface)}
 .mission-route[data-empty=true] {opacity:.5}
 .wizard-name small {color:var(--fs-danger)}
+
+.command-tree li,.command-stops,.command-insight>small,.command-line small,.command-source>small {color:var(--fs-muted)}
+.command-tree li,.command-lines,.command-source>small,.command-insight p {font-family:var(--fs-mono)}
+.command-tree li[aria-current],.command-stops li[aria-current] {color:var(--fs-accent)}
+.command-stops li[data-done=true] {color:var(--fs-success)}
+.command-stops i {border:1px solid currentColor;border-radius:50%;font-style:normal}
+.command-line[data-change=true] {background:var(--fs-success-bg)}
+.command-line input {font:inherit;color:var(--fs-text);border:1px solid var(--fs-accent);background:var(--fs-bg)}
+.command-line input::placeholder {color:var(--fs-muted)}
+.command-lesson [role=alert] {color:var(--fs-danger);overflow-wrap:anywhere}

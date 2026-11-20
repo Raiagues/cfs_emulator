@@ -40,3 +40,21 @@
 .wizard-name,.wizard-more code,.wizard-records span {display:block}
 .wizard-name input {display:block;width:min(100%,320px);margin-block:5px}
 .wizard-name small:empty {display:none}
+
+.command-lesson {display:grid;grid-template-columns:minmax(145px,17%) minmax(0,1fr) minmax(205px,23%);gap:14px;height:100%;padding:16px}
+.command-tree,.command-insight,.command-editor {min-height:0;min-width:0}
+.command-tree ul,.command-stops {padding:0;list-style:none}
+.command-tree li {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:5px}
+.command-editor {display:flex;flex-direction:column;gap:8px}
+.command-stops {display:flex;flex-wrap:wrap;gap:10px;margin:0}
+.command-stops li {display:inline-flex;align-items:center;gap:4px}
+.command-stops i {display:grid;place-items:center;min-width:19px;height:19px}
+.command-source {min-height:0;display:flex;flex:1;flex-direction:column;padding:12px;gap:6px}
+.command-source h2 {display:flex;align-items:center;gap:6px}
+.command-lines {overflow:auto;flex:1;padding-block:8px}
+.command-line {display:grid;grid-template-columns:4ch minmax(max-content,1fr);align-items:baseline;min-width:max-content;line-height:1.65}
+.command-line small {text-align:right;padding-inline-end:8px}
+.command-line code {white-space:pre}
+.command-line input {width:38ch;max-width:100%;margin-inline-start:2ch}
+.command-insight {align-self:start;display:grid;gap:12px;padding:16px}
+.command-insight label,.command-insight input[type=range] {display:block;width:100%}
