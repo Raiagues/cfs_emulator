@@ -10,3 +10,8 @@ def configure(device):
 
 def sample(seconds, initial):
     return initial
+
+
+if __name__ == "__main__":
+    from sensors.session import sensor_main
+    sensor_main(__file__)

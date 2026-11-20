@@ -1,4 +1,4 @@
-FROM debian:trixie-slim AS cfs-builder
+FROM debian:bookworm-slim AS cfs-builder
 
 # Cross-compile cFS without installing a toolchain on the host PC.
 RUN apt-get update && apt-get install -y --no-install-recommends build-essential cmake gcc-aarch64-linux-gnu g++-aarch64-linux-gnu git && rm -rf /var/lib/apt/lists/*

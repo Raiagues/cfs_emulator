@@ -32,12 +32,15 @@ def board_model():
 def service_installed():
     # setup_board.py marks the unit with the account allowed to control it.
     marker = "# Flight Studio managed; account=" + pwd.getpwuid(os.getuid()).pw_name + "\n"
-    return SERVICE.is_file() and SERVICE.read_text().startswith(marker)
+    return (SERVICE.is_file() and SERVICE.read_text().startswith(marker)
+            and output("systemctl", "show", "cfs-studio.service", "--property=User", "--value") == pwd.getpwuid(os.getuid()).pw_name
+            and output("systemctl", "show", "cfs-studio.service", "--property=NoNewPrivileges", "--value") == "yes")
 
 
 def report():
     return {
         "arch": platform.machine(),
+        "glibc": os.confstr("CS_GNU_LIBC_VERSION").removeprefix("glibc "),
         "model": board_model(),
         "home": os.path.expanduser("~"),
         "hostname": platform.node(),

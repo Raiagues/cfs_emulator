@@ -337,8 +337,18 @@ def waveform_for(root, device, settings, catalog=None, orbit=None):
     return SimpleNamespace(configure=original.configure, sample=sample, enabled={prop for prop,s in settings["signals"].items() if s.get("enabled", True)})
 
 
+def sample_frame(elapsed, samples, catalog):
+    payload = []
+    for device, values in samples:
+        props = catalog["models"][device["model"]]["properties"]
+        payload.append({"id": device["id"],
+                        "values": {name: value / display_units(props[name]["unit"])[0] for name, value in values.items()},
+                        "units": {name: display_units(props[name]["unit"])[1] for name in values}})
+    return {"elapsed": elapsed, "devices": payload}
+
+
 def run_session(root=ROOT, steps=None, events=False, dry_run=False, device_id=None,
-                sensor_ids=(), interval=None, trace_qmp=False, target=None):
+                sensor_ids=(), interval=None, trace_qmp=False, target=None, on_frame=None):
     root = Path(root)
     session = load_session(root)
     selected = [sensor for sensor in session["settings"]["sensors"] if sensor["enabled"]]
@@ -361,21 +371,20 @@ def run_session(root=ROOT, steps=None, events=False, dry_run=False, device_id=No
         if not waveforms[device["id"]].enabled:
             raise ValueError(f"Select at least one output for {device['id']}")
     def report(elapsed, samples):
-        payload = []
-        for device, values in samples:
-            props = catalog["models"][device["model"]]["properties"]
-            payload.append({"id": device["id"],
-                            "values": {name: value / display_units(props[name]["unit"])[0] for name, value in values.items()},
-                            "units": {name: display_units(props[name]["unit"])[1] for name in values}})
-        print("@sensor " + json.dumps({"elapsed": elapsed, "devices": payload}), flush=True)
+        frame = sample_frame(elapsed, samples, catalog)
+        if on_frame:
+            on_frame(frame)
+        if events:
+            print("@sensor " + json.dumps(frame), flush=True)
     simulate(root, list(waveforms), interval if interval is not None else session["settings"]["interval"],
-             steps, waveforms, trace_qmp=trace_qmp, on_sample=report if events else None, dry_run=dry_run, target=target)
+             steps, waveforms, trace_qmp=trace_qmp, on_sample=report if events or on_frame else None, dry_run=dry_run, target=target)
 
 
 def sensor_main(filename):
     """Execute a sensor module in the terminal without requiring a running board."""
     parser = argparse.ArgumentParser(description="Preview this sensor's configured Python functions.")
     parser.add_argument("--steps", type=int, default=8)
+    parser.add_argument("--events", action="store_true")
     parser.add_argument("--interval", type=float, default=1.0)
     args = parser.parse_args()
     model_name = Path(filename).stem
@@ -397,6 +406,8 @@ def sensor_main(filename):
             samples = sample_values([device], step * args.interval, {model_name: waveform},
                                     {model_name: configuration_}, root=root, catalog=catalog)
             print_samples(samples, step * args.interval, catalog)
+            if args.events:
+                print("@sensor " + json.dumps(sample_frame(step * args.interval, samples, catalog)), flush=True)
     except (OSError, ValueError, RuntimeError, TypeError) as error:
         parser.exit(1, f"Error: {error}\n")
 

@@ -3,6 +3,7 @@ import argparse
 import base64
 import json
 import os
+import selectors
 from pathlib import Path
 import subprocess
 import sys
@@ -10,6 +11,7 @@ import tempfile
 import time
 
 from hardware.infrastructure import emulator_config
+from project.defaults import loopback, network
 
 
 ALIAS = "flight-studio-qemu"
@@ -21,38 +23,39 @@ def trust_settings(root):
     filename = str(root.resolve() / "board/known_hosts").replace("%", "%%").replace("\\", "\\\\").replace('"', '\\"')
     return [f'UserKnownHostsFile="{filename}"', "GlobalKnownHostsFile=none",
             "StrictHostKeyChecking=yes", "UpdateHostKeys=no", "HostKeyAlgorithms=ssh-ed25519",
-            "HostKeyAlias=" + ALIAS, "HostName=127.0.0.1"]
+            "HostKeyAlias=" + ALIAS, "HostName=" + loopback()]
 
 
 def ssh_options(root, port):
-    options = ["-F", str(Path.home() / ".ssh/cfs-emulator/config")]
+    options = ["-F", str(Path(network(root).keys) / "config")]
     for setting in trust_settings(root):
         options.extend(["-o", setting])
-    return [*options, "-p", str(port), "pi4-cfs"]
+    return [*options, "-p", str(port), network(root).ssh_alias]
 
 
 def container_id(root, port):
-    result = subprocess.run(["docker", "container", "inspect", "pi4-cfs"], capture_output=True,
+    result = subprocess.run(["docker", "container", "inspect", network(root).container], capture_output=True,
                             text=True, timeout=10, check=True)
     item = json.loads(result.stdout)[0]
-    disk = root.resolve() / "board"
+    disk = (root / "board").resolve()
     mounted = any(m["Type"] == "bind" and m["Destination"] == "/work/board"
                   and Path(m["Source"]).resolve() == disk for m in item["Mounts"])
-    binding = item["NetworkSettings"]["Ports"].get("2222/tcp")
+    binding = item["NetworkSettings"]["Ports"].get(f"{network(root).internal_ssh}/tcp")
     if not (mounted and item["State"]["Running"] and item["HostConfig"]["NetworkMode"] in {"bridge", "default"}
-            and binding == [{"HostIp": "127.0.0.1", "HostPort": str(port)}]):
+            and binding == [{"HostIp": loopback(), "HostPort": str(port)}]):
         raise ValueError("The running emulator does not match this workspace, network and SSH port.")
     return item["Id"]
 
 
-def public_key(line):
+def public_key(line, port=None):
+    port = port or network(ROOT).internal_ssh
     # ssh-keyscan reads the guest port *inside* the verified Docker namespace.
     # Require one ED25519 key, with its RFC 4253 wire type and exact key length.
     records = [row.strip() for row in line.splitlines() if row.strip() and not row.lstrip().startswith("#")]
     if len(records) != 1:
         raise ValueError("Expected one emulator host key.")
     fields = records[0].split()
-    if len(fields) != 3 or fields[:2] != ["[127.0.0.1]:2222", "ssh-ed25519"]:
+    if len(fields) != 3 or fields[:2] != [f"[{loopback()}]:{port}", "ssh-ed25519"]:
         raise ValueError("Unexpected emulator host key record.")
     blob = base64.b64decode(fields[2], validate=True)
     prefix = b"\x00\x00\x00\x0bssh-ed25519\x00\x00\x00\x20"
@@ -62,18 +65,20 @@ def public_key(line):
 
 
 def pin_guest(root, ident):
-    scan = subprocess.run(["docker", "exec", ident, "ssh-keyscan", "-T", "3", "-p", "2222",
-                           "-t", "ed25519", "127.0.0.1"], capture_output=True, text=True, timeout=10)
+    scan = subprocess.run(["docker", "exec", ident, "ssh-keyscan", "-T", "3", "-p", str(network(root).internal_ssh),
+                           "-t", "ed25519", loopback()], capture_output=True, text=True, timeout=10)
     if scan.returncode == 1 and all(not row.strip() or row.lstrip().startswith("#")
                                     for row in scan.stdout.splitlines()):
         if "error response from daemon" in scan.stderr.lower():
             raise RuntimeError(scan.stderr.strip())
         return False  # sshd has not started.
     scan.check_returncode()
-    record = public_key(scan.stdout)
+    record = public_key(scan.stdout, network(root).internal_ssh)
     path = root / "board/known_hosts"
     if path.is_file() and path.read_text() == record:
         return True
+    if path.exists():
+        print("[emulator] Updating the SSH pin from the verified container for this disk.", flush=True)
     with tempfile.NamedTemporaryFile("w", dir=path.parent, delete=False) as f:
         try:
             f.write(record)
@@ -84,36 +89,54 @@ def pin_guest(root, ident):
     return True
 
 
-def wait_for_guest(root, port, timeout):
-    ident = container_id(root, port)
+def ssh_milestones(ident, timeout):
     started = time.monotonic()
-    next_status = started
-    while True:
-        try:
-            enrolled = pin_guest(root, ident)
-        except subprocess.TimeoutExpired:
-            enrolled = False
-        if enrolled:
-            # The forwarded endpoint must prove possession of the private key.
-            argv = ["ssh", "-T", "-o", "BatchMode=yes", "-o", "ConnectTimeout=3", *ssh_options(root, port), "true"]
+    deadline = started + timeout
+    progress = started
+    with subprocess.Popen(["docker", "logs", "--follow", ident], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as console:
+        with selectors.DefaultSelector() as ready:
+            ready.register(console.stdout, selectors.EVENT_READ)
+            pending, last = b"", ""
             try:
-                probe = subprocess.run(argv, capture_output=True, text=True, timeout=10, env=dict(os.environ, LC_ALL="C"))
-            except subprocess.TimeoutExpired:
-                pass  # sshd may still be bringing up the guest login session.
-            else:
-                if not probe.returncode:
-                    print("[emulator] Linux SSH ready.", flush=True)
-                    return
-                error = probe.stderr.strip()
-                if "Host key verification failed" in error or "Permission denied" in error:
-                    raise ValueError(error)
-        now = time.monotonic()
-        if now - started >= timeout:
-            raise ValueError("Linux SSH did not become ready before the boot timeout.")
-        if now >= next_status:
-            print(f"[Boot: {now-started:.0f}s] Waiting for guest SSH", flush=True)
-            next_status = now + 10
-        time.sleep(1)
+                while time.monotonic() < deadline:
+                    now = time.monotonic()
+                    if now >= progress:
+                        print(f"[Boot: {now-started:.0f}s] Waiting for guest SSH", flush=True)
+                        progress = now + 10
+                    if not ready.select(max(0, min(progress, deadline) - now)):
+                        continue
+                    data = os.read(console.stdout.fileno(), 65536)
+                    if not data:
+                        raise ValueError("Emulator exited before SSH was ready. " + last)
+                    pending += data
+                    lines = pending.split(b"\n")
+                    pending = lines.pop()
+                    for line in lines:
+                        last = line.decode(errors="replace").strip() or last
+                        if "FLIGHT_STUDIO_SSH_READY" in last or " login:" in last or (
+                                "Started" in last and "OpenBSD Secure Shell server" in last):
+                            yield last
+                raise ValueError("Linux SSH did not become ready before the boot timeout. " + last)
+            finally:
+                console.terminate()
+                console.wait()
+
+
+def wait_for_guest(root, port, timeout):
+    from contextlib import closing
+    ident = container_id(root, port)
+    if not pin_guest(root, ident):
+        with closing(ssh_milestones(ident, timeout)) as milestones:
+            for event in milestones:
+                if pin_guest(root, ident):
+                    break
+                if "FLIGHT_STUDIO_SSH_READY" in event:
+                    raise ValueError("Guest sshd started but did not present an ED25519 key.")
+    argv = ["ssh", "-T", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15", *ssh_options(root, port), "true"]
+    probe = subprocess.run(argv, capture_output=True, text=True, timeout=30, env=dict(os.environ, LC_ALL="C"))
+    if probe.returncode:
+        raise ValueError(probe.stderr.strip() or "The guest did not accept its checkout SSH identity.")
+    print("[emulator] Linux SSH ready.", flush=True)
 
 
 def main():
@@ -126,9 +149,10 @@ def main():
     args = parser.parse_args()
     port = emulator_config(ROOT)["ssh_port"]
     if args.mode == "config":
-        lines = [f"Port {port}", "User root", "IdentityFile ~/.ssh/cfs-emulator/id_ed25519",
+        key = str(Path(network(ROOT).keys) / 'id_ed25519').replace('%', '%%').replace('\\', '\\\\').replace('"', '\\"')
+        lines = [f"Port {port}", "User root", f'IdentityFile "{key}"',
                  "IdentitiesOnly yes", "BatchMode yes", "ConnectTimeout 5", *trust_settings(ROOT)]
-        print("Host pi4-cfs")
+        print("Host " + network(ROOT).ssh_alias)
         for line in lines:
             print("    " + line)
     elif args.mode == "wait":

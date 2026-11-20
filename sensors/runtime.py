@@ -116,7 +116,8 @@ def check_live(config, qmp):
 
 def connect_board(root):
     try:
-        return connect(root / "board" / "qmp.sock")
+        from project.defaults import loopback, network
+        return connect((loopback(), network(root).qmp))
     except OSError as error:
         raise ValueError(f"Cannot connect to the board QMP socket: {error}. {REBOOT}") from error
 

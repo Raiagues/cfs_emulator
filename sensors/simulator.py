@@ -47,7 +47,7 @@ def load_waveform(root, model):
 
 def binding(device, root=ROOT, catalog=None):
     """Expected target, shared by inspection and validation; does not load user code."""
-    return {"qmp_socket": "board/qmp.sock", "qom_path": f"/machine/peripheral/{device['id']}",
+    return {"qom_path": f"/machine/peripheral/{device['id']}",
             "bus": device["bus"], "address": device["address"],
             "linux_device": (catalog or board_catalog(load_config(root)["board"], root))["buses"][device["bus"]]["device"]}
 
@@ -220,12 +220,14 @@ def simulate(root, sensor_ids=(), interval=1.0, steps=None, waveforms=None, trac
         for device in devices:
             sensor_config = configurations[device["id"]]
             print(f"{device['id']}  |  {sensor_config.bus}  |  I2C {sensor_config.address:#04x}", flush=True)
-            print(f"QMP: {root / binding(device, root, catalog)['qmp_socket']}", flush=True)
+            from project.defaults import loopback, network
+            print(f"QMP: {loopback()}:{network(root).qmp}", flush=True)
             print(f"Object: {sensor_config.qom_path}", flush=True)
             for signal in sensor_config.signals:
                 print(f"{signal.property}: sample in {signal.unit}; QEMU value = sample × {signal.scale}", flush=True)
         print("\nElapsed  Sensor  Value  |  QMP command  |  Result", flush=True)
         started = time.monotonic()
+        confirmed = set()
         count = 0
         while steps is None or count < steps:
             tick = time.monotonic()
@@ -246,6 +248,10 @@ def simulate(root, sensor_ids=(), interval=1.0, steps=None, waveforms=None, trac
                         reply = "OK" if result == {} else json.dumps(result)
                         print(f"{tick - started:7.2f}s  {device['id']}  {name}={value / scale:.3f} {unit}"
                               f"  |  qom-set {name}={value}  |  {reply}", flush=True)
+                    if values and device["id"] not in confirmed:
+                        from journey.mission import record_writes
+                        record_writes(root, target, {device["id"]: time.time()})
+                        confirmed.add(device["id"])
             if on_sample:
                 on_sample(tick - started, samples)
             count += 1
@@ -261,21 +267,34 @@ def print_samples(samples, elapsed, catalog):
         print(f"{elapsed:7.2f}s  {device['id']}  {line}", flush=True)
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+def main(argv=None, *, public=False):
+    from contextlib import redirect_stdout
+    import sys
+    parser = argparse.ArgumentParser(prog='./start --no-ui simulate' if public else None, description=__doc__)
     parser.add_argument("ids", nargs="*", help="configured sensor IDs; defaults to the selected session")
-    parser.add_argument("--root", type=Path, default=ROOT)
+    if public:
+        parser.set_defaults(root=ROOT)
+    else:
+        parser.add_argument("--root", type=Path, default=ROOT)
+    parser.add_argument("--json", action="store_true")
     parser.add_argument("--target", choices=("native", "qemu", "physical"))
     parser.add_argument("--interval", type=float, help="seconds between updates; defaults to SESSION")
     parser.add_argument("--steps", type=int, help="stop after this many updates")
     parser.add_argument("--dry-run", action="store_true", help="preview samples without connecting to QEMU")
     parser.add_argument("--events", action="store_true", help="emit machine-readable @sensor JSON with physical units per tick")
     parser.add_argument("--trace-qmp", action="store_true", help="also print complete QMP requests and responses")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
+    result = {"samples": 0, "last": None}
+    def collect(frame):
+        result["samples"] += 1
+        result["last"] = frame
     try:
         from sensors.session import run_session
-        run_session(args.root, sensor_ids=args.ids, interval=args.interval, steps=args.steps,
-                    trace_qmp=args.trace_qmp, dry_run=args.dry_run, events=args.events, target=args.target)
+        with redirect_stdout(sys.stderr if args.json else sys.stdout):
+            run_session(args.root, sensor_ids=args.ids, interval=args.interval, steps=args.steps, trace_qmp=args.trace_qmp,
+                        dry_run=args.dry_run, events=args.events, target=args.target, on_frame=collect if args.json else None)
+        if args.json:
+            print(json.dumps(result))
     except KeyboardInterrupt:
         print("Synthetic data stopped.", flush=True)
     except (OSError, ValueError, RuntimeError) as error:

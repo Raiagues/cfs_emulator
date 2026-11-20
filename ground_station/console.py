@@ -8,9 +8,11 @@ import os
 from pathlib import Path
 import socket
 import socketserver
+import stat
 import struct
 import subprocess
 import sys
+import tempfile
 import threading
 
 from hardware.targets import selected_target
@@ -18,14 +20,25 @@ from project.defaults import runtime_dir, sensor_timeout
 
 
 def address(root):
-    # Linux abstract sockets disappear with the last file descriptor, even after a crash.
     identity = hashlib.sha256(os.fsencode(Path(root).resolve())).hexdigest()
-    return '\0flight-studio-ground-' + str(os.getuid()) + '-' + identity
+    if sys.platform.startswith('linux'):
+        return '\0flight-studio-ground-' + str(os.getuid()) + '-' + identity
+    directory = Path(tempfile.gettempdir()) / f'flight-studio-{os.getuid()}'
+    directory.mkdir(mode=0o700, exist_ok=True)
+    info = directory.lstat()
+    if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077:
+        raise PermissionError('The ground receiver needs a private socket directory')
+    return str(directory / identity[:20])
 
 
 def same_user(sock):
-    credentials = sock.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, struct.calcsize('3i'))
-    return struct.unpack('3i', credentials)[1] == os.getuid()
+    if hasattr(socket, 'SO_PEERCRED'):
+        credentials = sock.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, struct.calcsize('3i'))
+        return struct.unpack('3i', credentials)[1] == os.getuid()
+    import ctypes
+    uid, gid = ctypes.c_uint(), ctypes.c_uint()
+    result = ctypes.CDLL(None).getpeereid(sock.fileno(), ctypes.byref(uid), ctypes.byref(gid))
+    return result == 0 and uid.value == os.getuid()
 
 
 def send_frame(stream, data):
@@ -103,9 +116,12 @@ class Operator(socketserver.StreamRequestHandler):
 
 def serve(root, ready):
     from jobs.service import Laboratory
+    endpoint = address(root)
+    path = Path(endpoint) if not endpoint.startswith('\0') else None
     with os.fdopen(ready, 'w') as signal:
         try:
-            server = Receiver(address(root), Operator)
+            server = Receiver(endpoint, Operator)
+            identity = path.stat() if path else None
             server.lab = Laboratory(root)
             server.selection = threading.Lock()
         except (OSError, RuntimeError, ValueError) as error:
@@ -117,6 +133,12 @@ def serve(root, ready):
             server.serve_forever()
     finally:
         server.lab.close()
+        if path:
+            try:
+                if os.path.samestat(path.stat(), identity):
+                    path.unlink()
+            except FileNotFoundError:
+                pass  # Another launcher already removed the closed socket.
     return 0
 
 
@@ -132,7 +154,7 @@ def channel(root, start):
     with closing(socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)) as sock:
         try:
             connect(sock, root)
-        except ConnectionRefusedError:
+        except (ConnectionRefusedError, FileNotFoundError):
             if not start:
                 yield None
                 return
@@ -146,7 +168,14 @@ def channel(root, start):
             fcntl.flock(lock, fcntl.LOCK_EX)
             try:
                 connect(sock, root)
-            except ConnectionRefusedError:
+            except (ConnectionRefusedError, FileNotFoundError):
+                endpoint = address(root)
+                if not endpoint.startswith('\0'):
+                    path = Path(endpoint)
+                    if path.exists():
+                        if not stat.S_ISSOCK(path.lstat().st_mode):
+                            raise ValueError('Ground receiver path is occupied')
+                        path.unlink()
                 reader, writer = os.pipe()
                 with os.fdopen(reader) as signal:
                     try:

@@ -38,7 +38,7 @@ class EmulatorIdentityTest(unittest.TestCase):
 
     def test_recreated_disk_pinned_from_its_private_container_before_login(self):
         responses = [self.inspect(), result(self.banner, code=1), result(self.scan), result()]
-        with patch.object(subprocess, "run", side_effect=responses) as run, patch.object(emulator_ssh.time, "sleep"):
+        with patch.object(subprocess, "run", side_effect=responses) as run, patch.object(emulator_ssh, "ssh_milestones", return_value=(x for x in ["FLIGHT_STUDIO_SSH_READY"])):
             emulator_ssh.wait_for_guest(self.root, 3222, 20)
         calls = [c.args[0] for c in run.call_args_list]
         self.assertEqual(calls[1], calls[2])

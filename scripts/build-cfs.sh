@@ -43,12 +43,14 @@ if [[ "$MISSION_TARGET" == native ]]; then
     MISSION_ROOT="$PWD/mission"
     RUN=("${AS_USER[@]}")
 else
-    docker build --network=host --target cfs-builder -t cfs-builder:local .
+    BUILDER_IMAGE=$(python3 -m project.defaults builder)
+    BUILDER_PLATFORM=$(python3 -m project.defaults platform)
+    docker build --platform "$BUILDER_PLATFORM" --network=host --target cfs-builder -t "$BUILDER_IMAGE" .
     SOURCE_ROOT=/cFS
     MISSION_ROOT=/mission
-    RUN=(docker run --rm --user "${SUDO_UID:-$(id -u)}:${SUDO_GID:-$(id -g)}"
+    RUN=(docker run --platform "$BUILDER_PLATFORM" --rm --user "${SUDO_UID:-$(id -u)}:${SUDO_GID:-$(id -g)}"
          -v /etc/passwd:/etc/passwd:ro -v /etc/group:/etc/group:ro
-         -v "$PWD/cFS:/cFS:ro" -v "$PWD/mission:/mission" cfs-builder:local)
+         -v "$PWD/cFS:/cFS:ro" -v "$PWD/mission:/mission" "$BUILDER_IMAGE")
 fi
 BUILD_ROOT="$MISSION_ROOT/$MISSION_BUILD"
 "${RUN[@]}" cmake -S "$SOURCE_ROOT/cfe" -B "$BUILD_ROOT/cache" \

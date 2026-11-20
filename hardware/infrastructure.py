@@ -3,6 +3,7 @@ from project.qemu.generate import fingerprint
 from project.nasa_source import OFFICIAL_URL, source_status
 from hardware.host_tools import package_manager
 from hardware.targets import selected_target
+from project.defaults import loopback, network
 from hardware.state import BuildSettings, Emulator, RuntimeState
 from dataclasses import asdict
 from collections.abc import Callable
@@ -34,7 +35,7 @@ def emulator_config(root):
     image = (root / "config/image").read_text().strip()
     if "{fingerprint}" in image:
         image = image.replace("{fingerprint}", fingerprint())
-    return validate_emulator(asdict(RuntimeState(root).emulator(Emulator(image, 2222))))
+    return validate_emulator(asdict(RuntimeState(root).emulator(Emulator(image, network(root).ssh))))
 
 
 def validate_emulator(value):
@@ -248,8 +249,8 @@ def _check_plan(hardware, target):
         image = emulator["image"]
         yield Probe("Emulator image", ("docker", "image", "inspect", "--format",
                     '{{index .Config.Labels "org.flight-studio.register-models"}}', image), partial(_image_result, image))
-        yield Probe("Emulator SSH identity", (*local, "check-emulator-key"))
-        yield Probe("Local SSH port", (*local, "check-port", str(emulator["ssh_port"])))
+        yield Probe("Emulator SSH identity", (*local, "check-emulator-key", str(hardware.root)))
+        yield Probe("Local SSH port", (*local, "check-port", str(hardware.root), str(emulator["ssh_port"])))
     yield Probe("NASA cFS source", (sys.executable, "-m", "project.nasa_source", "--status", str(hardware.root)),
                 _source_result, "./scripts/install-cfs.sh")
 
@@ -377,33 +378,40 @@ def _cli(args):
         return subprocess.call(shlex.split(commands["authorize_key"]))
     if args == ["check-scp"]:
         return _scp_check()
-    if args == ["check-emulator-key"]:
-        directory = Path.home() / ".ssh/cfs-emulator"
+    if len(args) == 2 and args[0] == "check-emulator-key":
+        directory = Path(network(args[1]).keys)
         for filename in ("config", "id_ed25519", "id_ed25519.pub"):
             if not (directory / filename).is_file():
                 print(f"Missing {directory / filename}")
                 return 1
         return subprocess.call(["ssh-keygen", "-lf", str(directory / "id_ed25519")], stdin=subprocess.DEVNULL)
-    if len(args) == 2 and args[0] == "check-port":
-        port = int(args[1])
-        address = f"127.0.0.1:{port}"
+    if len(args) == 3 and args[0] == "check-port":
+        root, port = args[1], int(args[2])
+        address = f"{loopback()}:{port}"
         try:
             with socket.socket() as sock:
-                sock.bind(("127.0.0.1", port))
+                sock.bind((loopback(), port))
             print(address)
             return 0
         except OSError as error:
             # A busy port is also valid when the selected emulator owns the mapping.
             try:
-                result = subprocess.run(["docker", "port", "pi4-cfs", "2222/tcp"],
+                result = subprocess.run(["docker", "port", network(root).container, f"{network(root).internal_ssh}/tcp"],
                                         capture_output=True, text=True, timeout=5)
                 if result.returncode == 0 and address in result.stdout.splitlines():
                     print(address + " · QEMU running")
                     return 0
-            except (OSError, subprocess.TimeoutExpired):
-                pass
+            except (OSError, subprocess.TimeoutExpired) as inspect_error:
+                print(f"{address} · {error.strerror}. Could not inspect the emulator: {inspect_error}")
+                return 1
             print(f"{address} · {error.strerror}")
             return 1
+    if args == ["flight-command"]:
+        state = RuntimeState(CODE_ROOT)
+        build = state.read("build-flight.json", {})
+        catalog = state.read("catalog-flight-" + build["fingerprint"] + ".json", {}) if build.get("fingerprint") else {}
+        print(catalog.get("transport", {}).get("command_port", network(CODE_ROOT).flight_command))
+        return 0
     if len(args) == 1 and args[0] in {"ssh_port", "image"}:
         print(emulator_config(CODE_ROOT)[args[0]])
         return 0

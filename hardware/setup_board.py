@@ -2,9 +2,10 @@
 """One-time Raspberry Pi authorization: sudo python3 setup_board.py.
 
 Installs an on-demand cFS service and grants only its exact control commands.
-The calling user's flight binary runs as root, as with sudo ./core-cpu1.
+The flight process runs under the SSH account with the OSAL scheduling limits.
 """
 import argparse
+import grp
 import os
 from pathlib import Path
 import pwd
@@ -60,12 +61,23 @@ def main():
     if service.exists() and f"WorkingDirectory={current}\n" not in service.read_text():
         if subprocess.run([commands["systemctl"], "is-active", "--quiet", "cfs-studio.service"]).returncode == 0:
             raise SystemExit("Stop cFS before changing its installation folder.")
+    try:
+        grp.getgrnam("i2c")
+        groups = "SupplementaryGroups=i2c\n"
+    except KeyError:
+        groups = ""
     unit = marker + f'''[Unit]
 Description=cFS Flight Studio (on demand)
 After=network.target
 
 [Service]
 Type=simple
+User={user}
+{groups}NoNewPrivileges=yes
+CapabilityBoundingSet=CAP_SYS_NICE CAP_IPC_LOCK CAP_SYS_RESOURCE
+AmbientCapabilities=CAP_SYS_NICE CAP_IPC_LOCK CAP_SYS_RESOURCE
+LimitRTPRIO=99
+LimitMSGQUEUE=infinity
 WorkingDirectory={current}
 ExecStart={commands['stdbuf']} -oL -eL {current}/core-cpu1
 StandardOutput=journal

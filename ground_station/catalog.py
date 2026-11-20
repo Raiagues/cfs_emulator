@@ -155,9 +155,6 @@ def _build_catalog(root, overrides_root=None, container=None, temp_root=None, bu
     compiler_build = build / 'cache' if (build / 'cache').is_dir() else build
     flags_files = sorted(compiler_build.glob('**/default_cpu1/apps/*/CMakeFiles/*.dir/flags.make'))
     flags_files += sorted(compiler_build.glob('**/default_cpu1/*/CMakeFiles/*.dir/flags.make'))
-    script = (root / 'scripts/build-cfs.sh').read_text()
-    image_match = re.search(r'--target cfs-builder -t ([\w./:-]+)', script)
-    builder_image = image_match[1] if image_match else None
     if not flags_files:
         result['errors'].append('Build cFS to generate the headers and communication catalog.')
         return result
@@ -214,8 +211,6 @@ def _build_catalog(root, overrides_root=None, container=None, temp_root=None, bu
             args += ['-I' + str(root / 'cFS/apps/ci_lab/fsw/inc')]
         def compile_run(argv, **kwargs):
             if container_build:
-                if not builder_image:
-                    raise ValueError('Compiler image not found in scripts/build-cfs.sh')
                 if not container:
                     raise ValueError('Docker compiler unavailable')
                 prefix = ['docker', 'exec', '-i', container]
@@ -416,15 +411,12 @@ def build_catalog(root, overrides_root=None, build_dir=None):
     container_flags = any('-I/cFS/' in path.read_text() for path in build.glob('**/flags.make'))
     if not container_flags:
         return _build_catalog(root, overrides_root, build_dir=build)
-    script = (root / 'scripts/build-cfs.sh').read_text()
-    image = re.search(r'--target cfs-builder -t ([\w./:-]+)', script)
-    if not image:
-        raise ValueError('Compiler image not found in scripts/build-cfs.sh')
+    from project.defaults import builder, docker_platform
     with tempfile.TemporaryDirectory(prefix='flight-schema-') as temp:
-        container = run(['docker', 'run', '--rm', '-d', '--network', 'none',
+        container = run(['docker', 'run', '--platform', docker_platform(), '--rm', '-di', '--network', 'none',
                          '--user', f'{os.getuid()}:{os.getgid()}',
                          '-v', str(root / 'cFS') + ':/cFS:ro', '-v', str(root / 'mission') + ':/mission:ro', '-v', temp + ':' + temp,
-                         image[1], 'sleep', '600']).decode().strip()
+                         builder(), 'cat']).decode().strip()
         try:
             return _build_catalog(root, overrides_root, container, temp, build_dir=build)
         finally:

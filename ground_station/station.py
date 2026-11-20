@@ -65,12 +65,13 @@ class GroundStation:
                     self._catalog = catalog
             return copy.deepcopy(self._catalog)
 
-    def start(self, host, listen_host, return_host=None, build_root=None, catalog=None, build_dir=None):
+    def start(self, host, listen_host, return_host=None, build_root=None, catalog=None, build_dir=None,
+              command_port=None, receiver_container=None):
         with self._lifecycle:
             self.stop()
-            return self._start(host, listen_host, return_host, build_root, catalog, build_dir)
+            return self._start(host, listen_host, return_host, build_root, catalog, build_dir, command_port, receiver_container)
 
-    def _start(self, host, listen_host, return_host, build_root, catalog, build_dir):
+    def _start(self, host, listen_host, return_host, build_root, catalog, build_dir, command_port, receiver_container):
         catalog = copy.deepcopy(catalog) if catalog is not None else self.catalog(refresh=True, build_root=build_root, build_dir=build_dir)
         catalog = apply_overrides(catalog, self.root)
         if not catalog['transport']:
@@ -97,13 +98,18 @@ class GroundStation:
                 self._received = self._malformed = 0
                 self._last_received = None
                 self._error = self._failure = None
-                self._target = (catalog.get('build_target'), target_ip, ports['command_port'])
+                self._target = (catalog.get('build_target'), target_ip, command_port or ports['command_port'])
                 self._start_observations(catalog, return_host or listen_host)
                 self._stop = threading.Event()
                 self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 self._socket.bind((listen_host, 0))
                 self._transport = 'udp'
-                self._receiver = official.Receiver(target_ip, listen_host, ports['telemetry_port'], self._accept, self._transport_failed)
+                if receiver_container:
+                    from .emulator import EmulatorReceiver
+                    self._receiver = EmulatorReceiver(receiver_container, ports['telemetry_port'], self._accept, self._transport_failed)
+                else:
+                    self._receiver = official.Receiver(target_ip, listen_host, ports['telemetry_port'],
+                                                       self._accept, self._transport_failed)
                 self._receiver.start()
         except Exception:
             self.stop()

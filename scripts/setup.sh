@@ -13,7 +13,6 @@ if ((EUID == 0)); then
 fi
 
 ./scripts/setup-native.sh
-SUDO=()
 version_at_least() {
     python3 -c 'import re,sys
 m = re.search(r"(\d+)\.(\d+)", sys.argv[1])
@@ -24,7 +23,7 @@ docker_current() {
     version_at_least "$(docker --version 2>/dev/null)" 23 0
 }
 buildx_current() {
-    version_at_least "$("${SUDO[@]}" docker buildx version 2>/dev/null)" 0 10
+    version_at_least "$(docker buildx version 2>/dev/null)" 0 10
 }
 ssh_current() {
     command -v scp >/dev/null && command -v ssh-keygen >/dev/null && \
@@ -72,22 +71,23 @@ if ! docker_current || ! buildx_current || ! ssh_current; then
 fi
 
 echo "Connecting to Docker Engine..."
-if ! docker info >/dev/null 2>&1; then
-    if ! sudo docker info >/dev/null 2>&1; then
-        sudo systemctl enable --now docker
+if ! engine_status=$(docker info --format '{{.ServerVersion}}' 2>&1); then
+    echo "$engine_status" >&2
+    if [[ "$engine_status" == *'permission denied'* ]]; then
+        echo "Request membership in the docker group, sign in again and rerun setup." >&2
+    else
+        echo "Start Docker Engine or Docker Desktop and rerun setup." >&2
     fi
-    sudo groupadd -f docker
-    sudo usermod -aG docker "$(id -un)"
-    SUDO=(sudo)
+    exit 1
 fi
-if ! version_at_least "$("${SUDO[@]}" docker version --format '{{.Server.Version}}')" 23 0 || ! buildx_current || ! ssh_current; then
+if ! version_at_least "$(docker version --format '{{.Server.Version}}')" 23 0 || ! buildx_current || ! ssh_current; then
     echo "Docker Engine 23+, Buildx 0.10+ and OpenSSH are required for board builds." >&2
     exit 1
 fi
-"${SUDO[@]}" docker version --format 'Docker client {{.Client.Version}}, engine {{.Server.Version}}'
+docker version --format 'Docker client {{.Client.Version}}, engine {{.Server.Version}}'
 echo "Verifying the build worker..."
-"${SUDO[@]}" docker buildx inspect --bootstrap >/dev/null
-"${SUDO[@]}" docker buildx version
+docker buildx inspect --bootstrap >/dev/null
+docker buildx version
 ssh -V
 
 if [[ "${1:-}" == --build-only ]]; then
@@ -95,9 +95,9 @@ if [[ "${1:-}" == --build-only ]]; then
     exit 0
 fi
 
-# Keep this machine's SSH credentials outside the repository.
+# Generate an independent identity for this checkout.
 echo "Configuring the local SSH identity..."
-SSH_DIR="$HOME/.ssh/cfs-emulator"
+SSH_DIR=$(python3 -m project.defaults keys)
 mkdir -p "$SSH_DIR"
 chmod 0700 "$SSH_DIR"
 if [[ ! -f "$SSH_DIR/id_ed25519" ]]; then
@@ -116,11 +116,7 @@ trap - EXIT
 chmod 0600 "$SSH_DIR/config" "$SSH_DIR/id_ed25519"
 
 echo "Preparing the emulator image..."
-"${SUDO[@]}" ./start --no-ui emulator image
+./start --no-ui emulator image
 
 echo "Setup complete. SSH is configured in $SSH_DIR."
-if ((${#SUDO[@]})); then
-    echo "Sign out and sign in again, then run ./boot.sh."
-else
-    echo "Next: ./boot.sh"
-fi
+echo "Next: ./start --no-ui boot --target qemu"

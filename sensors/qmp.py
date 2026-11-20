@@ -12,12 +12,12 @@ class QMPError(RuntimeError):
 class QMPClient:
     def __init__(self, path, timeout=5.0):
         self.timeout = timeout
-        self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.socket = socket.socket(socket.AF_INET if isinstance(path, tuple) else socket.AF_UNIX, socket.SOCK_STREAM)
         self.stream = None
         self.request_id = 0
         try:
             self.socket.settimeout(timeout)
-            self.socket.connect(str(path))
+            self.socket.connect(path if isinstance(path, tuple) else str(path))
             self.stream = self.socket.makefile("rwb")
             greeting = self._receive(time.monotonic() + timeout)
             if "QMP" not in greeting:
