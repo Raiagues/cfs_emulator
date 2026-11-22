@@ -129,6 +129,7 @@ class WorkspaceHTTPTest(unittest.TestCase):
                             "payload": {"target": "native", "app": "weather", "stage": index,
                                         "source_hash": lesson["source_hash"]}}, status)
         self.assertEqual(lesson["stage"], 0)
+        self.assertTrue(all(path.startswith("cFS/apps/weather/") for path in lesson["files"]))
         confirm(1, 400)
         for stage in range(5):
             updated = confirm(stage)
@@ -149,6 +150,17 @@ class WorkspaceHTTPTest(unittest.TestCase):
         self.api("file", save)
         self.assertEqual(self.api("command/lesson?target=native&app=weather")["stage"], 6)
         self.assertFalse(self.api("journey?target=native")["steps"]["command"]["done"])
+
+    def test_new_app_with_a_bench_sensor_name_belongs_to_the_user(self):
+        self.api("hardware/target", {"target": "native"})
+        self.create("app", "hal_temp", self.api("workspace")["mission"]["source"]["hash"])
+        workspace = self.api("workspace")
+        app = next(app for app in workspace["apps"] if app["name"] == "hal_temp")
+        self.assertFalse(app["example"])
+        self.assertEqual(app["path"], "cFS/apps/hal_temp")
+        lesson = self.api("command/lesson?target=native")
+        self.assertEqual(lesson["app"], "hal_temp")
+        self.assertTrue(lesson["path"].startswith("cFS/apps/hal_temp/"))
 
     def test_bus_and_optional_hal_lifecycle(self):
         workspace = self.api("workspace")

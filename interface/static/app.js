@@ -684,7 +684,7 @@ async function chooseSourceCommand(command) {
 }
 
 function newMissionApp(name='',onClose){
- return openAppWizard({initialName:name,workspace:state.workspace,api,esc,requireSaved:requireSavedMission,refresh:async(changed,deleted)=>{
+ return openAppWizard({initialName:name,workspace:state.workspace,api,esc,sourcePath:editorPath,requireSaved:requireSavedMission,refresh:async(changed,deleted)=>{
   await reloadMissionFiles(changed,deleted);await refreshJourney();
  },onClose});
 }

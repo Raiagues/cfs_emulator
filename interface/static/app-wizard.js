@@ -15,7 +15,7 @@ function selectedFiles(files, name) {
   ].filter(([path])=>Object.hasOwn(files,root+path)).map(([path,purpose])=>({path:root+path,purpose}));
 }
 
-export function openAppWizard({initialName='',workspace,api,esc,refresh,onClose,requireSaved}) {
+export function openAppWizard({initialName='',workspace,api,esc,sourcePath,refresh,onClose,requireSaved}) {
   if(document.querySelector('.app-wizard[open]'))return;
   requireSaved();
   const modal=document.createElement('dialog');
@@ -33,10 +33,10 @@ export function openAppWizard({initialName='',workspace,api,esc,refresh,onClose,
     const item=(path,purpose,index)=>`<div class="wizard-file ${written?'fs-pop':'fs-in'}" data-scene="${written?'saved':'preview'}-${esc(path)}"
       style="animation-delay:${index*.09}s">${written?.has(path)?tick:icon('files')}<code>${esc(path.split('/').at(-1))}</code><small>${esc(purpose)}</small></div>`;
     return '<div class="wizard-files">'+important.map((f,i)=>item(f.path,f.purpose,i)).join('')+
-      (other.length?'<details class="wizard-more"><summary>and '+other.length+' more</summary>'+other.map(path=>'<code>'+esc(path)+'</code>').join('')+'</details>':'')+'</div>';
+      (other.length?'<details class="wizard-more"><summary>and '+other.length+' more</summary>'+other.map(path=>'<code>'+esc(sourcePath(path))+'</code>').join('')+'</details>':'')+'</div>';
   }
   function render() {
-    const folder='mission/apps/'+(name || '…')+'/';
+    const folder=sourcePath('mission/apps/'+(name || '…')+'/');
     const nameStep=`<label class="wizard-name">Name<input name="app_name" autocomplete="off" spellcheck="false"
       placeholder="orbit_demo" value="${esc(name)}"><small data-name-error>${name&&!valid()?'Use snake_case, up to 19 characters.':''}</small></label><code data-folder>${esc(folder)}</code>`;
     const review=draft && !editingName?`${files()}<div class="wizard-records ${written?'fs-pop':''}">

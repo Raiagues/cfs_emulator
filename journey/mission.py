@@ -1,18 +1,18 @@
 """Evidence produced by mission creation, compilation and linked sensor writes."""
 import re
 
-from journey import SHIPPED_APPS, Store
+from journey import Store, shipped_apps
 from project.appgen.source_tags import regions
 from project.model import identifier, load_config
 
 
 def created(root, target, name):
-    if target and name not in SHIPPED_APPS and (root / "mission/apps" / identifier(name) / "CMakeLists.txt").is_file():
+    if target and name not in shipped_apps(root) and (root / "mission/apps" / identifier(name) / "CMakeLists.txt").is_file():
         Store(root).observe(target, "app", {"app": name})
 
 
 def implemented(root, app):
-    if app in SHIPPED_APPS:
+    if app in shipped_apps(root):
         return
     directory = root / "mission/apps" / identifier(app)
     header = directory / "fsw/inc" / (app + "_fcncodes.h")

@@ -13,6 +13,16 @@ TARGETS = ("native", "qemu", "physical")
 SHIPPED_APPS = frozenset(("hal_temp", "hal_mag", "hal_mpu"))
 
 
+def shipped_apps(root):
+    """Identify the preinstalled readers still present in a legacy mission."""
+    from project.flight_sources import module_alias
+    root = Path(root)
+    directory = root / "mission/apps"
+    if not directory.is_dir() or module_alias(root, directory):
+        return frozenset()
+    return frozenset(name for name in SHIPPED_APPS if (directory / name / "CMakeLists.txt").is_file())
+
+
 @dataclass(frozen=True)
 class Observation:
     step: str

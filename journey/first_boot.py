@@ -3,7 +3,7 @@ import platform
 import time
 
 from hardware import infrastructure
-from journey import SHIPPED_APPS
+from journey import shipped_apps
 from project.model import load_config
 
 from hardware.boot_trace import (CATALOG_ACTIVITY, SERVICES, STATES, _record, app_records, boot_observed,
@@ -20,6 +20,7 @@ def snapshot(studio, target, *, journal=None):
             and (target != "physical" or hardware.same_board(j.get("connection"), connection))]
     job = jobs[-1] if jobs else {}
     config_data = load_config(hardware.root)
+    examples = shipped_apps(hardware.root)
     profile = next((p for p in hardware.profiles() if target in p["targets"]
                     and (p["board"], p["os"]) == (config_data.get("board"), config_data.get("os"))), {})
     receipt = hardware.state.read("operational-" + target + ".json", {})
@@ -81,7 +82,7 @@ def snapshot(studio, target, *, journal=None):
             "hardware": "This computer" if target == "native" else profile.get("board_label", "Board"),
             "architecture": platform.machine() if target == "native" else profile.get("board", ""),
             "os": platform.system() if target == "native" else profile.get("os_label", "Linux"),
-            "apps": apps, "example_apps": sorted(SHIPPED_APPS), "authored_apps": [app["name"] for app in config_data.get("apps", []) if app["name"] not in SHIPPED_APPS],
+            "apps": apps, "example_apps": sorted(examples), "authored_apps": [app["name"] for app in config_data.get("apps", []) if app["name"] not in examples],
             "services": [name for name in SERVICES if (hardware.root / "cFS/cfe/modules" / name.lower()).is_dir()], "es_states": STATES, "flight": flight, "stopped": stopped,
             "running": live, "unverified": bool(unknown),
             "job": {k: job[k] for k in ("id", "status", "action", "phase", "guest_stage", "build_percent", "build_activity", "error", "started") if k in job},

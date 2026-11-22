@@ -7,7 +7,7 @@ import re
 
 from hardware.manager import HardwareManager
 from hardware.targets import selected_target
-from journey import SHIPPED_APPS, Store
+from journey import Store, shipped_apps
 from project import model
 from project.c_source import blank_lexemes
 from project.manage import commit
@@ -35,7 +35,8 @@ class CommandLesson:
         self.target = target
         self.config = model.load_config(self.root)
         self.manifests = model.read_manifests(self.root, self.config)
-        mine = {m['name']: m for m in self.manifests if m['name'] not in SHIPPED_APPS}
+        examples = shipped_apps(self.root)
+        mine = {m['name']: m for m in self.manifests if m['name'] not in examples}
         if app is None:
             app = next(
                 (
@@ -224,7 +225,7 @@ typedef struct
             'steps': STOPS,
             'symbol': self.symbol,
             'code': self.code,
-            'path': path,
+            'path': self.workspace.source_path(path),
             'content': proposed,
             'ranges': ranges,
             'expected_hash': revision,
@@ -232,7 +233,7 @@ typedef struct
             'file_hash': hashlib.sha256(source.encode()).hexdigest(),
             'ghost': self.line,
             'stub': STUB,
-            'files': [p for k, p in self.paths.items() if self.source[k] or p == path],
+            'files': [self.workspace.source_path(p) for k, p in self.paths.items() if self.source[k] or p == path],
         }
 
     def compile(self):
@@ -253,7 +254,8 @@ typedef struct
         return CommandLesson(self.workspace, self.target, self.app).snapshot()
 
     def save_handler(self, path, content, expected_hash):
-        if self.stage != 5 or path != self.paths['handler']:
+        handler = self.paths['handler']
+        if self.stage != 5 or path not in {handler, self.workspace.source_path(handler)}:
             raise ValueError('Open the SET_RATE handler before saving this line.')
         source = self.source['handler']
         if expected_hash != hashlib.sha256(source.encode()).hexdigest():
@@ -265,5 +267,5 @@ typedef struct
             re.escape(self.prefix) + r'_Data\s*\.\s*Rate_Hz\s*=\s*(?:Rate_Hz|Msg->Payload\.Rate_Hz)\s*;', code
         ):
             raise ValueError('Store the received Rate_Hz in the app data.')
-        commit(self.root, {path: content}, validate=self.compile)
+        commit(self.root, {handler: content}, validate=self.compile)
         return self.workspace.read_file(path)

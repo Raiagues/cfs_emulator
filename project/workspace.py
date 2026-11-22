@@ -9,7 +9,7 @@ import json
 import math
 import os
 from pathlib import Path
-from journey import SHIPPED_APPS
+from journey import shipped_apps
 import re
 import sys
 import tempfile
@@ -63,6 +63,10 @@ class Workspace:
         if Path(relative).is_absolute() or ".." in parts or private:
             raise ValueError("Path is private or outside the project")
         return self.model.safe_path(self.root, relative)
+
+    def source_path(self, relative):
+        """Display the verified source location, including the NASA module directory."""
+        return self.path(relative).resolve().relative_to(self.root).as_posix()
 
     def editable(self, relative):
         from project.flight_sources import nasa_module_names
@@ -243,6 +247,7 @@ class Workspace:
             enabled = set(mission["enabled"])
             installed = set(mission["installed_enabled"])
             recipes = {app["name"]: app for app in mission["available"]}
+            examples = shipped_apps(self.root)
             for directory in module_directories(self.root, "apps"):
                 if not directory.is_dir() or directory.is_symlink():
                     continue
@@ -252,7 +257,7 @@ class Workspace:
                          or sorted(directory.glob("fsw/src/*app.c")))
                 entry = paths[0] if paths else directory / "CMakeLists.txt"
                 app = {"name": name, "path": directory.relative_to(self.root).as_posix(),
-                       "entry": entry.relative_to(self.root).as_posix(), "managed": bool(manifest), "example": name in SHIPPED_APPS,
+                       "entry": entry.relative_to(self.root).as_posix(), "managed": bool(manifest), "example": name in examples,
                        "built": name in installed, "enabled": name in enabled,
                        "manifest": manifest, "locations": []}
                 if not manifest:
@@ -364,7 +369,7 @@ class Workspace:
         content = plan.get(source) or self.path(source).read_text()
         preview = {"entry_point": entry.fields[2], "blocks": draft["blocks"],
                    "startup": {"path": native, "record": entry.raw}, "build": draft["build"],
-                   "schedule": draft["schedule"], "source": {"path": source, "content": content}}
+                   "schedule": draft["schedule"], "source": {"path": self.source_path(source), "content": content}}
         changed = {path: ("delete" if content is None else "create" if inputs[path] is None else "update")
                    for path, content in plan.items()
                    if inputs[path] != (None if content is None else content.encode())}
@@ -372,7 +377,7 @@ class Workspace:
             preview["mids"] = draft["mids"]
         public = {"files": changed, "draft": {"kind": kind, "mode": mode, "name": name, "settings": settings},
                   "preview": preview, "plan_hash": plan_hash, "expected_hash": revision}
-        return public, plan, inputs, {"name": name, "path": draft["path"], "entry": source}
+        return public, plan, inputs, {"name": name, "path": self.source_path(draft["path"]), "entry": self.source_path(source)}
 
     def _app_draft(self, name, settings, mode, config, manifests, target, original):
         """Generated files and startup record of an app, from its scheduler frequencies."""
