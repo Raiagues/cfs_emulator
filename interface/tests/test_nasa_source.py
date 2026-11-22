@@ -7,10 +7,31 @@ from unittest.mock import patch
 
 from project.workspace import Workspace
 from project.flight_sources import nasa_module_names, prepare_mission
-from project.nasa_source import OFFICIAL_URL, REVISION, install, source_status
+from project.nasa_source import OFFICIAL_URL, REVISION, _has_nasa_base, install, source_status
 
 
 class NasaSourceTest(unittest.TestCase):
+    def test_project_commits_can_extend_the_pinned_clone(self):
+        with tempfile.TemporaryDirectory() as scratch:
+            repo = Path(scratch)
+            git = ["git", "-C", str(repo), "-c", "user.name=Studio test", "-c", "user.email=test@localhost"]
+            subprocess.run([*git, "init", "--quiet"], check=True)
+            upstream = repo / "README.md"
+            upstream.write_text("NASA sample\n")
+            subprocess.run([*git, "add", "README.md"], check=True)
+            subprocess.run([*git, "commit", "--quiet", "-m", "upstream"], check=True)
+            base = subprocess.check_output([*git, "rev-parse", "HEAD"], text=True).strip()
+            sensor = repo / "apps/student_sensor"
+            sensor.mkdir(parents=True)
+            (sensor / "CMakeLists.txt").touch()
+            subprocess.run([*git, "add", "apps"], check=True)
+            subprocess.run([*git, "commit", "--quiet", "-m", "add sensor"], check=True)
+            with patch("project.nasa_source.REVISION", base):
+                self.assertTrue(_has_nasa_base(repo, "HEAD"))
+                upstream.write_text("Changed upstream\n")
+                subprocess.run([*git, "commit", "--quiet", "-am", "change upstream"], check=True)
+                self.assertFalse(_has_nasa_base(repo, "HEAD"))
+
     def test_readiness_uses_pinned_gitlinks_and_reserves_aliases(self):
         with tempfile.TemporaryDirectory() as scratch:
             root = Path(scratch)
@@ -18,6 +39,7 @@ class NasaSourceTest(unittest.TestCase):
             (source / ".git").mkdir(parents=True)
             (source / "apps/example").mkdir(parents=True)
             (source / "apps/plugin").symlink_to("example")
+            (source / "apps/student_sensor").mkdir()
             (source / "sample_defs").mkdir()
             (source / "sample_defs/targets.cmake").touch()
             (source / ".gitmodules").write_text('[submodule "optional"]\npath = apps/optional\n')

@@ -16,6 +16,19 @@ def _git(directory, *args):
     return subprocess.run(["git", "-C", str(directory), *args], capture_output=True, text=True, check=True).stdout.strip()
 
 
+def _has_nasa_base(source, revision):
+    if revision == REVISION:
+        return True
+    prefix = ["git", "-C", str(source)]
+    if subprocess.run([*prefix, "merge-base", "--is-ancestor", REVISION, revision],
+                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode:
+        return False
+    changes = subprocess.check_output([*prefix, "diff", "--name-status", "-z", "--no-renames",
+                                       REVISION, revision]).split(b"\0")[:-1]
+    return all(status == b"A" and path.startswith((b"apps/", b"libs/"))
+               for status, path in zip(changes[::2], changes[1::2]))
+
+
 def source_status(root):
     source = Path(root) / "cFS"
     status = {"state": "missing", "url": OFFICIAL_URL, "revision": None}
@@ -29,7 +42,7 @@ def source_status(root):
         if origin not in ("https://github.com/nasa/cfs", "git@github.com:nasa/cfs", "ssh://git@github.com/nasa/cfs"):
             return status
         status["revision"] = _git(source, "rev-parse", "HEAD")
-        if status["revision"] != REVISION:
+        if not _has_nasa_base(source, status["revision"]):
             status["state"] = "revision-mismatch"
             return status
         # The index records installed modules. An upstream .gitmodules can also
@@ -43,7 +56,7 @@ def source_status(root):
 
 
 def _checkout(source):
-    if _git(source, "rev-parse", "HEAD") != REVISION:
+    if not _has_nasa_base(source, _git(source, "rev-parse", "HEAD")):
         if _git(source, "status", "--porcelain"):
             raise ValueError("Save your NASA checkout changes before selecting the pinned revision.")
         subprocess.run(["git", "-C", str(source), "fetch", "--depth=1", "origin", REVISION], check=True)

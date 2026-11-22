@@ -197,8 +197,8 @@ No guest, o destino de telemetria deve alcançar a estação de solo. O laborat�
 | Caminho | Responsabilidade |
 | --- | --- |
 | `start`, `scripts/` | Entrada de terminal, setup, compilação e partida da máquina virtual. |
-| `project/`, `mission/` | Modelo da missão, gerador e drivers. O código editável fica em `mission/apps` e `mission/libs`. |
-| `cFS/` | Checkout oficial da NASA instalado localmente. |
+| `project/`, `mission/` | Configuração do Studio, geradores, definições de compilação e produtos de cada alvo. |
+| `cFS/` | Checkout da NASA. Ao criar uma aplicação, um HAL ou uma biblioteca, o Studio grava os fontes em `cFS/apps/<nome>` ou `cFS/libs/<nome>`. Os módulos distribuídos pela NASA aparecem ao lado como referência. |
 | `hardware/` | Verificações e execução em Linux, QEMU e Pi física. |
 | `ground_station/` | Catálogo de comandos, transporte UDP, eventos e decodificação de pacotes. |
 | `sensors/` | Sinais, órbita, cenários e transporte para os dispositivos. |

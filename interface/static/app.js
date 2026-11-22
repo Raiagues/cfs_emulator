@@ -67,7 +67,7 @@ async function refresh(tree=false) {
 async function renderTree() {
  const root=$('#tree'), path=fileRoot(), previous=root.dataset.root;
  if(previous)treeStates.set(previous,{expanded:[...root.querySelectorAll('details[open]')].map(folder=>folder.dataset.path),scroll:root.scrollTop});
- const saved=treeStates.get(path)||{expanded:path==='flight'?['mission','cFS','cFS/apps']:[],scroll:0};
+ const saved=treeStates.get(path)||{expanded:path==='flight'?['cFS','cFS/apps']:[],scroll:0};
  const request=++treeRequest,fragment=document.createDocumentFragment();
  await loadTree(path,fragment);
  if(request!==treeRequest)return;
@@ -101,7 +101,12 @@ async function loadTree(path, parent) {
   markFiles();
 }
 let fileOpenRequest=0;
+function editorPath(path){
+  return path.replace(/^mission\/(apps|libs)\//, (prefix,group) =>
+    state.workspace?.module_roots?.[group]==='cFS' ? 'cFS/'+group+'/' : prefix);
+}
 async function openFile(path, line, reveal=true, inspection=null) {
+  path=editorPath(path);
   const request=++fileOpenRequest;
     if(!state.files.has(path)) {
     const data=await api('file?path='+encodeURIComponent(path));
@@ -118,7 +123,7 @@ async function openFile(path, line, reveal=true, inspection=null) {
   syncCommandToFile(state,line);
   const selectedApp=state.workspace?.apps.find(a=>path.startsWith(a.path+'/'));if(selectedApp&&!inspection)state.groundApp=selectedApp.name; const file=state.files.get(path);
   $('#code').value=file.content; $('#code').disabled=false;$('#code').readOnly=!file.editable;
-  $('#source-location').hidden=!inspection && file.editable;
+  $('#source-location').hidden=false;
   $('#source-location span').textContent=inspection ? inspection.symbol+' · '+path.split('/').at(-1)+':'+line : path;
   $('#source-location small').hidden=file.editable;
   if(reveal||(state.view==='code' && !state.activity))document.body.classList.remove('no-editor');
@@ -539,7 +544,7 @@ function showFirstBoot(){
 function leaveBoot(){
  bootCleanup?.();bootCleanup=null;bootTarget=null;
 }
-const activities = {event: mountGroundLesson, app: mountMissionLesson, command: mountCommandLesson,
+const activities = {app: mountMissionLesson, command: mountCommandLesson,
  send: mountGroundLesson, sensor: mountSignalLesson, test: mountSignalLesson};
 let activity;
 function guidedView() {
@@ -1094,7 +1099,9 @@ async function prepareMissionDraft(kind,name,mode='create',revision=state.worksp
 }
 async function reloadMissionFiles(changed=[],deleted=[],moved={}){
  workspaceRequest++;
- for(const [oldPath,newPath] of Object.entries(moved)){
+ changed=changed.map(editorPath);deleted=deleted.map(editorPath);
+ for(const [oldName,newName] of Object.entries(moved)){
+  const oldPath=editorPath(oldName),newPath=editorPath(newName);
   if(!state.files.has(oldPath))continue;
   const file=state.files.get(oldPath);
   state.files.delete(oldPath);state.files.set(newPath,{...file,path:newPath});
@@ -1422,6 +1429,7 @@ document.addEventListener('click',guarded(async e=>{
  else if('connect' in d)connect();
  else if('copySetup' in d){await navigator.clipboard.writeText(state.hardware.physical.last_probe.admin_setup_command);feedback('Command copied');}
  else if('hardwareRefresh' in d){$('#dialog').close();if(state.target==='physical'&&state.hardware?.physical?.connection)await startJob('probe');else await hardwareRefresh();}
+ else if(d.ground==='prepare'){const plan=state.hardware?.launch?.[state.target];if(plan)await advanceDeployment(plan);}
  else if(d.ground){if(d.ground==='catalog')await groundRefresh();else await groundConnection(d.ground==='start');}
 
 }));

@@ -104,7 +104,7 @@ class JourneyTest(unittest.TestCase):
         source = Path(__file__).resolve().parents[2] / "project"
         for name in ("boards", "drivers"):
             shutil.copytree(source / name, self.root / "project" / name)
-        config = json.loads((source / "config.json").read_text())
+        config = json.loads((Path(__file__).parent / "fixtures/bancada/config.json").read_text())
         config["apps"] = [dict(config["apps"][-1], name="demo")]
         (self.root / "project/config.json").write_text(json.dumps(config))
 

@@ -121,6 +121,8 @@ body[data-view="ground"] .visual,body[data-view="ground"] #view {min-width:0;min
 .ground-catalog-status h2{margin:0 0 8px}
 .ground-catalog-status [role=status]{display:inline-flex;align-items:center;gap:8px}
 .ground-catalog-status p{max-width:38ch}
+.ground-prepare{align-self:flex-start;flex:none}
+.ground-catalog-status .ground-prepare{display:block;margin:8px auto}
 @media(max-width:760px){.ground-catalog-pending.flight-ground{grid-template: minmax(0,1fr) / minmax(0,1fr)}.ground-catalog-pending>.gs-desk{display:none}}
 .flight-ground button,.flight-ground select,.flight-ground input{min-width:0}
 .flight-ground button {padding:5px 9px;display:inline-flex;align-items:center;gap:6px}

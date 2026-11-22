@@ -15,13 +15,14 @@ PROTECTED_PATHS = ["cFS", "mission/libs"]
 
 
 def safe_path(root, relative):
+    from project.flight_sources import module_alias
     relative = Path(relative)
     if relative.is_absolute() or ".." in relative.parts:
         raise ProjectError(f"Unsafe path: {relative}")
     path = Path(root)
     for part in relative.parts:
         path /= part
-        if path.is_symlink():
+        if path.is_symlink() and not module_alias(root, path):
             raise ProjectError(f"Refusing symlink: {path}")
     return path
 

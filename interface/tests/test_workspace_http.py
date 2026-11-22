@@ -99,6 +99,27 @@ class WorkspaceHTTPTest(unittest.TestCase):
         self.assertIn(name, preview["preview"]["entry_point"].lower())
         return self.api("mission/save", {**body, "plan_hash": preview["plan_hash"]})["mission"]
 
+    def test_first_arm_profile_uses_its_own_startup_and_repairs_an_old_native_script(self):
+        from project.appgen.native_startup import parse_startup
+        from project.cfs_config import STARTUP, bootstrap_plan, evaluate_mission
+        from project.workspace import Workspace
+        config_path = self.root / "project/config.json"
+        config = json.loads(config_path.read_text())
+        config.update(board=None, os=None)
+        config_path.write_text(json.dumps(config))
+        native_script = evaluate_mission(self.root)["default"]
+        self.assertFalse((self.root / STARTUP).exists())
+        Workspace(self.root).select_profile("raspi4b", "raspios", hardware=Mock())
+        active, _ = parse_startup((self.root / STARTUP).read_text())
+        available = evaluate_mission(self.root)["compiled"]
+        self.assertTrue(all(entry.name in available for entry in active))
+        self.assertNotIn("sbn", available)
+
+        (self.root / STARTUP).write_text(native_script)
+        repaired, archived = parse_startup(bootstrap_plan(self.root)[STARTUP])
+        self.assertTrue(all(entry.name in available for entry in repaired))
+        self.assertIn("sbn", [entry.name for entry in archived])
+
     def test_guided_command_checks_source_revision_and_rolls_back_a_compiler_error(self):
         self.api("hardware/target", {"target": "native"})
         self.create("app", "weather", self.api("workspace")["mission"]["source"]["hash"])
@@ -152,6 +173,9 @@ class WorkspaceHTTPTest(unittest.TestCase):
         self.api("mutate", {"action": "link-hal", "payload": dict(args, device="absent")}, 400)
         self.assertFalse((self.root / "mission/apps/science").exists())
         self.mutate("link-hal", **args, read_command="read_now")
+        self.assertTrue((self.root / "cFS/apps/science/fsw/src/science.c").is_file())
+        self.assertTrue(self.file("cFS/apps/science/fsw/src/science.c")["editable"])
+        self.assertFalse(self.file("mission/apps/sample_app/fsw/src/sample_app.c")["editable"])
         command_path = "mission/apps/science/fsw/src/commands/science_read_now_cmd.c"
         command = self.file(command_path)
         self.assertIn("SCIENCE_Temp_Read()", command["content"])

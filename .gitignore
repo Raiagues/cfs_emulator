@@ -11,3 +11,5 @@ project/generated/build*.json
 /mission/build-*/
 /mission/.prepare.lock
 /mission/.prepare-*/
+/mission/apps
+/mission/libs

@@ -66,7 +66,7 @@ export function mountGroundLesson(root, {state, advanceDeployment}) {
   function draw() {
     if (disposed) return;
     const flight = first(), connected = local();
-    const {plan,button,working,failure}=deploy();
+    const {plan,working,failure}=deploy();
     const stage = [!!flight.downlink_receipt, !!flight.receipt?.send_id, !!flight.answer];
     const cards = ['Telemetry on', sendMode?'Your command':'First command', 'Answer'].map((label,i) =>
       `<li class="fs-panel" data-done="${stage[i]}" ${error && (i===0 && selected===ENABLE || i===2 && selected===main)?'data-failed':''}>
@@ -86,7 +86,7 @@ export function mountGroundLesson(root, {state, advanceDeployment}) {
       <div class="lesson-body"><ol class="lesson-cards">${cards}</ol>
       <form class="lesson-form fs-panel" novalidate>
         ${selected?`<span><small>${esc(selected.app)}</small><strong>${esc(selected.name)}</strong></span>`:''}
-        ${field}${plan ? (button ? '' : `<button type="button" class="primary" data-deploy ${working?'disabled':''}>${esc(plan.label)}</button>`) : !connected?`<button type="button" class="primary" data-connect ${!station||busy?'disabled':''}>Connect</button>`:
+        ${field}${plan ? `<button type="button" class="primary" data-deploy ${working?'disabled':''}>${esc(plan.label)}</button>` : !connected?`<button type="button" class="primary" data-connect ${!station||busy?'disabled':''}>Connect</button>`:
           selected?`<button type="submit" class="primary" data-send ${!ready||busy||waiting?'disabled':''}>Send</button>`:''}
         ${error||failure?`<output role="alert">${esc(error||failure)}</output>`:''}
       </form>

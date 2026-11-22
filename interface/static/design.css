@@ -1015,7 +1015,7 @@ svg{fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-l
 #code,.highlight-layer{tab-size:4;letter-spacing:0;border:0;background:none;}
 #code{color:transparent;-webkit-text-fill-color:transparent;caret-color:var(--fs-accent);outline:none;scrollbar-width:thin;scrollbar-color:var(--fs-line) transparent}
 #code::selection{background:color-mix(in srgb, var(--fs-line) 33%, transparent)}
-.highlight-layer{color:var(--fs-muted);scrollbar-width:none}
+.highlight-layer{color:var(--fs-text);scrollbar-width:none}
 .highlight-layer code{font:inherit;line-height:inherit}
 .visual{background:var(--fs-panel)}
 #visual-heading{border-bottom:1px solid var(--fs-line);color:var(--fs-muted);font-size:var(--fs-caption);background:var(--fs-panel)}

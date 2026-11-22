@@ -18,10 +18,20 @@ def lab(root, *, completed=False):
         mission_root = Path(temp)
         ignore = shutil.ignore_patterns('__pycache__', '.runtime', '.state', 'build-native', 'build-flight', '.prepare*')
         for folder in ('cFS', 'mission', 'project', 'hardware', 'jobs', 'journey', 'ground_station', 'sensors', 'config', 'scripts'):
+            if folder == 'mission' and not (root / folder).is_dir():
+                continue
             shutil.copytree(root / folder, mission_root / folder, ignore=ignore, symlinks=True)
         for name in ('Dockerfile', 'start', 'boot.sh', 'logs.sh', 'stop.sh'):
             shutil.copy2(root / name, mission_root)
         prepare_mission(mission_root)
+        if completed:
+            fixture = root / 'interface/tests/fixtures/bancada'
+            shutil.copytree(fixture / 'mission', mission_root / 'mission', dirs_exist_ok=True)
+            shutil.copytree(fixture / 'manifests', mission_root / 'project/apps', dirs_exist_ok=True)
+            shutil.copyfile(fixture / 'config.json', mission_root / 'project/config.json')
+            generated = mission_root / 'project/generated'
+            generated.mkdir(exist_ok=True)
+            shutil.copyfile(fixture / 'drivers.json', generated / 'drivers.json')
         with ThreadingHTTPServer(('127.0.0.1', 0), Handler) as server:
             server.daemon_threads = False
             server.studio = Studio(mission_root)

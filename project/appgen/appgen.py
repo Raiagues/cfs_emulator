@@ -134,14 +134,15 @@ def validate_all(manifests, project_root=None):
 
 
 def safe_path(root, relative):
-    """Reject symlinks as well as traversal before touching managed files."""
+    """Resolve managed files while preserving the mission's module layout."""
+    from project.flight_sources import module_alias
     relative = Path(relative)
     if relative.is_absolute() or ".." in relative.parts:
         raise AppgenError(f"Unsafe path: {relative}")
     path = root
     for part in relative.parts:
         path = path / part
-        if path.is_symlink():
+        if path.is_symlink() and not module_alias(root, path):
             raise AppgenError(f"Refusing symlink: {path}")
     return path
 

@@ -264,7 +264,8 @@ def rename_module(workspace, kind, old, new, revision):
                 edit(path, original, names.owned_text(original, path, suffix.as_posix()), target)
     renames.append((source, destination))
 
-    _check_consumers(root, set(modules) - owned, names)
+    owned_locations = {path.resolve() for path in owned}
+    _check_consumers(root, [path for path in modules if path.resolve() not in owned_locations], names)
 
     defs = root / 'mission/sample_defs'
     settings = [root / p for p in (mission.STARTUP, mission.MODULES, 'mission/libraries.cmake') if (root / p).is_file()]

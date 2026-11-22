@@ -234,14 +234,20 @@ def bootstrap_plan(root, config=None):
     if not safe_path(root, STARTUP).exists():
         if config['apps'] or config['devices']:
             plan[STARTUP] = native_startup(root, config)
-    elif any(config[key] != load_config(root)[key] for key in ('board', 'os')):
+    else:
         from project.appgen.native_startup import parse_startup, render_startup
         active, archived = parse_startup(native_startup(root, config))
         compiled = set(evaluate_mission(root, config)['compiled'])
         unavailable = [entry for entry in active if entry.name not in compiled]
+        if unavailable and all(config[key] == load_config(root)[key] for key in ('board', 'os')):
+            # Older empty missions could retain NASA's native-only startup entries after selecting ARM.
+            defaults, _ = parse_startup(evaluate_mission(root, {**config, 'board': None, 'os': None})['default'])
+            native_defaults = {entry.name for entry in defaults}
+            unavailable = [entry for entry in unavailable if entry.name in native_defaults]
         if unavailable:
             archive = {entry.name: entry for entry in archived + unavailable}
-            plan[STARTUP] = render_startup([entry for entry in active if entry.name in compiled], list(archive.values()))
+            retired = {entry.name for entry in unavailable}
+            plan[STARTUP] = render_startup([entry for entry in active if entry.name not in retired], list(archive.values()))
     generator = 'mission/sample_defs/generate_startup.cmake'
     original = safe_path(root, generator).read_text()
     updated = _startup_override(original)

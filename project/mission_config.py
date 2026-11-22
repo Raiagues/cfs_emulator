@@ -277,7 +277,7 @@ class MissionConfig:
                     "# Mission libraries built for CPU1. Native CFE_LIB startup entries load them.\n"
                     "set(MISSION_LIBRARIES " + " ".join(roots) + ")\n")
                 plan.update(self.selection_plan(forget=[name], sources=plan))
-                source = module_directory(self.root, "libs", name)
+                source = self._path("mission/libs/" + name)
                 plan.update({path.relative_to(self.root).as_posix(): None
                              for path in source.rglob("*") if path.is_file()})
             self.assert_revision(revision)

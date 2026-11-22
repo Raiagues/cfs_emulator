@@ -15,7 +15,7 @@ import sys
 import tempfile
 import threading
 
-from project.flight_sources import module_directories
+from project.flight_sources import module_alias, module_directories
 
 
 def nasa_module_title(directory):
@@ -40,11 +40,7 @@ class Workspace:
     HIDDEN = {".git", ".ssh", ".aws", ".agents", ".codex", "__pycache__", "node_modules", ".state", ".runtime", ".prepare.lock"}
     MAX_TEXT = 2 * 1024 * 1024
     FLIGHT_SOURCES = {
-        "mission": "Mission",
-        "project/drivers": "Sensor drivers",
-        "project/appgen/templates/hal_sensor": "HAL sensor templates",
-        "sensors": "Synthetic data",
-        "cFS": "NASA cFS",
+        "cFS": "cFS",
     }
 
     def __init__(self, root):
@@ -69,8 +65,11 @@ class Workspace:
         return self.model.safe_path(self.root, relative)
 
     def editable(self, relative):
+        from project.flight_sources import nasa_module_names
         parts = Path(relative).parts
         generated = any(part.startswith("build") or part in (".venv", "dist") for part in parts)
+        if len(parts) >= 3 and parts[0] in {"cFS", "mission"} and parts[1] in {"apps", "libs"}:
+            return not generated and parts[2] not in nasa_module_names(self.root, parts[1])
         return bool(parts and parts[0] == "mission" and not generated)
 
     def _read_bytes(self, relative):
@@ -103,6 +102,8 @@ class Workspace:
         changes = _changes(repo, directory.relative_to(repo)) if (repo / ".git").exists() else None
         entries = []
         for item in sorted(directory.iterdir(), key=lambda p: (not p.is_dir(), p.name.lower())):
+            if item.name.startswith((".", "build-")):
+                continue
             relative = item.relative_to(self.root).as_posix()
             try:
                 self.path(relative)
@@ -140,7 +141,7 @@ class Workspace:
         return dict(result, content=content, binary=False, editable=self.editable(path))
 
     def search_files(self, root, query):
-        if root not in ('flight', *self.FLIGHT_SOURCES) or not isinstance(query, str) or len(query) > 200:
+        if root not in ('flight', 'sensors', *self.FLIGHT_SOURCES) or not isinstance(query, str) or len(query) > 200:
             raise ValueError('Invalid file search')
         query = query.strip().lower()
         results = []
@@ -247,7 +248,8 @@ class Workspace:
                     continue
                 name = directory.name
                 manifest = registered.get(name)
-                paths = sorted(directory.glob("fsw/src/*_user.c")) or sorted(directory.glob("fsw/src/*app.c"))
+                paths = (sorted(directory.glob("fsw/src/*_user.c")) or sorted(directory.glob(f"fsw/src/{name}.c"))
+                         or sorted(directory.glob("fsw/src/*app.c")))
                 entry = paths[0] if paths else directory / "CMakeLists.txt"
                 app = {"name": name, "path": directory.relative_to(self.root).as_posix(),
                        "entry": entry.relative_to(self.root).as_posix(), "managed": bool(manifest), "example": name in SHIPPED_APPS,
@@ -257,7 +259,9 @@ class Workspace:
                     app["title"] = nasa_module_title(directory)
                 if manifest:
                     locations = generator.locations(self.root / "mission", manifest)["locations"]
-                    app["locations"] = [dict(location, path="mission/" + location["path"]) for location in locations]
+                    module_root = directory.parent.parent.relative_to(self.root)
+                    app["locations"] = [dict(location, path=(module_root / location["path"]).as_posix())
+                                        for location in locations]
                 app.update(self.source_index.application(directory, app["locations"]))
                 app["behavior"] = summarize_application(app, recipes.get(name, {}).get("entry_point"), root=self.root)
                 apps.append(app)
@@ -271,7 +275,9 @@ class Workspace:
                     core_modules.append({"name": module.name, "path": module.relative_to(self.root).as_posix(), "type": "directory"})
             bindings = {device["id"]: binding(device, root=self.root, catalog=catalog) for device in config["devices"]}
             simulation = {"root": "sensors", "scripts": simulation_scripts(self.root), "bindings": bindings}
-            return {"name": self.root.name, "core_modules": core_modules, "project": config, "catalog": catalog, "apps": apps,
+            module_roots = {group: "cFS" if module_alias(self.root, self.root / "mission" / group) else "mission"
+                            for group in ("apps", "libs")}
+            return {"name": self.root.name, "module_roots": module_roots, "core_modules": core_modules, "project": config, "catalog": catalog, "apps": apps,
                     "mission": mission, "libraries": libraries, "changes": hardware_changes(self.root, config),
                     "simulation": simulation}
 
@@ -502,6 +508,7 @@ class Workspace:
 
     def select_profile(self, board, os_name, expected_hash=None, hardware=None):
         """Persist a supported hardware profile and its native library inputs."""
+        from project.cfs_config import native_startup
         from project.manage import commit
         with self.lock, self.mission.transaction(expected_hash or self.mission._revision()) as revision:
             config_path = "project/config.json"
@@ -523,7 +530,9 @@ class Workspace:
             plan = self.model.planned_project_files(self.root, config, manifests)
             plan[config_path] = json.dumps(config, indent=2) + "\n"
             fragment = "mission/sample_defs/generated/appgen_startup.scr"
-            startup = plan.get(self.mission.STARTUP, self.mission.startup_text())
+            startup = plan.get(self.mission.STARTUP)
+            if startup is None:
+                startup = native_startup(self.root, config)
             plan[self.mission.STARTUP] = self.mission.reconcile_generated_modules(self._read_text(fragment), plan[fragment], startup)
             self._assert_inputs(inputs, "Project configuration changed. Reload it before selecting a profile.")
             self.mission.assert_revision(revision)

@@ -34,6 +34,14 @@ test('an Event received on the previous target cannot select a test on the new t
  assert.doesNotMatch(renderGround(changing,helpers),/>Run test</);
 });
 
+test('Event shows the action requested by the selected target even before the catalog loads',()=>{
+ const hardware={launch:{native:{action:'build',label:'Build cFS'}}};
+ for(const catalog of [null,state.catalog]){
+   assert.match(renderGround({...state,catalog,hardware},helpers),/data-ground="prepare"[^>]*>[^<]*Build cFS/);
+ }
+ assert.doesNotMatch(renderGround(state,helpers),/data-ground="prepare"/);
+});
+
 test('first contact selects the real output destination and limits the command list',()=>{
  const before=renderGround(state,helpers);
  assert.match(before,/data-command-id="TO_LAB_OUTPUT_ENABLE_CC"/);

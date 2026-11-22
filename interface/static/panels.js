@@ -106,6 +106,10 @@ function contactCoach(state, esc, icon) {
 }
 export function renderGround(state,helpers){
   const {esc,icon,hex}=context(helpers);
+  const next=state.hardware?.launch?.[state.target];
+  const working=state.jobs?.some(job=>job.target===state.target && job.status==='running' &&
+    !job.operation_complete && ['boot','build','run','stop','probe'].includes(job.action));
+  const prepare=next?`<button type="button" class="ground-prepare" data-ground="prepare" ${working?'disabled aria-busy="true"':''}>${icon('power')} ${esc(next.label)}</button>`:'';
   if (!state.catalog || state.catalogTarget !== state.target) {
     const status = state.groundError
       ? `<div role="alert"><strong>Catalog unavailable</strong><p>${esc(state.groundError)}</p>
@@ -113,7 +117,7 @@ export function renderGround(state,helpers){
       : '<div role="status"><i class="operation-spinner" aria-hidden="true"></i> Reading catalog…</div>';
     return `<section class="flight-ground ground-catalog-pending" data-pane="route" aria-label="Ground Station">
       <aside class="flight-library"><header>Commands</header></aside>
-      <main class="flight-command-column"><section class="ground-catalog-status"><h2>Ground Station</h2>${status}</section></main>
+      <main class="flight-command-column"><section class="ground-catalog-status"><h2>Ground Station</h2>${prepare}${status}</section></main>
       <aside class="gs-desk"><h2>Telemetry</h2></aside></section>`;
   }
   const ground=stationState(state), catalog=stationCatalog(state);
@@ -132,7 +136,7 @@ export function renderGround(state,helpers){
   <div class="ground-link"><span data-live="${!!ground.connected}">${ground.connected?'Connected':'Disconnected'}</span><button data-ground="${ground.connected?'stop':'start'}" ${state.groundBusy||state.catalogLoading?'disabled':''}>${ground.connected?'Disconnect':'Connect'}</button></div></aside>
   <main class="flight-command-column">${state.groundError?`<div class="gs-error" role="alert">${esc(state.groundError)}</div>`:''}
   ${errors.length?`<details class="gs-catalog-errors" data-detail-key="issues"><summary>Catalog details · ${errors.length}</summary><pre>${esc(errors.join('\n'))}</pre></details>`:''}
-  ${contactCoach(state,esc,icon)}${commandList(state,helpers)}<div id="ground-route"></div></main><aside id="ground-live"></aside></section>`;
+  ${prepare}${contactCoach(state,esc,icon)}${commandList(state,helpers)}<div id="ground-route"></div></main><aside id="ground-live"></aside></section>`;
 }
 
 function seriesChart(state, packet, field, helpers) {
