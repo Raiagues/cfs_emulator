@@ -33,7 +33,7 @@ exec qemu-system-aarch64 -M raspi4b \
     -dtb board/mission.dtb \
     -initrd board/initramfs8 \
     -drive file=board/raspios.qcow2,if=sd,format=qcow2 \
-    -append "console=ttyAMA1 root=/dev/mmcblk1p2 rw rootwait watchdog_disarm=0" \
+    -append "console=ttyAMA1 root=/dev/mmcblk1p2 rw rootwait watchdog_disarm=0 systemd.default_device_timeout_sec=300" \
     -display none \
     -chardev stdio,id=console,signal=off,logfile="$1" \
     -serial chardev:console -monitor none \

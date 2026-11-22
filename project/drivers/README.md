@@ -26,7 +26,7 @@ Escolha o primeiro ponto que descreve o hardware novo. Um segundo dispositivo de
 
 ## Cadastrar um sensor
 
-No Studio, abra **Hardware → Add sensor → Create a new I²C model** e informe os dados do chip. Em um sensor instalado, **Model definition** abre o arquivo que originou o driver. Pela linha de comando, o mesmo cadastro aceita uma cópia editada do [modelo de exemplo](templates/model.json).
+No Studio, abra **Hardware → Connections → Connect sensor → New I²C model**. Informe o ID do tipo, endereço de sete bits em decimal, registrador de identidade e os canais. Use **Apply** para gravar o modelo. Volte a **Connect sensor** para conectar uma instância ao barramento. Em um projeto vazio, configure primeiro o perfil Raspberry Pi 4B e adicione o barramento I²C. Em um sensor instalado, **Model definition** abre o arquivo que originou o driver. Pela linha de comando, o mesmo cadastro aceita uma cópia editada do [modelo de exemplo](templates/model.json).
 
 ```sh
 cp project/drivers/templates/model.json /tmp/lab_sensor.json
@@ -34,17 +34,24 @@ cp project/drivers/templates/model.json /tmp/lab_sensor.json
 ./start --no-ui project register-model /tmp/lab_sensor.json
 ```
 
-O cadastro grava o modelo e a forma de onda. Para exercitar o exemplo em uma missão com o perfil Raspberry Pi 4B e o endereço 0x48 livre, crie uma instância e vincule-a a uma app.
+O cadastro grava o modelo e a forma de onda. Para exercitar o exemplo em uma missão com o perfil Raspberry Pi 4B e o endereço 0x4a livre (inclua-o em `address` no modelo), crie uma instância e vincule-a a uma app.
 
 ```sh
 ./start --no-ui project add-bus i2c-bus.1
-./start --no-ui project add-device "Temperatura de bancada" --id bench_temp --model lab_sensor --bus i2c-bus.1 --address 0x48
-./start --no-ui project add-app bench_app
-./start --no-ui project add-sensor bench_app temperature --device bench_temp
+./start --no-ui project add-device "Temperatura de bancada" --id bench_temp --model lab_sensor --bus i2c-bus.1 --address 0x4a
+./start --no-ui project link-hal bench_app temperature --device bench_temp --new-app
 ./start --no-ui build --target qemu
 ```
 
-Para executar um modelo novo no emulador, instale a imagem atualizada no setup. O gerador do QEMU e o de voo leem o mesmo arquivo. Uma placa física usa a biblioteca de voo e o sensor conectado ao endereço configurado.
+Após o cadastro, a lista de tipos passa a incluir o novo sensor. Para usá-lo na máquina emulada é preciso compilar o dispositivo dentro do QEMU e iniciar o emulador com a nova imagem. A biblioteca de voo e o dispositivo virtual são gerados a partir da mesma definição. O teste de registradores da imagem pode ser feito antes de iniciar o Linux da placa virtual.
+
+```sh
+./start --no-ui emulator --image flight-studio:sensores-locais
+./scripts/build.sh
+./start --no-ui model-test --target qemu --device bench_temp
+```
+
+Na interface, use a instalação de imagem em **Set up emulator**. De volta à bancada, selecione o sensor e use **Validate model** para executar a verificação dos registradores. Para conferir a aquisição pela aplicação cFS, compile a missão e execute-a no alvo. Uma placa física usa a biblioteca de voo e o sensor conectado ao endereço configurado.
 
 ## Preencher o modelo
 
@@ -77,7 +84,7 @@ Consulte a documentação do componente para escolher o período. No TMP105, a e
 
 ## Implementar operações próprias
 
-O segundo template lê um contador de 8 bits. O [modelo](templates/custom-model.json) declara o endereço e os canais. A implementação da transação e da conversão fica em [driver.c.example](templates/driver.c.example). Registre os dois arquivos juntos.
+Para sensores que precisam de um protocolo próprio, a linha de comando também aceita um driver C fornecido pela equipe. O formulário gráfico atende ao perfil de registradores I²C. O segundo template lê um contador de 8 bits. O [modelo](templates/custom-model.json) declara o endereço e os canais. A implementação da transação e da conversão fica em [driver.c.example](templates/driver.c.example). Registre os dois arquivos juntos.
 
 ```sh
 ./start --no-ui project register-model project/drivers/templates/custom-model.json \

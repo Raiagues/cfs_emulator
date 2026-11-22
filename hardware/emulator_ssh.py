@@ -66,8 +66,11 @@ def public_key(line, port=None):
 
 
 def pin_guest(root, ident):
-    scan = subprocess.run(["docker", "exec", ident, "ssh-keyscan", "-T", "3", "-p", str(network(root).internal_ssh),
-                           "-t", "ed25519", loopback()], capture_output=True, text=True, timeout=10)
+    try:
+        scan = subprocess.run(["docker", "exec", ident, "ssh-keyscan", "-T", "3", "-p", str(network(root).internal_ssh),
+                               "-t", "ed25519", loopback()], capture_output=True, text=True, timeout=10)
+    except subprocess.TimeoutExpired:
+        return False  # Under load even starting docker exec can exceed a single probe.
     if scan.returncode == 1 and all(not row.strip() or row.lstrip().startswith("#")
                                     for row in scan.stdout.splitlines()):
         if "error response from daemon" in scan.stderr.lower():
@@ -93,7 +96,7 @@ def pin_guest(root, ident):
 def ssh_milestones(ident, timeout):
     started = time.monotonic()
     deadline = started + timeout
-    progress = started
+    progress = started + 10
     with subprocess.Popen(["docker", "logs", "--follow", ident], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as console:
         with selectors.DefaultSelector() as ready:
             ready.register(console.stdout, selectors.EVENT_READ)
@@ -104,7 +107,9 @@ def ssh_milestones(ident, timeout):
                     if now >= progress:
                         print(f"[Boot: {now-started:.0f}s] Waiting for guest SSH", flush=True)
                         progress = now + 10
-                    if not ready.select(max(0, min(progress, deadline) - now)):
+                        # An existing disk may start sshd without a serial readiness marker.
+                        yield ""
+                    if not ready.select(max(0, min(progress, deadline) - time.monotonic())):
                         continue
                     data = os.read(console.stdout.fileno(), 65536)
                     if not data:
@@ -128,11 +133,9 @@ def wait_for_guest(root, port, timeout):
     ident = container_id(root, port)
     if not pin_guest(root, ident):
         with closing(ssh_milestones(ident, timeout)) as milestones:
-            for event in milestones:
+            for _ in milestones:
                 if pin_guest(root, ident):
                     break
-                if "FLIGHT_STUDIO_SSH_READY" in event:
-                    raise ValueError("Guest sshd started but did not present an ED25519 key.")
     argv = ["ssh", "-T", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15", *ssh_options(root, port), "true"]
     probe = subprocess.run(argv, capture_output=True, text=True, timeout=30, env=dict(os.environ, LC_ALL="C"))
     if probe.returncode:

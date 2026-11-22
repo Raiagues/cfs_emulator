@@ -70,6 +70,10 @@ def probe(manager, target, device_id, connection, emit):
         spec = json.loads(legacy.read_text())
     if spec.get("protocol") == "custom":
         raise HardwareError("This sensor uses its flight driver to read the device")
+    if target == "qemu":
+        from sensors.runtime import check_record, prepare_guest
+        check_record(manager.root, config)
+        prepare_guest(config, manager.root)
     first, size = burst(spec)
     identity = bytes(identity_bytes(spec))
     registers = [c["register"] for c in spec["controls"]]

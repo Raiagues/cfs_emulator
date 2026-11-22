@@ -61,23 +61,20 @@ export function renderSimulationBoard(state,{esc}){
   else content=scenarioPanel(state,esc,active);
   return `<div class="signals-bench"><aside class="signal-catalog"><h2>Synthetic data</h2><button class="signal-pick signal-orbit-pick" data-signal-orbit aria-pressed="${!device}"><i>${icon('compass')}</i><span>Orbit<small data-orbit-subtitle>${esc(orbitSubtitle(session?.settings.orbit))}</small></span></button><h3>Sensors <small>${selected.length} enabled</small></h3><div class="signal-entries">${sensorList}</div><button class="signal-add" data-signal-hardware>${icon(state.target==='native'?'circuit':'plus')}${state.target==='native'?'Hardware':'Add sensor'}</button></aside><section class="signal-main"><header class="signal-tabs"><nav aria-label="Synthetic data views">${[['signals','Signals'],['python','Python'],['qemu','QEMU'],['test','Test']].map(([id,title])=>`<button data-signal-view="${id}" aria-pressed="${tab===id}">${title}</button>`).join('')}</nav>${orbitToolbar()}<button class="signal-settings-toggle" data-signal-sidebar aria-label="Signal settings" aria-controls="simulation-fields" aria-expanded="${state.signalSidebar!==false}">${icon('settings')}</button></header>${streamStatus}<div class="signal-content" data-tab="${tab}">${content}</div></section></div>`;
 }
-const patterns=[['constant','Constant'],['sine','Sine wave'],['ramp','Linear ramp'],['orbit.sunlight','Orbit · sunlight'],['uniform','Uniform noise'],['gaussian','Gaussian noise']];
+const patterns=[['constant','Constant'],['sine','Sine wave'],['ramp','Linear ramp'],['orbit.sunlight','Orbit · sunlight']];
 
 function patternOf(signal){
- if(signal.function==='orbit.thermal')return signal.function;
- if(signal.noise && signal.noise!=='none')return signal.function==='constant'?signal.noise:'model';
- return patterns.some(([key])=>key===signal.function)?signal.function:'model';
+ return signal.function==='custom' ? 'python:'+signal.custom : signal.function;
 }
 
-export function changePattern(settings,pattern,saved){
- const base={initial:settings.initial,enabled:settings.enabled,noise:'none',function:'constant'};
- if(pattern==='model')return {...saved,initial:base.initial,enabled:base.enabled};
- if(pattern==='sine')return {...base,function:'sine',amplitude:settings.amplitude??1,period:settings.period??30};
+export function changePattern(settings,pattern){
+ const base={initial:settings.initial,enabled:settings.enabled,noise:settings.noise??'none',noise_level:settings.noise_level??0};
+ if(pattern.startsWith('python:'))return {...base,function:'custom',custom:pattern.slice(7)};
+ if(pattern==='sine')return {...base,function:pattern,amplitude:settings.amplitude??1,period:settings.period??30};
  if(pattern==='orbit.thermal')return {...base,function:pattern,material:settings.material||{size:'1U',mass:1.3,alpha:.7,emissivity:.7,power:1}};
- if(pattern==='orbit.sunlight')return {...base,function:'orbit.sunlight',amplitude:settings.amplitude??1,response_time:settings.response_time??0};
- if(pattern==='ramp')return {...base,function:'ramp',slope:settings.slope??1};
- if(pattern==='gaussian'||pattern==='uniform')return {...base,noise:pattern,noise_level:settings.noise_level||1};
- return base;
+ if(pattern==='orbit.sunlight')return {...base,function:pattern,amplitude:settings.amplitude??1,response_time:settings.response_time??0};
+ if(pattern==='ramp')return {...base,function:pattern,slope:settings.slope??1};
+ return {...base,function:pattern};
 }
 
 export function renderSimulationSettings(state,{esc}){
@@ -91,9 +88,11 @@ export function renderSimulationSettings(state,{esc}){
  const outputs=Object.keys(sensor.signals);
  const key=outputs.includes(state.signalOutput)?state.signalOutput:outputs[0];
  const signal=sensor.signals[key],meta=device.properties[key],unit=meta.unit,prop=esc(key);
- const options=patterns.filter(([kind])=>unit!=='°C'||kind!=='orbit.sunlight'||signal.function===kind);
- if(unit==='°C')options.unshift(['orbit.thermal','Orbit physics']);
- if(patternOf(device.defaults.signals[key])==='model')options.push(['model','Sensor model']);
+ const options=[...patterns];
+ if(unit==='°C')options.push(['orbit.thermal','Orbit physics']);
+ if(device.sample_line)options.push(['script','Python · sample']);
+ for(const fn of device.functions||[])options.push(['python:'+fn.name,'Python · '+fn.name]);
+ const noiseOptions=[['none','None'],['uniform','Uniform'],['gaussian','Gaussian']];
  const numeric=(name,label,extra='')=>`<label>${esc(label)}<input type="number" step="any" required ${extra} data-signal-property="${prop}" name="${name}" value="${esc(signal[name]??0)}"></label>`;
  const thermal=signal.function==='orbit.thermal',m=signal.material;
  const materialField=(id,title,min,max,step,unit='')=>`<label class="thermal-range"><span>${title}<output>${m[id]} ${unit}</output></span><input type="range" min="${min}" max="${max}" step="${step}" value="${m[id]}" name="${id}" data-material-field data-signal-property="${prop}"></label>`;
@@ -103,9 +102,10 @@ export function renderSimulationSettings(state,{esc}){
  <div class="thermal-facts">${[['orbit','This orbit'],['steady_sun','Steady sun'],['steady_shadow','Steady shadow']].map(([key,title])=>`<span>${title}<output data-material-result="${key}">—</output></span>`).join('')}</div></div>`:'';
  return title+`<form id="simulation-form"><div class="signal-output-tabs" ${outputs.length===1?'hidden':''} role="group" aria-label="Sensor outputs">${outputs.map(name=>`<button type="button" data-signal-tab="${esc(name)}" aria-pressed="${name===key}">${esc(name)}</button>`).join('')}</div>
  <fieldset ${busy?'disabled':''}><legend>Signal settings</legend><label class="signal-check"><input type="checkbox" name="enabled" data-signal-property="${prop}" ${signal.enabled!==false?'checked':''}>Generate this output</label>
- <div class="signal-inputs">${thermal?'':numeric('initial','Baseline ('+unit+')',`min="${meta.min}" max="${meta.max}"`)}<label>Variation<select name="variation" data-signal-property="${prop}">${options.map(([id,label])=>`<option value="${id}" ${id===patternOf(signal)?'selected':''}>${label}</option>`).join('')}</select></label>
+ <div class="signal-inputs">${thermal?'':numeric('initial','Baseline ('+unit+')',`min="${meta.min}" max="${meta.max}"`)}<label>Waveform<select name="variation" data-signal-property="${prop}">${options.map(([id,label])=>`<option value="${id}" ${id===patternOf(signal)?'selected':''}>${esc(label)}</option>`).join('')}</select></label>
  ${thermalFields}
  ${signal.function==='sine'?numeric('amplitude','Amplitude ('+unit+')')+numeric('period','Period (s)','min="0.001"'):signal.function==='ramp'?numeric('slope','Rate ('+unit+'/s)'):signal.function==='orbit.sunlight'?numeric('amplitude','Sunlit offset ('+unit+')')+numeric('response_time','Response time (s)','min="0" max="7200"'):''}
+ <label>Noise<select name="noise" data-signal-property="${prop}">${noiseOptions.map(([id,label])=>`<option value="${id}" ${id===(signal.noise??'none')?'selected':''}>${label}</option>`).join('')}</select></label>
  ${signal.noise&&signal.noise!=='none'?numeric('noise_level',(signal.noise==='uniform'?'Peak deviation':'Standard deviation')+' ('+unit+')','min="0"'):''}</div></fieldset>
  <fieldset class="signal-session" ${busy?'disabled':''}><legend>Simulation session</legend><label class="signal-check"><input type="checkbox" data-simulation-enable="${esc(device.id)}" ${sensor.enabled?'checked':''}>Include sensor</label><label>Sample interval (s)<input type="number" name="interval" step="any" min="0.001" value="${esc(session.settings.interval)}" required></label></fieldset></form>`;
 }
@@ -115,10 +115,12 @@ export function selectSeries(id,channel){seriesSelection.set(id,channel);}
 
 // A deterministic noise realization keeps previous preview samples in place while scrubbing.
 function variate(i){const x=Math.sin(i*127.1+311.7)*43758.5453;return x-Math.floor(x);}
-function previewValue(signal,t,interval,limits){
+export function previewValue(signal,t,interval,limits){
   let result=signal.initial;
-  if(signal.function==='orbit.thermal')return orbitTemperature(t,signal.material);
-  if(signal.function==='sine')result+=signal.amplitude*Math.sin(2*Math.PI*t/signal.period);
+  if(signal.function==='orbit.thermal'){
+    result=orbitTemperature(t,signal.material);
+    if(result==null)return null;
+  }else if(signal.function==='sine')result+=signal.amplitude*Math.sin(2*Math.PI*t/signal.period);
   else if(signal.function==='ramp')result+=signal.slope*t;
   else if(signal.function==='orbit.sunlight'){const amount=orbitIllumination(t,signal.response_time);if(amount==null)return null;result+=signal.amplitude*amount;}
   else if(signal.function!=='constant')return null;

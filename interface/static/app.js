@@ -277,8 +277,9 @@ document.addEventListener('input',event=>{
   if(sensor){
    const settings=sensor.signals[field.dataset.signalProperty];
    if(field.name==='variation'){
-    const saved=state.simulation.available.find(device=>device.id===sensor.device).defaults.signals[field.dataset.signalProperty];
-    sensor.signals[field.dataset.signalProperty]=changePattern(settings,field.value,saved);
+    sensor.signals[field.dataset.signalProperty]=changePattern(settings,field.value);
+   }else if(field.name==='noise'){
+    settings.noise=field.value;
    }else if(field.hasAttribute('data-material-field')){
     if(field.name==='size'){
       settings.material.size=field.value;
@@ -304,7 +305,7 @@ document.addEventListener('change',event=>{
   if(!sensor){const item=state.simulation?.available.find(item=>item.id===id);if(!item)return;sensor=structuredClone(item.defaults);state.simulation.settings.sensors.push(sensor);}
   sensor.enabled=field.checked;state.simulationDirty=true;renderView();renderSimulationPanel(true);
  }
- else if(field.closest('#simulation-form')&&['variation','enabled','size'].includes(field.name))renderSimulationPanel(true);
+ else if(field.closest('#simulation-form')&&['variation','noise','enabled','size'].includes(field.name))renderSimulationPanel(true);
 });
 document.addEventListener('submit',event=>{if(event.target.id==='simulation-form'){event.preventDefault();guarded(saveSimulation)();}});
 let launchPending=null;

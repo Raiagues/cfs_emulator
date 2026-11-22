@@ -12,7 +12,7 @@ def prepare(root, *, build=False, options=()):
     root = Path(root)
     image = emulator_config(root)['image']
     platform = docker_platform()
-    models = fingerprint()
+    models = fingerprint(root)
     inspect = ['docker', 'image', 'inspect', '--format',
                '{{.Os}}/{{.Architecture}} {{index .Config.Labels "org.flight-studio.register-models"}}', image]
 

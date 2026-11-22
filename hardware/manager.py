@@ -183,6 +183,10 @@ class HardwareManager:
         paths = []
         for directory in ("cFS", "mission", "project"):
             for base, dirs, files in os.walk(self.root / directory):
+                if Path(base) == self.root / "mission":
+                    # prepare() and the portability tests stage independent checkouts here.
+                    dirs[:] = [d for d in dirs if not d.startswith(".prepare-")]
+                    files = [name for name in files if name != ".prepare.lock"]
                 sources = [d for d in dirs if d not in {".git", "__pycache__"} and not d.startswith("build")]
                 dirs[:] = sorted(d for d in sources if not (Path(base) / d).is_symlink())
                 for name in sorted(files):
@@ -280,8 +284,8 @@ class HardwareManager:
             return (normalized["host"].lower(), normalized["port"], normalized["user"], normalized.get("directory", BOARD_DIRECTORY))
         return destination(first) == destination(second)
 
-    def ssh_argv(self, target="qemu", connection=None, interactive=False):
-        argv = ["ssh", "-t" if interactive else "-T", "-o", "ConnectTimeout=8",
+    def ssh_argv(self, target="qemu", connection=None, interactive=False, *, connect_timeout=8):
+        argv = ["ssh", "-t" if interactive else "-T", "-o", f"ConnectTimeout={connect_timeout}",
                 "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=3"]
         if not interactive:
             argv += ["-o", "BatchMode=yes"]
@@ -302,9 +306,9 @@ class HardwareManager:
             argv += ["-i", config["identity_file"], "-o", "IdentitiesOnly=yes"]
         return argv + [config["host"]]
 
-    def agent_command(self, target, connection, operation, *args):
+    def agent_command(self, target, connection, operation, *args, connect_timeout=8):
         remote = shlex.join(["python3", "-u", "-", operation, json.dumps(args)])
-        return self.ssh_argv(target, connection) + [remote]
+        return self.ssh_argv(target, connection, connect_timeout=connect_timeout) + [remote]
 
     def remote_operation(self, target, connection, operation, args, emit, cancel=None, timeout=30):
         with Path(__file__).with_name("remote_agent.py").open("rb") as agent:
@@ -453,12 +457,12 @@ class HardwareManager:
                     selector.unregister(key.fileobj)
         emit("Native cFS stopped.")
 
-    def _flight_state(self, target, connection=None):
+    def _flight_state(self, target, connection=None, timeout=8):
         if target == "native":
             return self._local_flight_state()
         service = 'cfs.service' if target == 'qemu' else 'cfs-studio.service'
-        command = self.agent_command(target, connection, "status", service)
-        code, output = self._capture(command, 8, input=Path(__file__).with_name("remote_agent.py").read_text())
+        command = self.agent_command(target, connection, "status", service, connect_timeout=timeout)
+        code, output = self._capture(command, timeout, input=Path(__file__).with_name("remote_agent.py").read_text())
         try:
             state = json.loads(output.splitlines()[0]) if not code and output else None
             if not isinstance(state, dict) or set(state) != {'service', 'pids', 'running', 'instance'}:
@@ -577,6 +581,29 @@ class HardwareManager:
         self._stream(["docker", "wait", network(self.root).container], emit, cancel, timeout=timeout)
         emit("QEMU stopped.")
 
+    def confirmed_remote_flight(self, target, connection=None, emit=None, cancel=None):
+        state = self._flight_state(target, connection)
+        if state["running"] is not None:
+            return state
+        if cancel and cancel.is_set():
+            raise HardwareError("Operation cancelled while checking cFS.")
+        if emit:
+            emit("Could not read cFS process state over SSH. Retrying the check...")
+        # A newly booted Linux guest can be slow to accept SSH and query systemd.
+        return self._flight_state(target, connection, timeout=30)
+
+    @staticmethod
+    def _confirm_remote_stop(target, state):
+        location = "the emulator" if target == "qemu" else "the board"
+        if state["running"] is False:
+            return
+        if state["running"] is None:
+            detail = state.get("error") or "Check the SSH connection and retry."
+            raise HardwareError(f"Cannot confirm that cFS has stopped on {location}. {detail}")
+        if state["pids"] and state["service"] not in ACTIVE_STATES:
+            raise HardwareError(f"Stop the unmanaged core-cpu1 process on {location} before switching targets.")
+        raise HardwareError(f"The cFS service on {location} is still active.")
+
     def _stop_physical(self, connection, emit, cancel=None, required=True):
         state = self._flight_state("physical", connection)
         if state["running"] is None:
@@ -587,9 +614,8 @@ class HardwareManager:
             emit("Stopping cFS on the board...")
             self._stream(self.ssh_argv("physical", connection) + [shlex.join(["sudo", "-n", "systemctl", "stop", "cfs-studio.service"])],
                          emit, cancel, timeout=30)
-            state = self._flight_state("physical", connection)
-        if state["running"] is not False:
-            raise HardwareError("Stop the unmanaged core-cpu1 process on the board before switching targets.")
+            state = self.confirmed_remote_flight("physical", connection, emit, cancel)
+        self._confirm_remote_stop("physical", state)
         self._invalidate_observation("physical")
         emit("Board cFS stopped.")
 
@@ -693,7 +719,7 @@ class HardwareManager:
         if running is False and default_target == 'qemu':
             status, label = self._capture(["docker", "image", "inspect", "--format",
                 '{{index .Config.Labels "org.flight-studio.register-models"}}', emulator_config(self.root)["image"]], 10)
-            image_ready = not status and label == model_fingerprint()
+            image_ready = not status and label == model_fingerprint(self.root)
         qemu = {"image_ready": image_ready, "running": running, "service": service, "flight_running": flight_running,
                 "linux_ready": linux_ready, "can_boot": running is False,
                 "can_retry_boot": running is True and linux_ready is False, "boot_error": boot_error,
@@ -1141,9 +1167,9 @@ class HardwareManager:
         return result
 
     def _stop_qemu(self, emit, cancel):
-        self._stream(self.ssh_argv() + [shlex.join(["systemctl", "stop", "cfs.service"])], emit, cancel, timeout=30)
-        if self._flight_state("qemu")["running"] is not False:
-            raise HardwareError("Stop the unmanaged core-cpu1 process on the emulator before switching targets.")
+        self._stream(self.ssh_argv(connect_timeout=30) + [shlex.join(["systemctl", "stop", "cfs.service"])],
+                     emit, cancel, timeout=45)
+        self._confirm_remote_stop("qemu", self.confirmed_remote_flight("qemu", emit=emit, cancel=cancel))
 
     def _stop(self, target, connection, emit, cancel):
         if target == "native":

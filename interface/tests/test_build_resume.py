@@ -67,6 +67,15 @@ class FirstBootBuildResumeTest(unittest.TestCase):
                 self.build(resume=True)
                 self.assertEqual(self.compilations, index)
 
+    def test_preparation_workspaces_do_not_change_the_flight_fingerprint(self):
+        installed = self.build()
+        staging = self.root / "mission/.prepare-portability-example"
+        staging.mkdir()
+        (staging / "checkout.c").write_text("unrelated fixture")
+        (self.root / "mission/.prepare.lock").touch()
+        self.assertEqual(self.build(resume=True), installed)
+        self.assertEqual(self.compilations, 1)
+
     def test_old_receipts_and_other_targets_cannot_be_reused(self):
         current = self.build()
         for count, state in enumerate(({k: v for k, v in current.items() if k != "installed_sha256"},

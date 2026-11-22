@@ -51,6 +51,8 @@ def start_emulator(path, staging):
         raise ValueError('Invalid emulator upload directory')
     if status('cfs.service')['running'] is not False:
         raise RuntimeError('Stop the running cFS process before replacing its installation')
+    # Keep the other Pi 4B vCPUs available to the guest kernel and SSH.
+    subprocess.run(['systemctl', 'set-property', '--runtime', 'cfs.service', 'AllowedCPUs=1'], check=True)
     previous = current.with_suffix('.previous')
     if previous.exists():
         shutil.rmtree(previous)

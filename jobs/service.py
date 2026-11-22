@@ -412,14 +412,23 @@ class Laboratory:
         deployment = self.hardware.state.read('deployed.json', {}).get(target)
         if not deployment:
             raise ValueError('Build and run cFS on this target before connecting the ground station.')
-        hardware = self.hardware.status()
         if target == 'physical':
             probe = self.hardware.probe(options.get('connection'))
             running = probe.get('service') == 'active'
         elif target == 'native':
-            running = hardware['native'].get('running')
+            running = self.hardware.status()['native'].get('running')
         else:
-            running = hardware['qemu'].get('flight_running')
+            running = self.hardware._qemu_running()
+            if running is None:
+                raise ValueError('Cannot check the emulator container. Restore the Docker connection and retry.')
+            if running:
+                flight = self.hardware.confirmed_remote_flight('qemu')
+                running = flight['running']
+                if running is None:
+                    raise ValueError('Cannot verify cFS over SSH on the emulator. ' +
+                                     (flight.get('error') or 'Restore the guest connection and retry.'))
+                if running and not flight.get('instance'):
+                    raise ValueError('No managed cFS instance could be identified on the emulator.')
         if not running:
             raise ValueError('cFS is not available on this target. Run it from the workbench before connecting the ground station.')
         if target == 'physical':

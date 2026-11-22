@@ -70,6 +70,21 @@ class EmulatorIdentityTest(unittest.TestCase):
                     emulator_ssh.pin_guest(self.root, "container-A")
                 self.assertEqual(self.pin.read_text(), "old disk key\n")
 
+    def test_quiet_serial_console_still_rechecks_ssh(self):
+        elapsed = [0.0]
+
+        def quiet_console(timeout):
+            elapsed[0] += timeout
+            return []
+
+        with patch.object(subprocess, "Popen"), patch.object(emulator_ssh.selectors, "DefaultSelector") as selector, \
+                patch.object(emulator_ssh.time, "monotonic", side_effect=lambda: elapsed[0]):
+            selector.return_value.__enter__.return_value.select.side_effect = quiet_console
+            scans = [self.inspect(), subprocess.TimeoutExpired("ssh-keyscan", 10), result(self.scan), result()]
+            with patch.object(subprocess, "run", side_effect=scans):
+                emulator_ssh.wait_for_guest(self.root, 3222, 20)
+        self.assertEqual(elapsed[0], 10.0)
+
     def test_forwarded_endpoint_must_prove_guest_key(self):
         failed = result(error="Host key verification failed.", code=255)
         with patch.object(subprocess, "run", side_effect=[self.inspect(), result(self.scan), failed]) as run:

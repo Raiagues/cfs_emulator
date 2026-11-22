@@ -1,6 +1,7 @@
 """Regression tests for CLI launch, PTY reads and physical deployment ownership."""
 import base64
 from collections import deque
+import json
 from pathlib import Path
 import runpy
 import subprocess
@@ -10,8 +11,9 @@ import time
 import unittest
 from unittest.mock import Mock, patch
 
-from hardware import activate_release
+from hardware import activate_release, remote_agent
 from hardware.manager import HardwareError, HardwareManager
+from jobs.service import Laboratory
 from jobs.terminal import Shell, Shells
 
 
@@ -105,6 +107,23 @@ class ExecutionTest(unittest.TestCase):
             self.assertEqual(manager.state.read("active.json")["phase"], "stopped")
             self.assertIn("stopped_at", manager.state.read("deployed.json")["physical"])
 
+    def test_emulator_checks_cpu_allocation_before_replacing_payload(self):
+        with tempfile.TemporaryDirectory() as directory:
+            current = Path(directory, "cpu1")
+            staged = Path(directory, "cpu1.upload-test")
+            current.mkdir()
+            staged.mkdir()
+            failure = subprocess.CalledProcessError(1, "systemctl")
+            with patch.object(remote_agent, "status", return_value={"running": False}), \
+                    patch.object(remote_agent.subprocess, "run", side_effect=failure) as systemctl:
+                with self.assertRaises(subprocess.CalledProcessError):
+                    remote_agent.start_emulator(current, staged)
+            systemctl.assert_called_once_with(
+                ["systemctl", "set-property", "--runtime", "cfs.service", "AllowedCPUs=1"], check=True)
+            self.assertTrue(current.is_dir())
+            self.assertTrue(staged.is_dir())
+            self.assertFalse(current.with_suffix(".previous").exists())
+
     def test_recheck_authorization_before_upload_and_reuse_board_probe(self):
         with tempfile.TemporaryDirectory() as temporary:
             manager = HardwareManager(temporary)
@@ -119,6 +138,67 @@ class ExecutionTest(unittest.TestCase):
             manager.probe.assert_called_once()
             self.assertIs(manager.prepare_board.call_args.kwargs["board"], board)
             manager._stream.assert_not_called()
+
+
+class RemoteFlightStateTest(unittest.TestCase):
+    def setUp(self):
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        self.root = Path(folder.name)
+        (self.root / "config").mkdir()
+        (self.root / "config/image").write_text("flight-test:local")
+        self.manager = HardwareManager(self.root)
+        self.manager.assert_can_boot = Mock(return_value=False)
+        self.manager._switch_target = Mock()
+        self.manager._stream = Mock()
+        self.manager._qemu_running = Mock(return_value=True)
+        self.timeout = (124, "SSH status timed out")
+
+    @staticmethod
+    def observation(service, pids, instance=None):
+        return (0, json.dumps({"service": service, "running": bool(pids) or service == "active",
+                               "pids": pids, "instance": instance}))
+
+    def boot(self):
+        return self.manager._boot("qemu", None, False, Mock(), None)
+
+    def test_boot_confirms_inactive_service_after_transient_ssh_timeout(self):
+        self.manager._capture = Mock(side_effect=[self.timeout, self.observation("inactive", [])])
+        self.assertTrue(self.boot()["linux_ready"])
+        attempts = self.manager._capture.call_args_list
+        self.assertEqual([c.args[1] for c in attempts], [8, 30])
+        for attempt in attempts:
+            self.assertIn(f"ConnectTimeout={attempt.args[1]}", attempt.args[0])
+        self.assertEqual(self.manager.state.read("active.json")["phase"], "ready")
+
+    def test_boot_rejects_unknown_state_active_service_and_observed_unmanaged_pid(self):
+        cases = [(self.timeout, "Cannot confirm"), (self.observation("active", [9], "unit-id"), "still active"),
+                 (self.observation("inactive", [9]), "unmanaged core-cpu1")]
+        for result, message in cases:
+            with self.subTest(message=message):
+                self.manager._capture = Mock(side_effect=[self.timeout, result])
+                with self.assertRaisesRegex(HardwareError, message):
+                    self.boot()
+                self.assertFalse(self.manager.state.read("active.json"))
+
+    def test_ground_rechecks_ssh_and_only_connects_to_an_identified_service(self):
+        studio = Mock()
+        studio.hardware = self.manager
+        studio.workspace.root = self.root
+        studio.ground.start.return_value = {"connected": True}
+        self.manager.state.write("deployed.json", {"qemu": {"target": "qemu"}})
+        with patch("jobs.service.resolve_ground_link", return_value={}), \
+                patch("jobs.service.apply_overrides", return_value={}):
+            for result, error in [(self.timeout, "Cannot verify cFS over SSH"),
+                                  (self.observation("inactive", [9]), "No managed cFS")]:
+                with self.subTest(error=error):
+                    self.manager._capture = Mock(side_effect=[self.timeout, result])
+                    with self.assertRaisesRegex(ValueError, error):
+                        Laboratory.ground_start(studio, {"target": "qemu"})
+                    studio.ground.start.assert_not_called()
+            self.manager._capture = Mock(side_effect=[self.timeout, self.observation("active", [9], "unit-id")])
+            self.assertTrue(Laboratory.ground_start(studio, {"target": "qemu"})["connected"])
+            studio.ground.start.assert_called_once()
 
 
 class ReleaseTest(unittest.TestCase):

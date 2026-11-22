@@ -2,15 +2,18 @@
 from contextlib import closing, ExitStack
 import errno
 import fcntl
+import hashlib
 import json
+import os
 from pathlib import Path
 import selectors
 import socket
 import sqlite3
+import stat
 import time
 
 from journey import Store
-from project.defaults import sensor_timeout
+from project.defaults import runtime_dir, sensor_timeout
 from project.model import identifier, load_config, read_manifests
 from project.sensor_models import load, model_paths
 
@@ -53,8 +56,23 @@ def matching_write(store, device, flight, at, values):
     return None
 
 
+def _board_endpoint(root, device):
+    return runtime_dir(root) / ("board-sensor-" + identifier(device) + ".sock")
+
+
 def board_socket(root, device):
-    return Path(root) / "hardware/.runtime" / ("board-sensor-" + identifier(device) + ".sock")
+    path = _board_endpoint(root, device)
+    if len(os.fsencode(path)) < 104:  # sun_path is 104 bytes on macOS, 108 on Linux.
+        return path
+
+    # A private, short pathname also works when TMPDIR itself exceeds sun_path.
+    directory = Path("/tmp") / f"flight-studio-sensors-{os.getuid()}"
+    directory.mkdir(mode=0o700, exist_ok=True)
+    info = directory.lstat()
+    if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077:
+        raise PermissionError("The sensor reader needs a private socket directory")
+    identity = hashlib.sha256(os.fsencode(path)).hexdigest()[:32]
+    return directory / (identity + ".sock")
 
 
 def send_reading(address, packet):
@@ -120,7 +138,8 @@ def read_board(root, devices, on_sample, steps):
         selector = resources.enter_context(selectors.DefaultSelector())
         for device in devices:
             address = board_socket(root, device["id"])
-            lock = resources.enter_context(address.with_suffix(".lock").open("a"))
+            lock_path = _board_endpoint(root, device["id"]).with_suffix(".lock")
+            lock = resources.enter_context(lock_path.open("a"))
             try:
                 fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             except BlockingIOError:

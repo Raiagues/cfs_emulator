@@ -12,7 +12,7 @@ if __package__ in (None, ""):
 from project.sensor_models import model_paths, load, validate
 
 
-def render(model):
+def render(model, template=None):
     model = validate(model)
     if model.get("emulator", "register") != "register":
         raise ValueError("This device uses a separately implemented QEMU model")
@@ -31,7 +31,8 @@ def render(model):
         values = [output[k] for k in ("initial", "offset", "counts", "divisor")]
         values.extend([output.get("range_register", -1), output.get("range_shift", 0)])
         outputs.append('    {"%s", %d, %s},' % (output["name"], output["register"], ', '.join(map(str, values))))
-    template = (HERE / "device.c.in").read_text()
+    if template is None:
+        template = (HERE / "device.c.in").read_text()
     for key, value in dict(MODEL=model["name"], COUNT=len(outputs), OUTPUTS="\n".join(outputs),
                            ID_REG=model["id_register"], ID_VALUE=model["id_value"], RESET="\n".join(reset),
                            WRITES="\n".join(writes), SLEEP="\n".join(sleep_checks)).items():
@@ -50,11 +51,15 @@ def register_models(root=ROOT):
     return models
 
 
-def fingerprint():
-    digest = hashlib.sha256((HERE / "device.c.in").read_bytes())
-    for name, path in sorted(register_models().items()):
+def fingerprint(root=ROOT):
+    root = Path(root)
+    template = root / "project/qemu/device.c.in"
+    source = (template if template.is_file() else HERE / "device.c.in").read_bytes()
+    digest = hashlib.sha256(source)
+    template_text = source.decode("utf-8")
+    for name, path in sorted(register_models(root).items()):
         digest.update(name.encode())
-        digest.update(render(json.loads(path.read_text())).encode())
+        digest.update(render(json.loads(path.read_text()), template_text).encode())
     return digest.hexdigest()
 
 

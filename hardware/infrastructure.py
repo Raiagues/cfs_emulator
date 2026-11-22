@@ -34,10 +34,14 @@ def sources_ready(root):
 
 def emulator_config(root):
     root = Path(root)
-    image = (root / "config/image").read_text().strip()
-    if "{fingerprint}" in image:
-        image = image.replace("{fingerprint}", fingerprint())
-    return validate_emulator(asdict(RuntimeState(root).emulator(Emulator(image, network(root).ssh))))
+    template = (root / "config/image").read_text().strip()
+    settings = asdict(RuntimeState(root).emulator(Emulator(template, network(root).ssh)))
+    if "{fingerprint}" in template and isinstance(settings["image"], str):
+        # Older settings saved the expanded default tag alongside an edited SSH port.
+        tag_pattern = re.escape(template).replace(re.escape("{fingerprint}"), "[0-9a-f]{64}")
+        if settings["image"] == template or re.fullmatch(tag_pattern, settings["image"]):
+            settings["image"] = template.replace("{fingerprint}", fingerprint(root))
+    return validate_emulator(settings)
 
 
 def validate_emulator(value):
@@ -207,9 +211,9 @@ def _version_at_least(minimum, row, output):
             row["detail"] = version[0]
 
 
-def _image_result(image, row, output):
+def _image_result(image, root, row, output):
     if row["ready"]:
-        row["ready"] = output == fingerprint()
+        row["ready"] = output == fingerprint(root)
         row["detail"] = image if row["ready"] else image + " · Register models differ"
 
 
@@ -257,7 +261,7 @@ def _check_plan(hardware, target):
         emulator = emulator_config(hardware.root)
         image = emulator["image"]
         yield Probe("Emulator image", ("docker", "image", "inspect", "--format",
-                    '{{index .Config.Labels "org.flight-studio.register-models"}}', image), partial(_image_result, image))
+                    '{{index .Config.Labels "org.flight-studio.register-models"}}', image), partial(_image_result, image, hardware.root))
         yield Probe("Emulator SSH identity", (*local, "check-emulator-key", str(hardware.root)))
         yield Probe("Local SSH port", (*local, "check-port", str(hardware.root), str(emulator["ssh_port"])))
     yield Probe("NASA cFS source", (sys.executable, "-m", "project.nasa_source", "--status", str(hardware.root)),

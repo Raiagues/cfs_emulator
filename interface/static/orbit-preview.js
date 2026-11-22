@@ -15,6 +15,7 @@ let firstVisit=true, failedKey='', retryAt=0;
 let source='elements', tleText='', tleError='';
 const color = name => getComputedStyle(document.body).getPropertyValue(name).trim();
 const numeric = (v, digits=1) => Number(v).toFixed(digits);
+const epochFieldValue = epoch => epoch.replace(/Z$/, '').slice(0,23);
 const wrap = v => ((v+180)%360+360)%360-180;
 const currentJob = () => context?.state.jobs.find(job=>['simulate','simulate-preview'].includes(job.action) && job.status==='running');
 
@@ -72,7 +73,7 @@ export function orbitControls(el,locked=false) {
   const tleHtml=tleText.replaceAll('&','&amp;').replaceAll('<','&lt;');
   return `<fieldset class="orbit-inspector" ${locked?'disabled':''}><div class="orbit-presets">${Object.entries(presets).map(([id,p])=>`<button data-orbit-preset="${id}" aria-pressed="${presetName(el)===p.label}">${p.label}</button>`).join('')}</div><div class="orbit-defined">Defined by</div>${seg([['elements','Elements'],['tle','TLE']],'source',source)}
   ${source==='tle'?`<label class="orbit-tle">Two-line elements<textarea rows="4" data-orbit-tle spellcheck="false">${tleHtml}</textarea></label><span class="orbit-error" data-orbit-error role="status"></span><button type="button" data-orbit-import>Apply elements</button><div class="orbit-import-epoch">Epoch · ${el.epoch.slice(0,19).replace('T',' ')} UTC</div>`:
-  `<h3>Shape</h3>${slider('perigee','Perigee altitude','km',100,Math.max(2500,el.perigee),1)}${slider('apogee','Apogee altitude','km',100,rangeMax,1)}<h3>Orientation</h3>${slider('inclination','Inclination','°',0,180,.01)}${slider('node','RAAN','°',0,360,.1)}${slider('argument','Argument of perigee','°',0,360,.1)}${slider('anomaly','Mean anomaly at epoch','°',0,360,.1)}`}
+  `<label class="orbit-tle">Epoch (UTC)<input type="datetime-local" data-orbit-epoch step="0.001" required min="1900-01-01T00:00" max="2100-12-31T23:59:59.999" value="${epochFieldValue(el.epoch)}"></label><h3>Shape</h3>${slider('perigee','Perigee altitude','km',100,Math.max(2500,el.perigee),1)}${slider('apogee','Apogee altitude','km',100,rangeMax,1)}<h3>Orientation</h3>${slider('inclination','Inclination','°',0,180,.01)}${slider('node','RAAN','°',0,360,.1)}${slider('argument','Argument of perigee','°',0,360,.1)}${slider('anomaly','Mean anomaly at epoch','°',0,360,.1)}`}
   <h3>Propagator</h3>${seg([['Two-body','Two-body'],['J2','J2']],'model',el.model)}<div class="orbit-readouts"><span>period <b data-orbit-summary="period">—</b></span><span>eccentricity <b data-orbit-summary="ecc">—</b></span></div></fieldset>`;
 }
 
@@ -235,7 +236,13 @@ export function mountOrbit(options){
   });
   document.addEventListener('change',event=>{
     const field=event.target,id=field.dataset.orbitNumber;
-    if(!id || currentJob())return;
+    if(currentJob())return;
+    if(field.hasAttribute('data-orbit-epoch')){
+      if(!field.checkValidity()){field.value=epochFieldValue(stateElements().epoch);return;}
+      update({epoch:new Date(field.value+'Z').toISOString()});
+      return;
+    }
+    if(!id)return;
     if(field.value==='' || !field.checkValidity()){field.value=stateElements()[id];return;}
     const range=document.querySelector('[data-orbit-element="'+id+'"]');
     if(Number(field.value)>Number(range.max))range.max=field.value;

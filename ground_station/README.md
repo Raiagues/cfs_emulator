@@ -67,9 +67,9 @@ As portas são lidas da configuração compilada de CI_LAB e TO_LAB. No perfil p
 | Destino | Caminho do comando | Caminho de retorno |
 | --- | --- | --- |
 | Native | Loopback do computador | Loopback do computador |
-| Emulator | Endereço do contêiner e redirecionamento UDP para o guest | Gateway da bridge do Docker |
+| Emulator | Porta UDP publicada no loopback do computador, redirecionada à porta de CI_LAB no convidado | TO_LAB envia ao endereço do hospedeiro na rede do QEMU. Um receptor UDP no contêiner entrega os pacotes à estação |
 | Board | Endereço da placa observado pelo SSH | Endereço local observado pela placa na conexão SSH |
 
-Em **Emulator**, a conexão cria um `hostfwd_add` por QMP para a porta compilada. A implementação espera uma bridge Docker alcançável a partir do host e o redirecionamento dura até o fim do processo QEMU. Em **Board**, o Studio lê `SSH_CONNECTION` e verifica a rota UDP do host usando os endereços observados. Um NAT ou salto SSH que altere o endereço de retorno pode impedir essa verificação.
+Em **Emulator**, o encaminhamento de comandos é criado na inicialização do QEMU. A estação consulta a porta publicada pelo Docker e abre o receptor de telemetria no contêiner. Se a porta da missão compilada mudar, reinicie o emulador. O QMP recebe os estímulos dos sensores. Em **Board**, o Studio lê `SSH_CONNECTION` e verifica a rota UDP do host usando os endereços observados. Um NAT ou salto SSH que altere o endereço de retorno pode impedir essa verificação.
 
 A descoberta, a codificação CCSDS e o estado da sessão ficam nos módulos abaixo. [Catálogo](catalog.py) · [Descoberta em C](discovery.py) · [Integração NASA](official.py) · [Sessão](station.py)

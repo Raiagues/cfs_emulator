@@ -139,6 +139,8 @@ def main(argv=None):
         if action == 'setup':
             command.add_argument('--jobs', type=int, help='Save the number of parallel native build jobs')
             command.add_argument('--check', action='store_true', help='Report prerequisites without installing packages')
+        if action == 'boot':
+            command.add_argument('--retry', action='store_true', help='Retry SSH on a running emulator')
         if action == 'run':
             follow = command.add_mutually_exclusive_group()
             follow.add_argument('--follow', action='store_true', help='Follow the console after cFS reaches OPERATIONAL')
@@ -359,6 +361,8 @@ def main(argv=None):
             options['connection'] = connection
         if sensorless:
             options['sensorless'] = True
+        if getattr(args, 'retry', False):
+            options['retry'] = True
         for key in ('kind', 'model', 'device', 'scenario'):
             if getattr(args, key, None) is not None:
                 options[key] = getattr(args, key)

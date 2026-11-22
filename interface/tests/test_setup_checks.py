@@ -47,6 +47,7 @@ class SetupChecksTest(unittest.TestCase):
     def test_two_targets_can_stream_checks_concurrently(self):
         running = threading.Event()
         release = threading.Event()
+        self.addCleanup(release.set)
 
         # This test exercises the HTTP stream and concurrent requests. Running
         # host tools here makes the synchronization depend on local startup time.
@@ -55,8 +56,9 @@ class SetupChecksTest(unittest.TestCase):
                 return subprocess.CompletedProcess(command, 1, '{"state":"missing"}')
             if command[:2] == ('docker', 'version'):
                 running.set()
-                if not release.wait(5):
-                    raise RuntimeError('client did not receive the running state')
+                # The native request has its own HTTP timeout. Hold this probe
+                # until that request finishes, regardless of local disk speed.
+                release.wait()
                 return subprocess.CompletedProcess(command, 0, '28.0.0')
             return subprocess.CompletedProcess(command, 0, 'tool 1.0')
 

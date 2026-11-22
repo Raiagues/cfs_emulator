@@ -1,6 +1,8 @@
 import json
+import os
 from pathlib import Path
 import socket
+import stat
 import tempfile
 import unittest
 
@@ -40,11 +42,27 @@ class SensorTransportTest(unittest.TestCase):
 
     def test_physical_readings_reach_only_an_explicit_local_listener(self):
         with tempfile.TemporaryDirectory() as directory:
-            address = board_socket(Path(directory), 'temp')
-            address.parent.mkdir(parents=True)
-            packet = {'at':12.0,'values':{'temperature':22000}}
-            self.assertFalse(send_reading(address, packet))
-            with socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) as listener:
-                listener.bind(str(address))
-                self.assertTrue(send_reading(address, packet))
-                self.assertEqual(json.loads(listener.recv(2048)), packet)
+            self.check_local_readings(Path(directory))
+
+    def check_local_readings(self, root):
+        address = board_socket(root, 'temp')
+        address.parent.mkdir(parents=True, exist_ok=True)
+        self.addCleanup(address.unlink, missing_ok=True)
+        packet = {'at':12.0,'values':{'temperature':22000}}
+        self.assertFalse(send_reading(address, packet))
+        with socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) as listener:
+            listener.bind(str(address))
+            self.assertTrue(send_reading(address, packet))
+            self.assertEqual(json.loads(listener.recv(2048)), packet)
+
+    def test_long_workspaces_keep_private_separate_sensor_addresses(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / ('missão' * 25)
+            root.mkdir()
+            address = board_socket(root, 'temp')
+            self.assertLess(len(os.fsencode(address)), 104)
+            self.assertEqual(stat.S_IMODE(address.parent.stat().st_mode), 0o700)
+            self.assertEqual(address.parent.stat().st_uid, os.getuid())
+            self.assertNotEqual(address, board_socket(root, 'imu'))
+            self.assertNotEqual(address, board_socket(root / 'other', 'temp'))
+            self.check_local_readings(root)

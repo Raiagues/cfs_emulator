@@ -12,7 +12,7 @@ from project.driver_catalog import plan_drivers, requirements
 from project.manage import commit
 from project.model import board_catalog, load_config, validate_hardware
 from project.sensor_models import register
-from project.qemu.generate import register_models, render
+from project.qemu.generate import fingerprint, register_models, render
 from project.sensor_driver import app_adapter
 from project.sensor_models import MODELS, model_paths
 
@@ -64,7 +64,21 @@ class SensorHalTest(unittest.TestCase):
         self.assertEqual(subprocess.check_output(["fdtget", str(base), bus_node, "status"], text=True).strip(), "okay")
 
     def test_register_once_and_reuse_in_all_consumers(self):
+        from hardware.infrastructure import emulator_config
+        from hardware.state import RuntimeState
+        (self.root / "config").mkdir()
+        (self.root / "config/image").write_text("studio:models-{fingerprint}")
+        previous_image = fingerprint(self.root)
+        saved = RuntimeState(self.root)
+        saved.write("emulator.json", {"image": "studio:models-" + previous_image, "ssh_port": 23001})
+        original_image = fingerprint(ROOT)
         result = register(self.root, self.spec)
+        current_image = fingerprint(self.root)
+        self.assertNotEqual(previous_image, current_image)
+        self.assertEqual(emulator_config(self.root), {"image": "studio:models-" + current_image, "ssh_port": 23001})
+        saved.write("emulator.json", {"image": "outro:local", "ssh_port": 23001})
+        self.assertEqual(emulator_config(self.root)["image"], "outro:local")
+        self.assertEqual(original_image, fingerprint(ROOT))
         self.assertEqual(set(result["changed"]), {str(MODELS / "lab_sensor/model.json"), "sensors/lab_sensor.py"})
         with self.assertRaises(ValueError):
             register(self.root, self.spec)
