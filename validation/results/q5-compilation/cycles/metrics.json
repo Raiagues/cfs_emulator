@@ -1,0 +1,145 @@
+{
+  "kind": "q5_compilation_supplement",
+  "status": "failed",
+  "started_utc": "2026-11-23T12:22:44.637777+00:00",
+  "platform_commit": "64add2472dbf6869563612cf6b2c427b181dba5d",
+  "nasa_commit": "a4d305dc06fb7d468f5b45214d9f730b97d4bd77",
+  "procedure": {
+    "commit": "f6beb5f00ebff836ea9d6b8051f18db7df461050",
+    "files": {
+      "validation/compilation.py": "08fb3ee31e791df820eb196fa631a6f84aab48aed30115ec98dbb8a6eeb417c7",
+      "validation/common.py": "0452675382e672a2a33a42b4bb7f23c89aafb690c85d99ea1f06388646275aad"
+    }
+  },
+  "host": {
+    "platform": "Linux-6.8.0-149-generic-x86_64-with-glibc2.39",
+    "machine": "x86_64",
+    "python": "3.12.3",
+    "cpu_count_available": 8,
+    "build_jobs": 1
+  },
+  "planned_n": 10,
+  "target": "qemu",
+  "build_destinations": [
+    "qemu",
+    "physical"
+  ],
+  "scope": "Host source operations and shared cross-build; no emulator or physical-board execution",
+  "prerequisite_scope": "Fresh baseline ARM build before the measured incremental cycles",
+  "cycles": [
+    {
+      "repetition": 1,
+      "app": "eval_cycle_01",
+      "create_s": 1.3670612869900651,
+      "build_s": 97.09331876099168,
+      "delete_s": 2.8215859060001094
+    },
+    {
+      "repetition": 2,
+      "app": "eval_cycle_02",
+      "create_s": 1.6704412429971853,
+      "build_s": 51.792034176003654,
+      "delete_s": 2.9227687050006352
+    },
+    {
+      "repetition": 3,
+      "app": "eval_cycle_03",
+      "create_s": 1.5673968710034387,
+      "build_s": 51.83504241499759,
+      "delete_s": 2.9728931080026086
+    },
+    {
+      "repetition": 4,
+      "app": "eval_cycle_04",
+      "create_s": 1.6687307550018886,
+      "build_s": 50.629990268003894,
+      "delete_s": 2.922045886007254
+    },
+    {
+      "repetition": 5,
+      "app": "eval_cycle_05",
+      "create_s": 1.6184579690016108,
+      "build_s": 50.687191652003094,
+      "delete_s": 2.9719680849957513
+    },
+    {
+      "repetition": 6,
+      "app": "eval_cycle_06",
+      "create_s": 1.7705940829910105,
+      "build_s": 50.98282974200265,
+      "delete_s": 2.9223811039992142
+    },
+    {
+      "repetition": 7,
+      "app": "eval_cycle_07",
+      "create_s": 1.7183740629989188,
+      "build_s": 51.08267756400164,
+      "delete_s": 2.8230857330054278
+    },
+    {
+      "repetition": 8,
+      "app": "eval_cycle_08",
+      "create_s": 1.6186897669977043,
+      "build_s": 50.68272271800379,
+      "delete_s": 3.0729734300111886
+    },
+    {
+      "repetition": 9,
+      "app": "eval_cycle_09",
+      "create_s": 1.6193473730090773,
+      "build_s": 49.979585766996024,
+      "delete_s": 2.923551813000813
+    },
+    {
+      "repetition": 10,
+      "app": "eval_cycle_10",
+      "create_s": 1.5678582539985655,
+      "build_s": 50.63663990198984,
+      "delete_s": 2.9726451500027906
+    }
+  ],
+  "baseline_build": {
+    "name": "prepare-baseline",
+    "argv": [
+      "/tmp/flight-q5-compilation-20261123/flight/start",
+      "--no-ui",
+      "build",
+      "--target",
+      "qemu",
+      "--json"
+    ],
+    "started_utc": "2026-11-23T12:22:45.429030+00:00",
+    "stdout": "001-prepare-baseline.stdout.log",
+    "stderr": "001-prepare-baseline.stderr.log",
+    "exit_code": 0,
+    "elapsed_s": 119.42064020100224,
+    "ended_utc": "2026-11-23T12:24:44.849709+00:00"
+  },
+  "restoration_build": {
+    "name": "restore-base-mission",
+    "argv": [
+      "/tmp/flight-q5-compilation-20261123/flight/start",
+      "--no-ui",
+      "build",
+      "--target",
+      "qemu",
+      "--json"
+    ],
+    "started_utc": "2026-11-23T12:34:55.486856+00:00",
+    "stdout": "032-restore-base-mission.stdout.log",
+    "stderr": "032-restore-base-mission.stderr.log",
+    "exit_code": 0,
+    "elapsed_s": 94.08570484400843,
+    "ended_utc": "2026-11-23T12:36:29.572599+00:00"
+  },
+  "source_differences_after_restoration": [
+    "mission/modules.cmake",
+    "mission/sample_defs/cpu1/install_custom.cmake",
+    "mission/sample_defs/tables/sch_lab_table.c",
+    "mission/sample_defs/tables/to_lab_sub.c",
+    "mission/sample_defs/tables/to_lab_sub_alt.c",
+    "mission/sample_defs/tables/to_lab_sub_bad.c"
+  ],
+  "error": "ValueError: The source baseline was not restored: mission/modules.cmake, mission/sample_defs/cpu1/install_custom.cmake, mission/sample_defs/tables/sch_lab_table.c, mission/sample_defs/tables/to_lab_sub.c, mission/sample_defs/tables/to_lab_sub_alt.c, mission/sample_defs/tables/to_lab_sub_bad.c",
+  "ended_utc": "2026-11-23T12:36:30.374281+00:00"
+}

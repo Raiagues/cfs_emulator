@@ -1,0 +1,549 @@
+{
+  "started_utc": "2026-11-23T12:22:44.637767+00:00",
+  "commands": [
+    {
+      "name": "prepare-baseline",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "qemu",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:22:45.429030+00:00",
+      "stdout": "001-prepare-baseline.stdout.log",
+      "stderr": "001-prepare-baseline.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 119.42064020100224,
+      "ended_utc": "2026-11-23T12:24:44.849709+00:00"
+    },
+    {
+      "name": "create-eval_cycle_01",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_cycle_01",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:24:45.660103+00:00",
+      "stdout": "002-create-eval_cycle_01.stdout.log",
+      "stderr": "002-create-eval_cycle_01.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1.3670612869900651,
+      "ended_utc": "2026-11-23T12:24:47.027190+00:00"
+    },
+    {
+      "name": "build-eval_cycle_01",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "qemu",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:24:47.817751+00:00",
+      "stdout": "003-build-eval_cycle_01.stdout.log",
+      "stderr": "003-build-eval_cycle_01.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 97.09331876099168,
+      "ended_utc": "2026-11-23T12:26:24.911108+00:00"
+    },
+    {
+      "name": "delete-eval_cycle_01",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "delete",
+        "eval_cycle_01",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:26:24.911525+00:00",
+      "stdout": "004-delete-eval_cycle_01.stdout.log",
+      "stderr": "004-delete-eval_cycle_01.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 2.8215859060001094,
+      "ended_utc": "2026-11-23T12:26:27.733131+00:00"
+    },
+    {
+      "name": "create-eval_cycle_02",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_cycle_02",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:26:27.734012+00:00",
+      "stdout": "005-create-eval_cycle_02.stdout.log",
+      "stderr": "005-create-eval_cycle_02.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1.6704412429971853,
+      "ended_utc": "2026-11-23T12:26:29.404482+00:00"
+    },
+    {
+      "name": "build-eval_cycle_02",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "qemu",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:26:30.214796+00:00",
+      "stdout": "006-build-eval_cycle_02.stdout.log",
+      "stderr": "006-build-eval_cycle_02.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 51.792034176003654,
+      "ended_utc": "2026-11-23T12:27:22.006871+00:00"
+    },
+    {
+      "name": "delete-eval_cycle_02",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "delete",
+        "eval_cycle_02",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:27:22.007726+00:00",
+      "stdout": "007-delete-eval_cycle_02.stdout.log",
+      "stderr": "007-delete-eval_cycle_02.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 2.9227687050006352,
+      "ended_utc": "2026-11-23T12:27:24.930538+00:00"
+    },
+    {
+      "name": "create-eval_cycle_03",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_cycle_03",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:27:24.931248+00:00",
+      "stdout": "008-create-eval_cycle_03.stdout.log",
+      "stderr": "008-create-eval_cycle_03.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1.5673968710034387,
+      "ended_utc": "2026-11-23T12:27:26.498663+00:00"
+    },
+    {
+      "name": "build-eval_cycle_03",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "qemu",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:27:27.313538+00:00",
+      "stdout": "009-build-eval_cycle_03.stdout.log",
+      "stderr": "009-build-eval_cycle_03.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 51.83504241499759,
+      "ended_utc": "2026-11-23T12:28:19.148621+00:00"
+    },
+    {
+      "name": "delete-eval_cycle_03",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "delete",
+        "eval_cycle_03",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:28:19.149585+00:00",
+      "stdout": "010-delete-eval_cycle_03.stdout.log",
+      "stderr": "010-delete-eval_cycle_03.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 2.9728931080026086,
+      "ended_utc": "2026-11-23T12:28:22.122519+00:00"
+    },
+    {
+      "name": "create-eval_cycle_04",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_cycle_04",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:28:22.123114+00:00",
+      "stdout": "011-create-eval_cycle_04.stdout.log",
+      "stderr": "011-create-eval_cycle_04.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1.6687307550018886,
+      "ended_utc": "2026-11-23T12:28:23.791860+00:00"
+    },
+    {
+      "name": "build-eval_cycle_04",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "qemu",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:28:24.582923+00:00",
+      "stdout": "012-build-eval_cycle_04.stdout.log",
+      "stderr": "012-build-eval_cycle_04.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 50.629990268003894,
+      "ended_utc": "2026-11-23T12:29:15.212952+00:00"
+    },
+    {
+      "name": "delete-eval_cycle_04",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "delete",
+        "eval_cycle_04",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:29:15.213602+00:00",
+      "stdout": "013-delete-eval_cycle_04.stdout.log",
+      "stderr": "013-delete-eval_cycle_04.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 2.922045886007254,
+      "ended_utc": "2026-11-23T12:29:18.135674+00:00"
+    },
+    {
+      "name": "create-eval_cycle_05",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_cycle_05",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:29:18.136437+00:00",
+      "stdout": "014-create-eval_cycle_05.stdout.log",
+      "stderr": "014-create-eval_cycle_05.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1.6184579690016108,
+      "ended_utc": "2026-11-23T12:29:19.754914+00:00"
+    },
+    {
+      "name": "build-eval_cycle_05",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "qemu",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:29:20.565446+00:00",
+      "stdout": "015-build-eval_cycle_05.stdout.log",
+      "stderr": "015-build-eval_cycle_05.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 50.687191652003094,
+      "ended_utc": "2026-11-23T12:30:11.252685+00:00"
+    },
+    {
+      "name": "delete-eval_cycle_05",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "delete",
+        "eval_cycle_05",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:30:11.253811+00:00",
+      "stdout": "016-delete-eval_cycle_05.stdout.log",
+      "stderr": "016-delete-eval_cycle_05.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 2.9719680849957513,
+      "ended_utc": "2026-11-23T12:30:14.225824+00:00"
+    },
+    {
+      "name": "create-eval_cycle_06",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_cycle_06",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:30:14.227521+00:00",
+      "stdout": "017-create-eval_cycle_06.stdout.log",
+      "stderr": "017-create-eval_cycle_06.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1.7705940829910105,
+      "ended_utc": "2026-11-23T12:30:15.998157+00:00"
+    },
+    {
+      "name": "build-eval_cycle_06",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "qemu",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:30:16.827664+00:00",
+      "stdout": "018-build-eval_cycle_06.stdout.log",
+      "stderr": "018-build-eval_cycle_06.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 50.98282974200265,
+      "ended_utc": "2026-11-23T12:31:07.810551+00:00"
+    },
+    {
+      "name": "delete-eval_cycle_06",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "delete",
+        "eval_cycle_06",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:31:07.811511+00:00",
+      "stdout": "019-delete-eval_cycle_06.stdout.log",
+      "stderr": "019-delete-eval_cycle_06.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 2.9223811039992142,
+      "ended_utc": "2026-11-23T12:31:10.733914+00:00"
+    },
+    {
+      "name": "create-eval_cycle_07",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_cycle_07",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:31:10.734798+00:00",
+      "stdout": "020-create-eval_cycle_07.stdout.log",
+      "stderr": "020-create-eval_cycle_07.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1.7183740629989188,
+      "ended_utc": "2026-11-23T12:31:12.453194+00:00"
+    },
+    {
+      "name": "build-eval_cycle_07",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "qemu",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:31:13.274892+00:00",
+      "stdout": "021-build-eval_cycle_07.stdout.log",
+      "stderr": "021-build-eval_cycle_07.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 51.08267756400164,
+      "ended_utc": "2026-11-23T12:32:04.357608+00:00"
+    },
+    {
+      "name": "delete-eval_cycle_07",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "delete",
+        "eval_cycle_07",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:32:04.358847+00:00",
+      "stdout": "022-delete-eval_cycle_07.stdout.log",
+      "stderr": "022-delete-eval_cycle_07.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 2.8230857330054278,
+      "ended_utc": "2026-11-23T12:32:07.181978+00:00"
+    },
+    {
+      "name": "create-eval_cycle_08",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_cycle_08",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:32:07.182807+00:00",
+      "stdout": "023-create-eval_cycle_08.stdout.log",
+      "stderr": "023-create-eval_cycle_08.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1.6186897669977043,
+      "ended_utc": "2026-11-23T12:32:08.801516+00:00"
+    },
+    {
+      "name": "build-eval_cycle_08",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "qemu",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:32:09.601970+00:00",
+      "stdout": "024-build-eval_cycle_08.stdout.log",
+      "stderr": "024-build-eval_cycle_08.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 50.68272271800379,
+      "ended_utc": "2026-11-23T12:33:00.284733+00:00"
+    },
+    {
+      "name": "delete-eval_cycle_08",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "delete",
+        "eval_cycle_08",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:33:00.286157+00:00",
+      "stdout": "025-delete-eval_cycle_08.stdout.log",
+      "stderr": "025-delete-eval_cycle_08.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 3.0729734300111886,
+      "ended_utc": "2026-11-23T12:33:03.359216+00:00"
+    },
+    {
+      "name": "create-eval_cycle_09",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_cycle_09",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:33:03.361354+00:00",
+      "stdout": "026-create-eval_cycle_09.stdout.log",
+      "stderr": "026-create-eval_cycle_09.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1.6193473730090773,
+      "ended_utc": "2026-11-23T12:33:04.980745+00:00"
+    },
+    {
+      "name": "build-eval_cycle_09",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "qemu",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:33:05.790778+00:00",
+      "stdout": "027-build-eval_cycle_09.stdout.log",
+      "stderr": "027-build-eval_cycle_09.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 49.979585766996024,
+      "ended_utc": "2026-11-23T12:33:55.770405+00:00"
+    },
+    {
+      "name": "delete-eval_cycle_09",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "delete",
+        "eval_cycle_09",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:33:55.771871+00:00",
+      "stdout": "028-delete-eval_cycle_09.stdout.log",
+      "stderr": "028-delete-eval_cycle_09.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 2.923551813000813,
+      "ended_utc": "2026-11-23T12:33:58.695469+00:00"
+    },
+    {
+      "name": "create-eval_cycle_10",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_cycle_10",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:33:58.696256+00:00",
+      "stdout": "029-create-eval_cycle_10.stdout.log",
+      "stderr": "029-create-eval_cycle_10.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1.5678582539985655,
+      "ended_utc": "2026-11-23T12:34:00.264130+00:00"
+    },
+    {
+      "name": "build-eval_cycle_10",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "qemu",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:34:01.073239+00:00",
+      "stdout": "030-build-eval_cycle_10.stdout.log",
+      "stderr": "030-build-eval_cycle_10.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 50.63663990198984,
+      "ended_utc": "2026-11-23T12:34:51.709921+00:00"
+    },
+    {
+      "name": "delete-eval_cycle_10",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "delete",
+        "eval_cycle_10",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:34:51.711444+00:00",
+      "stdout": "031-delete-eval_cycle_10.stdout.log",
+      "stderr": "031-delete-eval_cycle_10.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 2.9726451500027906,
+      "ended_utc": "2026-11-23T12:34:54.684135+00:00"
+    },
+    {
+      "name": "restore-base-mission",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "qemu",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:34:55.486856+00:00",
+      "stdout": "032-restore-base-mission.stdout.log",
+      "stderr": "032-restore-base-mission.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 94.08570484400843,
+      "ended_utc": "2026-11-23T12:36:29.572599+00:00"
+    }
+  ]
+}

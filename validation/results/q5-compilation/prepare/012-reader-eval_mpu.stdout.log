@@ -1,0 +1,17 @@
+mission/apps/eval_mpu/CMakeLists.txt
+mission/apps/eval_mpu/fsw/src/eval_mpu_components.c
+mission/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.c
+mission/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.h
+mission/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor_cfg.h
+mission/cpu1_cfe_es_startup.scr
+mission/libs/mpu6050_lib/CMakeLists.txt
+mission/libs/mpu6050_lib/fsw/public_inc/mpu6050_lib.h
+mission/libs/mpu6050_lib/fsw/src/compat.c
+mission/libs/mpu6050_lib/fsw/src/mpu6050_lib.c
+mission/sample_defs/default_osconfig.cmake
+mission/sample_defs/generated/appgen.cmake
+mission/sample_defs/generated/appgen_startup.scr
+mission/sample_defs/generated/appgen_telemetry.inc
+project/apps/eval_mpu.json
+project/config.json
+project/generated/drivers.json

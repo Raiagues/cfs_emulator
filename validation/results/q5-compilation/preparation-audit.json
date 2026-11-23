@@ -1,0 +1,57 @@
+{
+  "kind": "q5_preparation_audit",
+  "status": "verified",
+  "checked_utc": "2026-11-23T12:28:02.684886+00:00",
+  "checks": [
+    {
+      "operation": "emulator_image_preparation",
+      "started_utc": "2026-11-23T07:14:23.047486+00:00",
+      "ended_utc": "2026-11-23T07:35:42.881391+00:00",
+      "recorded_elapsed_s": 1279.833868929003,
+      "utc_difference_s": 1279.833905,
+      "agreement_within_s": 0.01
+    },
+    {
+      "operation": "first_guest_provisioning",
+      "started_utc": "2026-11-23T07:36:54.655219+00:00",
+      "ended_utc": "2026-11-23T07:41:05.826929+00:00",
+      "recorded_elapsed_s": 251.1717001959987,
+      "utc_difference_s": 251.17171,
+      "agreement_within_s": 0.01
+    }
+  ],
+  "image_conditions": {
+    "qemu_source_build_stage_s": 840.1,
+    "workers": 1,
+    "os_download_cached": true,
+    "stage_durations_additive": false,
+    "note": "Docker stages overlap; the overall measured CLI interval is reported, not a sum of stage times."
+  },
+  "first_provisioning": {
+    "guest_disk_existed_before": false,
+    "guest_ssh_ready_observed_s": 241.21605408399773,
+    "scope": "Disk creation and key preparation, guest Linux boot and SSH verification; no cFS start."
+  },
+  "prepared_guest_boot_to_first_hk": {
+    "target": "qemu",
+    "n": "5",
+    "min": "101.20290330500575",
+    "median": "101.89985096599412",
+    "max": "114.89465301200107"
+  },
+  "conclusion": "The image and first-provisioning durations are supported by the original logs. They are prerequisites, separate from the five boots using a prepared disk.",
+  "sources": {
+    "validation/results/final/raw/setup-qemu-image-final/commands.json": {
+      "sha256": "d4367b03e64bf7a00d1b49515b6ab9efb2ceac23601d7fde94b818564826b00a"
+    },
+    "validation/results/final/raw/setup-qemu-image-final/001-prepare-evaluation-image.stderr.log": {
+      "sha256": "15d1f3fa81c5ac3540358a0d879418b83242ae7049fc21c434cf44599a518383"
+    },
+    "validation/results/final/raw/first-boot-qemu/provision.json": {
+      "sha256": "5d626637f078aae15e0bbb1db28d24ae784c1d4c595357cbe4a70825dcb60261"
+    },
+    "validation/results/final/tables/q5_statistics.csv": {
+      "sha256": "88696c6b494dce40cef9bc6a21d57a16f1bae484dedd5be81ab168e574fd99ab"
+    }
+  }
+}

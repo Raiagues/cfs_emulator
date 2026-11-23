@@ -5,6 +5,7 @@ import json
 import math
 from pathlib import Path
 import re
+import shutil
 import subprocess
 
 from . import common
@@ -82,6 +83,13 @@ def run(workspace, output, repetitions=10):
             raise ValueError('Baseline build did not produce the flight executable')
         before = common.input_manifest(root)
         common.save(output / 'sources-before-cycles.json', before)
+        # Preserve reviewable baseline bytes outside every timed CLI operation.
+        for name in before:
+            if name.startswith('mission/sample_defs/') or name == 'mission/modules.cmake':
+                reference = output / 'baseline-reference' / name
+                reference.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(root / name, reference)
+        report['baseline_reference'] = 'baseline-reference'
         for index in range(1, repetitions + 1):
             name = f'eval_cycle_{index:02d}'
             created = recorder.cli('create-' + name, 'app', 'new', name, '--json')

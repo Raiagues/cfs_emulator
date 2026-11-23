@@ -1,0 +1,1316 @@
+$ /usr/bin/python3 project/manage.py sync
+{"changed": [], "deleted": [], "check": false}
+$ bash scripts/build-cfs.sh --target qemu
+{"changed": [], "deleted": [], "check": false}
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 6.38kB done
+#1 DONE 0.1s
+
+#2 [internal] load metadata for docker.io/library/debian:bookworm-slim
+#2 DONE 1.2s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 543B done
+#3 DONE 0.1s
+
+#4 [cfs-builder 1/3] FROM docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
+#4 DONE 0.0s
+
+#5 [cfs-builder 2/3] RUN apt-get update && apt-get install -y --no-install-recommends build-essential cmake gcc-aarch64-linux-gnu g++-aarch64-linux-gnu git && rm -rf /var/lib/apt/lists/*
+#5 CACHED
+
+#6 [cfs-builder 3/3] WORKDIR /cFS
+#6 CACHED
+
+#7 exporting to image
+#7 exporting layers done
+#7 writing image sha256:bc5bd07e8f280215923ebe00de4a854b2c3665b5d764b3cfa547fe984b4c3109 0.0s done
+#7 naming to docker.io/library/flight-studio-builder:bookworm 0.0s done
+#7 DONE 0.1s
+-- OMIT_DEPRECATED=false: Deprecated elements included in build
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Search path for modules: /cFS/apps;/cFS/libs;/mission/apps;/mission/libs;apps;libs;psp/fsw/modules;cfe/modules
+-- Module 'core_api' found at /cFS/cfe/modules/core_api
+-- Module 'core_private' found at /cFS/cfe/modules/core_private
+-- Module 'ci_lab' found at /cFS/apps/ci_lab
+-- Module 'to_lab' found at /cFS/apps/to_lab
+-- Module 'sch_lab' found at /cFS/apps/sch_lab
+-- Module 'linux_i2c_lib' found at /cFS/libs/linux_i2c_lib
+-- Module 'hal_sensor' found at /cFS/libs/hal_sensor
+-- Module 'tmp105_lib' found at /cFS/libs/tmp105_lib
+-- Module 'lsm303dlhc_mag_lib' found at /cFS/libs/lsm303dlhc_mag_lib
+-- Module 'mpu6050_lib' found at /cFS/libs/mpu6050_lib
+-- Module 'eval_cycle_03' found at /cFS/apps/eval_cycle_03
+-- Module 'eval_mag' found at /cFS/apps/eval_mag
+-- Module 'eval_mpu' found at /cFS/apps/eval_mpu
+-- Module 'eval_temp' found at /cFS/apps/eval_temp
+-- Module 'cfe_assert' found at /cFS/cfe/modules/cfe_assert
+-- Module 'cfe_testcase' found at /cFS/cfe/modules/cfe_testcase
+-- Module 'sample_app' found at /cFS/apps/sample_app
+-- Module 'sample_lib' found at /cFS/libs/sample_lib
+-- Module 'cf' found at /cFS/apps/cf
+-- Module 'hs' found at /cFS/apps/hs
+-- Module 'md' found at /cFS/apps/md
+-- Module 'cs' found at /cFS/apps/cs
+-- Module 'fm' found at /cFS/apps/fm
+-- Module 'lc' found at /cFS/apps/lc
+-- Module 'sc' found at /cFS/apps/sc
+-- Module 'ds' found at /cFS/apps/ds
+-- Module 'hk' found at /cFS/apps/hk
+-- Module 'config' found at /cFS/cfe/modules/config
+-- Module 'es' found at /cFS/cfe/modules/es
+-- Module 'evs' found at /cFS/cfe/modules/evs
+-- Module 'fs' found at /cFS/cfe/modules/fs
+-- Module 'sb' found at /cFS/cfe/modules/sb
+-- Module 'tbl' found at /cFS/cfe/modules/tbl
+-- Module 'time' found at /cFS/cfe/modules/time
+-- Module 'osal' found at /cFS/osal
+-- Module 'psp' found at /cFS/psp
+-- Module 'msg' found at /cFS/cfe/modules/msg
+-- Module 'sbr' found at /cFS/cfe/modules/sbr
+-- Module 'resourceid' found at /cFS/cfe/modules/resourceid
+-- OSAL_SYSTEM_BSPTYPE not defined, no OSAL implementation will be compiled
+-- Using file: /mission/sample_defs/cfe_core_api_interface_cfg_values.h for core_api_interface_cfg_values.h
+-- Using file: /cFS/cfe/modules/core_api/config/default_cfe_core_api_msgid_mapping.h for core_api_msgid_mapping.h
+-- Using file: /cFS/cfe/modules/core_api/config/default_cfe_mission_cfg.h for mission_cfg.h
+-- Using file: /mission/sample_defs/cfe_perfids.h for perfids.h
+-- Using file: /cFS/apps/ci_lab/config/default_ci_lab_fcncode_values.h for ci_lab_fcncode_values.h
+-- Using file: /cFS/apps/ci_lab/config/default_ci_lab_interface_cfg_values.h for ci_lab_interface_cfg_values.h
+-- Using file: /cFS/apps/ci_lab/config/default_ci_lab_mission_cfg.h for ci_lab_mission_cfg.h
+-- Using file: /cFS/apps/ci_lab/config/default_ci_lab_perfids.h for ci_lab_perfids.h
+-- Using file: /cFS/apps/ci_lab/config/default_ci_lab_msg.h for ci_lab_msg.h
+-- Using file: /cFS/apps/ci_lab/config/default_ci_lab_msgdefs.h for ci_lab_msgdefs.h
+-- Using file: /cFS/apps/ci_lab/config/default_ci_lab_msgstruct.h for ci_lab_msgstruct.h
+-- Using file: /cFS/apps/ci_lab/config/default_ci_lab_topicid_values.h for ci_lab_topicid_values.h
+-- Using file: /cFS/apps/to_lab/config/default_to_lab_fcncode_values.h for to_lab_fcncode_values.h
+-- Using file: /cFS/apps/to_lab/config/default_to_lab_interface_cfg_values.h for to_lab_interface_cfg_values.h
+-- Using file: /cFS/apps/to_lab/config/default_to_lab_mission_cfg.h for to_lab_mission_cfg.h
+-- Using file: /cFS/apps/to_lab/config/default_to_lab_perfids.h for to_lab_perfids.h
+-- Using file: /cFS/apps/to_lab/config/default_to_lab_msg.h for to_lab_msg.h
+-- Using file: /cFS/apps/to_lab/config/default_to_lab_msgdefs.h for to_lab_msgdefs.h
+-- Using file: /cFS/apps/to_lab/config/default_to_lab_msgstruct.h for to_lab_msgstruct.h
+-- Using file: /cFS/apps/to_lab/config/default_to_lab_tbl.h for to_lab_tbl.h
+-- Using file: /cFS/apps/to_lab/config/default_to_lab_tbldefs.h for to_lab_tbldefs.h
+-- Using file: /cFS/apps/to_lab/config/default_to_lab_tblstruct.h for to_lab_tblstruct.h
+-- Using file: /cFS/apps/to_lab/config/default_to_lab_topicid_values.h for to_lab_topicid_values.h
+-- Using file: /cFS/apps/sch_lab/config/default_sch_lab_interface_cfg_values.h for sch_lab_interface_cfg_values.h
+-- Using file: /cFS/apps/sch_lab/config/default_sch_lab_mission_cfg.h for sch_lab_mission_cfg.h
+-- Using file: /cFS/apps/sch_lab/config/default_sch_lab_perfids.h for sch_lab_perfids.h
+-- Using file: /cFS/apps/sch_lab/config/default_sch_lab_tbl.h for sch_lab_tbl.h
+-- Using file: /cFS/apps/sch_lab/config/default_sch_lab_tbldefs.h for sch_lab_tbldefs.h
+-- Using file: /cFS/apps/sch_lab/config/default_sch_lab_tblstruct.h for sch_lab_tblstruct.h
+-- Using file: /cFS/apps/eval_cycle_03/config/default_eval_cycle_03_fcncode_values.h for eval_cycle_03_fcncode_values.h
+-- Using file: /cFS/apps/eval_cycle_03/config/default_eval_cycle_03_interface_cfg_values.h for eval_cycle_03_interface_cfg_values.h
+-- Using file: /cFS/apps/eval_cycle_03/config/default_eval_cycle_03_mission_cfg.h for eval_cycle_03_mission_cfg.h
+-- Using file: /cFS/apps/eval_cycle_03/config/default_eval_cycle_03_perfids.h for eval_cycle_03_perfids.h
+-- Using file: /cFS/apps/eval_cycle_03/config/default_eval_cycle_03_msg.h for eval_cycle_03_msg.h
+-- Using file: /cFS/apps/eval_cycle_03/config/default_eval_cycle_03_msgdefs.h for eval_cycle_03_msgdefs.h
+-- Using file: /cFS/apps/eval_cycle_03/config/default_eval_cycle_03_msgstruct.h for eval_cycle_03_msgstruct.h
+-- Using file: /cFS/apps/eval_cycle_03/config/default_eval_cycle_03_tbl.h for eval_cycle_03_tbl.h
+-- Using file: /cFS/apps/eval_cycle_03/config/default_eval_cycle_03_tbldefs.h for eval_cycle_03_tbldefs.h
+-- Using file: /cFS/apps/eval_cycle_03/config/default_eval_cycle_03_tblstruct.h for eval_cycle_03_tblstruct.h
+-- Using file: /cFS/apps/eval_cycle_03/config/default_eval_cycle_03_topicid_values.h for eval_cycle_03_topicid_values.h
+-- Using file: /cFS/apps/eval_mag/config/default_eval_mag_fcncode_values.h for eval_mag_fcncode_values.h
+-- Using file: /cFS/apps/eval_mag/config/default_eval_mag_interface_cfg_values.h for eval_mag_interface_cfg_values.h
+-- Using file: /cFS/apps/eval_mag/config/default_eval_mag_mission_cfg.h for eval_mag_mission_cfg.h
+-- Using file: /cFS/apps/eval_mag/config/default_eval_mag_perfids.h for eval_mag_perfids.h
+-- Using file: /cFS/apps/eval_mag/config/default_eval_mag_msg.h for eval_mag_msg.h
+-- Using file: /cFS/apps/eval_mag/config/default_eval_mag_msgdefs.h for eval_mag_msgdefs.h
+-- Using file: /cFS/apps/eval_mag/config/default_eval_mag_msgstruct.h for eval_mag_msgstruct.h
+-- Using file: /cFS/apps/eval_mag/config/default_eval_mag_tbl.h for eval_mag_tbl.h
+-- Using file: /cFS/apps/eval_mag/config/default_eval_mag_tbldefs.h for eval_mag_tbldefs.h
+-- Using file: /cFS/apps/eval_mag/config/default_eval_mag_tblstruct.h for eval_mag_tblstruct.h
+-- Using file: /cFS/apps/eval_mag/config/default_eval_mag_topicid_values.h for eval_mag_topicid_values.h
+-- Using file: /cFS/apps/eval_mpu/config/default_eval_mpu_fcncode_values.h for eval_mpu_fcncode_values.h
+-- Using file: /cFS/apps/eval_mpu/config/default_eval_mpu_interface_cfg_values.h for eval_mpu_interface_cfg_values.h
+-- Using file: /cFS/apps/eval_mpu/config/default_eval_mpu_mission_cfg.h for eval_mpu_mission_cfg.h
+-- Using file: /cFS/apps/eval_mpu/config/default_eval_mpu_perfids.h for eval_mpu_perfids.h
+-- Using file: /cFS/apps/eval_mpu/config/default_eval_mpu_msg.h for eval_mpu_msg.h
+-- Using file: /cFS/apps/eval_mpu/config/default_eval_mpu_msgdefs.h for eval_mpu_msgdefs.h
+-- Using file: /cFS/apps/eval_mpu/config/default_eval_mpu_msgstruct.h for eval_mpu_msgstruct.h
+-- Using file: /cFS/apps/eval_mpu/config/default_eval_mpu_tbl.h for eval_mpu_tbl.h
+-- Using file: /cFS/apps/eval_mpu/config/default_eval_mpu_tbldefs.h for eval_mpu_tbldefs.h
+-- Using file: /cFS/apps/eval_mpu/config/default_eval_mpu_tblstruct.h for eval_mpu_tblstruct.h
+-- Using file: /cFS/apps/eval_mpu/config/default_eval_mpu_topicid_values.h for eval_mpu_topicid_values.h
+-- Using file: /cFS/apps/eval_temp/config/default_eval_temp_fcncode_values.h for eval_temp_fcncode_values.h
+-- Using file: /cFS/apps/eval_temp/config/default_eval_temp_interface_cfg_values.h for eval_temp_interface_cfg_values.h
+-- Using file: /cFS/apps/eval_temp/config/default_eval_temp_mission_cfg.h for eval_temp_mission_cfg.h
+-- Using file: /cFS/apps/eval_temp/config/default_eval_temp_perfids.h for eval_temp_perfids.h
+-- Using file: /cFS/apps/eval_temp/config/default_eval_temp_msg.h for eval_temp_msg.h
+-- Using file: /cFS/apps/eval_temp/config/default_eval_temp_msgdefs.h for eval_temp_msgdefs.h
+-- Using file: /cFS/apps/eval_temp/config/default_eval_temp_msgstruct.h for eval_temp_msgstruct.h
+-- Using file: /cFS/apps/eval_temp/config/default_eval_temp_tbl.h for eval_temp_tbl.h
+-- Using file: /cFS/apps/eval_temp/config/default_eval_temp_tbldefs.h for eval_temp_tbldefs.h
+-- Using file: /cFS/apps/eval_temp/config/default_eval_temp_tblstruct.h for eval_temp_tblstruct.h
+-- Using file: /cFS/apps/eval_temp/config/default_eval_temp_topicid_values.h for eval_temp_topicid_values.h
+-- Using file: /cFS/cfe/modules/cfe_testcase/config/default_cfe_test_msg.h for test_msg.h
+-- Using file: /cFS/cfe/modules/cfe_testcase/config/default_cfe_test_msgdefs.h for test_msgdefs.h
+-- Using file: /cFS/cfe/modules/cfe_testcase/config/default_cfe_test_msgstruct.h for test_msgstruct.h
+-- Using file: /cFS/cfe/modules/cfe_testcase/config/default_cfe_test_msgids.h for test_msgids.h
+-- Using file: /cFS/cfe/modules/cfe_testcase/config/default_cfe_test_msgid_values.h for test_msgid_values.h
+-- Using file: /cFS/cfe/modules/cfe_testcase/config/default_cfe_test_tbl.h for test_tbl.h
+-- Using file: /cFS/cfe/modules/cfe_testcase/config/default_cfe_test_tblstruct.h for test_tblstruct.h
+-- Using file: /cFS/cfe/modules/cfe_testcase/config/default_cfe_test_topicid_values.h for test_topicid_values.h
+-- Using file: /cFS/apps/sample_app/config/default_sample_app_fcncode_values.h for sample_app_fcncode_values.h
+-- Using file: /cFS/apps/sample_app/config/default_sample_app_interface_cfg_values.h for sample_app_interface_cfg_values.h
+-- Using file: /cFS/apps/sample_app/config/default_sample_app_mission_cfg.h for sample_app_mission_cfg.h
+-- Using file: /cFS/apps/sample_app/config/default_sample_app_perfids.h for sample_app_perfids.h
+-- Using file: /cFS/apps/sample_app/config/default_sample_app_msg.h for sample_app_msg.h
+-- Using file: /cFS/apps/sample_app/config/default_sample_app_msgdefs.h for sample_app_msgdefs.h
+-- Using file: /cFS/apps/sample_app/config/default_sample_app_msgstruct.h for sample_app_msgstruct.h
+-- Using file: /cFS/apps/sample_app/config/default_sample_app_tbl.h for sample_app_tbl.h
+-- Using file: /cFS/apps/sample_app/config/default_sample_app_tbldefs.h for sample_app_tbldefs.h
+-- Using file: /cFS/apps/sample_app/config/default_sample_app_tblstruct.h for sample_app_tblstruct.h
+-- Using file: /cFS/apps/sample_app/config/default_sample_app_topicid_values.h for sample_app_topicid_values.h
+-- Using file: /cFS/apps/cf/config/default_cf_extern_typedefs.h for cf_extern_typedefs.h
+-- Using file: /cFS/apps/cf/config/default_cf_fcncode_values.h for cf_fcncode_values.h
+-- Using file: /cFS/apps/cf/config/default_cf_interface_cfg_values.h for cf_interface_cfg_values.h
+-- Using file: /cFS/apps/cf/config/default_cf_mission_cfg.h for cf_mission_cfg.h
+-- Using file: /cFS/apps/cf/config/default_cf_msgdefs.h for cf_msgdefs.h
+-- Using file: /cFS/apps/cf/config/default_cf_msg.h for cf_msg.h
+-- Using file: /cFS/apps/cf/config/default_cf_msgstruct.h for cf_msgstruct.h
+-- Using file: /cFS/apps/cf/config/default_cf_tbldefs.h for cf_tbldefs.h
+-- Using file: /cFS/apps/cf/config/default_cf_tbl.h for cf_tbl.h
+-- Using file: /cFS/apps/cf/config/default_cf_tblstruct.h for cf_tblstruct.h
+-- Using file: /cFS/apps/cf/config/default_cf_topicid_values.h for cf_topicid_values.h
+-- Using file: /cFS/apps/hs/config/default_hs_fcncode_values.h for hs_fcncode_values.h
+-- Using file: /cFS/apps/hs/config/default_hs_interface_cfg_values.h for hs_interface_cfg_values.h
+-- Using file: /cFS/apps/hs/config/default_hs_mission_cfg.h for hs_mission_cfg.h
+-- Using file: /cFS/apps/hs/config/default_hs_msgdefs.h for hs_msgdefs.h
+-- Using file: /cFS/apps/hs/config/default_hs_msg.h for hs_msg.h
+-- Using file: /cFS/apps/hs/config/default_hs_msgstruct.h for hs_msgstruct.h
+-- Using file: /cFS/apps/hs/config/default_hs_tbldefs.h for hs_tbldefs.h
+-- Using file: /cFS/apps/hs/config/default_hs_tbl.h for hs_tbl.h
+-- Using file: /cFS/apps/hs/config/default_hs_tblstruct.h for hs_tblstruct.h
+-- Using file: /cFS/apps/hs/config/default_hs_topicid_values.h for hs_topicid_values.h
+-- Using file: /cFS/apps/md/config/default_md_fcncode_values.h for md_fcncode_values.h
+-- Using file: /cFS/apps/md/config/default_md_interface_cfg_values.h for md_interface_cfg_values.h
+-- Using file: /cFS/apps/md/config/default_md_mission_cfg.h for md_mission_cfg.h
+-- Using file: /cFS/apps/md/config/default_md_perfids.h for md_perfids.h
+-- Using file: /cFS/apps/md/config/default_md_msg.h for md_msg.h
+-- Using file: /cFS/apps/md/config/default_md_msgdefs.h for md_msgdefs.h
+-- Using file: /cFS/apps/md/config/default_md_msgstruct.h for md_msgstruct.h
+-- Using file: /cFS/apps/md/config/default_md_tbldefs.h for md_tbldefs.h
+-- Using file: /cFS/apps/md/config/default_md_tblstruct.h for md_tblstruct.h
+-- Using file: /cFS/apps/md/config/default_md_topicid_values.h for md_topicid_values.h
+-- Using file: /cFS/apps/md/config/default_md_extern_typedefs.h for md_extern_typedefs.h
+-- Using file: /cFS/apps/cs/config/default_cs_extern_typedefs.h for cs_extern_typedefs.h
+-- Using file: /cFS/apps/cs/config/default_cs_fcncode_values.h for cs_fcncode_values.h
+-- Using file: /cFS/apps/cs/config/default_cs_interface_cfg_values.h for cs_interface_cfg_values.h
+-- Using file: /cFS/apps/cs/config/default_cs_mission_cfg.h for cs_mission_cfg.h
+-- Using file: /cFS/apps/cs/config/default_cs_msgdefs.h for cs_msgdefs.h
+-- Using file: /cFS/apps/cs/config/default_cs_msg.h for cs_msg.h
+-- Using file: /cFS/apps/cs/config/default_cs_msgstruct.h for cs_msgstruct.h
+-- Using file: /cFS/apps/cs/config/default_cs_tbldefs.h for cs_tbldefs.h
+-- Using file: /cFS/apps/cs/config/default_cs_tbl.h for cs_tbl.h
+-- Using file: /cFS/apps/cs/config/default_cs_topicid_values.h for cs_topicid_values.h
+-- Using file: /cFS/apps/fm/config/default_fm_fcncode_values.h for fm_fcncode_values.h
+-- Using file: /cFS/apps/fm/config/default_fm_interface_cfg_values.h for fm_interface_cfg_values.h
+-- Using file: /cFS/apps/fm/config/default_fm_mission_cfg.h for fm_mission_cfg.h
+-- Using file: /cFS/apps/fm/config/default_fm_msg.h for fm_msg.h
+-- Using file: /cFS/apps/fm/config/default_fm_msgdefs.h for fm_msgdefs.h
+-- Using file: /cFS/apps/fm/config/default_fm_msgstruct.h for fm_msgstruct.h
+-- Using file: /cFS/apps/fm/config/default_fm_perfids.h for fm_perfids.h
+-- Using file: /cFS/apps/fm/config/default_fm_tbl.h for fm_tbl.h
+-- Using file: /cFS/apps/fm/config/default_fm_tbldefs.h for fm_tbldefs.h
+-- Using file: /cFS/apps/fm/config/default_fm_tblstruct.h for fm_tblstruct.h
+-- Using file: /cFS/apps/fm/config/default_fm_topicid_values.h for fm_topicid_values.h
+-- Using file: /cFS/apps/fm/config/default_fm_extern_typedefs.h for fm_extern_typedefs.h
+-- Using file: /cFS/apps/lc/config/default_lc_fcncode_values.h for lc_fcncode_values.h
+-- Using file: /cFS/apps/lc/config/default_lc_interface_cfg_values.h for lc_interface_cfg_values.h
+-- Using file: /cFS/apps/lc/config/default_lc_mission_cfg.h for lc_mission_cfg.h
+-- Using file: /cFS/apps/lc/config/default_lc_msgstruct.h for lc_msgstruct.h
+-- Using file: /cFS/apps/lc/config/default_lc_msgdefs.h for lc_msgdefs.h
+-- Using file: /cFS/apps/lc/config/default_lc_msg.h for lc_msg.h
+-- Using file: /cFS/apps/lc/config/default_lc_tblstruct.h for lc_tblstruct.h
+-- Using file: /cFS/apps/lc/config/default_lc_tbldefs.h for lc_tbldefs.h
+-- Using file: /cFS/apps/lc/config/default_lc_tbl.h for lc_tbl.h
+-- Using file: /cFS/apps/lc/config/default_lc_topicid_values.h for lc_topicid_values.h
+-- Using file: /cFS/apps/sc/config/default_sc_extern_typedefs.h for sc_extern_typedefs.h
+-- Using file: /cFS/apps/sc/config/default_sc_fcncode_values.h for sc_fcncode_values.h
+-- Using file: /cFS/apps/sc/config/default_sc_interface_cfg_values.h for sc_interface_cfg_values.h
+-- Using file: /cFS/apps/sc/config/default_sc_mission_cfg.h for sc_mission_cfg.h
+-- Using file: /cFS/apps/sc/config/default_sc_msgdefs.h for sc_msgdefs.h
+-- Using file: /cFS/apps/sc/config/default_sc_msg.h for sc_msg.h
+-- Using file: /cFS/apps/sc/config/default_sc_msgstruct.h for sc_msgstruct.h
+-- Using file: /cFS/apps/sc/config/default_sc_tbldefs.h for sc_tbldefs.h
+-- Using file: /cFS/apps/sc/config/default_sc_tbl.h for sc_tbl.h
+-- Using file: /cFS/apps/sc/config/default_sc_tblstruct.h for sc_tblstruct.h
+-- Using file: /cFS/apps/sc/config/default_sc_topicid_values.h for sc_topicid_values.h
+-- Using file: /cFS/apps/ds/config/default_ds_fcncode_values.h for ds_fcncode_values.h
+-- Using file: /cFS/apps/ds/config/default_ds_interface_cfg_values.h for ds_interface_cfg_values.h
+-- Using file: /cFS/apps/ds/config/default_ds_mission_cfg.h for ds_mission_cfg.h
+-- Using file: /cFS/apps/ds/config/default_ds_msgdefs.h for ds_msgdefs.h
+-- Using file: /cFS/apps/ds/config/default_ds_msgstruct.h for ds_msgstruct.h
+-- Using file: /cFS/apps/ds/config/default_ds_msg.h for ds_msg.h
+-- Using file: /cFS/apps/ds/config/default_ds_tbldefs.h for ds_tbldefs.h
+-- Using file: /cFS/apps/ds/config/default_ds_tblstruct.h for ds_tblstruct.h
+-- Using file: /cFS/apps/ds/config/default_ds_tbl.h for ds_tbl.h
+-- Using file: /cFS/apps/ds/config/default_ds_topicid_values.h for ds_topicid_values.h
+-- Using file: /cFS/apps/hk/config/default_hk_fcncode_values.h for hk_fcncode_values.h
+-- Using file: /cFS/apps/hk/config/default_hk_interface_cfg_values.h for hk_interface_cfg_values.h
+-- Using file: /cFS/apps/hk/config/default_hk_mission_cfg.h for hk_mission_cfg.h
+-- Using file: /cFS/apps/hk/config/default_hk_msgdefs.h for hk_msgdefs.h
+-- Using file: /cFS/apps/hk/config/default_hk_msg.h for hk_msg.h
+-- Using file: /cFS/apps/hk/config/default_hk_msgstruct.h for hk_msgstruct.h
+-- Using file: /cFS/apps/hk/config/default_hk_tbldefs.h for hk_tbldefs.h
+-- Using file: /cFS/apps/hk/config/default_hk_tbl.h for hk_tbl.h
+-- Using file: /cFS/apps/hk/config/default_hk_tblstruct.h for hk_tblstruct.h
+-- Using file: /cFS/apps/hk/config/default_hk_topicid_values.h for hk_topicid_values.h
+-- Using file: /cFS/cfe/modules/es/config/default_cfe_es_mission_cfg.h for es_mission_cfg.h
+-- Using file: /cFS/cfe/modules/es/config/default_cfe_es_interface_cfg_values.h for es_interface_cfg_values.h
+-- Using file: /cFS/cfe/modules/es/config/default_cfe_es_memaddress.h for es_memaddress.h
+-- Using file: /cFS/cfe/modules/es/config/default_cfe_es_extern_typedefs.h for es_extern_typedefs.h
+-- Using file: /cFS/cfe/modules/es/config/default_cfe_es_fcncode_values.h for es_fcncode_values.h
+-- Using file: /cFS/cfe/modules/es/config/default_cfe_es_msgdefs.h for es_msgdefs.h
+-- Using file: /cFS/cfe/modules/es/config/default_cfe_es_msg.h for es_msg.h
+-- Using file: /cFS/cfe/modules/es/config/default_cfe_es_msgstruct.h for es_msgstruct.h
+-- Using file: /cFS/cfe/modules/es/config/default_cfe_es_topicid_values.h for es_topicid_values.h
+-- Using file: /cFS/cfe/modules/evs/config/default_cfe_evs_mission_cfg.h for evs_mission_cfg.h
+-- Using file: /cFS/cfe/modules/evs/config/default_cfe_evs_interface_cfg_values.h for evs_interface_cfg_values.h
+-- Using file: /cFS/cfe/modules/evs/config/default_cfe_evs_extern_typedefs.h for evs_extern_typedefs.h
+-- Using file: /cFS/cfe/modules/evs/config/default_cfe_evs_fcncode_values.h for evs_fcncode_values.h
+-- Using file: /cFS/cfe/modules/evs/config/default_cfe_evs_msgdefs.h for evs_msgdefs.h
+-- Using file: /cFS/cfe/modules/evs/config/default_cfe_evs_msg.h for evs_msg.h
+-- Using file: /cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h for evs_msgstruct.h
+-- Using file: /cFS/cfe/modules/evs/config/default_cfe_evs_topicid_values.h for evs_topicid_values.h
+-- Using file: /cFS/cfe/modules/fs/config/default_cfe_fs_mission_cfg.h for fs_mission_cfg.h
+-- Using file: /cFS/cfe/modules/fs/config/default_cfe_fs_interface_cfg_values.h for fs_interface_cfg_values.h
+-- Using file: /cFS/cfe/modules/fs/config/default_cfe_fs_filedef.h for fs_filedef.h
+-- Using file: /cFS/cfe/modules/fs/config/default_cfe_fs_extern_typedefs.h for fs_extern_typedefs.h
+-- Using file: /cFS/cfe/modules/sb/config/default_cfe_sb_mission_cfg.h for sb_mission_cfg.h
+-- Using file: /cFS/cfe/modules/sb/config/default_cfe_sb_interface_cfg_values.h for sb_interface_cfg_values.h
+-- Using file: /cFS/cfe/modules/sb/config/default_cfe_sb_extern_typedefs.h for sb_extern_typedefs.h
+-- Using file: /cFS/cfe/modules/sb/config/default_cfe_sb_fcncode_values.h for sb_fcncode_values.h
+-- Using file: /cFS/cfe/modules/sb/config/default_cfe_sb_msgdefs.h for sb_msgdefs.h
+-- Using file: /cFS/cfe/modules/sb/config/default_cfe_sb_msg.h for sb_msg.h
+-- Using file: /cFS/cfe/modules/sb/config/default_cfe_sb_msgstruct.h for sb_msgstruct.h
+-- Using file: /cFS/cfe/modules/sb/config/default_cfe_sb_topicid_values.h for sb_topicid_values.h
+-- Using file: /cFS/cfe/modules/tbl/config/default_cfe_tbl_mission_cfg.h for tbl_mission_cfg.h
+-- Using file: /cFS/cfe/modules/tbl/config/default_cfe_tbl_interface_cfg_values.h for tbl_interface_cfg_values.h
+-- Using file: /cFS/cfe/modules/tbl/config/default_cfe_tbl_extern_typedefs.h for tbl_extern_typedefs.h
+-- Using file: /cFS/cfe/modules/tbl/config/default_cfe_tbl_fcncode_values.h for tbl_fcncode_values.h
+-- Using file: /cFS/cfe/modules/tbl/config/default_cfe_tbl_msgdefs.h for tbl_msgdefs.h
+-- Using file: /cFS/cfe/modules/tbl/config/default_cfe_tbl_msg.h for tbl_msg.h
+-- Using file: /cFS/cfe/modules/tbl/config/default_cfe_tbl_msgstruct.h for tbl_msgstruct.h
+-- Using file: /cFS/cfe/modules/tbl/config/default_cfe_tbl_topicid_values.h for tbl_topicid_values.h
+-- Using file: /cFS/cfe/modules/time/config/default_cfe_time_mission_cfg.h for time_mission_cfg.h
+-- Using file: /cFS/cfe/modules/time/config/default_cfe_time_interface_cfg_values.h for time_interface_cfg_values.h
+-- Using file: /cFS/cfe/modules/time/config/default_cfe_time_extern_typedefs.h for time_extern_typedefs.h
+-- Using file: /cFS/cfe/modules/time/config/default_cfe_time_fcncode_values.h for time_fcncode_values.h
+-- Using file: /cFS/cfe/modules/time/config/default_cfe_time_msgdefs.h for time_msgdefs.h
+-- Using file: /cFS/cfe/modules/time/config/default_cfe_time_msg.h for time_msg.h
+-- Using file: /cFS/cfe/modules/time/config/default_cfe_time_msgstruct.h for time_msgstruct.h
+-- Using file: /cFS/cfe/modules/time/config/default_cfe_time_topicid_values.h for time_topicid_values.h
+-- Using file: /cFS/cfe/modules/msg/option_inc/default_cfe_msg_hdr_pri.h for cfe_msg_hdr.h
+-- Using file: /cFS/cfe/modules/msg/option_inc/default_cfe_msg_sechdr.h for cfe_msg_sechdr.h
+-- Using file: /cFS/cfe/modules/resourceid/option_inc/cfe_resourceid_simple.h for cfe_resourceid_typedef.h
+-- Configuring for system arch: aarch64-linux-gnu/default_cpu1
+-- OMIT_DEPRECATED=false: Deprecated elements included in build
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Using file: /mission/sample_defs/cpu1/cfe_core_api_base_msgid_values.h for cfe_core_api_base_msgid_values.h
+-- Using file: /cFS/cfe/modules/core_api/config/default_cfe_msgids.h for cfe_msgids.h
+-- Using file: /cFS/cfe/modules/core_private/config/default_cfe_platform_cfg.h for platform_cfg.h
+-- Using file: /cFS/cfe/modules/core_private/config/default_cfe_core_private_internal_cfg.h for cfe_core_private_internal_cfg.h
+-- Using file: /cFS/apps/ci_lab/config/default_ci_lab_internal_cfg_values.h for ci_lab_internal_cfg_values.h
+-- Using file: /cFS/apps/ci_lab/config/default_ci_lab_platform_cfg.h for ci_lab_platform_cfg.h
+-- Using file: /cFS/apps/ci_lab/config/default_ci_lab_perfids.h for ci_lab_perfids.h
+-- Using file: /cFS/apps/ci_lab/config/default_ci_lab_msgids.h for ci_lab_msgids.h
+-- Using file: /cFS/apps/ci_lab/config/default_ci_lab_msgid_values.h for ci_lab_msgid_values.h
+-- Using file: /cFS/apps/to_lab/config/default_to_lab_internal_cfg_values.h for to_lab_internal_cfg_values.h
+-- Using file: /cFS/apps/to_lab/config/default_to_lab_platform_cfg.h for to_lab_platform_cfg.h
+-- Using file: /cFS/apps/to_lab/config/default_to_lab_perfids.h for to_lab_perfids.h
+-- Using file: /cFS/apps/to_lab/config/default_to_lab_msgids.h for to_lab_msgids.h
+-- Using file: /cFS/apps/to_lab/config/default_to_lab_msgid_values.h for to_lab_msgid_values.h
+-- Using file: /cFS/apps/sch_lab/config/default_sch_lab_internal_cfg_values.h for sch_lab_internal_cfg_values.h
+-- Using file: /cFS/apps/sch_lab/config/default_sch_lab_platform_cfg.h for sch_lab_platform_cfg.h
+-- Using file: /cFS/apps/sch_lab/config/default_sch_lab_perfids.h for sch_lab_perfids.h
+-- Using file: /cFS/apps/eval_cycle_03/config/default_eval_cycle_03_internal_cfg_values.h for eval_cycle_03_internal_cfg_values.h
+-- Using file: /cFS/apps/eval_cycle_03/config/default_eval_cycle_03_platform_cfg.h for eval_cycle_03_platform_cfg.h
+-- Using file: /cFS/apps/eval_cycle_03/config/default_eval_cycle_03_perfids.h for eval_cycle_03_perfids.h
+-- Using file: /cFS/apps/eval_cycle_03/config/default_eval_cycle_03_msgids.h for eval_cycle_03_msgids.h
+-- Using file: /cFS/apps/eval_cycle_03/config/default_eval_cycle_03_msgid_values.h for eval_cycle_03_msgid_values.h
+-- Using file: /cFS/apps/eval_mag/config/default_eval_mag_internal_cfg_values.h for eval_mag_internal_cfg_values.h
+-- Using file: /cFS/apps/eval_mag/config/default_eval_mag_platform_cfg.h for eval_mag_platform_cfg.h
+-- Using file: /cFS/apps/eval_mag/config/default_eval_mag_perfids.h for eval_mag_perfids.h
+-- Using file: /cFS/apps/eval_mag/config/default_eval_mag_msgids.h for eval_mag_msgids.h
+-- Using file: /cFS/apps/eval_mag/config/default_eval_mag_msgid_values.h for eval_mag_msgid_values.h
+-- Using file: /cFS/apps/eval_mpu/config/default_eval_mpu_internal_cfg_values.h for eval_mpu_internal_cfg_values.h
+-- Using file: /cFS/apps/eval_mpu/config/default_eval_mpu_platform_cfg.h for eval_mpu_platform_cfg.h
+-- Using file: /cFS/apps/eval_mpu/config/default_eval_mpu_perfids.h for eval_mpu_perfids.h
+-- Using file: /cFS/apps/eval_mpu/config/default_eval_mpu_msgids.h for eval_mpu_msgids.h
+-- Using file: /cFS/apps/eval_mpu/config/default_eval_mpu_msgid_values.h for eval_mpu_msgid_values.h
+-- Using file: /cFS/apps/eval_temp/config/default_eval_temp_internal_cfg_values.h for eval_temp_internal_cfg_values.h
+-- Using file: /cFS/apps/eval_temp/config/default_eval_temp_platform_cfg.h for eval_temp_platform_cfg.h
+-- Using file: /cFS/apps/eval_temp/config/default_eval_temp_perfids.h for eval_temp_perfids.h
+-- Using file: /cFS/apps/eval_temp/config/default_eval_temp_msgids.h for eval_temp_msgids.h
+-- Using file: /cFS/apps/eval_temp/config/default_eval_temp_msgid_values.h for eval_temp_msgid_values.h
+-- Using file: /cFS/cfe/modules/cfe_testcase/config/default_cfe_test_msgids.h for cfe_test_msgids.h
+-- Using file: /cFS/cfe/modules/cfe_testcase/config/default_cfe_test_msgid_values.h for cfe_test_msgid_values.h
+-- Using file: /cFS/apps/sample_app/config/default_sample_app_internal_cfg_values.h for sample_app_internal_cfg_values.h
+-- Using file: /cFS/apps/sample_app/config/default_sample_app_platform_cfg.h for sample_app_platform_cfg.h
+-- Using file: /cFS/apps/sample_app/config/default_sample_app_perfids.h for sample_app_perfids.h
+-- Using file: /cFS/apps/sample_app/config/default_sample_app_msgids.h for sample_app_msgids.h
+-- Using file: /cFS/apps/sample_app/config/default_sample_app_msgid_values.h for sample_app_msgid_values.h
+-- Using file: /cFS/apps/cf/config/default_cf_internal_cfg_values.h for cf_internal_cfg_values.h
+-- Using file: /cFS/apps/cf/config/default_cf_msgid_values.h for cf_msgid_values.h
+-- Using file: /cFS/apps/cf/config/default_cf_msgids.h for cf_msgids.h
+-- Using file: /cFS/apps/cf/config/default_cf_platform_cfg.h for cf_platform_cfg.h
+-- Using file: /cFS/apps/hs/config/default_hs_internal_cfg_values.h for hs_internal_cfg_values.h
+-- Using file: /cFS/apps/hs/config/default_hs_msgid_values.h for hs_msgid_values.h
+-- Using file: /cFS/apps/hs/config/default_hs_msgids.h for hs_msgids.h
+-- Using file: /cFS/apps/hs/config/default_hs_platform_cfg.h for hs_platform_cfg.h
+-- Using file: /cFS/apps/md/config/default_md_internal_cfg_values.h for md_internal_cfg_values.h
+-- Using file: /cFS/apps/md/config/default_md_platform_cfg.h for md_platform_cfg.h
+-- Using file: /cFS/apps/md/config/default_md_perfids.h for md_perfids.h
+-- Using file: /cFS/apps/md/config/default_md_msgids.h for md_msgids.h
+-- Using file: /cFS/apps/md/config/default_md_msgid_values.h for md_msgid_values.h
+-- Using file: /cFS/apps/cs/config/default_cs_internal_cfg_values.h for cs_internal_cfg_values.h
+-- Using file: /cFS/apps/cs/config/default_cs_msgid_values.h for cs_msgid_values.h
+-- Using file: /cFS/apps/cs/config/default_cs_msgids.h for cs_msgids.h
+-- Using file: /cFS/apps/cs/config/default_cs_platform_cfg.h for cs_platform_cfg.h
+-- Using file: /cFS/apps/fm/config/default_fm_internal_cfg_values.h for fm_internal_cfg_values.h
+-- Using file: /cFS/apps/fm/config/default_fm_platform_cfg.h for fm_platform_cfg.h
+-- Using file: /cFS/apps/fm/config/default_fm_msgid_values.h for fm_msgid_values.h
+-- Using file: /cFS/apps/fm/config/default_fm_msgids.h for fm_msgids.h
+-- Using file: /cFS/apps/lc/config/default_lc_internal_cfg_values.h for lc_internal_cfg_values.h
+-- Using file: /cFS/apps/lc/config/default_lc_platform_cfg.h for lc_platform_cfg.h
+-- Using file: /cFS/apps/lc/config/default_lc_msgid_values.h for lc_msgid_values.h
+-- Using file: /cFS/apps/lc/config/default_lc_msgids.h for lc_msgids.h
+-- Using file: /cFS/apps/sc/config/default_sc_internal_cfg_values.h for sc_internal_cfg_values.h
+-- Using file: /cFS/apps/sc/config/default_sc_platform_cfg.h for sc_platform_cfg.h
+-- Using file: /cFS/apps/sc/config/default_sc_perfids.h for sc_perfids.h
+-- Using file: /cFS/apps/sc/config/default_sc_msgids.h for sc_msgids.h
+-- Using file: /cFS/apps/sc/config/default_sc_msgid_values.h for sc_msgid_values.h
+-- Using file: /cFS/apps/ds/config/default_ds_internal_cfg_values.h for ds_internal_cfg_values.h
+-- Using file: /cFS/apps/ds/config/default_ds_msgid_values.h for ds_msgid_values.h
+-- Using file: /cFS/apps/ds/config/default_ds_msgids.h for ds_msgids.h
+-- Using file: /cFS/apps/ds/config/default_ds_platform_cfg.h for ds_platform_cfg.h
+-- Using file: /cFS/apps/hk/config/default_hk_internal_cfg_values.h for hk_internal_cfg_values.h
+-- Using file: /cFS/apps/hk/config/default_hk_msgids.h for hk_msgids.h
+-- Using file: /cFS/apps/hk/config/default_hk_msgid_values.h for hk_msgid_values.h
+-- Using file: /cFS/apps/hk/config/default_hk_platform_cfg.h for hk_platform_cfg.h
+-- Using file: /cFS/cfe/modules/es/config/default_cfe_es_internal_cfg_values.h for cfe_es_internal_cfg_values.h
+-- Using file: /cFS/cfe/modules/es/config/default_cfe_es_msgid_values.h for cfe_es_msgid_values.h
+-- Using file: /cFS/cfe/modules/es/config/default_cfe_es_msgids.h for cfe_es_msgids.h
+-- Using file: /cFS/cfe/modules/es/config/default_cfe_es_platform_cfg.h for cfe_es_platform_cfg.h
+-- Using file: /cFS/cfe/modules/evs/config/default_cfe_evs_internal_cfg_values.h for cfe_evs_internal_cfg_values.h
+-- Using file: /cFS/cfe/modules/evs/config/default_cfe_evs_msgid_values.h for cfe_evs_msgid_values.h
+-- Using file: /cFS/cfe/modules/evs/config/default_cfe_evs_msgids.h for cfe_evs_msgids.h
+-- Using file: /cFS/cfe/modules/evs/config/default_cfe_evs_platform_cfg.h for cfe_evs_platform_cfg.h
+-- Using file: /cFS/cfe/modules/sb/config/default_cfe_sb_internal_cfg_values.h for cfe_sb_internal_cfg_values.h
+-- Using file: /cFS/cfe/modules/sb/config/default_cfe_sb_msgid_values.h for cfe_sb_msgid_values.h
+-- Using file: /cFS/cfe/modules/sb/config/default_cfe_sb_msgids.h for cfe_sb_msgids.h
+-- Using file: /cFS/cfe/modules/sb/config/default_cfe_sb_platform_cfg.h for cfe_sb_platform_cfg.h
+-- Using file: /cFS/cfe/modules/tbl/config/default_cfe_tbl_internal_cfg_values.h for cfe_tbl_internal_cfg_values.h
+-- Using file: /cFS/cfe/modules/tbl/config/default_cfe_tbl_msgid_values.h for cfe_tbl_msgid_values.h
+-- Using file: /cFS/cfe/modules/tbl/config/default_cfe_tbl_msgids.h for cfe_tbl_msgids.h
+-- Using file: /cFS/cfe/modules/tbl/config/default_cfe_tbl_platform_cfg.h for cfe_tbl_platform_cfg.h
+-- Using file: /cFS/cfe/modules/time/config/default_cfe_time_internal_cfg_values.h for cfe_time_internal_cfg_values.h
+-- Using file: /cFS/cfe/modules/time/config/default_cfe_time_msgid_values.h for cfe_time_msgid_values.h
+-- Using file: /cFS/cfe/modules/time/config/default_cfe_time_msgids.h for cfe_time_msgids.h
+-- Using file: /cFS/cfe/modules/time/config/default_cfe_time_platform_cfg.h for cfe_time_platform_cfg.h
+-- BSP Selection: generic-linux at /cFS/osal/src/bsp/generic-linux
+-- OSAL Selection: posix at /cFS/osal/src/os/posix
+-- OSAL Compile Definitions: _XOPEN_SOURCE=600;_POSIX_OS_
+-- PSP Selection: pc-linux
+-- Building Core Module: core_api
+-- Building Core Module: core_private
+-- Building Core Module: config
+-- Building Core Module: es
+-- Building Core Module: evs
+-- Building Core Module: fs
+-- Building Core Module: sb
+-- Building Core Module: tbl
+-- Building Core Module: time
+-- Building Core Module: psp
+-- Building Core Module: msg
+-- CCSDS primary header included in message header (not including CCSDS extended header)
+-- Message Id version 1 in use (MsgId V1)
+-- Building Core Module: sbr
+-- Using hashed map software bus routing implementation
+-- Building Core Module: resourceid
+-- Building Dynamic App: ci_lab targets=cpu1
+-- Building Dynamic App: to_lab targets=cpu1
+-- Using file: /mission/sample_defs/tables/to_lab_sub.c for to_lab_sub.c
+-- Building Dynamic App: sch_lab targets=cpu1
+-- Using file: /mission/sample_defs/tables/sch_lab_table.c for sch_lab_table.c
+-- Building Dynamic App: linux_i2c_lib targets=cpu1
+-- Building Dynamic App: hal_sensor targets=cpu1
+-- Building Dynamic App: tmp105_lib targets=cpu1
+-- Building Dynamic App: lsm303dlhc_mag_lib targets=cpu1
+-- Building Dynamic App: mpu6050_lib targets=cpu1
+-- Building Dynamic App: eval_cycle_03 targets=cpu1
+-- Using file: /cFS/apps/eval_cycle_03/fsw/tables/eval_cycle_03_tbl.c for eval_cycle_03_tbl.c
+-- Building Dynamic App: eval_mag targets=cpu1
+-- Using file: /cFS/apps/eval_mag/fsw/tables/eval_mag_tbl.c for eval_mag_tbl.c
+-- Building Dynamic App: eval_mpu targets=cpu1
+-- Using file: /cFS/apps/eval_mpu/fsw/tables/eval_mpu_tbl.c for eval_mpu_tbl.c
+-- Building Dynamic App: eval_temp targets=cpu1
+-- Using file: /cFS/apps/eval_temp/fsw/tables/eval_temp_tbl.c for eval_temp_tbl.c
+-- Building Dynamic App: cfe_assert targets=cpu1
+-- Building Dynamic App: cfe_testcase targets=cpu1
+NOTE: "cfeTestAppTable" passed to add_cfe_tables is not a previously-defined application target
+-- Using file: /cFS/cfe/modules/cfe_testcase/tables/cfe_test_tbl.c for cfe_test_tbl.c
+-- Building Dynamic App: sample_app targets=cpu1
+-- Using file: /cFS/apps/sample_app/fsw/tables/sample_app_tbl.c for sample_app_tbl.c
+-- Building Dynamic App: sample_lib targets=cpu1
+-- Building Dynamic App: cf targets=cpu1
+-- Using file: /cFS/apps/cf/fsw/tables/cf_def_config.c for cf_def_config.c
+-- Building Dynamic App: hs targets=cpu1
+-- Using file: /cFS/apps/hs/fsw/tables/hs_mat.c for hs_mat.c
+-- Using file: /cFS/apps/hs/fsw/tables/hs_xct.c for hs_xct.c
+-- Using file: /cFS/apps/hs/fsw/tables/hs_amt.c for hs_amt.c
+-- Using file: /cFS/apps/hs/fsw/tables/hs_emt.c for hs_emt.c
+-- Building Dynamic App: md targets=cpu1
+-- Using file: /cFS/apps/md/fsw/tables/md_dw02.c for md_dw02.c
+-- Using file: /cFS/apps/md/fsw/tables/md_dw03.c for md_dw03.c
+-- Using file: /cFS/apps/md/fsw/tables/md_dw04.c for md_dw04.c
+-- Using file: /cFS/apps/md/fsw/tables/md_dw01.c for md_dw01.c
+-- Building Dynamic App: cs targets=cpu1
+-- Using file: /cFS/apps/cs/fsw/tables/cs_apptbl.c for cs_apptbl.c
+-- Using file: /cFS/apps/cs/fsw/tables/cs_eepromtbl.c for cs_eepromtbl.c
+-- Using file: /cFS/apps/cs/fsw/tables/cs_memorytbl.c for cs_memorytbl.c
+-- Using file: /mission/sample_defs/tables/cs_tablestbl.c for cs_tablestbl.c
+-- Building Dynamic App: fm targets=cpu1
+-- Using file: /cFS/apps/fm/fsw/tables/fm_monitor.c for fm_monitor.c
+-- Building Dynamic App: lc targets=cpu1
+-- Adding math library dependency to LC App...
+-- Using file: /cFS/apps/lc/fsw/tables/lc_def_wdt.c for lc_def_wdt.c
+-- Using file: /cFS/apps/lc/fsw/tables/lc_def_adt.c for lc_def_adt.c
+-- Building Dynamic App: sc targets=cpu1
+-- Using file: /cFS/apps/sc/fsw/tables/sc_ats1.c for sc_ats1.c
+-- Using file: /cFS/apps/sc/fsw/tables/sc_rts001.c for sc_rts001.c
+-- Using file: /cFS/apps/sc/fsw/tables/sc_rts002.c for sc_rts002.c
+-- Using file: /cFS/apps/sc/fsw/tables/sc_rts003.c for sc_rts003.c
+-- Using file: /cFS/apps/sc/fsw/tables/sc_rts004.c for sc_rts004.c
+-- Building Dynamic App: ds targets=cpu1
+-- Using file: /cFS/apps/ds/fsw/tables/ds_filter_tbl.c for ds_filter_tbl.c
+-- Using file: /cFS/apps/ds/fsw/tables/ds_file_tbl.c for ds_file_tbl.c
+-- Building Dynamic App: hk targets=cpu1
+-- Using file: /cFS/apps/hk/fsw/tables/hk_cpy_tbl.c for hk_cpy_tbl.c
+-- Using file: /mission/sample_defs/tables/sample_app_alt1.c for sample_app_alt1.c
+-- Using file: /mission/sample_defs/tables/to_lab_sub_alt.c for to_lab_sub_alt.c
+-- Using file: /mission/sample_defs/tables/to_lab_sub_bad.c for to_lab_sub_bad.c
+-- Using file: /mission/sample_defs/tables/lc_def_adt-test.c for lc_def_adt-test.c
+-- Using file: /mission/sample_defs/tables/sc_ats2_test.c for sc_ats2_test.c
+-- Using file: /mission/sample_defs/tables/sc_append_test.c for sc_append_test.c
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /mission/build-flight/cache/aarch64-linux-gnu/default_cpu1
+-- Configuring for system arch: aarch64-linux-gnu/default_cpu2
+-- OMIT_DEPRECATED=false: Deprecated elements included in build
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Using file: /mission/sample_defs/cpu2/cfe_core_api_base_msgid_values.h for cfe_core_api_base_msgid_values.h
+-- Using file: /cFS/cfe/modules/core_api/config/default_cfe_msgids.h for cfe_msgids.h
+-- Using file: /cFS/cfe/modules/core_private/config/default_cfe_platform_cfg.h for platform_cfg.h
+-- Using file: /cFS/cfe/modules/core_private/config/default_cfe_core_private_internal_cfg.h for cfe_core_private_internal_cfg.h
+-- Using file: /cFS/apps/ci_lab/config/default_ci_lab_internal_cfg_values.h for ci_lab_internal_cfg_values.h
+-- Using file: /cFS/apps/ci_lab/config/default_ci_lab_platform_cfg.h for ci_lab_platform_cfg.h
+-- Using file: /cFS/apps/ci_lab/config/default_ci_lab_perfids.h for ci_lab_perfids.h
+-- Using file: /cFS/apps/ci_lab/config/default_ci_lab_msgids.h for ci_lab_msgids.h
+-- Using file: /cFS/apps/ci_lab/config/default_ci_lab_msgid_values.h for ci_lab_msgid_values.h
+-- Using file: /cFS/apps/to_lab/config/default_to_lab_internal_cfg_values.h for to_lab_internal_cfg_values.h
+-- Using file: /cFS/apps/to_lab/config/default_to_lab_platform_cfg.h for to_lab_platform_cfg.h
+-- Using file: /cFS/apps/to_lab/config/default_to_lab_perfids.h for to_lab_perfids.h
+-- Using file: /cFS/apps/to_lab/config/default_to_lab_msgids.h for to_lab_msgids.h
+-- Using file: /cFS/apps/to_lab/config/default_to_lab_msgid_values.h for to_lab_msgid_values.h
+-- Using file: /cFS/apps/sch_lab/config/default_sch_lab_internal_cfg_values.h for sch_lab_internal_cfg_values.h
+-- Using file: /cFS/apps/sch_lab/config/default_sch_lab_platform_cfg.h for sch_lab_platform_cfg.h
+-- Using file: /cFS/apps/sch_lab/config/default_sch_lab_perfids.h for sch_lab_perfids.h
+-- Using file: /cFS/apps/eval_cycle_03/config/default_eval_cycle_03_internal_cfg_values.h for eval_cycle_03_internal_cfg_values.h
+-- Using file: /cFS/apps/eval_cycle_03/config/default_eval_cycle_03_platform_cfg.h for eval_cycle_03_platform_cfg.h
+-- Using file: /cFS/apps/eval_cycle_03/config/default_eval_cycle_03_perfids.h for eval_cycle_03_perfids.h
+-- Using file: /cFS/apps/eval_cycle_03/config/default_eval_cycle_03_msgids.h for eval_cycle_03_msgids.h
+-- Using file: /cFS/apps/eval_cycle_03/config/default_eval_cycle_03_msgid_values.h for eval_cycle_03_msgid_values.h
+-- Using file: /cFS/apps/eval_mag/config/default_eval_mag_internal_cfg_values.h for eval_mag_internal_cfg_values.h
+-- Using file: /cFS/apps/eval_mag/config/default_eval_mag_platform_cfg.h for eval_mag_platform_cfg.h
+-- Using file: /cFS/apps/eval_mag/config/default_eval_mag_perfids.h for eval_mag_perfids.h
+-- Using file: /cFS/apps/eval_mag/config/default_eval_mag_msgids.h for eval_mag_msgids.h
+-- Using file: /cFS/apps/eval_mag/config/default_eval_mag_msgid_values.h for eval_mag_msgid_values.h
+-- Using file: /cFS/apps/eval_mpu/config/default_eval_mpu_internal_cfg_values.h for eval_mpu_internal_cfg_values.h
+-- Using file: /cFS/apps/eval_mpu/config/default_eval_mpu_platform_cfg.h for eval_mpu_platform_cfg.h
+-- Using file: /cFS/apps/eval_mpu/config/default_eval_mpu_perfids.h for eval_mpu_perfids.h
+-- Using file: /cFS/apps/eval_mpu/config/default_eval_mpu_msgids.h for eval_mpu_msgids.h
+-- Using file: /cFS/apps/eval_mpu/config/default_eval_mpu_msgid_values.h for eval_mpu_msgid_values.h
+-- Using file: /cFS/apps/eval_temp/config/default_eval_temp_internal_cfg_values.h for eval_temp_internal_cfg_values.h
+-- Using file: /cFS/apps/eval_temp/config/default_eval_temp_platform_cfg.h for eval_temp_platform_cfg.h
+-- Using file: /cFS/apps/eval_temp/config/default_eval_temp_perfids.h for eval_temp_perfids.h
+-- Using file: /cFS/apps/eval_temp/config/default_eval_temp_msgids.h for eval_temp_msgids.h
+-- Using file: /cFS/apps/eval_temp/config/default_eval_temp_msgid_values.h for eval_temp_msgid_values.h
+-- Using file: /cFS/cfe/modules/cfe_testcase/config/default_cfe_test_msgids.h for cfe_test_msgids.h
+-- Using file: /cFS/cfe/modules/cfe_testcase/config/default_cfe_test_msgid_values.h for cfe_test_msgid_values.h
+-- Using file: /cFS/apps/sample_app/config/default_sample_app_internal_cfg_values.h for sample_app_internal_cfg_values.h
+-- Using file: /cFS/apps/sample_app/config/default_sample_app_platform_cfg.h for sample_app_platform_cfg.h
+-- Using file: /cFS/apps/sample_app/config/default_sample_app_perfids.h for sample_app_perfids.h
+-- Using file: /cFS/apps/sample_app/config/default_sample_app_msgids.h for sample_app_msgids.h
+-- Using file: /cFS/apps/sample_app/config/default_sample_app_msgid_values.h for sample_app_msgid_values.h
+-- Using file: /cFS/apps/cf/config/default_cf_internal_cfg_values.h for cf_internal_cfg_values.h
+-- Using file: /cFS/apps/cf/config/default_cf_msgid_values.h for cf_msgid_values.h
+-- Using file: /cFS/apps/cf/config/default_cf_msgids.h for cf_msgids.h
+-- Using file: /cFS/apps/cf/config/default_cf_platform_cfg.h for cf_platform_cfg.h
+-- Using file: /cFS/apps/hs/config/default_hs_internal_cfg_values.h for hs_internal_cfg_values.h
+-- Using file: /cFS/apps/hs/config/default_hs_msgid_values.h for hs_msgid_values.h
+-- Using file: /cFS/apps/hs/config/default_hs_msgids.h for hs_msgids.h
+-- Using file: /cFS/apps/hs/config/default_hs_platform_cfg.h for hs_platform_cfg.h
+-- Using file: /cFS/apps/md/config/default_md_internal_cfg_values.h for md_internal_cfg_values.h
+-- Using file: /cFS/apps/md/config/default_md_platform_cfg.h for md_platform_cfg.h
+-- Using file: /cFS/apps/md/config/default_md_perfids.h for md_perfids.h
+-- Using file: /cFS/apps/md/config/default_md_msgids.h for md_msgids.h
+-- Using file: /cFS/apps/md/config/default_md_msgid_values.h for md_msgid_values.h
+-- Using file: /cFS/apps/cs/config/default_cs_internal_cfg_values.h for cs_internal_cfg_values.h
+-- Using file: /cFS/apps/cs/config/default_cs_msgid_values.h for cs_msgid_values.h
+-- Using file: /cFS/apps/cs/config/default_cs_msgids.h for cs_msgids.h
+-- Using file: /cFS/apps/cs/config/default_cs_platform_cfg.h for cs_platform_cfg.h
+-- Using file: /cFS/apps/fm/config/default_fm_internal_cfg_values.h for fm_internal_cfg_values.h
+-- Using file: /cFS/apps/fm/config/default_fm_platform_cfg.h for fm_platform_cfg.h
+-- Using file: /cFS/apps/fm/config/default_fm_msgid_values.h for fm_msgid_values.h
+-- Using file: /cFS/apps/fm/config/default_fm_msgids.h for fm_msgids.h
+-- Using file: /cFS/apps/lc/config/default_lc_internal_cfg_values.h for lc_internal_cfg_values.h
+-- Using file: /cFS/apps/lc/config/default_lc_platform_cfg.h for lc_platform_cfg.h
+-- Using file: /cFS/apps/lc/config/default_lc_msgid_values.h for lc_msgid_values.h
+-- Using file: /cFS/apps/lc/config/default_lc_msgids.h for lc_msgids.h
+-- Using file: /cFS/apps/sc/config/default_sc_internal_cfg_values.h for sc_internal_cfg_values.h
+-- Using file: /cFS/apps/sc/config/default_sc_platform_cfg.h for sc_platform_cfg.h
+-- Using file: /cFS/apps/sc/config/default_sc_perfids.h for sc_perfids.h
+-- Using file: /cFS/apps/sc/config/default_sc_msgids.h for sc_msgids.h
+-- Using file: /cFS/apps/sc/config/default_sc_msgid_values.h for sc_msgid_values.h
+-- Using file: /cFS/apps/ds/config/default_ds_internal_cfg_values.h for ds_internal_cfg_values.h
+-- Using file: /cFS/apps/ds/config/default_ds_msgid_values.h for ds_msgid_values.h
+-- Using file: /cFS/apps/ds/config/default_ds_msgids.h for ds_msgids.h
+-- Using file: /cFS/apps/ds/config/default_ds_platform_cfg.h for ds_platform_cfg.h
+-- Using file: /cFS/apps/hk/config/default_hk_internal_cfg_values.h for hk_internal_cfg_values.h
+-- Using file: /cFS/apps/hk/config/default_hk_msgids.h for hk_msgids.h
+-- Using file: /cFS/apps/hk/config/default_hk_msgid_values.h for hk_msgid_values.h
+-- Using file: /cFS/apps/hk/config/default_hk_platform_cfg.h for hk_platform_cfg.h
+-- Using file: /cFS/cfe/modules/es/config/default_cfe_es_internal_cfg_values.h for cfe_es_internal_cfg_values.h
+-- Using file: /cFS/cfe/modules/es/config/default_cfe_es_msgid_values.h for cfe_es_msgid_values.h
+-- Using file: /cFS/cfe/modules/es/config/default_cfe_es_msgids.h for cfe_es_msgids.h
+-- Using file: /cFS/cfe/modules/es/config/default_cfe_es_platform_cfg.h for cfe_es_platform_cfg.h
+-- Using file: /cFS/cfe/modules/evs/config/default_cfe_evs_internal_cfg_values.h for cfe_evs_internal_cfg_values.h
+-- Using file: /cFS/cfe/modules/evs/config/default_cfe_evs_msgid_values.h for cfe_evs_msgid_values.h
+-- Using file: /cFS/cfe/modules/evs/config/default_cfe_evs_msgids.h for cfe_evs_msgids.h
+-- Using file: /cFS/cfe/modules/evs/config/default_cfe_evs_platform_cfg.h for cfe_evs_platform_cfg.h
+-- Using file: /cFS/cfe/modules/sb/config/default_cfe_sb_internal_cfg_values.h for cfe_sb_internal_cfg_values.h
+-- Using file: /cFS/cfe/modules/sb/config/default_cfe_sb_msgid_values.h for cfe_sb_msgid_values.h
+-- Using file: /cFS/cfe/modules/sb/config/default_cfe_sb_msgids.h for cfe_sb_msgids.h
+-- Using file: /cFS/cfe/modules/sb/config/default_cfe_sb_platform_cfg.h for cfe_sb_platform_cfg.h
+-- Using file: /cFS/cfe/modules/tbl/config/default_cfe_tbl_internal_cfg_values.h for cfe_tbl_internal_cfg_values.h
+-- Using file: /cFS/cfe/modules/tbl/config/default_cfe_tbl_msgid_values.h for cfe_tbl_msgid_values.h
+-- Using file: /cFS/cfe/modules/tbl/config/default_cfe_tbl_msgids.h for cfe_tbl_msgids.h
+-- Using file: /cFS/cfe/modules/tbl/config/default_cfe_tbl_platform_cfg.h for cfe_tbl_platform_cfg.h
+-- Using file: /cFS/cfe/modules/time/config/default_cfe_time_internal_cfg_values.h for cfe_time_internal_cfg_values.h
+-- Using file: /cFS/cfe/modules/time/config/default_cfe_time_msgid_values.h for cfe_time_msgid_values.h
+-- Using file: /cFS/cfe/modules/time/config/default_cfe_time_msgids.h for cfe_time_msgids.h
+-- Using file: /cFS/cfe/modules/time/config/default_cfe_time_platform_cfg.h for cfe_time_platform_cfg.h
+-- BSP Selection: generic-linux at /cFS/osal/src/bsp/generic-linux
+-- OSAL Selection: posix at /cFS/osal/src/os/posix
+-- OSAL Compile Definitions: _XOPEN_SOURCE=600;_POSIX_OS_
+-- PSP Selection: pc-linux
+-- Building Core Module: core_api
+-- Building Core Module: core_private
+-- Building Core Module: config
+-- Building Core Module: es
+-- Building Core Module: evs
+-- Building Core Module: fs
+-- Building Core Module: sb
+-- Building Core Module: tbl
+-- Building Core Module: time
+-- Building Core Module: psp
+-- Building Core Module: msg
+-- CCSDS primary header included in message header (not including CCSDS extended header)
+-- Message Id version 1 in use (MsgId V1)
+-- Building Core Module: sbr
+-- Using hashed map software bus routing implementation
+-- Building Core Module: resourceid
+-- Building Dynamic App: ci_lab targets=cpu2
+-- Building Dynamic App: to_lab targets=cpu2
+-- Using file: /mission/sample_defs/tables/to_lab_sub.c for to_lab_sub.c
+-- Building Dynamic App: sch_lab targets=cpu2
+-- Using file: /mission/sample_defs/tables/sch_lab_table.c for sch_lab_table.c
+-- Building Dynamic App: cfe_assert targets=cpu2
+-- Building Dynamic App: cfe_testcase targets=cpu2
+NOTE: "cfeTestAppTable" passed to add_cfe_tables is not a previously-defined application target
+-- Using file: /cFS/cfe/modules/cfe_testcase/tables/cfe_test_tbl.c for cfe_test_tbl.c
+-- Building Dynamic App: sample_app targets=cpu2
+-- Using file: /cFS/apps/sample_app/fsw/tables/sample_app_tbl.c for sample_app_tbl.c
+-- Building Dynamic App: sample_lib targets=cpu2
+-- Building Dynamic App: cf targets=cpu2
+-- Using file: /cFS/apps/cf/fsw/tables/cf_def_config.c for cf_def_config.c
+-- Building Dynamic App: hs targets=cpu2
+-- Using file: /cFS/apps/hs/fsw/tables/hs_mat.c for hs_mat.c
+-- Using file: /cFS/apps/hs/fsw/tables/hs_xct.c for hs_xct.c
+-- Using file: /cFS/apps/hs/fsw/tables/hs_amt.c for hs_amt.c
+-- Using file: /cFS/apps/hs/fsw/tables/hs_emt.c for hs_emt.c
+-- Building Dynamic App: md targets=cpu2
+-- Using file: /cFS/apps/md/fsw/tables/md_dw02.c for md_dw02.c
+-- Using file: /cFS/apps/md/fsw/tables/md_dw03.c for md_dw03.c
+-- Using file: /cFS/apps/md/fsw/tables/md_dw04.c for md_dw04.c
+-- Using file: /cFS/apps/md/fsw/tables/md_dw01.c for md_dw01.c
+-- Building Dynamic App: cs targets=cpu2
+-- Using file: /cFS/apps/cs/fsw/tables/cs_apptbl.c for cs_apptbl.c
+-- Using file: /cFS/apps/cs/fsw/tables/cs_eepromtbl.c for cs_eepromtbl.c
+-- Using file: /cFS/apps/cs/fsw/tables/cs_memorytbl.c for cs_memorytbl.c
+-- Using file: /mission/sample_defs/tables/cs_tablestbl.c for cs_tablestbl.c
+-- Building Dynamic App: fm targets=cpu2
+-- Using file: /cFS/apps/fm/fsw/tables/fm_monitor.c for fm_monitor.c
+-- Building Dynamic App: lc targets=cpu2
+-- Adding math library dependency to LC App...
+-- Using file: /cFS/apps/lc/fsw/tables/lc_def_wdt.c for lc_def_wdt.c
+-- Using file: /cFS/apps/lc/fsw/tables/lc_def_adt.c for lc_def_adt.c
+-- Building Dynamic App: sc targets=cpu2
+-- Using file: /cFS/apps/sc/fsw/tables/sc_ats1.c for sc_ats1.c
+-- Using file: /cFS/apps/sc/fsw/tables/sc_rts001.c for sc_rts001.c
+-- Using file: /cFS/apps/sc/fsw/tables/sc_rts002.c for sc_rts002.c
+-- Using file: /cFS/apps/sc/fsw/tables/sc_rts003.c for sc_rts003.c
+-- Using file: /cFS/apps/sc/fsw/tables/sc_rts004.c for sc_rts004.c
+-- Building Dynamic App: ds targets=cpu2
+-- Using file: /cFS/apps/ds/fsw/tables/ds_filter_tbl.c for ds_filter_tbl.c
+-- Using file: /cFS/apps/ds/fsw/tables/ds_file_tbl.c for ds_file_tbl.c
+-- Building Dynamic App: hk targets=cpu2
+-- Using file: /cFS/apps/hk/fsw/tables/hk_cpy_tbl.c for hk_cpy_tbl.c
+-- Using file: /mission/sample_defs/tables/sample_app_alt1.c for sample_app_alt1.c
+-- Using file: /mission/sample_defs/tables/to_lab_sub_alt.c for to_lab_sub_alt.c
+-- Using file: /mission/sample_defs/tables/to_lab_sub_bad.c for to_lab_sub_bad.c
+-- Using file: /mission/sample_defs/tables/lc_def_adt-test.c for lc_def_adt-test.c
+-- Using file: /mission/sample_defs/tables/sc_ats2_test.c for sc_ats2_test.c
+-- Using file: /mission/sample_defs/tables/sc_append_test.c for sc_append_test.c
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /mission/build-flight/cache/aarch64-linux-gnu/default_cpu2
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /mission/build-flight/cache
+[ 16%] Built target elf2cfetbl
+[ 16%] Built target cfe-build-env
+[ 16%] Built target cfe-module-version
+[ 16%] Built target mission-version
+[ 25%] Building C object cfeconfig_platformdata_tool/CMakeFiles/cfeconfig_platformdata_aarch64_linux_gnu_default_cpu2.dir/cfeconfig_platformdata_table.c.o
+[ 25%] Built target cfeconfig_platformdata_aarch64_linux_gnu_default_cpu2
+[ 33%] Building C object cfeconfig_platformdata_tool/CMakeFiles/cfeconfig_platformdata_aarch64_linux_gnu_default_cpu1.dir/cfeconfig_platformdata_table.c.o
+[ 33%] Built target cfeconfig_platformdata_aarch64_linux_gnu_default_cpu1
+[ 41%] Building C object cfeconfig_platformdata_tool/CMakeFiles/cfeconfig_platformdata_tool.dir/cfeconfig_platformdata_tool.c.o
+[ 50%] Building C object cfeconfig_platformdata_tool/CMakeFiles/cfeconfig_platformdata_tool.dir/__/src/cfe_configid_nametable.c.o
+[ 58%] Building C object cfeconfig_platformdata_tool/CMakeFiles/cfeconfig_platformdata_tool.dir/__/src/cfe_platform_list.c.o
+[ 66%] Linking C executable cfeconfig_platformdata_tool
+[ 66%] Built target cfeconfig_platformdata_tool
+[ 75%] Generating ../src/cfeconfig_platformdata_aarch64_linux_gnu_default_cpu1.c
+[ 83%] Generating ../src/cfeconfig_platformdata_aarch64_linux_gnu_default_cpu1.list
+[ 83%] Built target cfgtool-execute-aarch64_linux_gnu_default_cpu1
+[ 91%] Generating ../src/cfeconfig_platformdata_aarch64_linux_gnu_default_cpu2.c
+[100%] Generating ../src/cfeconfig_platformdata_aarch64_linux_gnu_default_cpu2.list
+[100%] Built target cfgtool-execute-aarch64_linux_gnu_default_cpu2
+[100%] Built target mission-prebuild
+[  6%] Built target tblobj_cpu2_hk.tblfa39eb10532b99c7e5b39a906bc8db2fde163b3b
+[  6%] Generating /mission/build-flight/cache/tables/cpu2_hk.tblfa39eb10532b99c7e5b39a906bc8db2fde163b3b.hk_cpy_tbl.d
+[  6%] Built target generate_table_cpu2_hk_hk_cpy_tbl
+[ 13%] Built target tblobj_cpu2_sample_app.tbl69bb67499186eb9124b81a1df72af29fb2ed28a9
+[ 13%] Generating /mission/build-flight/cache/tables/cpu2_sample_app.tbl69bb67499186eb9124b81a1df72af29fb2ed28a9.sample_app_alt1.d
+[ 13%] Built target generate_table_cpu2_sample_app_sample_app_alt1
+[ 13%] Built target tblobj_cpu2_to_lab.tblf70cc3a498175a42b2ee5f276dcf453b970b1372
+[ 13%] Generating /mission/build-flight/cache/tables/cpu2_to_lab.tblf70cc3a498175a42b2ee5f276dcf453b970b1372.to_lab_sub_alt.d
+[ 13%] Built target generate_table_cpu2_to_lab_to_lab_sub_alt
+[ 13%] Built target tblobj_cpu2_to_lab.tblbde3e5064554b79978e74fdca5b482c97ce5b811
+[ 13%] Generating /mission/build-flight/cache/tables/cpu2_to_lab.tblbde3e5064554b79978e74fdca5b482c97ce5b811.to_lab_sub_bad.d
+[ 13%] Built target generate_table_cpu2_to_lab_to_lab_sub_bad
+[ 13%] Built target tblobj_cpu2_lc.tbl2650aa809e0acccec8c66f38e75b74b90331b93c
+[ 13%] Generating /mission/build-flight/cache/tables/cpu2_lc.tbl2650aa809e0acccec8c66f38e75b74b90331b93c.lc_def_adt-test.d
+[ 13%] Built target generate_table_cpu2_lc_lc_def_adt-test
+[ 13%] Built target tblobj_cpu2_sc.tbl888605d35eeee07c602cac479dec33f3deafd4e0
+[ 20%] Generating /mission/build-flight/cache/tables/cpu2_sc.tbl888605d35eeee07c602cac479dec33f3deafd4e0.sc_ats2_test.d
+[ 20%] Built target generate_table_cpu2_sc_sc_ats2_test
+[ 20%] Built target tblobj_cpu2_sc.tbl2b8d6edbfab85b5198773b13ff23f12871fead8f
+[ 20%] Generating /mission/build-flight/cache/tables/cpu2_sc.tbl2b8d6edbfab85b5198773b13ff23f12871fead8f.sc_append_test.d
+[ 20%] Built target generate_table_cpu2_sc_sc_append_test
+[ 26%] Built target tblobj_cpu2_to_lab.tbl7c6559e77335b0a7b33bca332f486cceb4d13fb5
+[ 33%] Generating /mission/build-flight/cache/tables/cpu2_to_lab.tbl7c6559e77335b0a7b33bca332f486cceb4d13fb5.to_lab_sub.d
+[ 33%] Built target generate_table_cpu2_to_lab_to_lab_sub
+[ 33%] Built target tblobj_cpu2_sch_lab.tbl7543a9a6ca5197adc917c707f2c39d3c47bf890f
+[ 33%] Generating /mission/build-flight/cache/tables/cpu2_sch_lab.tbl7543a9a6ca5197adc917c707f2c39d3c47bf890f.sch_lab_table.d
+[ 33%] Built target generate_table_cpu2_sch_lab_sch_lab_table
+[ 40%] Built target tblobj_cpu2_cfeTestAppTable.tbl044e0737b21a357f8fa1d2e1aa1d5a65d7d65ed4
+[ 40%] Generating /mission/build-flight/cache/tables/cpu2_cfeTestAppTable.tbl044e0737b21a357f8fa1d2e1aa1d5a65d7d65ed4.cfe_test_tbl.d
+[ 40%] Built target generate_table_cpu2_cfeTestAppTable_cfe_test_tbl
+[ 40%] Built target tblobj_cpu2_sample_app.tbld14c718877fa4e057cf659f205e88cc8d30e60ba
+[ 40%] Generating /mission/build-flight/cache/tables/cpu2_sample_app.tbld14c718877fa4e057cf659f205e88cc8d30e60ba.sample_app_tbl.d
+[ 40%] Built target generate_table_cpu2_sample_app_sample_app_tbl
+[ 40%] Built target tblobj_cpu2_cf.tbl573bdf6760e30db9890f9051cdb8c38b10320b84
+[ 40%] Generating /mission/build-flight/cache/tables/cpu2_cf.tbl573bdf6760e30db9890f9051cdb8c38b10320b84.cf_def_config.d
+[ 40%] Built target generate_table_cpu2_cf_cf_def_config
+[ 46%] Built target tblobj_cpu2_hs.tbld602fc9088ed36f0103d0916413a7635c0ac1664
+[ 46%] Generating /mission/build-flight/cache/tables/cpu2_hs.tbld602fc9088ed36f0103d0916413a7635c0ac1664.hs_mat.d
+[ 46%] Built target generate_table_cpu2_hs_hs_mat
+[ 53%] Generating /mission/build-flight/cache/tables/cpu2_hs.tbld602fc9088ed36f0103d0916413a7635c0ac1664.hs_xct.d
+[ 53%] Built target generate_table_cpu2_hs_hs_xct
+[ 53%] Generating /mission/build-flight/cache/tables/cpu2_hs.tbld602fc9088ed36f0103d0916413a7635c0ac1664.hs_amt.d
+[ 53%] Built target generate_table_cpu2_hs_hs_amt
+[ 53%] Generating /mission/build-flight/cache/tables/cpu2_hs.tbld602fc9088ed36f0103d0916413a7635c0ac1664.hs_emt.d
+[ 53%] Built target generate_table_cpu2_hs_hs_emt
+[ 53%] Built target tblobj_cpu2_md.tbl6c11a371c656c343097bb02b216e4e90fd046a8b
+[ 53%] Generating /mission/build-flight/cache/tables/cpu2_md.tbl6c11a371c656c343097bb02b216e4e90fd046a8b.md_dw02.d
+[ 53%] Built target generate_table_cpu2_md_md_dw02
+[ 60%] Generating /mission/build-flight/cache/tables/cpu2_md.tbl6c11a371c656c343097bb02b216e4e90fd046a8b.md_dw03.d
+[ 60%] Built target generate_table_cpu2_md_md_dw03
+[ 60%] Generating /mission/build-flight/cache/tables/cpu2_md.tbl6c11a371c656c343097bb02b216e4e90fd046a8b.md_dw04.d
+[ 60%] Built target generate_table_cpu2_md_md_dw04
+[ 60%] Generating /mission/build-flight/cache/tables/cpu2_md.tbl6c11a371c656c343097bb02b216e4e90fd046a8b.md_dw01.d
+[ 60%] Built target generate_table_cpu2_md_md_dw01
+[ 66%] Built target tblobj_cpu2_cs.tbl98b7edbd130db813accebe3f78834b4ae9d6a8c5
+[ 73%] Generating /mission/build-flight/cache/tables/cpu2_cs.tbl98b7edbd130db813accebe3f78834b4ae9d6a8c5.cs_apptbl.d
+[ 73%] Built target generate_table_cpu2_cs_cs_apptbl
+[ 73%] Generating /mission/build-flight/cache/tables/cpu2_cs.tbl98b7edbd130db813accebe3f78834b4ae9d6a8c5.cs_eepromtbl.d
+[ 73%] Built target generate_table_cpu2_cs_cs_eepromtbl
+[ 73%] Generating /mission/build-flight/cache/tables/cpu2_cs.tbl98b7edbd130db813accebe3f78834b4ae9d6a8c5.cs_memorytbl.d
+[ 73%] Built target generate_table_cpu2_cs_cs_memorytbl
+[ 73%] Generating /mission/build-flight/cache/tables/cpu2_cs.tbl98b7edbd130db813accebe3f78834b4ae9d6a8c5.cs_tablestbl.d
+[ 73%] Built target generate_table_cpu2_cs_cs_tablestbl
+[ 73%] Built target tblobj_cpu2_fm.tbl0d8fea8be05eba5628dab638d9d21d6705c052ab
+[ 80%] Generating /mission/build-flight/cache/tables/cpu2_fm.tbl0d8fea8be05eba5628dab638d9d21d6705c052ab.fm_monitor.d
+[ 80%] Built target generate_table_cpu2_fm_fm_monitor
+[ 86%] Built target tblobj_cpu2_lc.tblbf901e77056841cee9113d6dc67642f0c6953378
+[ 86%] Generating /mission/build-flight/cache/tables/cpu2_lc.tblbf901e77056841cee9113d6dc67642f0c6953378.lc_def_wdt.d
+[ 86%] Built target generate_table_cpu2_lc_lc_def_wdt
+[ 86%] Generating /mission/build-flight/cache/tables/cpu2_lc.tblbf901e77056841cee9113d6dc67642f0c6953378.lc_def_adt.d
+[ 86%] Built target generate_table_cpu2_lc_lc_def_adt
+[100%] Built target tblobj_cpu2_sc.tbl6c42f839777c8383cf9d8aa5016e6e662322c5c9
+[100%] Generating /mission/build-flight/cache/tables/cpu2_sc.tbl6c42f839777c8383cf9d8aa5016e6e662322c5c9.sc_ats1.d
+[100%] Built target generate_table_cpu2_sc_sc_ats1
+[100%] Generating /mission/build-flight/cache/tables/cpu2_sc.tbl6c42f839777c8383cf9d8aa5016e6e662322c5c9.sc_rts001.d
+[100%] Built target generate_table_cpu2_sc_sc_rts001
+[100%] Generating /mission/build-flight/cache/tables/cpu2_sc.tbl6c42f839777c8383cf9d8aa5016e6e662322c5c9.sc_rts002.d
+[100%] Built target generate_table_cpu2_sc_sc_rts002
+[100%] Generating /mission/build-flight/cache/tables/cpu2_sc.tbl6c42f839777c8383cf9d8aa5016e6e662322c5c9.sc_rts003.d
+[100%] Built target generate_table_cpu2_sc_sc_rts003
+[100%] Generating /mission/build-flight/cache/tables/cpu2_sc.tbl6c42f839777c8383cf9d8aa5016e6e662322c5c9.sc_rts004.d
+[100%] Built target generate_table_cpu2_sc_sc_rts004
+[100%] Built target tblobj_cpu2_ds.tbl7fff25b74a1e71e695bd995fc44058daf121b9d3
+[100%] Generating /mission/build-flight/cache/tables/cpu2_ds.tbl7fff25b74a1e71e695bd995fc44058daf121b9d3.ds_filter_tbl.d
+[100%] Built target generate_table_cpu2_ds_ds_filter_tbl
+[100%] Generating /mission/build-flight/cache/tables/cpu2_ds.tbl7fff25b74a1e71e695bd995fc44058daf121b9d3.ds_file_tbl.d
+[100%] Built target generate_table_cpu2_ds_ds_file_tbl
+[100%] Built target cfetables
+[100%] Built target aarch64_linux_gnu_default_cpu2-cfetables
+[  0%] Built target tblobj_cpu1_hk.tblfa39eb10532b99c7e5b39a906bc8db2fde163b3b
+[  0%] Generating /mission/build-flight/cache/tables/cpu1_hk.tblfa39eb10532b99c7e5b39a906bc8db2fde163b3b.hk_cpy_tbl.d
+[  0%] Built target generate_table_cpu1_hk_hk_cpy_tbl
+[  0%] Built target tblobj_cpu1_sample_app.tbl79ea2e50256d25fbfe2952b7a28956a4c0f91c2e
+[  0%] Generating /mission/build-flight/cache/tables/cpu1_sample_app.tbl79ea2e50256d25fbfe2952b7a28956a4c0f91c2e.sample_app_alt1.d
+[  0%] Built target generate_table_cpu1_sample_app_sample_app_alt1
+[  0%] Building C object CMakeFiles/tblobj_cpu1_to_lab.tbldbe77716289f34ceaa4b05a27fc0c1a8834cd55f.dir/mission/sample_defs/tables/to_lab_sub_alt.c.o
+[  0%] Linking C static library libtblobj_cpu1_to_lab.tbldbe77716289f34ceaa4b05a27fc0c1a8834cd55f.a
+[  0%] Built target tblobj_cpu1_to_lab.tbldbe77716289f34ceaa4b05a27fc0c1a8834cd55f
+[  0%] Generating /mission/build-flight/cache/tables/cpu1_to_lab.tbldbe77716289f34ceaa4b05a27fc0c1a8834cd55f.to_lab_sub_alt.d
+[  0%] Built target generate_table_cpu1_to_lab_to_lab_sub_alt
+[  0%] Building C object CMakeFiles/tblobj_cpu1_to_lab.tbl24d28d436e217fde65ac48b35c1b7574027adec9.dir/mission/sample_defs/tables/to_lab_sub_bad.c.o
+[  6%] Linking C static library libtblobj_cpu1_to_lab.tbl24d28d436e217fde65ac48b35c1b7574027adec9.a
+[  6%] Built target tblobj_cpu1_to_lab.tbl24d28d436e217fde65ac48b35c1b7574027adec9
+[  6%] Generating /mission/build-flight/cache/tables/cpu1_to_lab.tbl24d28d436e217fde65ac48b35c1b7574027adec9.to_lab_sub_bad.d
+[  6%] Built target generate_table_cpu1_to_lab_to_lab_sub_bad
+[  6%] Built target tblobj_cpu1_lc.tbl6424e5fb671f97c36865a27fded11e71cdd8ab0f
+[  6%] Generating /mission/build-flight/cache/tables/cpu1_lc.tbl6424e5fb671f97c36865a27fded11e71cdd8ab0f.lc_def_adt-test.d
+[  6%] Built target generate_table_cpu1_lc_lc_def_adt-test
+[  6%] Built target tblobj_cpu1_sc.tbl74dfff26ac68b4e96524eb672e1eded07ef6cd08
+[  6%] Generating /mission/build-flight/cache/tables/cpu1_sc.tbl74dfff26ac68b4e96524eb672e1eded07ef6cd08.sc_ats2_test.d
+[  6%] Built target generate_table_cpu1_sc_sc_ats2_test
+[ 13%] Built target tblobj_cpu1_sc.tbl46209464de9c320939a45b89d49273d0628c7967
+[ 20%] Generating /mission/build-flight/cache/tables/cpu1_sc.tbl46209464de9c320939a45b89d49273d0628c7967.sc_append_test.d
+[ 20%] Built target generate_table_cpu1_sc_sc_append_test
+[ 20%] Building C object apps/to_lab/CMakeFiles/tblobj_cpu1_to_lab.tbl7c6559e77335b0a7b33bca332f486cceb4d13fb5.dir/mission/sample_defs/tables/to_lab_sub.c.o
+[ 20%] Linking C static library libtblobj_cpu1_to_lab.tbl7c6559e77335b0a7b33bca332f486cceb4d13fb5.a
+[ 20%] Built target tblobj_cpu1_to_lab.tbl7c6559e77335b0a7b33bca332f486cceb4d13fb5
+[ 20%] Generating /mission/build-flight/cache/tables/cpu1_to_lab.tbl7c6559e77335b0a7b33bca332f486cceb4d13fb5.to_lab_sub.d
+[ 20%] Built target generate_table_cpu1_to_lab_to_lab_sub
+[ 20%] Building C object apps/sch_lab/CMakeFiles/tblobj_cpu1_sch_lab.tbl7543a9a6ca5197adc917c707f2c39d3c47bf890f.dir/mission/sample_defs/tables/sch_lab_table.c.o
+[ 20%] Linking C static library libtblobj_cpu1_sch_lab.tbl7543a9a6ca5197adc917c707f2c39d3c47bf890f.a
+[ 20%] Built target tblobj_cpu1_sch_lab.tbl7543a9a6ca5197adc917c707f2c39d3c47bf890f
+[ 20%] Generating /mission/build-flight/cache/tables/cpu1_sch_lab.tbl7543a9a6ca5197adc917c707f2c39d3c47bf890f.sch_lab_table.d
+[ 20%] Built target generate_table_cpu1_sch_lab_sch_lab_table
+[ 26%] Building C object apps/eval_cycle_03/CMakeFiles/tblobj_cpu1_eval_cycle_03.tbl7d6a60ddf79928715a93eb0cd12e087a48d2186a.dir/fsw/tables/eval_cycle_03_tbl.c.o
+[ 26%] Linking C static library libtblobj_cpu1_eval_cycle_03.tbl7d6a60ddf79928715a93eb0cd12e087a48d2186a.a
+[ 26%] Built target tblobj_cpu1_eval_cycle_03.tbl7d6a60ddf79928715a93eb0cd12e087a48d2186a
+[ 33%] Generating /mission/build-flight/cache/tables/cpu1_eval_cycle_03.tbl7d6a60ddf79928715a93eb0cd12e087a48d2186a.eval_cycle_03_tbl.d
+[ 33%] Built target generate_table_cpu1_eval_cycle_03_eval_cycle_03_tbl
+[ 33%] Built target tblobj_cpu1_eval_mag.tbl72bfd14cad142a850f87461b79cda67c8852e212
+[ 33%] Generating /mission/build-flight/cache/tables/cpu1_eval_mag.tbl72bfd14cad142a850f87461b79cda67c8852e212.eval_mag_tbl.d
+[ 33%] Built target generate_table_cpu1_eval_mag_eval_mag_tbl
+[ 33%] Built target tblobj_cpu1_eval_mpu.tbl4494d696b4b8f891c7ed358f6b73500adc3a2209
+[ 33%] Generating /mission/build-flight/cache/tables/cpu1_eval_mpu.tbl4494d696b4b8f891c7ed358f6b73500adc3a2209.eval_mpu_tbl.d
+[ 33%] Built target generate_table_cpu1_eval_mpu_eval_mpu_tbl
+[ 40%] Built target tblobj_cpu1_eval_temp.tbl473ecac3074d33eb59aa4ec883cfc2cdc8bc639a
+[ 40%] Generating /mission/build-flight/cache/tables/cpu1_eval_temp.tbl473ecac3074d33eb59aa4ec883cfc2cdc8bc639a.eval_temp_tbl.d
+[ 40%] Built target generate_table_cpu1_eval_temp_eval_temp_tbl
+[ 40%] Built target tblobj_cpu1_cfeTestAppTable.tbl044e0737b21a357f8fa1d2e1aa1d5a65d7d65ed4
+[ 46%] Generating /mission/build-flight/cache/tables/cpu1_cfeTestAppTable.tbl044e0737b21a357f8fa1d2e1aa1d5a65d7d65ed4.cfe_test_tbl.d
+[ 46%] Built target generate_table_cpu1_cfeTestAppTable_cfe_test_tbl
+[ 46%] Built target tblobj_cpu1_sample_app.tbld14c718877fa4e057cf659f205e88cc8d30e60ba
+[ 46%] Generating /mission/build-flight/cache/tables/cpu1_sample_app.tbld14c718877fa4e057cf659f205e88cc8d30e60ba.sample_app_tbl.d
+[ 46%] Built target generate_table_cpu1_sample_app_sample_app_tbl
+[ 46%] Built target tblobj_cpu1_cf.tbl573bdf6760e30db9890f9051cdb8c38b10320b84
+[ 46%] Generating /mission/build-flight/cache/tables/cpu1_cf.tbl573bdf6760e30db9890f9051cdb8c38b10320b84.cf_def_config.d
+[ 46%] Built target generate_table_cpu1_cf_cf_def_config
+[ 53%] Built target tblobj_cpu1_hs.tbld602fc9088ed36f0103d0916413a7635c0ac1664
+[ 53%] Generating /mission/build-flight/cache/tables/cpu1_hs.tbld602fc9088ed36f0103d0916413a7635c0ac1664.hs_mat.d
+[ 53%] Built target generate_table_cpu1_hs_hs_mat
+[ 53%] Generating /mission/build-flight/cache/tables/cpu1_hs.tbld602fc9088ed36f0103d0916413a7635c0ac1664.hs_xct.d
+[ 53%] Built target generate_table_cpu1_hs_hs_xct
+[ 60%] Generating /mission/build-flight/cache/tables/cpu1_hs.tbld602fc9088ed36f0103d0916413a7635c0ac1664.hs_amt.d
+[ 60%] Built target generate_table_cpu1_hs_hs_amt
+[ 60%] Generating /mission/build-flight/cache/tables/cpu1_hs.tbld602fc9088ed36f0103d0916413a7635c0ac1664.hs_emt.d
+[ 60%] Built target generate_table_cpu1_hs_hs_emt
+[ 66%] Built target tblobj_cpu1_md.tbl6c11a371c656c343097bb02b216e4e90fd046a8b
+[ 66%] Generating /mission/build-flight/cache/tables/cpu1_md.tbl6c11a371c656c343097bb02b216e4e90fd046a8b.md_dw02.d
+[ 66%] Built target generate_table_cpu1_md_md_dw02
+[ 66%] Generating /mission/build-flight/cache/tables/cpu1_md.tbl6c11a371c656c343097bb02b216e4e90fd046a8b.md_dw03.d
+[ 66%] Built target generate_table_cpu1_md_md_dw03
+[ 66%] Generating /mission/build-flight/cache/tables/cpu1_md.tbl6c11a371c656c343097bb02b216e4e90fd046a8b.md_dw04.d
+[ 66%] Built target generate_table_cpu1_md_md_dw04
+[ 66%] Generating /mission/build-flight/cache/tables/cpu1_md.tbl6c11a371c656c343097bb02b216e4e90fd046a8b.md_dw01.d
+[ 66%] Built target generate_table_cpu1_md_md_dw01
+[ 73%] Built target tblobj_cpu1_cs.tbl98b7edbd130db813accebe3f78834b4ae9d6a8c5
+[ 73%] Generating /mission/build-flight/cache/tables/cpu1_cs.tbl98b7edbd130db813accebe3f78834b4ae9d6a8c5.cs_apptbl.d
+[ 73%] Built target generate_table_cpu1_cs_cs_apptbl
+[ 73%] Generating /mission/build-flight/cache/tables/cpu1_cs.tbl98b7edbd130db813accebe3f78834b4ae9d6a8c5.cs_eepromtbl.d
+[ 73%] Built target generate_table_cpu1_cs_cs_eepromtbl
+[ 73%] Generating /mission/build-flight/cache/tables/cpu1_cs.tbl98b7edbd130db813accebe3f78834b4ae9d6a8c5.cs_memorytbl.d
+[ 73%] Built target generate_table_cpu1_cs_cs_memorytbl
+[ 73%] Generating /mission/build-flight/cache/tables/cpu1_cs.tbl98b7edbd130db813accebe3f78834b4ae9d6a8c5.cs_tablestbl.d
+[ 73%] Built target generate_table_cpu1_cs_cs_tablestbl
+[ 73%] Built target tblobj_cpu1_fm.tbl0d8fea8be05eba5628dab638d9d21d6705c052ab
+[ 73%] Generating /mission/build-flight/cache/tables/cpu1_fm.tbl0d8fea8be05eba5628dab638d9d21d6705c052ab.fm_monitor.d
+[ 73%] Built target generate_table_cpu1_fm_fm_monitor
+[ 80%] Built target tblobj_cpu1_lc.tblbf901e77056841cee9113d6dc67642f0c6953378
+[ 86%] Generating /mission/build-flight/cache/tables/cpu1_lc.tblbf901e77056841cee9113d6dc67642f0c6953378.lc_def_wdt.d
+[ 86%] Built target generate_table_cpu1_lc_lc_def_wdt
+[ 86%] Generating /mission/build-flight/cache/tables/cpu1_lc.tblbf901e77056841cee9113d6dc67642f0c6953378.lc_def_adt.d
+[ 86%] Built target generate_table_cpu1_lc_lc_def_adt
+[ 93%] Built target tblobj_cpu1_sc.tbl6c42f839777c8383cf9d8aa5016e6e662322c5c9
+[ 93%] Generating /mission/build-flight/cache/tables/cpu1_sc.tbl6c42f839777c8383cf9d8aa5016e6e662322c5c9.sc_ats1.d
+[ 93%] Built target generate_table_cpu1_sc_sc_ats1
+[ 93%] Generating /mission/build-flight/cache/tables/cpu1_sc.tbl6c42f839777c8383cf9d8aa5016e6e662322c5c9.sc_rts001.d
+[ 93%] Built target generate_table_cpu1_sc_sc_rts001
+[ 93%] Generating /mission/build-flight/cache/tables/cpu1_sc.tbl6c42f839777c8383cf9d8aa5016e6e662322c5c9.sc_rts002.d
+[ 93%] Built target generate_table_cpu1_sc_sc_rts002
+[ 93%] Generating /mission/build-flight/cache/tables/cpu1_sc.tbl6c42f839777c8383cf9d8aa5016e6e662322c5c9.sc_rts003.d
+[ 93%] Built target generate_table_cpu1_sc_sc_rts003
+[100%] Generating /mission/build-flight/cache/tables/cpu1_sc.tbl6c42f839777c8383cf9d8aa5016e6e662322c5c9.sc_rts004.d
+[100%] Built target generate_table_cpu1_sc_sc_rts004
+[100%] Built target tblobj_cpu1_ds.tbl7fff25b74a1e71e695bd995fc44058daf121b9d3
+[100%] Generating /mission/build-flight/cache/tables/cpu1_ds.tbl7fff25b74a1e71e695bd995fc44058daf121b9d3.ds_filter_tbl.d
+[100%] Built target generate_table_cpu1_ds_ds_filter_tbl
+[100%] Generating /mission/build-flight/cache/tables/cpu1_ds.tbl7fff25b74a1e71e695bd995fc44058daf121b9d3.ds_file_tbl.d
+[100%] Built target generate_table_cpu1_ds_ds_file_tbl
+[100%] Built target cfetables
+[100%] Built target aarch64_linux_gnu_default_cpu1-cfetables
+[100%] Built target mission-cfetables
+mkdir: created directory 'elf'
+mkdir: created directory 'elf/cpu1/'
+mkdir: created directory 'staging/cpu1'
+mkdir: created directory 'staging/cpu1/cf/'
+mkdir: created directory 'elf/cpu2/'
+mkdir: created directory 'staging/cpu2'
+mkdir: created directory 'staging/cpu2/cf/'
+Table build completed
+[100%] Built target tabletool-execute
+[  1%] Built target osal_generic-linux_impl
+[  2%] Built target osal_bsp
+[  9%] Built target osal_posix_impl
+[ 15%] Built target osal
+[ 16%] Built target ut_assert
+[ 28%] Built target ut_osapi_stubs
+[ 28%] Generating ../src/cfe_platformcfg_tables.c
+[ 28%] Building C object config/CMakeFiles/config.dir/fsw/src/cfe_config_init.c.o
+[ 28%] Building C object config/CMakeFiles/config.dir/fsw/src/cfe_config_lookup.c.o
+[ 28%] Building C object config/CMakeFiles/config.dir/fsw/src/cfe_config_get.c.o
+[ 29%] Building C object config/CMakeFiles/config.dir/fsw/src/cfe_config_set.c.o
+[ 29%] Building C object config/CMakeFiles/config.dir/mission/build-flight/cache/src/cfe_configid_nametable.c.o
+[ 29%] Generating ../src/cfe_platformcfg_tables.c
+[ 29%] Building C object config/CMakeFiles/config.dir/__/src/cfe_platformcfg_tables.c.o
+[ 29%] Linking C static library libconfig.a
+[ 29%] Built target config
+[ 29%] Building C object es/CMakeFiles/es.dir/fsw/src/cfe_es_cds_mempool.c.o
+[ 29%] Building C object es/CMakeFiles/es.dir/fsw/src/cfe_es_mempool.c.o
+[ 29%] Building C object es/CMakeFiles/es.dir/fsw/src/cfe_es_task.c.o
+[ 29%] Building C object es/CMakeFiles/es.dir/fsw/src/cfe_es_dispatch.c.o
+[ 29%] Linking C static library libes.a
+[ 33%] Built target es
+[ 35%] Building C object evs/CMakeFiles/evs.dir/fsw/src/cfe_evs_task.c.o
+[ 35%] Linking C static library libevs.a
+[ 35%] Built target evs
+[ 35%] Built target fs
+[ 35%] Building C object sb/CMakeFiles/sb.dir/fsw/src/cfe_sb_init.c.o
+[ 35%] Building C object sb/CMakeFiles/sb.dir/fsw/src/cfe_sb_task.c.o
+[ 35%] Linking C static library libsb.a
+[ 38%] Built target sb
+[ 38%] Building C object tbl/CMakeFiles/tbl.dir/fsw/src/cfe_tbl_load.c.o
+[ 38%] Building C object tbl/CMakeFiles/tbl.dir/fsw/src/cfe_tbl_dump.c.o
+[ 38%] Building C object tbl/CMakeFiles/tbl.dir/fsw/src/cfe_tbl_task.c.o
+[ 38%] Building C object tbl/CMakeFiles/tbl.dir/fsw/src/cfe_tbl_task_cmds.c.o
+[ 39%] Linking C static library libtbl.a
+[ 42%] Built target tbl
+[ 43%] Building C object time/CMakeFiles/time.dir/fsw/src/cfe_time_task.c.o
+[ 43%] Linking C static library libtime.a
+[ 43%] Built target time
+[ 45%] Built target ram_notimpl
+[ 45%] Built target psp-pc-linux-impl
+[ 46%] Built target psp-pc-linux-shared
+[ 47%] Built target soft_timebase
+[ 49%] Built target timebase_posix_clock
+[ 50%] Built target eeprom_mmap_file
+[ 50%] Built target port_notimpl
+[ 50%] Built target iodriver
+[ 50%] Built target linux_sysmon
+[ 50%] Built target endian_api
+[ 52%] Built target psp-pc-linux
+[ 54%] Built target msg
+[ 56%] Built target sbr
+[ 56%] Built target resourceid
+[ 56%] Building C object apps/ci_lab/CMakeFiles/ci_lab.dir/fsw/src/ci_lab_app.c.o
+[ 56%] Building C object apps/ci_lab/CMakeFiles/ci_lab.dir/fsw/src/ci_lab_cmds.c.o
+[ 57%] Building C object apps/ci_lab/CMakeFiles/ci_lab.dir/fsw/src/ci_lab_dispatch.c.o
+[ 57%] Building C object apps/ci_lab/CMakeFiles/ci_lab.dir/fsw/src/ci_lab_passthru_decode.c.o
+[ 57%] Linking C shared module ci_lab.so
+[ 57%] Built target ci_lab
+[ 57%] Building C object apps/to_lab/CMakeFiles/to_lab.dir/fsw/src/to_lab_app.c.o
+[ 57%] Building C object apps/to_lab/CMakeFiles/to_lab.dir/fsw/src/to_lab_cmds.c.o
+[ 57%] Building C object apps/to_lab/CMakeFiles/to_lab.dir/fsw/src/to_lab_passthru_encode.c.o
+[ 57%] Linking C shared module to_lab.so
+[ 59%] Built target to_lab
+[ 59%] Building C object apps/sch_lab/CMakeFiles/sch_lab.dir/fsw/src/sch_lab_app.c.o
+[ 59%] Linking C shared module sch_lab.so
+[ 59%] Built target sch_lab
+[ 60%] Built target linux_i2c_lib
+[ 61%] Built target hal_sensor
+[ 61%] Built target tmp105_lib
+[ 61%] Built target lsm303dlhc_mag_lib
+[ 63%] Built target mpu6050_lib
+[ 63%] Building C object apps/eval_cycle_03/CMakeFiles/eval_cycle_03.dir/fsw/src/eval_cycle_03.c.o
+[ 64%] Building C object apps/eval_cycle_03/CMakeFiles/eval_cycle_03.dir/fsw/src/eval_cycle_03_cmds.c.o
+[ 64%] Building C object apps/eval_cycle_03/CMakeFiles/eval_cycle_03.dir/fsw/src/eval_cycle_03_utils.c.o
+[ 64%] Building C object apps/eval_cycle_03/CMakeFiles/eval_cycle_03.dir/fsw/src/eval_cycle_03_dispatch.c.o
+[ 64%] Building C object apps/eval_cycle_03/CMakeFiles/eval_cycle_03.dir/fsw/src/eval_cycle_03_components.c.o
+[ 64%] Building C object apps/eval_cycle_03/CMakeFiles/eval_cycle_03.dir/fsw/src/eval_cycle_03_user.c.o
+[ 64%] Linking C shared module eval_cycle_03.so
+[ 64%] Built target eval_cycle_03
+[ 64%] Building C object apps/eval_mag/CMakeFiles/eval_mag.dir/fsw/src/eval_mag.c.o
+[ 66%] Building C object apps/eval_mag/CMakeFiles/eval_mag.dir/fsw/src/eval_mag_cmds.c.o
+[ 66%] Building C object apps/eval_mag/CMakeFiles/eval_mag.dir/fsw/src/eval_mag_utils.c.o
+[ 66%] Building C object apps/eval_mag/CMakeFiles/eval_mag.dir/fsw/src/eval_mag_dispatch.c.o
+[ 67%] Linking C shared module eval_mag.so
+[ 67%] Built target eval_mag
+[ 67%] Building C object apps/eval_mpu/CMakeFiles/eval_mpu.dir/fsw/src/eval_mpu.c.o
+[ 67%] Building C object apps/eval_mpu/CMakeFiles/eval_mpu.dir/fsw/src/eval_mpu_cmds.c.o
+[ 67%] Building C object apps/eval_mpu/CMakeFiles/eval_mpu.dir/fsw/src/eval_mpu_utils.c.o
+[ 67%] Building C object apps/eval_mpu/CMakeFiles/eval_mpu.dir/fsw/src/eval_mpu_dispatch.c.o
+[ 67%] Linking C shared module eval_mpu.so
+[ 69%] Built target eval_mpu
+[ 69%] Building C object apps/eval_temp/CMakeFiles/eval_temp.dir/fsw/src/eval_temp.c.o
+[ 69%] Building C object apps/eval_temp/CMakeFiles/eval_temp.dir/fsw/src/eval_temp_cmds.c.o
+[ 69%] Building C object apps/eval_temp/CMakeFiles/eval_temp.dir/fsw/src/eval_temp_utils.c.o
+[ 70%] Building C object apps/eval_temp/CMakeFiles/eval_temp.dir/fsw/src/eval_temp_dispatch.c.o
+[ 70%] Linking C shared module eval_temp.so
+[ 70%] Built target eval_temp
+[ 71%] Built target ut_assert_pic
+[ 73%] Built target cfe_assert
+[ 80%] Built target cfe_testcase
+[ 80%] Building C object apps/sample_app/CMakeFiles/sample_app.dir/fsw/src/sample_app.c.o
+[ 81%] Building C object apps/sample_app/CMakeFiles/sample_app.dir/fsw/src/sample_app_cmds.c.o
+[ 81%] Building C object apps/sample_app/CMakeFiles/sample_app.dir/fsw/src/sample_app_utils.c.o
+[ 81%] Building C object apps/sample_app/CMakeFiles/sample_app.dir/fsw/src/sample_app_dispatch.c.o
+[ 81%] Linking C shared module sample_app.so
+[ 81%] Built target sample_app
+[ 81%] Building C object apps/sample_lib/CMakeFiles/sample_lib.dir/fsw/src/sample_lib.c.o
+[ 81%] Linking C shared module sample_lib.so
+[ 81%] Built target sample_lib
+[ 84%] Built target cf
+[ 87%] Built target hs
+[ 88%] Built target md
+[ 90%] Built target cs
+[ 92%] Built target fm
+[ 94%] Built target lc
+[ 95%] Built target sc
+[ 97%] Built target ds
+[ 97%] Built target hk
+[ 98%] Generating cfe_module_version_table.c
+[ 98%] Generating cfe_build_env_table.c
+[ 98%] Building C object cpu1/CMakeFiles/core-cpu1.dir/cfe_module_version_table.c.o
+[ 98%] Building C object cpu1/CMakeFiles/core-cpu1.dir/cfe_build_env_table.c.o
+[ 98%] Linking C executable core-cpu1
+[100%] Built target core-cpu1
+Install the project...
+-- Install configuration: "release"
+-- Installing: /mission/build-flight/exe/cpu1/cf/ci_lab.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/to_lab.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/sch_lab.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/linux_i2c_lib.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/hal_sensor.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/tmp105_lib.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/lsm303dlhc_mag_lib.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/mpu6050_lib.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/eval_cycle_03.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/eval_mag.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/eval_mpu.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/eval_temp.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/cfe_assert.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/cfe_testcase.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/sample_app.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/sample_lib.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/cf.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/hs.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/md.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/cs.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/fm.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/lc.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/sc.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/ds.so
+-- Installing: /mission/build-flight/exe/cpu1/cf/hk.so
+-- Installing: /mission/build-flight/exe/cpu1/core-cpu1
+[100%] Built target aarch64_linux_gnu_default_cpu1-install
+[  0%] Built target osal_generic-linux_impl
+[  1%] Built target osal_bsp
+[ 10%] Built target osal_posix_impl
+[ 17%] Built target osal
+[ 19%] Built target ut_assert
+[ 32%] Built target ut_osapi_stubs
+[ 32%] Generating ../src/cfe_platformcfg_tables.c
+[ 32%] Building C object config/CMakeFiles/config.dir/fsw/src/cfe_config_init.c.o
+[ 32%] Building C object config/CMakeFiles/config.dir/fsw/src/cfe_config_lookup.c.o
+[ 32%] Building C object config/CMakeFiles/config.dir/fsw/src/cfe_config_get.c.o
+[ 33%] Building C object config/CMakeFiles/config.dir/fsw/src/cfe_config_set.c.o
+[ 33%] Building C object config/CMakeFiles/config.dir/mission/build-flight/cache/src/cfe_configid_nametable.c.o
+[ 33%] Generating ../src/cfe_platformcfg_tables.c
+[ 33%] Building C object config/CMakeFiles/config.dir/__/src/cfe_platformcfg_tables.c.o
+[ 33%] Linking C static library libconfig.a
+[ 33%] Built target config
+[ 33%] Building C object es/CMakeFiles/es.dir/fsw/src/cfe_es_cds_mempool.c.o
+[ 33%] Building C object es/CMakeFiles/es.dir/fsw/src/cfe_es_mempool.c.o
+[ 33%] Building C object es/CMakeFiles/es.dir/fsw/src/cfe_es_task.c.o
+[ 33%] Building C object es/CMakeFiles/es.dir/fsw/src/cfe_es_dispatch.c.o
+[ 33%] Linking C static library libes.a
+[ 38%] Built target es
+[ 38%] Building C object evs/CMakeFiles/evs.dir/fsw/src/cfe_evs_task.c.o
+[ 38%] Linking C static library libevs.a
+[ 39%] Built target evs
+[ 41%] Built target fs
+[ 41%] Building C object sb/CMakeFiles/sb.dir/fsw/src/cfe_sb_init.c.o
+[ 42%] Building C object sb/CMakeFiles/sb.dir/fsw/src/cfe_sb_task.c.o
+[ 42%] Linking C static library libsb.a
+[ 42%] Built target sb
+[ 42%] Building C object tbl/CMakeFiles/tbl.dir/fsw/src/cfe_tbl_load.c.o
+[ 42%] Building C object tbl/CMakeFiles/tbl.dir/fsw/src/cfe_tbl_dump.c.o
+[ 42%] Building C object tbl/CMakeFiles/tbl.dir/fsw/src/cfe_tbl_task.c.o
+[ 42%] Building C object tbl/CMakeFiles/tbl.dir/fsw/src/cfe_tbl_task_cmds.c.o
+[ 42%] Linking C static library libtbl.a
+[ 47%] Built target tbl
+[ 48%] Building C object time/CMakeFiles/time.dir/fsw/src/cfe_time_task.c.o
+[ 48%] Linking C static library libtime.a
+[ 48%] Built target time
+[ 48%] Built target ram_notimpl
+[ 50%] Built target psp-pc-linux-impl
+[ 51%] Built target psp-pc-linux-shared
+[ 52%] Built target soft_timebase
+[ 52%] Built target timebase_posix_clock
+[ 52%] Built target eeprom_mmap_file
+[ 52%] Built target port_notimpl
+[ 54%] Built target iodriver
+[ 54%] Built target linux_sysmon
+[ 55%] Built target endian_api
+[ 57%] Built target psp-pc-linux
+[ 60%] Built target msg
+[ 60%] Built target sbr
+[ 61%] Built target resourceid
+[ 61%] Building C object apps/ci_lab/CMakeFiles/ci_lab.dir/fsw/src/ci_lab_app.c.o
+[ 61%] Building C object apps/ci_lab/CMakeFiles/ci_lab.dir/fsw/src/ci_lab_cmds.c.o
+[ 61%] Building C object apps/ci_lab/CMakeFiles/ci_lab.dir/fsw/src/ci_lab_dispatch.c.o
+[ 63%] Building C object apps/ci_lab/CMakeFiles/ci_lab.dir/fsw/src/ci_lab_passthru_decode.c.o
+[ 63%] Linking C shared module ci_lab.so
+[ 63%] Built target ci_lab
+[ 63%] Building C object apps/to_lab/CMakeFiles/to_lab.dir/fsw/src/to_lab_app.c.o
+[ 63%] Building C object apps/to_lab/CMakeFiles/to_lab.dir/fsw/src/to_lab_cmds.c.o
+[ 63%] Building C object apps/to_lab/CMakeFiles/to_lab.dir/fsw/src/to_lab_passthru_encode.c.o
+[ 63%] Linking C shared module to_lab.so
+[ 64%] Built target to_lab
+[ 64%] Building C object apps/sch_lab/CMakeFiles/sch_lab.dir/fsw/src/sch_lab_app.c.o
+[ 64%] Linking C shared module sch_lab.so
+[ 64%] Built target sch_lab
+[ 66%] Built target ut_assert_pic
+[ 67%] Built target cfe_assert
+[ 76%] Built target cfe_testcase
+[ 76%] Building C object apps/sample_app/CMakeFiles/sample_app.dir/fsw/src/sample_app.c.o
+[ 76%] Building C object apps/sample_app/CMakeFiles/sample_app.dir/fsw/src/sample_app_cmds.c.o
+[ 76%] Building C object apps/sample_app/CMakeFiles/sample_app.dir/fsw/src/sample_app_utils.c.o
+[ 76%] Building C object apps/sample_app/CMakeFiles/sample_app.dir/fsw/src/sample_app_dispatch.c.o
+[ 76%] Linking C shared module sample_app.so
+[ 76%] Built target sample_app
+[ 77%] Building C object apps/sample_lib/CMakeFiles/sample_lib.dir/fsw/src/sample_lib.c.o
+[ 77%] Linking C shared module sample_lib.so
+[ 77%] Built target sample_lib
+[ 80%] Built target cf
+[ 82%] Built target hs
+[ 85%] Built target md
+[ 88%] Built target cs
+[ 89%] Built target fm
+[ 91%] Built target lc
+[ 94%] Built target sc
+[ 95%] Built target ds
+[ 97%] Built target hk
+[ 98%] Generating cfe_module_version_table.c
+[ 98%] Generating cfe_build_env_table.c
+[ 98%] Building C object cpu2/CMakeFiles/core-cpu2.dir/cfe_module_version_table.c.o
+[ 98%] Building C object cpu2/CMakeFiles/core-cpu2.dir/cfe_build_env_table.c.o
+[ 98%] Linking C executable core-cpu2
+[100%] Built target core-cpu2
+Install the project...
+-- Install configuration: "release"
+-- Installing: /mission/build-flight/exe/cpu2/cf/ci_lab.so
+-- Installing: /mission/build-flight/exe/cpu2/cf/to_lab.so
+-- Installing: /mission/build-flight/exe/cpu2/cf/sch_lab.so
+-- Installing: /mission/build-flight/exe/cpu2/cf/cfe_assert.so
+-- Installing: /mission/build-flight/exe/cpu2/cf/cfe_testcase.so
+-- Installing: /mission/build-flight/exe/cpu2/cf/sample_app.so
+-- Installing: /mission/build-flight/exe/cpu2/cf/sample_lib.so
+-- Installing: /mission/build-flight/exe/cpu2/cf/cf.so
+-- Installing: /mission/build-flight/exe/cpu2/cf/hs.so
+-- Installing: /mission/build-flight/exe/cpu2/cf/md.so
+-- Installing: /mission/build-flight/exe/cpu2/cf/cs.so
+-- Installing: /mission/build-flight/exe/cpu2/cf/fm.so
+-- Installing: /mission/build-flight/exe/cpu2/cf/lc.so
+-- Installing: /mission/build-flight/exe/cpu2/cf/sc.so
+-- Installing: /mission/build-flight/exe/cpu2/cf/ds.so
+-- Installing: /mission/build-flight/exe/cpu2/cf/hk.so
+-- Installing: /mission/build-flight/exe/cpu2/core-cpu2
+[100%] Built target aarch64_linux_gnu_default_cpu2-install
+[  5%] Built target cfeconfig_platformdata_aarch64_linux_gnu_default_cpu1
+[ 10%] Built target cfeconfig_platformdata_aarch64_linux_gnu_default_cpu2
+[ 31%] Built target cfeconfig_platformdata_tool
+[ 42%] Built target cfe_ts_crc
+[ 68%] Built target cmd_send
+[ 89%] Built target tlm_recv
+[100%] Built target elf2cfetbl
+Install the project...
+-- Install configuration: "release"
+-- Installing: /mission/build-flight/exe/host/cfe_ts_crc
+-- Installing: /mission/build-flight/exe/host/cmd_send
+-- Installing: /mission/build-flight/exe/host/tlm_recv
+-- Up-to-date: /mission/build-flight/exe/.
+-- Up-to-date: /mission/build-flight/exe/./cpu2
+-- Up-to-date: /mission/build-flight/exe/./cpu2/cf
+-- Installing: /mission/build-flight/exe/./cpu2/cf/hs_emt.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/hs_amt.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/sc_rts002.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/sc_rts003.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/cs_eepromtbl.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/to_lab_sub_bad.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/ds_filter_tbl.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/hs_xct.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/lc_def_adt.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/sample_app_tbl.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/md_dw03.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/sc_ats1.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/to_lab_sub_alt.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/sc_append_test.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/to_lab_sub.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/hk_cpy_tbl.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/sc_rts001.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/cf_def_config.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/cs_tablestbl.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/md_dw02.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/cs_apptbl.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/cs_memorytbl.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/sch_lab_table.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/ds_file_tbl.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/lc_def_adt-test.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/hs_mat.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/sc_ats2_test.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/lc_def_wdt.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/sc_rts004.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/md_dw04.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/fm_monitor.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/cfe_test_tbl.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/sample_app_alt1.tbl
+-- Installing: /mission/build-flight/exe/./cpu2/cf/md_dw01.tbl
+-- Up-to-date: /mission/build-flight/exe/./cpu1
+-- Up-to-date: /mission/build-flight/exe/./cpu1/cf
+-- Installing: /mission/build-flight/exe/./cpu1/cf/hs_emt.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/hs_amt.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/sc_rts002.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/sc_rts003.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/cs_eepromtbl.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/to_lab_sub_bad.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/ds_filter_tbl.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/hs_xct.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/lc_def_adt.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/eval_temp_tbl.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/sample_app_tbl.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/md_dw03.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/sc_ats1.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/to_lab_sub_alt.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/sc_append_test.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/to_lab_sub.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/hk_cpy_tbl.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/sc_rts001.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/cf_def_config.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/cs_tablestbl.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/md_dw02.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/cs_apptbl.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/cs_memorytbl.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/sch_lab_table.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/eval_mag_tbl.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/ds_file_tbl.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/lc_def_adt-test.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/hs_mat.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/sc_ats2_test.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/lc_def_wdt.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/sc_rts004.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/eval_mpu_tbl.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/md_dw04.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/fm_monitor.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/cfe_test_tbl.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/sample_app_alt1.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/md_dw01.tbl
+-- Installing: /mission/build-flight/exe/./cpu1/cf/eval_cycle_03_tbl.tbl
+-- Installing: /mission/build-flight/exe/host/elf2cfetbl
+Built target mission-install
+{"changed": ["project/generated/build-flight.json"]}
+Build ready: mission/build-flight/exe/cpu1
+Preparing the communication catalog for this build...

@@ -58,6 +58,36 @@ Each `run` includes the product's transfer and deployment. The report provides `
 
 The ten incremental cycles require a prior Native build. After the tenth deletion, a restoration build of the baseline mission is marked separately and excluded from the ten measurements. If a run exceeds feasible resources or time, record the failure and explicitly revise the protocol before repeating; do not silently reduce N.
 
+## Incremental builds for the shared QEMU/physical profile
+
+The platform has three execution targets: Native, QEMU and the physical board. QEMU and the board use the same cross-compiled artifacts. ARM64 names their architecture, not an additional execution target. App creation and deletion operate on shared sources on the host; they do not execute on a guest or board.
+
+The [compilation procedure](compilation.py) measures ten incremental cycles for the shared QEMU/physical build profile. It requires a newly prepared independent mission, with no existing ARM build, and a committed measurement procedure. It records a baseline build before the cycles and a restoration build afterward, outside the ten incremental measurements. Every cycle creates an app, builds with `--target qemu`, and deletes the app. The procedure records before/after source manifests, preserves all observed durations, and retains raw logs, per-cycle times, and exact procedure/platform revisions. After the baseline build and before any timed cycle, it copies the mission definitions and any module-selection file to `<measurements>/baseline-reference/`. Keep these bytes for the separate source audit; this copy is outside the measured operations. Builds use one worker; it does not boot QEMU or contact a physical board.
+
+For the published mission revision, run from a checkout containing the compilation procedure:
+
+```sh
+git worktree add --detach /tmp/flight-platform-frozen 64add2472dbf6869563612cf6b2c427b181dba5d
+python3 -B -m validation prepare --source /tmp/flight-platform-frozen --directory /tmp/flight-q5-fresh
+python3 -B -m validation.compilation --workspace /tmp/flight-q5-fresh/flight --output /tmp/flight-q5-measurements --repetitions 10
+```
+
+Each directory must be new. `prepare --source-copy /path/to/clean/cFS` can use an independent copy of a verified local NASA checkout and records that source method.
+
+The collection ends with a strict byte-identity check of the restored sources. Its result is separate from the success and timings of the 32 CLI operations. Creating and deleting modules can leave generated module-selection guards in the mission definitions. If all 32 commands succeeded and only this final byte check failed, retain the original `metrics.json` unchanged and run the committed [source audit and analysis](compilation_summary.py):
+
+```sh
+python3 -B -m validation.compilation_summary \
+  --workspace /tmp/flight-q5-fresh/flight \
+  --measurements /tmp/flight-q5-measurements \
+  --reference /tmp/flight-q5-measurements/baseline-reference \
+  --output /tmp/flight-q5-analysis
+```
+
+The analysis rejects missing, failed, reordered, or inconsistent command records. It verifies the recorded baseline hashes, unchanged app/configuration/startup definitions, empty module overrides, absence of cycle apps, and equality of the four preprocessed tables for both configured CPUs. Only the expected persistent integration scaffolding is accepted. A final analysis summary keeps `byte_identical=false`, the original collection status and hash, and separate measurement/analysis revisions. It exports the statistics from all ten successful cycles, preserving slow observations and excluding prerequisite/restoration builds. Other failures require investigation and do not become final results through this analysis.
+
+The [shared-profile compilation results](results/q5-compilation/README.md) complement the [mission evaluation](results/final/README.md). Host source operations, build destinations, and runtime targets are reported separately; the shared build is counted once.
+
 ## Evidence and publication
 
 Preserve `prepare.json`, `nasa-before.json`, `sources.json`, `commands.json`, build/start logs, `catalog.json`, `downlink.jsonl`, sensor/register records, `artifacts.json`, and `metrics.json`. Packets contain original bytes, MID, CCSDS sequence, reception time, decoded fields, and errors. Private connections are not serialized; review logs before publication without changing measured values, bytes, or durations.

@@ -1,0 +1,41 @@
+{
+  "status": "passed",
+  "schema": 1,
+  "created_utc": "2026-11-23T12:21:20.469491+00:00",
+  "platform_commit": "64add2472dbf6869563612cf6b2c427b181dba5d",
+  "source_method": "independent copy of official local checkout",
+  "host": {
+    "platform": "Linux-6.8.0-149-generic-x86_64-with-glibc2.39",
+    "machine": "x86_64",
+    "python": "3.12.3",
+    "cpu_count_available": 8,
+    "build_jobs": 1
+  },
+  "protocol": "final-technical-v1",
+  "nasa_commit": "a4d305dc06fb7d468f5b45214d9f730b97d4bd77",
+  "nasa_tracked_files": 4458,
+  "workspace": "/tmp/flight-q5-compilation-20261123/flight",
+  "sensors": [
+    {
+      "model": "tmp105",
+      "device": "eval_temp",
+      "app": "eval_temp",
+      "address": 72
+    },
+    {
+      "model": "lsm303dlhc_mag",
+      "device": "eval_mag",
+      "app": "eval_mag",
+      "address": 30
+    },
+    {
+      "model": "mpu6050",
+      "device": "eval_mpu",
+      "app": "eval_mpu",
+      "address": 104
+    }
+  ],
+  "nasa_originals_unchanged": true,
+  "prepared_utc": "2026-11-23T12:21:27.934604+00:00",
+  "commands": 13
+}

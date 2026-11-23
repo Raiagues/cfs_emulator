@@ -1,0 +1,15 @@
+{
+  "observed_utc": "2026-11-23T12:23:37.755410+00:00",
+  "scope": "Supplemental shared cross-build; independent fresh mission; no QEMU or SSH operations",
+  "measured_operations_sequential": true,
+  "build_jobs": 1,
+  "source_copy": "Clean official checkout independently copied during prepare",
+  "baseline_build": "cycles/001-prepare-baseline.stdout.log; outside the ten incremental cycles",
+  "builder": {
+    "Id": "sha256:bc5bd07e8f280215923ebe00de4a854b2c3665b5d764b3cfa547fe984b4c3109",
+    "Architecture": "amd64",
+    "Os": "linux",
+    "Created": "2026-11-22T23:12:20.937947193-03:00"
+  },
+  "comparison": "The builder image ID matches the prepared image recorded for the final technical campaign."
+}

@@ -35,6 +35,8 @@ class CompilationSupplementTest(unittest.TestCase):
         root = base/'flight'; root.mkdir()
         (root/'.evaluation.json').write_text(json.dumps({'platform_commit':'a'*40, 'nasa_commit':'b'*40}))
         (root/'start').write_text(PROGRAM); (root/'start').chmod(0o755)
+        sample = root/'mission/sample_defs/tables/example.c'
+        sample.parent.mkdir(parents=True); sample.write_text('const int example = 7;\n')
         return root
 
     def test_real_cli_records_only_incremental_cycles_and_restores_sources(self):
@@ -45,6 +47,9 @@ class CompilationSupplementTest(unittest.TestCase):
             self.assertEqual(result['status'], 'final')
             self.assertEqual(result['build_destinations'], ['qemu', 'physical'])
             self.assertEqual(result['source_differences_after_restoration'], [])
+            reference = output/'baseline-reference/mission/sample_defs/tables/example.c'
+            self.assertEqual(reference.read_bytes(), (root/'mission/sample_defs/tables/example.c').read_bytes())
+            self.assertEqual(result['baseline_reference'], 'baseline-reference')
             commands = json.loads((output/'commands.json').read_text())['commands']
             self.assertEqual(len(commands), 8)
             invocations = [json.loads(line) for line in (root/'invocations.jsonl').read_text().splitlines()]

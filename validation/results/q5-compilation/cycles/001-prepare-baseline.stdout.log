@@ -1,0 +1,1 @@
+{"fingerprint": "abac831b8ddd66c9ad4fe15fcdc51c7b19b69467429c22bcd2eead1c6de3034d", "built_at": 1795436659.2094085, "sensorless": false, "target": "qemu", "build_dir": "mission/build-flight", "installed_sha256": "ea0c95620aecd68d889005a662531207d0169a47c3d6436b70512066206ad3b8"}

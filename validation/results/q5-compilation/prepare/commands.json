@@ -1,0 +1,273 @@
+{
+  "started_utc": "2026-11-23T12:21:20.470879+00:00",
+  "commands": [
+    {
+      "name": "source-install",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "source",
+        "install",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:21:21.003133+00:00",
+      "stdout": "001-source-install.stdout.log",
+      "stderr": "001-source-install.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 0.41506490399478935,
+      "ended_utc": "2026-11-23T12:21:21.418228+00:00"
+    },
+    {
+      "name": "profile",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "profile",
+        "--board",
+        "raspi4b",
+        "--os",
+        "raspios",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:21:21.592949+00:00",
+      "stdout": "002-profile.stdout.log",
+      "stderr": "002-profile.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 0.565654006000841,
+      "ended_utc": "2026-11-23T12:21:22.158627+00:00"
+    },
+    {
+      "name": "add-bus",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "project",
+        "add-bus",
+        "i2c-bus.1"
+      ],
+      "started_utc": "2026-11-23T12:21:22.158997+00:00",
+      "stdout": "003-add-bus.stdout.log",
+      "stderr": "003-add-bus.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 0.114490576001117,
+      "ended_utc": "2026-11-23T12:21:22.273505+00:00"
+    },
+    {
+      "name": "device-eval_temp",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "project",
+        "add-device",
+        "tmp105",
+        "--id",
+        "eval_temp",
+        "--model",
+        "tmp105",
+        "--bus",
+        "i2c-bus.1",
+        "--address",
+        "0x48",
+        "--value",
+        "temperature=21537"
+      ],
+      "started_utc": "2026-11-23T12:21:22.273877+00:00",
+      "stdout": "004-device-eval_temp.stdout.log",
+      "stderr": "004-device-eval_temp.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 0.1143008130020462,
+      "ended_utc": "2026-11-23T12:21:22.388197+00:00"
+    },
+    {
+      "name": "app-eval_temp",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_temp",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:21:22.388749+00:00",
+      "stdout": "005-app-eval_temp.stdout.log",
+      "stderr": "005-app-eval_temp.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 0.9168138259992702,
+      "ended_utc": "2026-11-23T12:21:23.305587+00:00"
+    },
+    {
+      "name": "reader-eval_temp",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "project",
+        "link-hal",
+        "eval_temp",
+        "sample",
+        "--device",
+        "eval_temp"
+      ],
+      "started_utc": "2026-11-23T12:21:23.306180+00:00",
+      "stdout": "006-reader-eval_temp.stdout.log",
+      "stderr": "006-reader-eval_temp.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 0.36535796700627543,
+      "ended_utc": "2026-11-23T12:21:23.671567+00:00"
+    },
+    {
+      "name": "device-eval_mag",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "project",
+        "add-device",
+        "lsm303dlhc_mag",
+        "--id",
+        "eval_mag",
+        "--model",
+        "lsm303dlhc_mag",
+        "--bus",
+        "i2c-bus.1",
+        "--address",
+        "0x1e",
+        "--value",
+        "mag-x=18123",
+        "--value",
+        "mag-y=-12457",
+        "--value",
+        "mag-z=38912"
+      ],
+      "started_utc": "2026-11-23T12:21:23.672042+00:00",
+      "stdout": "007-device-eval_mag.stdout.log",
+      "stderr": "007-device-eval_mag.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 0.16495482000755146,
+      "ended_utc": "2026-11-23T12:21:23.837020+00:00"
+    },
+    {
+      "name": "app-eval_mag",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_mag",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:21:23.837956+00:00",
+      "stdout": "008-app-eval_mag.stdout.log",
+      "stderr": "008-app-eval_mag.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1.0674958329909714,
+      "ended_utc": "2026-11-23T12:21:24.905498+00:00"
+    },
+    {
+      "name": "reader-eval_mag",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "project",
+        "link-hal",
+        "eval_mag",
+        "sample",
+        "--device",
+        "eval_mag"
+      ],
+      "started_utc": "2026-11-23T12:21:24.906519+00:00",
+      "stdout": "009-reader-eval_mag.stdout.log",
+      "stderr": "009-reader-eval_mag.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 0.416099750000285,
+      "ended_utc": "2026-11-23T12:21:25.322662+00:00"
+    },
+    {
+      "name": "device-eval_mpu",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "project",
+        "add-device",
+        "mpu6050",
+        "--id",
+        "eval_mpu",
+        "--model",
+        "mpu6050",
+        "--bus",
+        "i2c-bus.1",
+        "--address",
+        "0x68",
+        "--value",
+        "accel-x=13",
+        "--value",
+        "accel-y=-21",
+        "--value",
+        "accel-z=998",
+        "--value",
+        "temperature=24137",
+        "--value",
+        "gyro-x=317",
+        "--value",
+        "gyro-y=-541",
+        "--value",
+        "gyro-z=129"
+      ],
+      "started_utc": "2026-11-23T12:21:25.323056+00:00",
+      "stdout": "010-device-eval_mpu.stdout.log",
+      "stderr": "010-device-eval_mpu.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 0.16480326499731746,
+      "ended_utc": "2026-11-23T12:21:25.487876+00:00"
+    },
+    {
+      "name": "app-eval_mpu",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_mpu",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T12:21:25.488914+00:00",
+      "stdout": "011-app-eval_mpu.stdout.log",
+      "stderr": "011-app-eval_mpu.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1.1687881730031222,
+      "ended_utc": "2026-11-23T12:21:26.657748+00:00"
+    },
+    {
+      "name": "reader-eval_mpu",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "project",
+        "link-hal",
+        "eval_mpu",
+        "sample",
+        "--device",
+        "eval_mpu"
+      ],
+      "started_utc": "2026-11-23T12:21:26.658771+00:00",
+      "stdout": "012-reader-eval_mpu.stdout.log",
+      "stderr": "012-reader-eval_mpu.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 0.4663124200014863,
+      "ended_utc": "2026-11-23T12:21:27.125125+00:00"
+    },
+    {
+      "name": "sync",
+      "argv": [
+        "/tmp/flight-q5-compilation-20261123/flight/start",
+        "--no-ui",
+        "project",
+        "sync"
+      ],
+      "started_utc": "2026-11-23T12:21:27.125685+00:00",
+      "stdout": "013-sync.stdout.log",
+      "stderr": "013-sync.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 0.41559045200119726,
+      "ended_utc": "2026-11-23T12:21:27.541299+00:00"
+    }
+  ]
+}
