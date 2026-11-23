@@ -6,7 +6,9 @@ const settingsFields = [['priority','Priority'],['stack_size','Stack · bytes'],
 const tick = '<svg class="fs-tick fs-draw" viewBox="0 0 16 16" aria-label="Written"><path pathLength="1" d="m3 8 3 3 7-7"/></svg>';
 
 function selectedFiles(files, name) {
-  const root = 'mission/apps/'+name+'/';
+  const root = ['cFS/apps/', 'mission/apps/'].map(base=>base+name+'/')
+    .find(path=>Object.hasOwn(files,path+'CMakeLists.txt'));
+  if(!root)return [];
   return [
     ['CMakeLists.txt','Build this app'],
     ['fsw/src/'+name+'.c','Main flight loop'],
@@ -15,7 +17,7 @@ function selectedFiles(files, name) {
   ].filter(([path])=>Object.hasOwn(files,root+path)).map(([path,purpose])=>({path:root+path,purpose}));
 }
 
-export function openAppWizard({initialName='',workspace,api,esc,sourcePath,refresh,onClose,requireSaved}) {
+export function openAppWizard({initialName='',workspace,api,esc,sourcePath,refresh,onCreated,onClose,requireSaved}) {
   if(document.querySelector('.app-wizard[open]'))return;
   requireSaved();
   const modal=document.createElement('dialog');
@@ -79,7 +81,12 @@ export function openAppWizard({initialName='',workspace,api,esc,sourcePath,refre
         written=new Set(result.changed);render();
         const animations=modal.querySelector('.wizard-files').getAnimations({subtree:true});
         await Promise.all([refresh(result.changed,result.deleted),...animations.map(animation=>animation.finished)]);
-        modal.close();return;
+        if(modal.open){
+          const closed=new Promise(resolve=>modal.addEventListener('close',resolve,{once:true}));
+          modal.close();await closed;
+          await onCreated?.(name);
+        }
+        return;
       }
     }catch(e){error=e.message;}
     finally{busy=false;if(modal.open)render();}

@@ -25,7 +25,7 @@ function excerpt(source, editable) {
   }).join('');
 }
 
-export function mountCommandLesson(root, { state, startJob }) {
+export function mountCommandLesson(root, { state, startJob, sourceOpened=()=>{}, openEditor }) {
   let lesson, fileView = null, busy = false, disposed = false, error = '', draft = '', lastScene;
   const target = state.target;
   let proof = null, proofRequest = null;
@@ -65,7 +65,7 @@ export function mountCommandLesson(root, { state, startJob }) {
       guide(root.querySelector('a'));
       return;
     }
-    const { stage, steps, app } = lesson, selected = view(), source = fileView || lesson;
+    const { stage, steps } = lesson, selected = view(), source = fileView || lesson;
     const { path } = source, name = path.split('/').at(-1), directory = path.slice(0, -name.length);
     const running = state.hardware?.execution?.running_targets?.includes(target), active = job();
     const action = fileView ? 'return' : selected < stage ? 'view-next' :
@@ -82,12 +82,9 @@ export function mountCommandLesson(root, { state, startJob }) {
         disabled: busy || i > stage, title: i > stage ? 'Complete ' + steps[stage] + ' first' : label})),
       selected, attribute:'data-command-view', next,
     });
-    const files = lesson.files.map(f => `<li><button type="button" data-command-file="${esc(f)}" ${f === path ? 'aria-current="page"' : ''} ${busy ? 'disabled' : ''} title="${esc(f)}">${icon('file')}<span>${esc(f.split('/').at(-1))}</span></button></li>`).join('');
     const editable = !fileView && selected === stage && stage === 5, scene = path + ':' + selected + ':' + !!fileView;
-    paint(root, `<section class="command-lesson"><aside class="command-tree"><h2>Files</h2>
-      <div class="source-folder">${icon('folder')}<span>${esc(app)}</span></div><ul>${files}</ul></aside>
-      <main class="command-editor">${progress}${error ? `<p class="activity-error" role="alert">${esc(error)}</p>` : ''}
-      <section class="command-source"><header>${icon('file')}<strong>${esc(name)}</strong><small>${esc(directory)}</small></header>
+    paint(root, `<section class="command-lesson"><main class="command-editor">${progress}${error ? `<p class="activity-error" role="alert">${esc(error)}</p>` : ''}
+      <section class="command-source"><header>${icon('file')}<strong>${esc(name)}</strong><small>${esc(directory)}</small>${openEditor ? '<button type="button" data-command-edit '+(busy?'disabled':'')+'>Open editor</button>' : ''}</header>
       <div class="command-lines" data-scene="${esc(scene)}">${excerpt(source, editable)}</div></section></main></section>`);
     const editor = root.querySelector('[data-handler-line]');
     if (editor && editor.value !== draft) editor.value = draft;
@@ -106,6 +103,7 @@ export function mountCommandLesson(root, { state, startJob }) {
     if (disposed) return;
     lesson = result;
     fileView = null;
+    sourceOpened(lesson.path);
     draw();
     await refreshProof();
   }
@@ -116,18 +114,19 @@ export function mountCommandLesson(root, { state, startJob }) {
     finally {busy = false; draw();}
   }
   async function openFile(path) {
-    if (busy || !lesson.files.includes(path)) return;
-    if (path === lesson.path) {fileView = null; draw(); return;}
+    if (busy || !lesson || disposed) return;
+    if (path === lesson.path) {fileView = null; sourceOpened(path); draw(); return;}
     busy = true; error = ''; draw();
     try {
       const file = await api('file?' + new URLSearchParams({path}));
-      if (!disposed) fileView = {...file, path, ranges:[]};
+      if(file.binary)throw Error(file.reason || 'Binary file · open externally');
+      if (!disposed) {fileView = {...file, path, ranges:[]};sourceOpened(path);}
     } catch (e) {error = e.message;}
     finally {busy = false; draw();}
   }
   async function act(action) {
     if (busy || job()) return;
-    if (action === 'return') {fileView = null; draw(); return;}
+    if (action === 'return') {fileView = null; sourceOpened(lesson.path); draw(); return;}
     if (action === 'view-next') {await navigate(view() + 1); return;}
     if (fileView || view() !== lesson.stage) return;
     busy = true; error = ''; draw();
@@ -137,6 +136,7 @@ export function mountCommandLesson(root, { state, startJob }) {
           action:'command-step', expected_hash:lesson.expected_hash,
           payload:{app:lesson.app, target, stage:lesson.stage, source_hash:lesson.source_hash},
         });
+        if(!disposed)sourceOpened(lesson.path);
       } else if (action === 'accept') {
         const content = lesson.content.replace(lesson.stub, () => draft || lesson.ghost);
         await api('file', {command_lesson:true, path:lesson.path, app:lesson.app, target, content, expected_hash:lesson.file_hash});
@@ -150,7 +150,8 @@ export function mountCommandLesson(root, { state, startJob }) {
   const click = event => {
     const button = event.target.closest('button');
     if (!button || button.disabled) return;
-    if (button.hasAttribute('data-command-view')) navigate(Number(button.dataset.commandView));
+    if (button.hasAttribute('data-command-edit')) openEditor?.((fileView || lesson).path);
+    else if (button.hasAttribute('data-command-view')) navigate(Number(button.dataset.commandView));
     else if (button.hasAttribute('data-command-file')) openFile(button.dataset.commandFile);
     else if (button.dataset.commandAction) act(button.dataset.commandAction);
   };
@@ -169,7 +170,7 @@ export function mountCommandLesson(root, { state, startJob }) {
   root.addEventListener('input', input);
   root.addEventListener('keydown', key);
   read().catch(e => {error = e.message; draw();});
-  return {update:draw, close() {
+  return {update:draw, openFile, close() {
     disposed = true;
     resize.disconnect();
     stopProofUpdates();

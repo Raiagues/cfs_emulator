@@ -602,7 +602,9 @@ function guidedView() {
   pane.className = 'activity-view';
   $('#view').replaceChildren(pane);
   const controller = mount(pane, {state,startJob,guided:step==='event',advanceDeployment,saveSimulation,openApp:done=>newMissionApp('',done),
-    refreshMission:()=>Promise.all([refresh(true),hardwareRefresh(true)])});
+    refreshMission:()=>Promise.all([refresh(true),hardwareRefresh(true)]),
+    sourceOpened:path=>{state.path=path;markFiles();guarded(revealFile)(path);},
+    openEditor:path=>guarded(selectView)('code',path)});
   activity = {step, target:state.target, ...controller};
  } else activity.update?.();
  $('#visual-heading').hidden=true;
@@ -716,6 +718,13 @@ async function chooseSourceCommand(command) {
 function newMissionApp(name='',onClose){
  return openAppWizard({initialName:name,workspace:state.workspace,api,esc,sourcePath:editorPath,requireSaved:requireSavedMission,refresh:async(changed,deleted)=>{
   await reloadMissionFiles(changed,deleted);await refreshJourney();
+ },onCreated:async createdName=>{
+  const created=state.workspace.apps.find(app=>app.name===createdName && app.managed);
+  if(created?.entry){
+   state.commandTask=null;state.sourceCommand=null;state.sourceStep=null;invalidateSourceActivity();
+   await selectView('code',created.entry);
+  }
+  feedback(createdName+' created · Build cFS to compile it');
  },onClose});
 }
 function newCodeCommand(preferred) {
@@ -1023,7 +1032,7 @@ async function selectView(view,sourceFile,sourceLine,inspection=null,route=view)
  if(state.activity)document.body.dataset.activity=route;else delete document.body.dataset.activity;
  document.body.classList.toggle('code-only',codeOnly && !state.activity);state.view=next;state.inspected=null;
  document.body.classList.toggle('no-editor',!codeOnly || !!state.activity);
- document.body.classList.toggle('no-tree',!codeOnly || !!state.activity);
+ document.body.classList.toggle('no-tree',!codeOnly || !!state.activity && state.activity!=='command');
  if(next==='simulation' && state.signalSidebar==null)state.signalSidebar=window.innerWidth>760;
  recordRoute(route,codeOnly && sourceFile ? {file:sourceFile,line:sourceLine,inspection} : {});
  if(!state.activity && next==='ground' && !state.commandLaunch && state.catalogTarget!==state.target)state.catalogLoading=true;
@@ -1033,7 +1042,10 @@ async function selectView(view,sourceFile,sourceLine,inspection=null,route=view)
   terminal.selectContext('simulation',{reveal:false});
   if(previous!==next)terminal.show(false);
  }else terminal.selectContext('flight',{reveal:false});
- if(state.activity)return true;
+ if(state.activity){
+  if(state.activity==='command')await renderTree();
+  return request===viewRequest;
+ }
  if(codeOnly){
   const first=state.workspace.apps.find(app=>app.managed)||state.workspace.apps.find(app=>app.name==='sample_app');
   const path=sourceFile || lastFiles.get('flight') || first?.entry || state.workspace.mission.source.path;
@@ -1277,7 +1289,11 @@ document.addEventListener('click',guarded(async e=>{
  }
  else if('chooseBoard' in d){boardSelector.open();}
  else if(d.modelDefinition){await selectView('code',d.modelDefinition);}
- else if(d.file){state.inspected=null;$('#dialog').close();await openFile(d.file,Number(d.line)||undefined);}
+ else if(d.file){
+  state.inspected=null;$('#dialog').close();
+  if(state.activity==='command' && activity?.openFile)await activity.openFile(d.file);
+  else await openFile(d.file,Number(d.line)||undefined);
+ }
  else if(d.view){state.commandLaunch=null;if(d.view==='code')state.commandTask=null;if($('#dialog').open)$('#dialog').close();if(!await selectView(d.view))return;if(d.device)state.selectedDevice=d.device;if(d.inspect){state.inspected=d.inspect;renderView();}}
  else if(d.closeFile){await saveFile(d.closeFile);state.files.delete(d.closeFile);if(state.path===d.closeFile){const next=[...state.files.keys()].at(-1);state.path=null;if(next)await openFile(next);else{$('#code').value='';$('#code').disabled=true;lineNumbers();}}renderTabs();}
  else if(d.archApp||d.archLibrary||d.archTab){

@@ -1,14 +1,14 @@
 @scope (:root[data-page="studio"]) {
 /* Code workspace: geometry from codigo_design; content comes from the source tree. */
-.code-only .explorer{background:var(--c14181d);border-right:1px solid var(--c22272e)}
-.code-only .explorer-heading{height:44px;min-height:44px;padding:0 14px;border-bottom:1px solid var(--c1f242a)}
-.code-only .explorer-heading>span{font:10px var(--fs-mono);letter-spacing:.12em}
-.code-only .file-tree{padding:10px 6px 18px;}
-.code-only .file-tree .tree-group>summary,.code-only .file-tree .file-row{min-height:26px;height:26px;margin:1px 0;padding:0 8px;gap:8px;font:11.5px var(--fs-mono);border-radius:4px}
-.code-only .file-tree .tree-group .tree-group{margin-left:0}
-.code-only .file-tree .tree-group>div{padding-left:14px}
-.code-only .file-tree .file-row{color:var(--ca4acb6)}
-.code-only .file-tree .file-row.selected{background:var(--c232930);color:var(--ceef0f2)}
+:is(.code-only,[data-activity="command"]) .explorer{background:var(--c14181d);border-right:1px solid var(--c22272e)}
+:is(.code-only,[data-activity="command"]) .explorer-heading{height:44px;min-height:44px;padding:0 14px;border-bottom:1px solid var(--c1f242a)}
+:is(.code-only,[data-activity="command"]) .explorer-heading>span{font:10px var(--fs-mono);letter-spacing:.12em}
+:is(.code-only,[data-activity="command"]) .file-tree{padding:10px 6px 18px;}
+:is(.code-only,[data-activity="command"]) .file-tree .tree-group>summary,:is(.code-only,[data-activity="command"]) .file-tree .file-row{min-height:26px;height:26px;margin:1px 0;padding:0 8px;gap:8px;font:11.5px var(--fs-mono);border-radius:4px}
+:is(.code-only,[data-activity="command"]) .file-tree .tree-group .tree-group{margin-left:0}
+:is(.code-only,[data-activity="command"]) .file-tree .tree-group>div{padding-left:14px}
+:is(.code-only,[data-activity="command"]) .file-tree .file-row{color:var(--ca4acb6)}
+:is(.code-only,[data-activity="command"]) .file-tree .file-row.selected{background:var(--c232930);color:var(--ceef0f2)}
 .file-reviewed{margin-left:auto;display:grid;place-items:center;flex:none;color:var(--fs-success)}.file-reviewed svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.5}
 .studio .editor-workspace{background:var(--fs-bg);min-width:0}
 .source-card{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;margin:8px 20px 20px;border:1px solid var(--c22272e);border-radius:6px;overflow:hidden;background:var(--fs-bg)}
@@ -59,17 +59,9 @@
 .code-only .file-type.header{color:var(--fs-code)}
 .code-only .file-type svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.6}
 .code-only:has(.command-trail:not([hidden])) .source-card #source-line{border-color:var(--fs-accent);background:color-mix(in srgb,var(--fs-accent) 8%,transparent)}
-/* The activity uses the same source card; no explanation sidebar or title strip. */
-.command-lesson{grid-template-columns:250px minmax(0,1fr);gap:0;padding:0}
-.command-tree{background:var(--c14181d);border-right:1px solid var(--c22272e);overflow:auto;padding:0 6px 18px}
-.command-tree h2{height:44px;display:flex;align-items:center;margin:0 8px 10px;font:10px var(--fs-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--c8e96a1);border-bottom:1px solid var(--c1f242a)}
-.command-tree button{display:flex;align-items:center;gap:8px;min-width:0;width:100%;height:26px;padding:0 8px;border:0;border-radius:4px;text-align:left;font:11.5px var(--fs-mono);background:transparent;color:var(--ca4acb6)}
-.command-tree button[aria-current=page]{background:var(--c232930);color:var(--ceef0f2)}
-.command-tree button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.command-tree button svg{width:12px;height:12px;flex:none;color:var(--ca9cdf5)}
-.command-tree button small{margin-left:auto;color:var(--fs-success)}
-.command-tree .source-folder{display:flex;align-items:center;height:26px;font:11.5px var(--fs-mono);color:var(--c8e96a1);gap:8px}
-.command-tree .source-folder svg{width:12px;height:12px}
+/* Command lessons keep the shared cFS explorer beside their source card. */
+body[data-activity="command"].no-tree #show-explorer{display:flex}
+.command-lesson{grid-template-columns:minmax(0,1fr);gap:0;padding:0}
 .command-editor{gap:0;overflow:hidden}
 .command-source{flex:1;min-height:0;padding:0;margin:8px 20px 20px;border:1px solid var(--c22272e);border-radius:6px;overflow:hidden;background:var(--fs-bg);gap:0}
 .command-source>header{height:32px;min-height:32px;padding:0 12px;display:flex;align-items:center;gap:8px;background:var(--c161a20);border-bottom:1px solid var(--c1f242a);font:11.5px var(--fs-mono);color:var(--ceef0f2)}
@@ -79,9 +71,10 @@
 .command-line small{font:11.5px/21.875px var(--fs-mono);text-align:right;padding-right:16px;color:var(--c6b7380)}
 .command-line code{font:inherit}
 .command-line[data-change=true]{background:color-mix(in srgb,var(--fs-success) 7%,transparent);box-shadow:inset 3px 0 var(--fs-success)}
+.command-source>header>button{margin-left:auto;flex:none;font-size:11px}
 .command-editor>.activity-error{margin:0 20px;color:var(--fs-danger)}
 .command-line input{padding:0 4px;margin:0;border:0;border-bottom:1px solid var(--fs-accent);background:var(--c1a1f25);color:var(--cf3dcb8);font:inherit;width:55ch}
-@media(max-width:1100px){.activity-progress{gap:8px;padding-inline:12px}.activity-progress nav>button,.command-trail .activity-progress nav>button{flex-basis:58px}.command-lesson{grid-template-columns:210px minmax(0,1fr)}}
-@media(max-width:760px){.source-card,.command-source{margin:8px 10px 12px}.editor-workspace>.tabbar{padding-inline:10px}.activity-progress{flex-wrap:wrap;padding:10px}.activity-progress>nav{flex-basis:100%}.activity-actions{margin-left:auto}.command-lesson{grid-template-columns:minmax(0,1fr)}.command-tree{display:none}.source-location>span>span{display:none}.source-card .source-location>span{flex:1}.source-card .source-location strong{overflow:hidden;text-overflow:ellipsis}.source-card .line-numbers{width:42px;min-width:42px;padding-right:10px}}
+@media(max-width:1100px){.activity-progress{gap:8px;padding-inline:12px}.activity-progress nav>button,.command-trail .activity-progress nav>button{flex-basis:58px}}
+@media(max-width:760px){.source-card,.command-source{margin:8px 10px 12px}.editor-workspace>.tabbar{padding-inline:10px}.activity-progress{flex-wrap:wrap;padding:10px}.activity-progress>nav{flex-basis:100%}.activity-actions{margin-left:auto}.command-lesson{grid-template-columns:minmax(0,1fr)}.source-location>span>span{display:none}.source-card .source-location>span{flex:1}.source-card .source-location strong{overflow:hidden;text-overflow:ellipsis}.source-card .line-numbers{width:42px;min-width:42px;padding-right:10px}}
 
 }
