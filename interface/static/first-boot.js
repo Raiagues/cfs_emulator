@@ -2,7 +2,7 @@ import {updateNode} from './dom.js';
 import {guide} from './coach.js';
 import {onUpdate} from './updates.js';
 import {targetDrawing} from './target-drawing.js';
-import {navigate, stepUrl} from './router.js';
+import {stepUrl} from './router.js';
 import {icon} from './ui.js';
 
 const escape = value => String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -247,8 +247,7 @@ export function mountFirstBoot(container,{api,target}) {
     if(starting)return;
     starting=true;err='';++pollVersion;pausedAt=null;pausedIndex=null;replayStart=null;pick='';pickKey='';draw();
     try{
-      const job=await api('job',{action:'first-boot',options:{target}});
-      sessionStorage.setItem('flight.boot.'+target,job.id);
+      await api('job',{action:'first-boot',options:{target}});
       await poll();
     }catch(error){err=error.message;}
     finally{starting=false;draw();}
@@ -265,10 +264,7 @@ export function mountFirstBoot(container,{api,target}) {
       publishRunning(next.running);
       window.dispatchEvent(new CustomEvent('flight:boot-state',{detail:{target,id:next.job.id,failed:['failed','cancelled'].includes(next.job.status)}}));
       draw();
-      if(next.running && pausedAt==null && sessionStorage.getItem('flight.boot.'+target)===next.job.id){
-        sessionStorage.removeItem('flight.boot.'+target);
-        navigate(stepUrl('event', location, target));
-      }
+      // Completion unlocks the journey's Next link; the operator chooses when to leave Boot.
     }catch(error){
       if(disposed||version!==pollVersion)return;
       publishRunning(false);

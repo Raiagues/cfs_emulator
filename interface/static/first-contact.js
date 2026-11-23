@@ -1,13 +1,13 @@
 import {api} from './api.js';
 import {paint} from './dom.js';
-import {navigate, stepUrl} from './router.js';
+import {stepUrl} from './router.js';
 import {onUpdate} from './updates.js';
 import {renderContact,renderPacketPreview,fieldValues,userFields,layoutContactRoute,contactRouteModel} from './contact-view.js';
 
 export function mountFirstContact(root,{state,startJob,guided=true}){
   const target=state.target;
   let catalog=null,station={},selected=guided?'':state.groundSelection||'',error='',busy=false,closed=false,refreshBusy=false,refreshAgain=false;
-  let attempted=false,wasRunning=null,sent=null,replay=null,frame=0,clock=0,paused=false,timer,stepTimer;
+  let attempted=false,wasRunning=null,sent=null,replay=null,frame=0,clock=0,paused=false,timer;
   let lastDeployment=null,lastSession=null,revealedSelection='',routePacket=null;
   const defaulted=new Set(),drafts=new Map(),receipts=new Map(),commandGroups=new Set(['to_lab','sample_app',state.groundApp].filter(Boolean)),telemetryGroups=new Set(['to_lab','sample_app',state.groundApp].filter(Boolean)),packetGroups=new Set();
   const nextUrl=stepUrl('app',location,target);
@@ -21,7 +21,7 @@ export function mountFirstContact(root,{state,startJob,guided=true}){
     return draft;
   }
   function flightRunning(){return target==='qemu'?state.hardware?.qemu?.flight_running:target==='physical'?state.hardware?.physical?.last_probe?.flight_running:state.hardware?.native?.running;}
-  function cancelMotion(){cancelAnimationFrame(frame);clearTimeout(stepTimer);frame=0;replay=null;paused=false;}
+  function cancelMotion(){cancelAnimationFrame(frame);frame=0;replay=null;paused=false;}
   function acceptStation(next){
     const session=next.connected&&next.target===target?next.communication?.since:null;
     if(lastSession!==null&&session!==lastSession){selected=guided?'':state.groundSelection||selected;drafts.clear();defaulted.clear();receipts.clear();sent=null;clearTimeout(timer);cancelMotion();}
@@ -34,7 +34,7 @@ export function mountFirstContact(root,{state,startJob,guided=true}){
     if(!complete&&guided)selected=station.first_flight?.noop_command||selected;
     routePacket=null;
     draw();
-    if(complete&&guided)stepTimer=setTimeout(()=>{if(!closed)navigate(nextUrl);},1000);
+    // Keep the confirmed response visible until the operator follows Next.
   }
   function tick(now){
     frame=0;if(closed||!replay)return;

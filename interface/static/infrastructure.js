@@ -591,8 +591,7 @@ form.addEventListener('submit', async event => {
     busy = true;
     controls();
     try {
-      const job = await api('job', {action:'first-boot', options:{target}});
-      sessionStorage.setItem('flight.boot.' + target, job.id);
+      await api('job', {action:'first-boot', options:{target}});
       navigate(stepUrl('boot', location, target));
     } catch (error) { showError(error); }
     finally { busy = false; controls(); }
