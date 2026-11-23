@@ -1,0 +1,875 @@
+{
+  "purpose": "New real UI illustration of SAMPLE_APP RESET baseline then NOOP, RESET_COUNTERS, NOOP; separate from the quantitative campaign",
+  "target": "native",
+  "started_at": "2026-11-23T14:23:25.448Z",
+  "repository_head": "2f878c867610b518d79fe3b59748a98c760831f1",
+  "mutating_requests": [
+    {
+      "phase": "setup",
+      "path": "/api/job",
+      "method": "POST",
+      "body": {
+        "action": "run",
+        "options": {
+          "target": "native"
+        }
+      },
+      "at": "2026-11-23T14:23:26.990Z"
+    },
+    {
+      "phase": "setup",
+      "path": "/api/ground/start",
+      "method": "POST",
+      "body": {
+        "target": "native"
+      },
+      "at": "2026-11-23T14:23:34.151Z"
+    },
+    {
+      "phase": "ui_command",
+      "method": "POST",
+      "path": "/api/ground/send",
+      "body": {
+        "target": "native",
+        "command_id": "TO_LAB_OUTPUT_ENABLE_CC",
+        "values": {
+          "dest_IP": "127.0.0.1"
+        }
+      },
+      "at": "2026-11-23T14:23:39.337Z"
+    },
+    {
+      "phase": "ui_command",
+      "method": "POST",
+      "path": "/api/ground/send",
+      "body": {
+        "target": "native",
+        "command_id": "SAMPLE_APP_RESET_COUNTERS_CC",
+        "values": {}
+      },
+      "at": "2026-11-23T14:23:43.206Z"
+    },
+    {
+      "phase": "ui_command",
+      "method": "POST",
+      "path": "/api/ground/send",
+      "body": {
+        "target": "native",
+        "command_id": "SAMPLE_APP_NOOP_CC",
+        "values": {}
+      },
+      "at": "2026-11-23T14:23:48.100Z"
+    },
+    {
+      "phase": "ui_command",
+      "method": "POST",
+      "path": "/api/ground/send",
+      "body": {
+        "target": "native",
+        "command_id": "SAMPLE_APP_RESET_COUNTERS_CC",
+        "values": {}
+      },
+      "at": "2026-11-23T14:23:56.137Z"
+    },
+    {
+      "phase": "ui_command",
+      "method": "POST",
+      "path": "/api/ground/send",
+      "body": {
+        "target": "native",
+        "command_id": "SAMPLE_APP_NOOP_CC",
+        "values": {}
+      },
+      "at": "2026-11-23T14:23:58.593Z"
+    },
+    {
+      "phase": "log_reader",
+      "method": "POST",
+      "path": "/api/job",
+      "body": {
+        "action": "logs",
+        "options": {
+          "target": "native",
+          "kind": "flight"
+        }
+      },
+      "at": "2026-11-23T14:24:04.019Z"
+    },
+    {
+      "phase": "read_only_terminal_follow",
+      "path": "/api/job",
+      "method": "POST",
+      "body": {
+        "action": "logs",
+        "options": {
+          "target": "native",
+          "kind": "flight"
+        }
+      },
+      "at": "2026-11-23T14:26:43.643Z"
+    },
+    {
+      "phase": "read_only_terminal_follow",
+      "path": "/api/job",
+      "method": "POST",
+      "body": {
+        "action": "logs",
+        "options": {
+          "target": "native",
+          "kind": "flight"
+        }
+      },
+      "at": "2026-11-23T14:27:42.500Z"
+    },
+    {
+      "phase": "read_only_terminal_follow",
+      "path": "/api/job",
+      "method": "POST",
+      "body": {
+        "action": "logs",
+        "options": {
+          "target": "native",
+          "kind": "flight"
+        }
+      },
+      "at": "2026-11-23T14:28:17.635Z"
+    }
+  ],
+  "blocked_requests": [],
+  "page_errors": [],
+  "screenshots": [
+    {
+      "file": "sample-app-hk-01-initial.png",
+      "sha256": "30cadd65a86b1731ebd7327da88fd1b8334bd77435762f5221ee7926e99f103a",
+      "at": "2026-11-23T14:23:47.951Z",
+      "kind": "actual_dom_element",
+      "bounds": {
+        "x": 1437,
+        "y": 170,
+        "width": 255,
+        "height": 138
+      },
+      "viewport": {
+        "width": 1700,
+        "height": 1000
+      },
+      "device_scale_factor": 2,
+      "text": "⌄\nsample_app\n1\n⌄\nHK_TLM_MID\n0x0883\n↓ 2\nCommandCounter\nuint8\n0\nCommandErrorCounter\nuint8\n0\n18 bytes · 11:23:47 AM",
+      "label": "Baseline after preparation RESET_COUNTERS",
+      "expected_counter": 0
+    },
+    {
+      "file": "sample-app-hk-02-after-noop.png",
+      "sha256": "df2c1d11c74c1a6258bf0c84316715cc048d8f0e18221c836309c43437a37b98",
+      "at": "2026-11-23T14:23:55.975Z",
+      "kind": "actual_dom_element",
+      "bounds": {
+        "x": 1437,
+        "y": 170,
+        "width": 255,
+        "height": 138
+      },
+      "viewport": {
+        "width": 1700,
+        "height": 1000
+      },
+      "device_scale_factor": 2,
+      "text": "⌄\nsample_app\n1\n⌄\nHK_TLM_MID\n0x0883\n↓ 3\nCommandCounter\nuint8\n1\nCommandErrorCounter\nuint8\n0\n18 bytes · 11:23:52 AM",
+      "label": "First NOOP",
+      "expected_counter": 1
+    },
+    {
+      "file": "sample-app-hk-03-after-reset.png",
+      "sha256": "e61a0c9e46ae76c8cda2724e017e45cdce361452e291c0a6c3644e1ec080aea3",
+      "at": "2026-11-23T14:23:58.456Z",
+      "kind": "actual_dom_element",
+      "bounds": {
+        "x": 1437,
+        "y": 170,
+        "width": 255,
+        "height": 138
+      },
+      "viewport": {
+        "width": 1700,
+        "height": 1000
+      },
+      "device_scale_factor": 2,
+      "text": "⌄\nsample_app\n1\n⌄\nHK_TLM_MID\n0x0883\n↓ 4\nCommandCounter\nuint8\n0\nCommandErrorCounter\nuint8\n0\n18 bytes · 11:23:58 AM",
+      "label": "RESET_COUNTERS",
+      "expected_counter": 0
+    },
+    {
+      "file": "sample-app-hk-04-after-noop.png",
+      "sha256": "d690d86941a7b4965c96470c216f1619b280012c7ce117455043f704e245c8e1",
+      "at": "2026-11-23T14:24:03.875Z",
+      "kind": "actual_dom_element",
+      "bounds": {
+        "x": 1437,
+        "y": 170,
+        "width": 255,
+        "height": 138
+      },
+      "viewport": {
+        "width": 1700,
+        "height": 1000
+      },
+      "device_scale_factor": 2,
+      "text": "⌄\nsample_app\n1\n⌄\nHK_TLM_MID\n0x0883\n↓ 5\nCommandCounter\nuint8\n1\nCommandErrorCounter\nuint8\n0\n18 bytes · 11:24:03 AM",
+      "label": "Second NOOP",
+      "expected_counter": 1
+    },
+    {
+      "file": "context-after.png",
+      "sha256": "c597f1599bd623ce8f8c632f62d61b91780ac0b27f7ee5288a7a76fe3b053b54",
+      "kind": "full_actual_viewport",
+      "at": "2026-11-23T14:24:04.886Z"
+    },
+    {
+      "file": "sample-app-terminal.png",
+      "sha256": "b7c6a84b8cf57c6e88d8363cd2b5aead95b9b249e648861141b4a775688c53b7",
+      "at": "2026-11-23T14:28:22.924Z",
+      "kind": "actual_dom_element",
+      "bounds": {
+        "x": 68,
+        "y": 600,
+        "width": 1420,
+        "height": 240
+      },
+      "viewport": {
+        "width": 1500,
+        "height": 850
+      },
+      "device_scale_factor": 2,
+      "text": "Terminal\nRun cFS · Native\nRunning\n$ tail -n 100 -F /home/rodriger/Documents/raspi/pi4-emulator/boot_cfs-estudio/hardware/.runtime/native.log\nEVS Port1 1980-012-14:03:20.05192 66/1/CFE_ES 1: cFE ES Initialized: CFE_ES v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled\nEVS Port1 1980-012-14:03:20.05197 66/1/CFE_ES 2: cFS Versions: cfe v7.0.2-rc1-oss, osal v7.0.2-rc1-oss, psp v7.0.2-rc1-oss. cFE chksm 26699\nEVS Port1 1980-012-14:03:20.05197 66/1/CFE_ES 91: Version Info: Mission SampleMission, version git:a4d305d\nEVS Port1 1980-012-14:03:20.05198 66/1/CFE_ES 91: Version Info: Module CORE_API, version git:3673163\nEVS Port1 1980-012-14:03:20.05198 66/1/CFE_ES 91: Version Info: Module CONFIG, version git:3673163\nEVS Port1 1980-012-14:03:20.05198 66/1/CFE_ES 91: Version Info: Module ES, version git:3673163\nEVS Port1 1980-012-14:03:20.05200 66/1/CFE_ES 91: Version Info: Module EVS, version git:3673163\nEVS Port1 1980-012-14:03:20.05200 66/1/CFE_ES 91: Version Info: Module FS, version git:3673163\nEVS Port1 1980-012-14:03:20.05200 66/1/CFE_ES 91: Version Info: Module SB, version git:3673163\nEVS Port1 1980-012-14:03:20.05200 66/1/CFE_ES 91: Version Info: Module TBL, version git:3673163\nEVS Port1 1980-012-14:03:20.05201 66/1/CFE_ES 91: Version Info: Module TIME, version git:3673163\nEVS Port1 1980-012-14:03:20.05201 66/1/CFE_ES 91: Version Info: Module OSAL, version git:2a96a4f\nEVS Port1 1980-012-14:03:20.05201 66/1/CFE_ES 91: Version Info: Module PSP, version git:5c8a969\nEVS Port1 1980-012-14:03:20.05203 66/1/CFE_ES 91: Version Info: Module MSG, version git:3673163\nEVS Port1 1980-012-14:03:20.05203 66/1/CFE_ES 91: Version Info: Module SBR, version git:3673163\nEVS Port1 1980-012-14:03:20.05204 66/1/CFE_ES 91: Version Info: Module RESOURCEID, version git:3673163\nEVS Port1 1980-012-14:03:20.05204 66/1/CFE_ES 92: Build 202611231119 by rodriger@rodriger, config sample\nEVS Port1 1980-012-14:03:20.15061 66/1/CFE_EVS 1: cFE EVS Initialized: CFE_EVS v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled\n1980-012-14:03:20.25081 CFE_SB_AppInit: Registered 4 events for filtering\nEVS Port1 1980-012-14:03:20.25088 66/1/CFE_SB 1: cFE SB Initialized: CFE_SB v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled\nEVS Port1 1980-012-14:03:20.25090 66/1/CFE_SB 14: No subscribers for MsgId 0x808,sender CFE_SB\nEVS Port1 1980-012-14:03:20.35116 66/1/CFE_TBL 1: cFE TBL Initialized: CFE_TBL v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled\nEVS Port1 1980-012-14:03:20.35119 66/1/CFE_SB 14: No subscribers for MsgId 0x808,sender CFE_TBL\nEVS Port1 1980-012-14:03:20.45140 66/1/CFE_TIME 1: cFE TIME Initialized: CFE_TIME v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled\nEVS Port1 1980-012-14:03:20.45141 66/1/CFE_SB 14: No subscribers for MsgId 0x808,sender CFE_TIME\n1980-012-14:03:20.50132 CFE_ES_CreateObjects: Finished ES CreateObject table entries.\n1980-012-14:03:20.50133 CFE_ES_Main: CFE_ES_Main entering CORE_READY state\n1980-012-14:03:20.50136 CFE_ES_OpenStartupScript: Opened ES App Startup file: /cf/cfe_es_startup.scr\n1980-012-14:03:20.50155 CFE_ES_ParseFileEntry: Loading shared library: /cf/cfe_assert.so\n1980-012-14:03:20.50181 [BEGIN] CFE FUNCTIONAL TEST\n1980-012-14:03:20.50182 [BEGIN] 01 CFE-STARTUP\n1980-012-14:03:20.50200 CFE_ES_ParseFileEntry: Loading shared library: /cf/sample_lib.so\nSAMPLE Lib Initialized.Sample Lib v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled\n1980-012-14:03:20.50234 CFE_ES_ParseFileEntry: Loading file: /cf/sch_lab.so, APP: SCH_LAB\n1980-012-14:03:20.50272 CFE_ES_ParseFileEntry: Loading file: /cf/ci_lab.so, APP: CI_LAB\n1980-012-14:03:20.50309 CFE_ES_ParseFileEntry: Loading file: /cf/to_lab.so, APP: TO_LAB\n1980-012-14:03:20.50357 CFE_ES_ParseFileEntry: Loading file: /cf/sample_app.so, APP: SAMPLE_APP\n1980-012-14:03:20.50391 CFE_ES_ParseFileEntry: Loading file: /cf/lc.so, APP: LC\n1980-012-14:03:20.50458 CFE_ES_ParseFileEntry: Loading file: /cf/cf.so, APP: CF\n1980-012-14:03:20.50502 CFE_ES_ParseFileEntry: Loading file: /cf/ds.so, APP: DS\n1980-012-14:03:20.50541 CFE_ES_ParseFileEntry: Loading file: /cf/fm.so, APP: FM\n1980-012-14:03:20.50575 CFE_ES_ParseFileEntry: Loading file: /cf/hk.so, APP: HK\n1980-012-14:03:20.50604 CFE_ES_ParseFileEntry: Loading file: /cf/hs.so, APP: HS\n1980-012-14:03:20.50635 CFE_ES_ParseFileEntry: Loading file: /cf/sc.so, APP: SC\n1980-012-14:03:20.50664 CFE_ES_ParseFileEntry: Loading file: /cf/md.so, APP: MD\n1980-012-14:03:20.50693 CFE_ES_ParseFileEntry: Loading file: /cf/cs.so, APP: CS\n1980-012-14:03:20.50733 CFE_ES_ParseFileEntry: Loading file: /cf/orbit_demo.so, APP: ORBIT_DEMO\nSCH Lab Initialized.SCH Lab v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled\nEVS Port1 1980-012-14:03:20.55354 66/1/TO_LAB 1: TO Lab Initialized.TO Lab v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled, Awaiting enable command.\nEVS Port1 1980-012-14:03:20.55355 66/1/CFE_SB 14: No subscribers for MsgId 0x808,sender TO_LAB\n1980-012-14:03:20.55397 CI_LAB listening on UDP port: 1234\nEVS Port1 1980-012-14:03:20.55397 66/1/SAMPLE_APP 1: Sample App Initialized.Sample App v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled\nEVS Port1 1980-012-14:03:20.55398 66/1/CI_LAB 3: CI Lab Initialized.CI Lab App v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled\nEVS Port1 1980-012-14:03:20.55430 66/1/LC 56: WDT verify results: good = 0, bad = 0, unused = 176\nEVS Port1 1980-012-14:03:20.55444 66/1/LC 66: ADT verify results: good = 0, bad = 0, unused = 176\nEVS Port1 1980-012-14:03:20.55445 66/1/LC 23: LC use of Critical Data Store disabled, activity mask = 0x00991990\nEVS Port1 1980-012-14:03:20.55447 66/1/LC 2: LC Initialized. Version 7.0.2.255\nEVS Port1 1980-012-14:03:20.55538 66/1/CF 20: CF Initialized. Version 7.0.2.255\nEVS Port1 1980-012-14:03:20.55548 66/1/DS 10: Destination file table verify results: good entries = 6, bad = 0, unused = 10\nEVS Port1 1980-012-14:03:20.55557 66/1/DS 12: Filter table verify results: good entries = 14, bad = 0, unused = 242\nEVS Port1 1980-012-14:03:20.55572 66/1/DS 1: Application initialized, version 7.0.2.255, data at 0x707f7b154480\nEVS Port1 1980-012-14:03:20.55578 66/1/FM 80: Free Space Table verify results: good entries = 3, bad = 0, unused = 5\nEVS Port1 1980-012-14:03:20.55590 66/1/FM 1: Initialization complete: version 7.0.2.255\nEVS Port1 1980-012-14:03:20.55613 66/1/HK 1: HK Initialized.  Version 7.0.2.255\nEVS Port1 1980-012-14:03:20.55633 66/1/HS 54: ExeCount verify results: good = 5, bad = 0, unused = 27\nEVS Port1 1980-012-14:03:20.55635 66/1/HS 50: AppMon verify results: good = 0, bad = 0, unused = 32\nEVS Port1 1980-012-14:03:20.55636 66/1/HS 52: EventMon verify results: good = 0, bad = 0, unused = 16\nEVS Port1 1980-012-14:03:20.55638 66/1/HS 56: MsgActs verify results: good = 2, bad = 0, unused = 6\n1980-012-14:03:20.55639 HS_SysMonInit(): System Monitor using PSP device ID 0110ff05\nEVS Port1 1980-012-14:03:20.55668 66/1/SC 21: RTS table files not loaded at initialization = 0 of 4\nEVS Port1 1980-012-14:03:20.55668 66/1/SC 9: SC Initialized. Version 7.0.2.255\nEVS Port1 1980-012-14:03:20.55691 66/1/MD 52: MD Dwell Tbl verify results: good = 0, bad = 0, unused = 25\nEVS Port1 1980-012-14:03:20.55696 66/1/MD 52: MD Dwell Tbl verify results: good = 0, bad = 0, unused = 25\nEVS Port1 1980-012-14:03:20.55700 66/1/MD 52: MD Dwell Tbl verify results: good = 0, bad = 0, unused = 25\nEVS Port1 1980-012-14:03:20.55703 66/1/MD 52: MD Dwell Tbl verify results: good = 0, bad = 0, unused = 25\nEVS Port1 1980-012-14:03:20.55705 66/1/MD 7: Dwell Tables Recovered: 0, Dwell Tables Initialized: 4\nEVS Port1 1980-012-14:03:20.55705 66/1/MD 1: MD Initialized.  Version 7.0.2.255\nEVS Port1 1980-012-14:03:20.55737 66/1/CS 144: CS EEPROM Table verification results: good = 0, bad = 0, unused = 16\nEVS Port1 1980-012-14:03:20.55737 66/1/CS 107: CS EEPROM Table: No valid entries in the table\nEVS Port1 1980-012-14:03:20.55740 66/1/CS 143: CS Memory Table verification results: good = 0, bad = 0, unused = 16\nEVS Port1 1980-012-14:03:20.55740 66/1/CS 107: CS Memory Table: No valid entries in the table\nEVS Port1 1980-012-14:03:20.55743 66/1/CS 139: CS Tables Table verification results: good = 1, bad = 0, unused = 23\nEVS Port1 1980-012-14:03:20.55744 66/1/CS 142: CS Apps Table verification results: good = 0, bad = 0, unused = 24\nEVS Port1 1980-012-14:03:20.55744 66/1/CS 108: CS Apps Table: No valid entries in the table\nEVS Port1 1980-012-14:03:20.55744 66/1/CS 127: OS Text Segment disabled due to platform\nEVS Port1 1980-012-14:03:20.55746 66/1/CS 1: CS Initialized. Version 7.0.2.255\nEVS Port1 1980-012-14:03:20.55767 66/1/ORBIT_DEMO 1: Orbit Demo Initialized.Orbit Demo v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled\nCFE_PSP(Linux_SysMon): Started CPU utilization monitoring on 8 CPU(s)\nEVS Port1 1980-012-14:03:20.56652 66/1/HS 1: HS Initialized.  Version 7.0.2.255\nEVS Port1 1980-012-14:03:20.60601 66/1/FM 72: Child Task initialization complete\n1980-012-14:03:20.60767 CFE_ES_Main: CFE_ES_Main entering APPS_INIT state\n1980-012-14:03:20.60768 CFE_ES_Main: CFE_ES_Main entering OPERATIONAL state\nEVS Port1 1980-012-14:03:20.65379 66/1/TO_LAB 19: L549 TO Lab subscribed to 37 messages from the table\nEVS Port1 1980-012-14:03:21.00004 66/1/CFE_TIME 21: Stop FLYWHEEL\n.EVS Port1 1980-012-14:03:28.99874 66/1/TO_LAB 3: TO telemetry output enabled for IP 127.0.0.1\n.EVS Port1 1980-012-14:03:32.99551 66/1/SAMPLE_APP 4: SAMPLE: RESET command\nEVS Port1 1980-012-14:03:37.49633 66/1/SAMPLE_APP 3: SAMPLE: NOOP command v7.0.2-rc1-oss\n..EVS Port1 1980-012-14:03:45.99935 66/1/SAMPLE_APP 4: SAMPLE: RESET command\nEVS Port1 1980-012-14:03:47.99565 66/1/SAMPLE_APP 3: SAMPLE: NOOP command v7.0.2-rc1-oss\nRun cFS\n11:24\nRun cFS\n11:23\nBuild cFS\n11:19\nBuild cFS\n11:18\nStop cFS\n11:18\nfirst-boot\n11:12\nBuild cFS\n11:11\nBuild cFS\n11:11",
+      "note": "Read-only screenshot of the same live stdout log after notification expired; no additional command or inserted text."
+    },
+    {
+      "file": "sample-app-terminal-events.png",
+      "sha256": "15b86f3648f77a3332411ea7f244c6bdc35aca50df8dab4be2aa39c71f963d10",
+      "at": "2026-11-23T14:28:23.023Z",
+      "kind": "actual_dom_text_range_crop",
+      "bounds": {
+        "x": 75,
+        "y": 741.5,
+        "width": 649.609375,
+        "height": 89.171875
+      },
+      "viewport": {
+        "width": 1500,
+        "height": 850
+      },
+      "device_scale_factor": 2,
+      "text": "EVS Port1 1980-012-14:03:32.99551 66/1/SAMPLE_APP 4: SAMPLE: RESET command\nEVS Port1 1980-012-14:03:37.49633 66/1/SAMPLE_APP 3: SAMPLE: NOOP command v7.0.2-rc1-oss\n..EVS Port1 1980-012-14:03:45.99935 66/1/SAMPLE_APP 4: SAMPLE: RESET command\nEVS Port1 1980-012-14:03:47.99565 66/1/SAMPLE_APP 3: SAMPLE: NOOP command v7.0.2-rc1-oss",
+      "note": "Screenshot clipped to the bounding rectangle of four actual SAMPLE_APP stdout event lines; DOM content unchanged, no inserted text."
+    }
+  ],
+  "steps": [
+    {
+      "name": "01-initial",
+      "label": "Baseline after preparation RESET_COUNTERS",
+      "expected_counter": 0,
+      "before": {
+        "mid": 2179,
+        "sequence": 2,
+        "bytes": 18,
+        "name": "SAMPLE_APP_HkTlm_t",
+        "app": "sample_app",
+        "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+        "values": {
+          "CommandCounter": 0,
+          "CommandErrorCounter": 0
+        },
+        "errors": [],
+        "hex": "0883c002000b000f46334cca000000000000",
+        "received_at": 1795443821.9288733,
+        "count": 1,
+        "event_id": 8
+      },
+      "command": {
+        "id": "SAMPLE_APP_RESET_COUNTERS_CC",
+        "app": "sample_app",
+        "mid": 6274,
+        "code": 1,
+        "values": {},
+        "sent_at": 1795443823.2085304,
+        "bytes": 8,
+        "status": "sent",
+        "hex": "1882c000000101a5",
+        "event_id": 13
+      },
+      "event": {
+        "mid": 2056,
+        "sequence": 32,
+        "bytes": 172,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "SAMPLE_APP",
+          "PacketID.EventID": 4,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "SAMPLE: RESET command",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c02000a5000f4634fedb0000000053414d504c455f4150500000000000000000000004000200420000000100000053414d504c453a20524553455420636f6d6d616e6400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795443823.6260376,
+        "count": 2,
+        "event_id": 16
+      },
+      "confirmed_housekeeping": {
+        "mid": 2179,
+        "sequence": 3,
+        "bytes": 18,
+        "name": "SAMPLE_APP_HkTlm_t",
+        "app": "sample_app",
+        "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+        "values": {
+          "CommandCounter": 0,
+          "CommandErrorCounter": 0
+        },
+        "errors": [],
+        "hex": "0883c003000b000f4638b32b000000000000",
+        "received_at": 1795443827.3291605,
+        "count": 2,
+        "event_id": 30
+      },
+      "preceding_or_following_screen_packet": {
+        "mid": 2179,
+        "sequence": 3,
+        "bytes": 18,
+        "name": "SAMPLE_APP_HkTlm_t",
+        "app": "sample_app",
+        "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+        "values": {
+          "CommandCounter": 0,
+          "CommandErrorCounter": 0
+        },
+        "errors": [],
+        "hex": "0883c003000b000f4638b32b000000000000",
+        "received_at": 1795443827.3291605,
+        "count": 2,
+        "event_id": 30
+      },
+      "screenshot": "sample-app-hk-01-initial.png"
+    },
+    {
+      "name": "02-after-noop",
+      "label": "First NOOP",
+      "expected_counter": 1,
+      "before": {
+        "mid": 2179,
+        "sequence": 3,
+        "bytes": 18,
+        "name": "SAMPLE_APP_HkTlm_t",
+        "app": "sample_app",
+        "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+        "values": {
+          "CommandCounter": 0,
+          "CommandErrorCounter": 0
+        },
+        "errors": [],
+        "hex": "0883c003000b000f4638b32b000000000000",
+        "received_at": 1795443827.3291605,
+        "count": 2,
+        "event_id": 30
+      },
+      "command": {
+        "id": "SAMPLE_APP_NOOP_CC",
+        "app": "sample_app",
+        "mid": 6274,
+        "code": 0,
+        "values": {},
+        "sent_at": 1795443828.1053672,
+        "bytes": 8,
+        "status": "sent",
+        "hex": "1882c000000100a4",
+        "event_id": 33
+      },
+      "event": {
+        "mid": 2056,
+        "sequence": 33,
+        "bytes": 172,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "SAMPLE_APP",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "SAMPLE: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c02100a5000f46397f110000000053414d504c455f4150500000000000000000000003000200420000000100000053414d504c453a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795443828.1249883,
+        "count": 3,
+        "event_id": 34
+      },
+      "confirmed_housekeeping": {
+        "mid": 2179,
+        "sequence": 4,
+        "bytes": 18,
+        "name": "SAMPLE_APP_HkTlm_t",
+        "app": "sample_app",
+        "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+        "values": {
+          "CommandCounter": 1,
+          "CommandErrorCounter": 0
+        },
+        "errors": [],
+        "hex": "0883c004000b000f463e198a000000000100",
+        "received_at": 1795443832.7286956,
+        "count": 3,
+        "event_id": 49
+      },
+      "preceding_or_following_screen_packet": {
+        "mid": 2179,
+        "sequence": 4,
+        "bytes": 18,
+        "name": "SAMPLE_APP_HkTlm_t",
+        "app": "sample_app",
+        "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+        "values": {
+          "CommandCounter": 1,
+          "CommandErrorCounter": 0
+        },
+        "errors": [],
+        "hex": "0883c004000b000f463e198a000000000100",
+        "received_at": 1795443832.7286956,
+        "count": 3,
+        "event_id": 49
+      },
+      "screenshot": "sample-app-hk-02-after-noop.png"
+    },
+    {
+      "name": "03-after-reset",
+      "label": "RESET_COUNTERS",
+      "expected_counter": 0,
+      "before": {
+        "mid": 2179,
+        "sequence": 4,
+        "bytes": 18,
+        "name": "SAMPLE_APP_HkTlm_t",
+        "app": "sample_app",
+        "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+        "values": {
+          "CommandCounter": 1,
+          "CommandErrorCounter": 0
+        },
+        "errors": [],
+        "hex": "0883c004000b000f463e198a000000000100",
+        "received_at": 1795443832.7286956,
+        "count": 3,
+        "event_id": 49
+      },
+      "command": {
+        "id": "SAMPLE_APP_RESET_COUNTERS_CC",
+        "app": "sample_app",
+        "mid": 6274,
+        "code": 1,
+        "values": {},
+        "sent_at": 1795443836.1535516,
+        "bytes": 8,
+        "status": "sent",
+        "hex": "1882c000000101a5",
+        "event_id": 62
+      },
+      "event": {
+        "mid": 2056,
+        "sequence": 34,
+        "bytes": 172,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "SAMPLE_APP",
+          "PacketID.EventID": 4,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "SAMPLE: RESET command",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c02200a5000f4641ffd80000000053414d504c455f4150500000000000000000000004000200420000000100000053414d504c453a20524553455420636f6d6d616e6400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795443836.628276,
+        "count": 4,
+        "event_id": 64
+      },
+      "confirmed_housekeeping": {
+        "mid": 2179,
+        "sequence": 5,
+        "bytes": 18,
+        "name": "SAMPLE_APP_HkTlm_t",
+        "app": "sample_app",
+        "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+        "values": {
+          "CommandCounter": 0,
+          "CommandErrorCounter": 0
+        },
+        "errors": [],
+        "hex": "0883c005000b000f46438005000000000000",
+        "received_at": 1795443838.1293585,
+        "count": 4,
+        "event_id": 68
+      },
+      "preceding_or_following_screen_packet": {
+        "mid": 2179,
+        "sequence": 5,
+        "bytes": 18,
+        "name": "SAMPLE_APP_HkTlm_t",
+        "app": "sample_app",
+        "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+        "values": {
+          "CommandCounter": 0,
+          "CommandErrorCounter": 0
+        },
+        "errors": [],
+        "hex": "0883c005000b000f46438005000000000000",
+        "received_at": 1795443838.1293585,
+        "count": 4,
+        "event_id": 68
+      },
+      "screenshot": "sample-app-hk-03-after-reset.png"
+    },
+    {
+      "name": "04-after-noop",
+      "label": "Second NOOP",
+      "expected_counter": 1,
+      "before": {
+        "mid": 2179,
+        "sequence": 5,
+        "bytes": 18,
+        "name": "SAMPLE_APP_HkTlm_t",
+        "app": "sample_app",
+        "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+        "values": {
+          "CommandCounter": 0,
+          "CommandErrorCounter": 0
+        },
+        "errors": [],
+        "hex": "0883c005000b000f46438005000000000000",
+        "received_at": 1795443838.1293585,
+        "count": 4,
+        "event_id": 68
+      },
+      "command": {
+        "id": "SAMPLE_APP_NOOP_CC",
+        "app": "sample_app",
+        "mid": 6274,
+        "code": 0,
+        "values": {},
+        "sent_at": 1795443838.5989697,
+        "bytes": 8,
+        "status": "sent",
+        "hex": "1882c000000100a4",
+        "event_id": 70
+      },
+      "event": {
+        "mid": 2056,
+        "sequence": 35,
+        "bytes": 172,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "SAMPLE_APP",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "SAMPLE: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c02300a5000f4643fee40000000053414d504c455f4150500000000000000000000003000200420000000100000053414d504c453a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795443838.624331,
+        "count": 5,
+        "event_id": 71
+      },
+      "confirmed_housekeeping": {
+        "mid": 2179,
+        "sequence": 6,
+        "bytes": 18,
+        "name": "SAMPLE_APP_HkTlm_t",
+        "app": "sample_app",
+        "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+        "values": {
+          "CommandCounter": 1,
+          "CommandErrorCounter": 0
+        },
+        "errors": [],
+        "hex": "0883c006000b000f4648e668000000000100",
+        "received_at": 1795443843.528606,
+        "count": 5,
+        "event_id": 90
+      },
+      "preceding_or_following_screen_packet": {
+        "mid": 2179,
+        "sequence": 6,
+        "bytes": 18,
+        "name": "SAMPLE_APP_HkTlm_t",
+        "app": "sample_app",
+        "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+        "values": {
+          "CommandCounter": 1,
+          "CommandErrorCounter": 0
+        },
+        "errors": [],
+        "hex": "0883c006000b000f4648e668000000000100",
+        "received_at": 1795443843.528606,
+        "count": 5,
+        "event_id": 90
+      },
+      "screenshot": "sample-app-hk-04-after-noop.png"
+    }
+  ],
+  "initial_native": {
+    "running": false
+  },
+  "run_job_id": "7913a60e160d",
+  "build_fingerprint": "99810172fd7a5eac214bdb73ae9af297dec3546b52e9de805b96b788fd0e95ef",
+  "catalog_hk": {
+    "id": "SAMPLE_APP_HK_TLM_MID",
+    "name": "SAMPLE_APP_HkTlm_t",
+    "app": "sample_app",
+    "struct": "SAMPLE_APP_HkTlm_t",
+    "fields": [
+      {
+        "name": "CommandCounter",
+        "type": "uint8",
+        "format": "B",
+        "count": 1,
+        "offset": 16,
+        "size": 1
+      },
+      {
+        "name": "CommandErrorCounter",
+        "type": "uint8",
+        "format": "B",
+        "count": 1,
+        "offset": 17,
+        "size": 1
+      }
+    ],
+    "kind": "telemetry",
+    "mid": 2179,
+    "size": 18,
+    "mid_symbol": "SAMPLE_APP_HK_TLM_MID",
+    "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+    "locations": {
+      "identifier": {
+        "path": "cFS/apps/sample_app/config/default_sample_app_msgids.h",
+        "line": 31,
+        "end_line": 31,
+        "symbol": "SAMPLE_APP_HK_TLM_MID"
+      },
+      "packet": {
+        "path": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+        "line": 79,
+        "end_line": 83,
+        "symbol": "SAMPLE_APP_HkTlm_t"
+      }
+    }
+  },
+  "enable_command": {
+    "id": "TO_LAB_OUTPUT_ENABLE_CC",
+    "app": "to_lab",
+    "mid": 6272,
+    "code": 6,
+    "values": {
+      "dest_IP": "127.0.0.1"
+    },
+    "sent_at": 1795443819.3390636,
+    "bytes": 24,
+    "status": "sent",
+    "hex": "1880c0000011069b3132372e302e302e3100000000000000",
+    "event_id": 1
+  },
+  "stdout_window": {
+    "source": "hardware/.runtime/native.log",
+    "start_byte": 11930,
+    "inode": 2147825,
+    "end_byte": 12261,
+    "sha256": "3e43f825418fbd7198d0d52f8e03f32048fdc88f01ce4e04a3ee179b1ebc4560",
+    "note": "Literal contiguous byte range from the real cFS stdout log, starting immediately before preparation RESET_COUNTERS; no line substitution or filtering."
+  },
+  "stdout_events": [
+    "EVS Port1 1980-012-14:03:32.99551 66/1/SAMPLE_APP 4: SAMPLE: RESET command",
+    "EVS Port1 1980-012-14:03:37.49633 66/1/SAMPLE_APP 3: SAMPLE: NOOP command v7.0.2-rc1-oss",
+    "..EVS Port1 1980-012-14:03:45.99935 66/1/SAMPLE_APP 4: SAMPLE: RESET command",
+    "EVS Port1 1980-012-14:03:47.99565 66/1/SAMPLE_APP 3: SAMPLE: NOOP command v7.0.2-rc1-oss"
+  ],
+  "final_jobs": [
+    {
+      "id": "7913a60e160d",
+      "action": "run",
+      "target": "native",
+      "status": "succeeded",
+      "kind": "flight",
+      "lines": [
+        "$ stdbuf -oL -eL /home/rodriger/Documents/raspi/pi4-emulator/boot_cfs-estudio/mission/build-native/exe/cpu1/core-cpu1",
+        "OS_BSP_Initialize():Maximum user msg queue depth = 10",
+        "CFE_PSP: Default Reset SubType = 1",
+        "CFE_PSP: Default CPU ID = 1",
+        "CFE_PSP: Default Spacecraft ID = 66",
+        "CFE_PSP: Default CPU Name: cpu1",
+        "OS_Posix_GetSchedulerParams():208:Policy 1: available, min-max: 1-99",
+        "OS_Posix_GetSchedulerParams():208:Policy 2: available, min-max: 1-99",
+        "OS_Posix_TaskAPI_Impl_Init():401:Selected policy 2 for RT tasks, root task = 99",
+        "OS_Posix_TaskAPI_Impl_Init():419:Could not setschedparam in main thread: Operation not permitted (1)",
+        "CFE_PSP: initializing module 'soft_timebase' with ID 0110ff00",
+        "CFE_PSP: Instantiated software timebase 'cFS-Master' running at 10000 usec",
+        "CFE_PSP: initializing module 'timebase_posix_clock' with ID 0110ff01",
+        "CFE_PSP: Using POSIX monotonic clock as CFE timebase",
+        "CFE_PSP: initializing module 'eeprom_mmap_file' with ID 0110ff02",
+        "CFE_PSP: Using MMAP simulated EEPROM implementation",
+        "CFE_PSP: initializing module 'port_notimpl' with ID 0110ff03",
+        "CFE_PSP: I/O Port access not implemented",
+        "CFE_PSP: initializing module 'iodriver' with ID 0110ff04",
+        "CFE_PSP: EEPROM Range (2) created: Start Address = 707F7B280000, Size = 00080000 Status = 0",
+        "CFE_PSP: initializing module 'linux_sysmon' with ID 0110ff05",
+        "CFE_PSP: initializing module 'endian_api' with ID 0110ff06",
+        "CFE_PSP: Host CPU Endian=LITTLE",
+        "CFE_PSP: initializing module 'ram_notimpl' with ID 0110ff07",
+        "CFE_PSP: Physical RAM access not implemented",
+        "CFE_PSP: Starting the cFE with a POWER ON reset.",
+        "CFE_PSP: Clearing out CFE CDS Shared memory segment.",
+        "CFE_PSP: Clearing out CFE Reset Shared memory segment.",
+        "CFE_PSP: Clearing out CFE User Reserved Shared memory segment.",
+        "1980-002-00:21:02.27671 CFE_ES_SetupResetVariables: POWER ON RESET due to Power Cycle (Power Cycle).",
+        "1980-002-00:21:02.27682 CFE_ES_Main: CFE_ES_Main in EARLY_INIT state",
+        "Number of addresses returned by backtrace = 1",
+        "CFE_PSP: CFE_PSP_AttachExceptions called",
+        "1980-002-00:21:02.27744 CFE_ES_Main: CFE_ES_Main entering CORE_STARTUP state",
+        "1980-002-00:21:02.27745 CFE_ES_CreateObjects: Starting Object Creation calls.",
+        "1980-002-00:21:02.27745 CFE_ES_CreateObjects: Calling EarlyInit for CFE_CONFIG",
+        "1980-002-00:21:02.27747 CFE_ES_CreateObjects: Calling EarlyInit for CFE_ES",
+        "1980-002-00:21:02.27760 CFE_ES_CreateObjects: Calling EarlyInit for CFE_EVS",
+        "1980-002-00:21:02.27763 CFE_EVS_EarlyInit: Event Log cleared following power-on reset",
+        "1980-002-00:21:02.27764 CFE_ES_CreateObjects: Calling EarlyInit for CFE_FS",
+        "1980-002-00:21:02.27765 CFE_ES_CreateObjects: Calling EarlyInit for CFE_SB",
+        "1980-002-00:21:02.27828 CFE_ES_CreateObjects: Calling EarlyInit for CFE_TBL",
+        "1980-002-00:21:02.27888 CFE_ES_CreateObjects: Calling EarlyInit for CFE_TIME",
+        "EVS Port1 1980-012-14:03:20.05192 66/1/CFE_ES 1: cFE ES Initialized: CFE_ES v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled",
+        "EVS Port1 1980-012-14:03:20.05197 66/1/CFE_ES 2: cFS Versions: cfe v7.0.2-rc1-oss, osal v7.0.2-rc1-oss, psp v7.0.2-rc1-oss. cFE chksm 26699",
+        "EVS Port1 1980-012-14:03:20.05197 66/1/CFE_ES 91: Version Info: Mission SampleMission, version git:a4d305d",
+        "EVS Port1 1980-012-14:03:20.05198 66/1/CFE_ES 91: Version Info: Module CORE_API, version git:3673163",
+        "EVS Port1 1980-012-14:03:20.05198 66/1/CFE_ES 91: Version Info: Module CONFIG, version git:3673163",
+        "EVS Port1 1980-012-14:03:20.05198 66/1/CFE_ES 91: Version Info: Module ES, version git:3673163",
+        "EVS Port1 1980-012-14:03:20.05200 66/1/CFE_ES 91: Version Info: Module EVS, version git:3673163",
+        "EVS Port1 1980-012-14:03:20.05200 66/1/CFE_ES 91: Version Info: Module FS, version git:3673163",
+        "EVS Port1 1980-012-14:03:20.05200 66/1/CFE_ES 91: Version Info: Module SB, version git:3673163",
+        "EVS Port1 1980-012-14:03:20.05200 66/1/CFE_ES 91: Version Info: Module TBL, version git:3673163",
+        "EVS Port1 1980-012-14:03:20.05201 66/1/CFE_ES 91: Version Info: Module TIME, version git:3673163",
+        "EVS Port1 1980-012-14:03:20.05201 66/1/CFE_ES 91: Version Info: Module OSAL, version git:2a96a4f",
+        "EVS Port1 1980-012-14:03:20.05201 66/1/CFE_ES 91: Version Info: Module PSP, version git:5c8a969",
+        "EVS Port1 1980-012-14:03:20.05203 66/1/CFE_ES 91: Version Info: Module MSG, version git:3673163",
+        "EVS Port1 1980-012-14:03:20.05203 66/1/CFE_ES 91: Version Info: Module SBR, version git:3673163",
+        "EVS Port1 1980-012-14:03:20.05204 66/1/CFE_ES 91: Version Info: Module RESOURCEID, version git:3673163",
+        "EVS Port1 1980-012-14:03:20.05204 66/1/CFE_ES 92: Build 202611231119 by rodriger@rodriger, config sample",
+        "EVS Port1 1980-012-14:03:20.15061 66/1/CFE_EVS 1: cFE EVS Initialized: CFE_EVS v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled",
+        "1980-012-14:03:20.25081 CFE_SB_AppInit: Registered 4 events for filtering",
+        "EVS Port1 1980-012-14:03:20.25088 66/1/CFE_SB 1: cFE SB Initialized: CFE_SB v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled",
+        "EVS Port1 1980-012-14:03:20.25090 66/1/CFE_SB 14: No subscribers for MsgId 0x808,sender CFE_SB",
+        "EVS Port1 1980-012-14:03:20.35116 66/1/CFE_TBL 1: cFE TBL Initialized: CFE_TBL v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled",
+        "EVS Port1 1980-012-14:03:20.35119 66/1/CFE_SB 14: No subscribers for MsgId 0x808,sender CFE_TBL",
+        "EVS Port1 1980-012-14:03:20.45140 66/1/CFE_TIME 1: cFE TIME Initialized: CFE_TIME v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled",
+        "EVS Port1 1980-012-14:03:20.45141 66/1/CFE_SB 14: No subscribers for MsgId 0x808,sender CFE_TIME",
+        "1980-012-14:03:20.50132 CFE_ES_CreateObjects: Finished ES CreateObject table entries.",
+        "1980-012-14:03:20.50133 CFE_ES_Main: CFE_ES_Main entering CORE_READY state",
+        "1980-012-14:03:20.50136 CFE_ES_OpenStartupScript: Opened ES App Startup file: /cf/cfe_es_startup.scr",
+        "1980-012-14:03:20.50155 CFE_ES_ParseFileEntry: Loading shared library: /cf/cfe_assert.so",
+        "1980-012-14:03:20.50181 [BEGIN] CFE FUNCTIONAL TEST",
+        "1980-012-14:03:20.50182 [BEGIN] 01 CFE-STARTUP",
+        "1980-012-14:03:20.50200 CFE_ES_ParseFileEntry: Loading shared library: /cf/sample_lib.so",
+        "SAMPLE Lib Initialized.Sample Lib v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled",
+        "1980-012-14:03:20.50234 CFE_ES_ParseFileEntry: Loading file: /cf/sch_lab.so, APP: SCH_LAB",
+        "1980-012-14:03:20.50272 CFE_ES_ParseFileEntry: Loading file: /cf/ci_lab.so, APP: CI_LAB",
+        "1980-012-14:03:20.50309 CFE_ES_ParseFileEntry: Loading file: /cf/to_lab.so, APP: TO_LAB",
+        "1980-012-14:03:20.50357 CFE_ES_ParseFileEntry: Loading file: /cf/sample_app.so, APP: SAMPLE_APP",
+        "1980-012-14:03:20.50391 CFE_ES_ParseFileEntry: Loading file: /cf/lc.so, APP: LC",
+        "1980-012-14:03:20.50458 CFE_ES_ParseFileEntry: Loading file: /cf/cf.so, APP: CF",
+        "1980-012-14:03:20.50502 CFE_ES_ParseFileEntry: Loading file: /cf/ds.so, APP: DS",
+        "1980-012-14:03:20.50541 CFE_ES_ParseFileEntry: Loading file: /cf/fm.so, APP: FM",
+        "1980-012-14:03:20.50575 CFE_ES_ParseFileEntry: Loading file: /cf/hk.so, APP: HK",
+        "1980-012-14:03:20.50604 CFE_ES_ParseFileEntry: Loading file: /cf/hs.so, APP: HS",
+        "1980-012-14:03:20.50635 CFE_ES_ParseFileEntry: Loading file: /cf/sc.so, APP: SC",
+        "1980-012-14:03:20.50664 CFE_ES_ParseFileEntry: Loading file: /cf/md.so, APP: MD",
+        "1980-012-14:03:20.50693 CFE_ES_ParseFileEntry: Loading file: /cf/cs.so, APP: CS",
+        "1980-012-14:03:20.50733 CFE_ES_ParseFileEntry: Loading file: /cf/orbit_demo.so, APP: ORBIT_DEMO",
+        "SCH Lab Initialized.SCH Lab v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled",
+        "EVS Port1 1980-012-14:03:20.55354 66/1/TO_LAB 1: TO Lab Initialized.TO Lab v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled, Awaiting enable command.",
+        "EVS Port1 1980-012-14:03:20.55355 66/1/CFE_SB 14: No subscribers for MsgId 0x808,sender TO_LAB",
+        "1980-012-14:03:20.55397 CI_LAB listening on UDP port: 1234",
+        "EVS Port1 1980-012-14:03:20.55397 66/1/SAMPLE_APP 1: Sample App Initialized.Sample App v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled",
+        "EVS Port1 1980-012-14:03:20.55398 66/1/CI_LAB 3: CI Lab Initialized.CI Lab App v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled",
+        "EVS Port1 1980-012-14:03:20.55430 66/1/LC 56: WDT verify results: good = 0, bad = 0, unused = 176",
+        "EVS Port1 1980-012-14:03:20.55444 66/1/LC 66: ADT verify results: good = 0, bad = 0, unused = 176",
+        "EVS Port1 1980-012-14:03:20.55445 66/1/LC 23: LC use of Critical Data Store disabled, activity mask = 0x00991990",
+        "EVS Port1 1980-012-14:03:20.55447 66/1/LC 2: LC Initialized. Version 7.0.2.255",
+        "EVS Port1 1980-012-14:03:20.55538 66/1/CF 20: CF Initialized. Version 7.0.2.255",
+        "EVS Port1 1980-012-14:03:20.55548 66/1/DS 10: Destination file table verify results: good entries = 6, bad = 0, unused = 10",
+        "EVS Port1 1980-012-14:03:20.55557 66/1/DS 12: Filter table verify results: good entries = 14, bad = 0, unused = 242",
+        "EVS Port1 1980-012-14:03:20.55572 66/1/DS 1: Application initialized, version 7.0.2.255, data at 0x707f7b154480",
+        "EVS Port1 1980-012-14:03:20.55578 66/1/FM 80: Free Space Table verify results: good entries = 3, bad = 0, unused = 5",
+        "EVS Port1 1980-012-14:03:20.55590 66/1/FM 1: Initialization complete: version 7.0.2.255",
+        "EVS Port1 1980-012-14:03:20.55613 66/1/HK 1: HK Initialized.  Version 7.0.2.255",
+        "EVS Port1 1980-012-14:03:20.55633 66/1/HS 54: ExeCount verify results: good = 5, bad = 0, unused = 27",
+        "EVS Port1 1980-012-14:03:20.55635 66/1/HS 50: AppMon verify results: good = 0, bad = 0, unused = 32",
+        "EVS Port1 1980-012-14:03:20.55636 66/1/HS 52: EventMon verify results: good = 0, bad = 0, unused = 16",
+        "EVS Port1 1980-012-14:03:20.55638 66/1/HS 56: MsgActs verify results: good = 2, bad = 0, unused = 6",
+        "1980-012-14:03:20.55639 HS_SysMonInit(): System Monitor using PSP device ID 0110ff05",
+        "EVS Port1 1980-012-14:03:20.55668 66/1/SC 21: RTS table files not loaded at initialization = 0 of 4",
+        "EVS Port1 1980-012-14:03:20.55668 66/1/SC 9: SC Initialized. Version 7.0.2.255",
+        "EVS Port1 1980-012-14:03:20.55691 66/1/MD 52: MD Dwell Tbl verify results: good = 0, bad = 0, unused = 25",
+        "EVS Port1 1980-012-14:03:20.55696 66/1/MD 52: MD Dwell Tbl verify results: good = 0, bad = 0, unused = 25",
+        "EVS Port1 1980-012-14:03:20.55700 66/1/MD 52: MD Dwell Tbl verify results: good = 0, bad = 0, unused = 25",
+        "EVS Port1 1980-012-14:03:20.55703 66/1/MD 52: MD Dwell Tbl verify results: good = 0, bad = 0, unused = 25",
+        "EVS Port1 1980-012-14:03:20.55705 66/1/MD 7: Dwell Tables Recovered: 0, Dwell Tables Initialized: 4",
+        "EVS Port1 1980-012-14:03:20.55705 66/1/MD 1: MD Initialized.  Version 7.0.2.255",
+        "EVS Port1 1980-012-14:03:20.55737 66/1/CS 144: CS EEPROM Table verification results: good = 0, bad = 0, unused = 16",
+        "EVS Port1 1980-012-14:03:20.55737 66/1/CS 107: CS EEPROM Table: No valid entries in the table",
+        "EVS Port1 1980-012-14:03:20.55740 66/1/CS 143: CS Memory Table verification results: good = 0, bad = 0, unused = 16",
+        "EVS Port1 1980-012-14:03:20.55740 66/1/CS 107: CS Memory Table: No valid entries in the table",
+        "EVS Port1 1980-012-14:03:20.55743 66/1/CS 139: CS Tables Table verification results: good = 1, bad = 0, unused = 23",
+        "EVS Port1 1980-012-14:03:20.55744 66/1/CS 142: CS Apps Table verification results: good = 0, bad = 0, unused = 24",
+        "EVS Port1 1980-012-14:03:20.55744 66/1/CS 108: CS Apps Table: No valid entries in the table",
+        "EVS Port1 1980-012-14:03:20.55744 66/1/CS 127: OS Text Segment disabled due to platform",
+        "EVS Port1 1980-012-14:03:20.55746 66/1/CS 1: CS Initialized. Version 7.0.2.255",
+        "EVS Port1 1980-012-14:03:20.55767 66/1/ORBIT_DEMO 1: Orbit Demo Initialized.Orbit Demo v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled",
+        "CFE_PSP(Linux_SysMon): Started CPU utilization monitoring on 8 CPU(s)",
+        "EVS Port1 1980-012-14:03:20.56652 66/1/HS 1: HS Initialized.  Version 7.0.2.255",
+        "EVS Port1 1980-012-14:03:20.60601 66/1/FM 72: Child Task initialization complete",
+        "1980-012-14:03:20.60767 CFE_ES_Main: CFE_ES_Main entering APPS_INIT state",
+        "1980-012-14:03:20.60768 CFE_ES_Main: CFE_ES_Main entering OPERATIONAL state"
+      ]
+    }
+  ],
+  "finished_at": "2026-11-23T14:24:04.911Z",
+  "passed": true,
+  "stdout_job": {
+    "id": "b6c1293aaefb",
+    "action": "logs",
+    "target": "native",
+    "status": "running"
+  },
+  "terminal_recaptured_at": "2026-11-23T14:28:22.924Z"
+}

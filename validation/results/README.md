@@ -1,11 +1,13 @@
 # Reading the validation results
 
-These results come from backend procedures without a browser. There are three execution targets: **Native**, **QEMU**, and the **physical Raspberry Pi**. In raw records they are named `native`, `qemu`, and `physical`. ARM64 describes the shared architecture of the last two; it is not a fourth target.
+The quantitative results come from backend procedures without a browser. Later interface illustrations are packaged separately. There are three execution targets: **Native**, **QEMU**, and the **physical Raspberry Pi**. In raw records they are named `native`, `qemu`, and `physical`. ARM64 describes the shared architecture of the last two; it is not a fourth target.
 
 ## Start here
 
 | Package | What it contains |
 | --- | --- |
+| [Command sequence captures](illustrations/q1-sequence/README.md) | Four real HK panels (0 → 1 → 0 → 1), the corresponding literal cFS log, and capture metadata; a later illustration outside the quantitative sample. |
+| [Sensor encoding guide](SENSOR-ENCODING.md) | Fixed inputs, sensor addresses and registers, scaled units, the full received packet, and a read-only decoding example. |
 | [Final campaign](final/README.md) | The primary Q1–Q5 evidence: commands, sensor readings, interruptions, installed-file comparisons, and timings. `raw/` holds observations and logs; `tables/` holds summaries derived from them. |
 | [Compilation supplement](q5-compilation/README.md) | Ten additional incremental build cycles for the profile shared by QEMU and the physical board. `cycles/` contains the operations and logs; `analysis/` contains the source audit and derived tables. It supplements the final campaign without replacing its records. |
 | [Interface illustrations](final/illustrations/ground-qemu/) | Captures taken after the measured campaign. They illustrate the interface and do not add observations to the quantitative results. |
@@ -34,6 +36,8 @@ The sensor table contains one row per channel, not one row per packet. The physi
 The tables retain every measured duration. `n` means repetitions; `median` is the central value after sorting the times (the mean of the two central values for an even count); `min` and `max` give the observed range. `iqr` describes the spread of the middle half of the observations. Full builds have one observation each. The repeated measurements are descriptive; they do not establish a performance improvement. Builds used one worker.
 
 ## One sensor reading, from input to packet
+
+For a complete register and packet diagram, all byte offsets, and a reproducible decoder, read the [sensor encoding guide](SENSOR-ENCODING.md).
 
 The first case in [QEMU sensor records](final/raw/qemu/sensors.json) follows this path:
 
