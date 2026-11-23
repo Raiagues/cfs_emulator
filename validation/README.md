@@ -1,5 +1,7 @@
 # Final technical evaluation
 
+For a short explanation of the published evidence, examples, and timing terms, start with the [results reading guide](results/README.md).
+
 This protocol exercises the backend without a browser. Each result must come from a new run with a frozen platform commit, an identified official NASA checkout, and an independent mission. Unit tests verify the harness; their temporary data are not study results.
 
 The harness only modifies missions with an `.evaluation.json` marker created by `prepare`. Do not copy a mission or artifacts from a previous run. All builds use one job. Each output directory must be new; a failure preserves partial evidence and returns an error without artificially completing the counts.
