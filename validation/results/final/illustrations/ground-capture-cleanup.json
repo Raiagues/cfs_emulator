@@ -1,0 +1,9 @@
+{
+  "server_pid": 624908,
+  "server_port": 8766,
+  "server_stopped": true,
+  "port_released": true,
+  "finished_utc": "2026-11-23T11:21:06.851126+00:00",
+  "flight_left_running": true,
+  "notes": "Only the isolated UI process received SIGINT; browser closed by capture script. No cFS command sent during capture."
+}

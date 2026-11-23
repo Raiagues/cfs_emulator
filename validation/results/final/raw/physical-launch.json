@@ -1,0 +1,8 @@
+{
+  "pid": 627901,
+  "launched_utc": "2026-11-23T11:21:49.568452+00:00",
+  "coordinator_sha256": "3f5290baa489a55c95f71431f52c2b5961266ab5433f40e0c52523c9abd97d55",
+  "log": "physical-orchestration.log",
+  "detached": true,
+  "release": "root confirmed QEMU capture closed, port 8766 free; exclusive measured physical phase"
+}

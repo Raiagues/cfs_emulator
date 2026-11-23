@@ -1,0 +1,22 @@
+{
+  "kind": "full_build",
+  "target": "qemu",
+  "n": 1,
+  "started_utc": "2026-11-23T06:59:37.322370+00:00",
+  "status": "passed",
+  "measurement": {
+    "action": "build",
+    "target": "qemu",
+    "started_utc": "2026-11-23T06:59:37.322402+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "296e3d31931eefde52e11f7bc2c8c2ab550ebc72137c31c57fd78efd7b5538ed",
+      "built_at": 1795417273.7588363
+    },
+    "elapsed_s": 122.08249576199887,
+    "ended_utc": "2026-11-23T07:01:40.205533+00:00"
+  },
+  "ended_utc": "2026-11-23T07:01:40.206094+00:00"
+}

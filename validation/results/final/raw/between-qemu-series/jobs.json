@@ -1,0 +1,14 @@
+[
+  {
+    "action": "stop",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:51:26.468810+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 2.4924322869992466,
+    "ended_utc": "2026-11-23T07:51:28.961254+00:00"
+  }
+]

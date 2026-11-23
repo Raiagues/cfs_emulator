@@ -1,0 +1,290 @@
+[
+  {
+    "action": "run",
+    "target": "native",
+    "started_utc": "2026-11-23T06:51:52.510981+00:00",
+    "phases": [],
+    "operational_observed_s": 2.817046855998342,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "ef5f6b5a906dc68daf30917c1e5ba9420b02543ca1a540f65f46aa02d2bf6f1f",
+      "pid": 580861,
+      "instance": "33074a868cda96c1db99131adccd2ef3",
+      "built_at": 1795416686.7975543,
+      "deployed_at": 1795416713.2994554
+    },
+    "elapsed_s": 3.0434655209974153,
+    "ended_utc": "2026-11-23T06:51:55.554454+00:00"
+  },
+  {
+    "action": "stop",
+    "target": "native",
+    "started_utc": "2026-11-23T06:52:01.382189+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 0.289470750001783,
+    "ended_utc": "2026-11-23T06:52:01.671688+00:00"
+  },
+  {
+    "action": "run",
+    "target": "native",
+    "started_utc": "2026-11-23T06:52:01.672390+00:00",
+    "phases": [],
+    "operational_observed_s": 2.533877878995554,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "ef5f6b5a906dc68daf30917c1e5ba9420b02543ca1a540f65f46aa02d2bf6f1f",
+      "pid": 580961,
+      "instance": "0c9c09565dd638774ca1976bf4b30d84",
+      "built_at": 1795416686.7975543,
+      "deployed_at": 1795416722.2257428
+    },
+    "elapsed_s": 2.762047635995259,
+    "ended_utc": "2026-11-23T06:52:04.434448+00:00"
+  },
+  {
+    "action": "stop",
+    "target": "native",
+    "started_utc": "2026-11-23T06:52:10.263286+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 0.42432663300132845,
+    "ended_utc": "2026-11-23T06:52:10.687644+00:00"
+  },
+  {
+    "action": "run",
+    "target": "native",
+    "started_utc": "2026-11-23T06:52:10.688434+00:00",
+    "phases": [],
+    "operational_observed_s": 2.6401528310016147,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "ef5f6b5a906dc68daf30917c1e5ba9420b02543ca1a540f65f46aa02d2bf6f1f",
+      "pid": 581111,
+      "instance": "a288c5476331c5383f19c0390cfdf43d",
+      "built_at": 1795416686.7975543,
+      "deployed_at": 1795416731.3232012
+    },
+    "elapsed_s": 2.8560637199989287,
+    "ended_utc": "2026-11-23T06:52:13.544508+00:00"
+  },
+  {
+    "action": "stop",
+    "target": "native",
+    "started_utc": "2026-11-23T06:52:19.298709+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 0.3995472780006821,
+    "ended_utc": "2026-11-23T06:52:19.698284+00:00"
+  },
+  {
+    "action": "run",
+    "target": "native",
+    "started_utc": "2026-11-23T06:52:19.699270+00:00",
+    "phases": [],
+    "operational_observed_s": 2.599593653998454,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "ef5f6b5a906dc68daf30917c1e5ba9420b02543ca1a540f65f46aa02d2bf6f1f",
+      "pid": 581209,
+      "instance": "e34c6ea47b2a85421e03568ed57bd7e2",
+      "built_at": 1795416686.7975543,
+      "deployed_at": 1795416740.2558389
+    },
+    "elapsed_s": 2.8263966719969176,
+    "ended_utc": "2026-11-23T06:52:22.525678+00:00"
+  },
+  {
+    "action": "stop",
+    "target": "native",
+    "started_utc": "2026-11-23T06:52:28.286928+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 0.48849626899755094,
+    "ended_utc": "2026-11-23T06:52:28.775452+00:00"
+  },
+  {
+    "action": "run",
+    "target": "native",
+    "started_utc": "2026-11-23T06:52:28.776388+00:00",
+    "phases": [],
+    "operational_observed_s": 2.526546954002697,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "ef5f6b5a906dc68daf30917c1e5ba9420b02543ca1a540f65f46aa02d2bf6f1f",
+      "pid": 581314,
+      "instance": "ac21d716cf7ca6b83317a495f9b18bdf",
+      "built_at": 1795416686.7975543,
+      "deployed_at": 1795416749.3286686
+    },
+    "elapsed_s": 2.7548340820067097,
+    "ended_utc": "2026-11-23T06:52:31.531234+00:00"
+  },
+  {
+    "action": "stop",
+    "target": "native",
+    "started_utc": "2026-11-23T06:52:37.373737+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 0.4339846459988621,
+    "ended_utc": "2026-11-23T06:52:37.807751+00:00"
+  },
+  {
+    "action": "run",
+    "target": "native",
+    "started_utc": "2026-11-23T06:52:37.808750+00:00",
+    "phases": [],
+    "operational_observed_s": 2.639296066001407,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "ef5f6b5a906dc68daf30917c1e5ba9420b02543ca1a540f65f46aa02d2bf6f1f",
+      "pid": 581410,
+      "instance": "7ec38d07676892c2643cc0cd2d490128",
+      "built_at": 1795416686.7975543,
+      "deployed_at": 1795416758.360678
+    },
+    "elapsed_s": 2.8547664989964687,
+    "ended_utc": "2026-11-23T06:52:40.663528+00:00"
+  },
+  {
+    "action": "stop",
+    "target": "native",
+    "started_utc": "2026-11-23T06:52:46.436217+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 0.31087081500299973,
+    "ended_utc": "2026-11-23T06:52:46.747118+00:00"
+  },
+  {
+    "action": "run",
+    "target": "native",
+    "started_utc": "2026-11-23T06:52:46.748124+00:00",
+    "phases": [],
+    "operational_observed_s": 2.5782196590007516,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "ef5f6b5a906dc68daf30917c1e5ba9420b02543ca1a540f65f46aa02d2bf6f1f",
+      "pid": 581514,
+      "instance": "c4a906d9dc399b8237bbec185d786393",
+      "built_at": 1795416686.7975543,
+      "deployed_at": 1795416767.2023623
+    },
+    "elapsed_s": 2.8067026260032435,
+    "ended_utc": "2026-11-23T06:52:49.554837+00:00"
+  },
+  {
+    "action": "stop",
+    "target": "native",
+    "started_utc": "2026-11-23T06:52:55.199305+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 0.42533178499434143,
+    "ended_utc": "2026-11-23T06:52:55.624672+00:00"
+  },
+  {
+    "action": "run",
+    "target": "native",
+    "started_utc": "2026-11-23T06:52:55.625739+00:00",
+    "phases": [],
+    "operational_observed_s": 2.811237374000484,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "ef5f6b5a906dc68daf30917c1e5ba9420b02543ca1a540f65f46aa02d2bf6f1f",
+      "pid": 581615,
+      "instance": "f6cf75a47d6c8d6b0fe579d4f3fd2cd5",
+      "built_at": 1795416686.7975543,
+      "deployed_at": 1795416776.3825684
+    },
+    "elapsed_s": 3.026937809001538,
+    "ended_utc": "2026-11-23T06:52:58.652688+00:00"
+  },
+  {
+    "action": "stop",
+    "target": "native",
+    "started_utc": "2026-11-23T06:53:04.337650+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 0.40471981700102333,
+    "ended_utc": "2026-11-23T06:53:04.742398+00:00"
+  },
+  {
+    "action": "run",
+    "target": "native",
+    "started_utc": "2026-11-23T06:53:04.743448+00:00",
+    "phases": [],
+    "operational_observed_s": 2.6848537969999597,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "ef5f6b5a906dc68daf30917c1e5ba9420b02543ca1a540f65f46aa02d2bf6f1f",
+      "pid": 581721,
+      "instance": "87842e9b5c2c15f98e904a2677f72724",
+      "built_at": 1795416686.7975543,
+      "deployed_at": 1795416785.3075325
+    },
+    "elapsed_s": 2.9123558579958626,
+    "ended_utc": "2026-11-23T06:53:07.655814+00:00"
+  },
+  {
+    "action": "stop",
+    "target": "native",
+    "started_utc": "2026-11-23T06:53:13.361576+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 0.42401088799670106,
+    "ended_utc": "2026-11-23T06:53:13.785617+00:00"
+  },
+  {
+    "action": "run",
+    "target": "native",
+    "started_utc": "2026-11-23T06:53:13.786912+00:00",
+    "phases": [],
+    "operational_observed_s": 2.7324643739993917,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "ef5f6b5a906dc68daf30917c1e5ba9420b02543ca1a540f65f46aa02d2bf6f1f",
+      "pid": 581815,
+      "instance": "7b41f68328a1acce78b6bc9be8cb84d9",
+      "built_at": 1795416686.7975543,
+      "deployed_at": 1795416794.3612795
+    },
+    "elapsed_s": 2.9597698590005166,
+    "ended_utc": "2026-11-23T06:53:16.746692+00:00"
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "action": "stop",
+    "target": "qemu",
+    "started_utc": "2026-11-23T11:21:49.741919+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 2.4766187820059713,
+    "ended_utc": "2026-11-23T11:21:52.218553+00:00"
+  },
+  {
+    "action": "shutdown",
+    "target": "qemu",
+    "started_utc": "2026-11-23T11:21:52.218775+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 6.846989429002861,
+    "ended_utc": "2026-11-23T11:21:59.065776+00:00"
+  }
+]

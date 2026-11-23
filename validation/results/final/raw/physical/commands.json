@@ -1,0 +1,3854 @@
+[
+  {
+    "app": "sample_app",
+    "repetition": 1,
+    "command": "SAMPLE_APP_NOOP_CC",
+    "baseline": {
+      "mid": 2179,
+      "sequence": 2,
+      "bytes": 18,
+      "name": "SAMPLE_APP_HkTlm_t",
+      "app": "sample_app",
+      "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0883c002000b000f46334cc9000000000000",
+      "received_at": 1795433100.2706518,
+      "count": 1,
+      "event_id": 20
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 36,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "TO_LAB",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "TO telemetry output enabled for IP 192.168.1.117",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c02400a9000f46308e7900000000544f5f4c4142000000000000000000000000000000000000030002004200000001000000544f2074656c656d65747279206f757470757420656e61626c656420666f72204950203139322e3136382e312e31313700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433097.5069187,
+        "count": 1,
+        "event_id": 10
+      }
+    },
+    "expected_counter": 1,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "SAMPLE_APP_NOOP_CC",
+      "app": "sample_app",
+      "mid": 6274,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433100.314839,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1882c000000100a4",
+      "event_id": 21
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 37,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "SAMPLE_APP",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "SAMPLE: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c02500a9000f46337f850000000053414d504c455f415050000000000000000000000000000003000200420000000100000053414d504c453a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433100.475469,
+      "count": 2,
+      "event_id": 22
+    },
+    "housekeeping": {
+      "mid": 2179,
+      "sequence": 3,
+      "bytes": 18,
+      "name": "SAMPLE_APP_HkTlm_t",
+      "app": "sample_app",
+      "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0883c003000b000f4638b330000000000100",
+      "received_at": 1795433105.6979144,
+      "count": 2,
+      "event_id": 55
+    }
+  },
+  {
+    "app": "sample_app",
+    "repetition": 1,
+    "command": "SAMPLE_APP_RESET_COUNTERS_CC",
+    "baseline": {
+      "mid": 2179,
+      "sequence": 3,
+      "bytes": 18,
+      "name": "SAMPLE_APP_HkTlm_t",
+      "app": "sample_app",
+      "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0883c003000b000f4638b330000000000100",
+      "received_at": 1795433105.6979144,
+      "count": 2,
+      "event_id": 55
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 37,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "SAMPLE_APP",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "SAMPLE: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c02500a9000f46337f850000000053414d504c455f415050000000000000000000000000000003000200420000000100000053414d504c453a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433100.475469,
+        "count": 2,
+        "event_id": 22
+      }
+    },
+    "expected_counter": 0,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "SAMPLE_APP_RESET_COUNTERS_CC",
+      "app": "sample_app",
+      "mid": 6274,
+      "code": 1,
+      "values": {},
+      "sent_at": 1795433105.828709,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1882c000000101a5",
+      "event_id": 56
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 38,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "SAMPLE_APP",
+        "PacketID.EventID": 4,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "SAMPLE: RESET command",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c02600a9000f4638ff520000000053414d504c455f415050000000000000000000000000000004000200420000000100000053414d504c453a20524553455420636f6d6d616e6400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433105.9156582,
+      "count": 3,
+      "event_id": 57
+    },
+    "housekeeping": {
+      "mid": 2179,
+      "sequence": 4,
+      "bytes": 18,
+      "name": "SAMPLE_APP_HkTlm_t",
+      "app": "sample_app",
+      "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0883c004000b000f463e1999000000000000",
+      "received_at": 1795433111.023103,
+      "count": 3,
+      "event_id": 82
+    }
+  },
+  {
+    "app": "sample_app",
+    "repetition": 1,
+    "command": "SAMPLE_APP_NOOP_CC",
+    "baseline": {
+      "mid": 2179,
+      "sequence": 4,
+      "bytes": 18,
+      "name": "SAMPLE_APP_HkTlm_t",
+      "app": "sample_app",
+      "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0883c004000b000f463e1999000000000000",
+      "received_at": 1795433111.023103,
+      "count": 3,
+      "event_id": 82
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 38,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "SAMPLE_APP",
+          "PacketID.EventID": 4,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "SAMPLE: RESET command",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c02600a9000f4638ff520000000053414d504c455f415050000000000000000000000000000004000200420000000100000053414d504c453a20524553455420636f6d6d616e6400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433105.9156582,
+        "count": 3,
+        "event_id": 57
+      }
+    },
+    "expected_counter": 1,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "SAMPLE_APP_NOOP_CC",
+      "app": "sample_app",
+      "mid": 6274,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433111.0900521,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1882c000000100a4",
+      "event_id": 84
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 39,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "SAMPLE_APP",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "SAMPLE: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c02700a9000f463e7f120000000053414d504c455f415050000000000000000000000000000003000200420000000100000053414d504c453a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433111.414579,
+      "count": 4,
+      "event_id": 85
+    },
+    "housekeeping": {
+      "mid": 2179,
+      "sequence": 5,
+      "bytes": 18,
+      "name": "SAMPLE_APP_HkTlm_t",
+      "app": "sample_app",
+      "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0883c005000b000f46437ffe000000000100",
+      "received_at": 1795433116.4182763,
+      "count": 4,
+      "event_id": 112
+    }
+  },
+  {
+    "app": "sample_app",
+    "repetition": 2,
+    "command": "SAMPLE_APP_NOOP_CC",
+    "baseline": {
+      "mid": 2179,
+      "sequence": 5,
+      "bytes": 18,
+      "name": "SAMPLE_APP_HkTlm_t",
+      "app": "sample_app",
+      "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0883c005000b000f46437ffe000000000100",
+      "received_at": 1795433116.4182763,
+      "count": 4,
+      "event_id": 112
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 39,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "SAMPLE_APP",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "SAMPLE: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c02700a9000f463e7f120000000053414d504c455f415050000000000000000000000000000003000200420000000100000053414d504c453a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433111.414579,
+        "count": 4,
+        "event_id": 85
+      }
+    },
+    "expected_counter": 2,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "SAMPLE_APP_NOOP_CC",
+      "app": "sample_app",
+      "mid": 6274,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433116.4775977,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1882c000000100a4",
+      "event_id": 113
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 40,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "SAMPLE_APP",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "SAMPLE: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c02800a9000f4643fed30000000053414d504c455f415050000000000000000000000000000003000200420000000100000053414d504c453a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433116.9131298,
+      "count": 5,
+      "event_id": 115
+    },
+    "housekeeping": {
+      "mid": 2179,
+      "sequence": 6,
+      "bytes": 18,
+      "name": "SAMPLE_APP_HkTlm_t",
+      "app": "sample_app",
+      "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+      "values": {
+        "CommandCounter": 2,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0883c006000b000f4648e663000000000200",
+      "received_at": 1795433121.8204362,
+      "count": 5,
+      "event_id": 147
+    }
+  },
+  {
+    "app": "sample_app",
+    "repetition": 2,
+    "command": "SAMPLE_APP_RESET_COUNTERS_CC",
+    "baseline": {
+      "mid": 2179,
+      "sequence": 6,
+      "bytes": 18,
+      "name": "SAMPLE_APP_HkTlm_t",
+      "app": "sample_app",
+      "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+      "values": {
+        "CommandCounter": 2,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0883c006000b000f4648e663000000000200",
+      "received_at": 1795433121.8204362,
+      "count": 5,
+      "event_id": 147
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 40,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "SAMPLE_APP",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "SAMPLE: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c02800a9000f4643fed30000000053414d504c455f415050000000000000000000000000000003000200420000000100000053414d504c453a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433116.9131298,
+        "count": 5,
+        "event_id": 115
+      }
+    },
+    "expected_counter": 0,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "SAMPLE_APP_RESET_COUNTERS_CC",
+      "app": "sample_app",
+      "mid": 6274,
+      "code": 1,
+      "values": {},
+      "sent_at": 1795433121.8358839,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1882c000000101a5",
+      "event_id": 148
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 41,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "SAMPLE_APP",
+        "PacketID.EventID": 4,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "SAMPLE: RESET command",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c02900a9000f4648fed40000000053414d504c455f415050000000000000000000000000000004000200420000000100000053414d504c453a20524553455420636f6d6d616e6400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433121.9134126,
+      "count": 6,
+      "event_id": 149
+    },
+    "housekeeping": {
+      "mid": 2179,
+      "sequence": 7,
+      "bytes": 18,
+      "name": "SAMPLE_APP_HkTlm_t",
+      "app": "sample_app",
+      "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0883c007000b000f464e4ccf000000000000",
+      "received_at": 1795433127.21977,
+      "count": 6,
+      "event_id": 175
+    }
+  },
+  {
+    "app": "sample_app",
+    "repetition": 2,
+    "command": "SAMPLE_APP_NOOP_CC",
+    "baseline": {
+      "mid": 2179,
+      "sequence": 7,
+      "bytes": 18,
+      "name": "SAMPLE_APP_HkTlm_t",
+      "app": "sample_app",
+      "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0883c007000b000f464e4ccf000000000000",
+      "received_at": 1795433127.21977,
+      "count": 6,
+      "event_id": 175
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 41,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "SAMPLE_APP",
+          "PacketID.EventID": 4,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "SAMPLE: RESET command",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c02900a9000f4648fed40000000053414d504c455f415050000000000000000000000000000004000200420000000100000053414d504c453a20524553455420636f6d6d616e6400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433121.9134126,
+        "count": 6,
+        "event_id": 149
+      }
+    },
+    "expected_counter": 1,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "SAMPLE_APP_NOOP_CC",
+      "app": "sample_app",
+      "mid": 6274,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433127.3370893,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1882c000000100a4",
+      "event_id": 176
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 42,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "SAMPLE_APP",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "SAMPLE: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c02a00a9000f464e7e930000000053414d504c455f415050000000000000000000000000000003000200420000000100000053414d504c453a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433127.4129393,
+      "count": 7,
+      "event_id": 177
+    },
+    "housekeeping": {
+      "mid": 2179,
+      "sequence": 8,
+      "bytes": 18,
+      "name": "SAMPLE_APP_HkTlm_t",
+      "app": "sample_app",
+      "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0883c008000b000f4653b334000000000100",
+      "received_at": 1795433132.6184685,
+      "count": 7,
+      "event_id": 204
+    }
+  },
+  {
+    "app": "sample_app",
+    "repetition": 3,
+    "command": "SAMPLE_APP_NOOP_CC",
+    "baseline": {
+      "mid": 2179,
+      "sequence": 8,
+      "bytes": 18,
+      "name": "SAMPLE_APP_HkTlm_t",
+      "app": "sample_app",
+      "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0883c008000b000f4653b334000000000100",
+      "received_at": 1795433132.6184685,
+      "count": 7,
+      "event_id": 204
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 42,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "SAMPLE_APP",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "SAMPLE: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c02a00a9000f464e7e930000000053414d504c455f415050000000000000000000000000000003000200420000000100000053414d504c453a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433127.4129393,
+        "count": 7,
+        "event_id": 177
+      }
+    },
+    "expected_counter": 2,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "SAMPLE_APP_NOOP_CC",
+      "app": "sample_app",
+      "mid": 6274,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433132.6820529,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1882c000000100a4",
+      "event_id": 207
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 43,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "SAMPLE_APP",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "SAMPLE: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c02b00a9000f4653fe570000000053414d504c455f415050000000000000000000000000000003000200420000000100000053414d504c453a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433132.914533,
+      "count": 8,
+      "event_id": 209
+    },
+    "housekeeping": {
+      "mid": 2179,
+      "sequence": 9,
+      "bytes": 18,
+      "name": "SAMPLE_APP_HkTlm_t",
+      "app": "sample_app",
+      "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+      "values": {
+        "CommandCounter": 2,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0883c009000b000f46591999000000000200",
+      "received_at": 1795433138.056537,
+      "count": 8,
+      "event_id": 240
+    }
+  },
+  {
+    "app": "sample_app",
+    "repetition": 3,
+    "command": "SAMPLE_APP_RESET_COUNTERS_CC",
+    "baseline": {
+      "mid": 2179,
+      "sequence": 9,
+      "bytes": 18,
+      "name": "SAMPLE_APP_HkTlm_t",
+      "app": "sample_app",
+      "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+      "values": {
+        "CommandCounter": 2,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0883c009000b000f46591999000000000200",
+      "received_at": 1795433138.056537,
+      "count": 8,
+      "event_id": 240
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 43,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "SAMPLE_APP",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "SAMPLE: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c02b00a9000f4653fe570000000053414d504c455f415050000000000000000000000000000003000200420000000100000053414d504c453a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433132.914533,
+        "count": 8,
+        "event_id": 209
+      }
+    },
+    "expected_counter": 0,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "SAMPLE_APP_RESET_COUNTERS_CC",
+      "app": "sample_app",
+      "mid": 6274,
+      "code": 1,
+      "values": {},
+      "sent_at": 1795433138.1001067,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1882c000000101a5",
+      "event_id": 241
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 44,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "SAMPLE_APP",
+        "PacketID.EventID": 4,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "SAMPLE: RESET command",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c02c00a9000f46597e130000000053414d504c455f415050000000000000000000000000000004000200420000000100000053414d504c453a20524553455420636f6d6d616e6400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433138.4109993,
+      "count": 9,
+      "event_id": 242
+    },
+    "housekeeping": {
+      "mid": 2179,
+      "sequence": 10,
+      "bytes": 18,
+      "name": "SAMPLE_APP_HkTlm_t",
+      "app": "sample_app",
+      "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0883c00a000b000f465e8002000000000000",
+      "received_at": 1795433143.4852316,
+      "count": 9,
+      "event_id": 266
+    }
+  },
+  {
+    "app": "sample_app",
+    "repetition": 3,
+    "command": "SAMPLE_APP_NOOP_CC",
+    "baseline": {
+      "mid": 2179,
+      "sequence": 10,
+      "bytes": 18,
+      "name": "SAMPLE_APP_HkTlm_t",
+      "app": "sample_app",
+      "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0883c00a000b000f465e8002000000000000",
+      "received_at": 1795433143.4852316,
+      "count": 9,
+      "event_id": 266
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 44,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "SAMPLE_APP",
+          "PacketID.EventID": 4,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "SAMPLE: RESET command",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c02c00a9000f46597e130000000053414d504c455f415050000000000000000000000000000004000200420000000100000053414d504c453a20524553455420636f6d6d616e6400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433138.4109993,
+        "count": 9,
+        "event_id": 242
+      }
+    },
+    "expected_counter": 1,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "SAMPLE_APP_NOOP_CC",
+      "app": "sample_app",
+      "mid": 6274,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433143.564232,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1882c000000100a4",
+      "event_id": 270
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 45,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "SAMPLE_APP",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "SAMPLE: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c02d00a9000f465efdd60000000053414d504c455f415050000000000000000000000000000003000200420000000100000053414d504c453a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433143.909579,
+      "count": 10,
+      "event_id": 273
+    },
+    "housekeeping": {
+      "mid": 2179,
+      "sequence": 11,
+      "bytes": 18,
+      "name": "SAMPLE_APP_HkTlm_t",
+      "app": "sample_app",
+      "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0883c00b000b000f4663e667000000000100",
+      "received_at": 1795433148.8184974,
+      "count": 10,
+      "event_id": 296
+    }
+  },
+  {
+    "app": "eval_temp",
+    "repetition": 1,
+    "command": "EVAL_TEMP_NOOP_CC",
+    "baseline": {
+      "mid": 2560,
+      "sequence": 14,
+      "bytes": 18,
+      "name": "EVAL_TEMP_HkTlm_t",
+      "app": "eval_temp",
+      "source": "cFS/apps/eval_temp/config/default_eval_temp_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a00c00e000b000f4660809c000000000000",
+      "received_at": 1795433145.4360244,
+      "count": 13,
+      "event_id": 284
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 45,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "SAMPLE_APP",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "SAMPLE: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c02d00a9000f465efdd60000000053414d504c455f415050000000000000000000000000000003000200420000000100000053414d504c453a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433143.909579,
+        "count": 10,
+        "event_id": 273
+      }
+    },
+    "expected_counter": 1,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_TEMP_NOOP_CC",
+      "app": "eval_temp",
+      "mid": 6656,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433148.8501668,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a00c00000010024",
+      "event_id": 298
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 46,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_TEMP",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_TEMP: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c02e00a9000f4663fdde000000004556414c5f54454d500000000000000000000000000000000300020042000000010000004556414c5f54454d503a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433148.914576,
+      "count": 11,
+      "event_id": 299
+    },
+    "housekeeping": {
+      "mid": 2560,
+      "sequence": 15,
+      "bytes": 18,
+      "name": "EVAL_TEMP_HkTlm_t",
+      "app": "eval_temp",
+      "source": "cFS/apps/eval_temp/config/default_eval_temp_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a00c00f000b000f46648072000000000100",
+      "received_at": 1795433149.419445,
+      "count": 14,
+      "event_id": 304
+    }
+  },
+  {
+    "app": "eval_temp",
+    "repetition": 1,
+    "command": "EVAL_TEMP_RESET_COUNTERS_CC",
+    "baseline": {
+      "mid": 2560,
+      "sequence": 15,
+      "bytes": 18,
+      "name": "EVAL_TEMP_HkTlm_t",
+      "app": "eval_temp",
+      "source": "cFS/apps/eval_temp/config/default_eval_temp_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a00c00f000b000f46648072000000000100",
+      "received_at": 1795433149.419445,
+      "count": 14,
+      "event_id": 304
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 46,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_TEMP",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_TEMP: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c02e00a9000f4663fdde000000004556414c5f54454d500000000000000000000000000000000300020042000000010000004556414c5f54454d503a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433148.914576,
+        "count": 11,
+        "event_id": 299
+      }
+    },
+    "expected_counter": 0,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_TEMP_RESET_COUNTERS_CC",
+      "app": "eval_temp",
+      "mid": 6656,
+      "code": 1,
+      "values": {},
+      "sent_at": 1795433149.490766,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a00c00000010125",
+      "event_id": 309
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 47,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_TEMP",
+        "PacketID.EventID": 4,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_TEMP: RESET command",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c02f00a9000f4664ffd2000000004556414c5f54454d500000000000000000000000000000000400020042000000010000004556414c5f54454d503a20524553455420636f6d6d616e6400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433149.9348965,
+      "count": 12,
+      "event_id": 311
+    },
+    "housekeeping": {
+      "mid": 2560,
+      "sequence": 16,
+      "bytes": 18,
+      "name": "EVAL_TEMP_HkTlm_t",
+      "app": "eval_temp",
+      "source": "cFS/apps/eval_temp/config/default_eval_temp_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a00c010000b000f4668809b000000000000",
+      "received_at": 1795433153.4195356,
+      "count": 15,
+      "event_id": 329
+    }
+  },
+  {
+    "app": "eval_temp",
+    "repetition": 1,
+    "command": "EVAL_TEMP_NOOP_CC",
+    "baseline": {
+      "mid": 2560,
+      "sequence": 16,
+      "bytes": 18,
+      "name": "EVAL_TEMP_HkTlm_t",
+      "app": "eval_temp",
+      "source": "cFS/apps/eval_temp/config/default_eval_temp_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a00c010000b000f4668809b000000000000",
+      "received_at": 1795433153.4195356,
+      "count": 15,
+      "event_id": 329
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 47,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_TEMP",
+          "PacketID.EventID": 4,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_TEMP: RESET command",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c02f00a9000f4664ffd2000000004556414c5f54454d500000000000000000000000000000000400020042000000010000004556414c5f54454d503a20524553455420636f6d6d616e6400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433149.9348965,
+        "count": 12,
+        "event_id": 311
+      }
+    },
+    "expected_counter": 1,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_TEMP_NOOP_CC",
+      "app": "eval_temp",
+      "mid": 6656,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433153.486593,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a00c00000010024",
+      "event_id": 332
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 48,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_TEMP",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_TEMP: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c03000a9000f4668fde1000000004556414c5f54454d500000000000000000000000000000000300020042000000010000004556414c5f54454d503a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433153.9105558,
+      "count": 13,
+      "event_id": 334
+    },
+    "housekeeping": {
+      "mid": 2560,
+      "sequence": 17,
+      "bytes": 18,
+      "name": "EVAL_TEMP_HkTlm_t",
+      "app": "eval_temp",
+      "source": "cFS/apps/eval_temp/config/default_eval_temp_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a00c011000b000f466c809a000000000100",
+      "received_at": 1795433157.4198174,
+      "count": 16,
+      "event_id": 353
+    }
+  },
+  {
+    "app": "eval_temp",
+    "repetition": 2,
+    "command": "EVAL_TEMP_NOOP_CC",
+    "baseline": {
+      "mid": 2560,
+      "sequence": 17,
+      "bytes": 18,
+      "name": "EVAL_TEMP_HkTlm_t",
+      "app": "eval_temp",
+      "source": "cFS/apps/eval_temp/config/default_eval_temp_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a00c011000b000f466c809a000000000100",
+      "received_at": 1795433157.4198174,
+      "count": 16,
+      "event_id": 353
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 48,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_TEMP",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_TEMP: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c03000a9000f4668fde1000000004556414c5f54454d500000000000000000000000000000000300020042000000010000004556414c5f54454d503a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433153.9105558,
+        "count": 13,
+        "event_id": 334
+      }
+    },
+    "expected_counter": 2,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_TEMP_NOOP_CC",
+      "app": "eval_temp",
+      "mid": 6656,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433157.5602155,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a00c00000010024",
+      "event_id": 356
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 49,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_TEMP",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_TEMP: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c03100a9000f466cfe54000000004556414c5f54454d500000000000000000000000000000000300020042000000010000004556414c5f54454d503a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433157.9119415,
+      "count": 14,
+      "event_id": 359
+    },
+    "housekeeping": {
+      "mid": 2560,
+      "sequence": 18,
+      "bytes": 18,
+      "name": "EVAL_TEMP_HkTlm_t",
+      "app": "eval_temp",
+      "source": "cFS/apps/eval_temp/config/default_eval_temp_msgstruct.h",
+      "values": {
+        "CommandCounter": 2,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a00c012000b000f4670809c000000000200",
+      "received_at": 1795433161.4206219,
+      "count": 17,
+      "event_id": 376
+    }
+  },
+  {
+    "app": "eval_temp",
+    "repetition": 2,
+    "command": "EVAL_TEMP_RESET_COUNTERS_CC",
+    "baseline": {
+      "mid": 2560,
+      "sequence": 18,
+      "bytes": 18,
+      "name": "EVAL_TEMP_HkTlm_t",
+      "app": "eval_temp",
+      "source": "cFS/apps/eval_temp/config/default_eval_temp_msgstruct.h",
+      "values": {
+        "CommandCounter": 2,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a00c012000b000f4670809c000000000200",
+      "received_at": 1795433161.4206219,
+      "count": 17,
+      "event_id": 376
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 49,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_TEMP",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_TEMP: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c03100a9000f466cfe54000000004556414c5f54454d500000000000000000000000000000000300020042000000010000004556414c5f54454d503a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433157.9119415,
+        "count": 14,
+        "event_id": 359
+      }
+    },
+    "expected_counter": 0,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_TEMP_RESET_COUNTERS_CC",
+      "app": "eval_temp",
+      "mid": 6656,
+      "code": 1,
+      "values": {},
+      "sent_at": 1795433161.4787233,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a00c00000010125",
+      "event_id": 379
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 50,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_TEMP",
+        "PacketID.EventID": 4,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_TEMP: RESET command",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c03200a9000f4670fed5000000004556414c5f54454d500000000000000000000000000000000400020042000000010000004556414c5f54454d503a20524553455420636f6d6d616e6400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433161.92316,
+      "count": 15,
+      "event_id": 381
+    },
+    "housekeeping": {
+      "mid": 2560,
+      "sequence": 19,
+      "bytes": 18,
+      "name": "EVAL_TEMP_HkTlm_t",
+      "app": "eval_temp",
+      "source": "cFS/apps/eval_temp/config/default_eval_temp_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a00c013000b000f4674809d000000000000",
+      "received_at": 1795433165.4235811,
+      "count": 18,
+      "event_id": 401
+    }
+  },
+  {
+    "app": "eval_temp",
+    "repetition": 2,
+    "command": "EVAL_TEMP_NOOP_CC",
+    "baseline": {
+      "mid": 2560,
+      "sequence": 19,
+      "bytes": 18,
+      "name": "EVAL_TEMP_HkTlm_t",
+      "app": "eval_temp",
+      "source": "cFS/apps/eval_temp/config/default_eval_temp_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a00c013000b000f4674809d000000000000",
+      "received_at": 1795433165.4235811,
+      "count": 18,
+      "event_id": 401
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 50,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_TEMP",
+          "PacketID.EventID": 4,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_TEMP: RESET command",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c03200a9000f4670fed5000000004556414c5f54454d500000000000000000000000000000000400020042000000010000004556414c5f54454d503a20524553455420636f6d6d616e6400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433161.92316,
+        "count": 15,
+        "event_id": 381
+      }
+    },
+    "expected_counter": 1,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_TEMP_NOOP_CC",
+      "app": "eval_temp",
+      "mid": 6656,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433165.5020888,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a00c00000010024",
+      "event_id": 404
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 51,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_TEMP",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_TEMP: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c03300a9000f4674ff50000000004556414c5f54454d500000000000000000000000000000000300020042000000010000004556414c5f54454d503a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433165.915588,
+      "count": 16,
+      "event_id": 405
+    },
+    "housekeeping": {
+      "mid": 2560,
+      "sequence": 20,
+      "bytes": 18,
+      "name": "EVAL_TEMP_HkTlm_t",
+      "app": "eval_temp",
+      "source": "cFS/apps/eval_temp/config/default_eval_temp_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a00c014000b000f46788056000000000100",
+      "received_at": 1795433169.419413,
+      "count": 19,
+      "event_id": 424
+    }
+  },
+  {
+    "app": "eval_temp",
+    "repetition": 3,
+    "command": "EVAL_TEMP_NOOP_CC",
+    "baseline": {
+      "mid": 2560,
+      "sequence": 20,
+      "bytes": 18,
+      "name": "EVAL_TEMP_HkTlm_t",
+      "app": "eval_temp",
+      "source": "cFS/apps/eval_temp/config/default_eval_temp_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a00c014000b000f46788056000000000100",
+      "received_at": 1795433169.419413,
+      "count": 19,
+      "event_id": 424
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 51,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_TEMP",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_TEMP: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c03300a9000f4674ff50000000004556414c5f54454d500000000000000000000000000000000300020042000000010000004556414c5f54454d503a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433165.915588,
+        "count": 16,
+        "event_id": 405
+      }
+    },
+    "expected_counter": 2,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_TEMP_NOOP_CC",
+      "app": "eval_temp",
+      "mid": 6656,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433169.5128462,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a00c00000010024",
+      "event_id": 427
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 52,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_TEMP",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_TEMP: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c03400a9000f4678ffdb000000004556414c5f54454d500000000000000000000000000000000300020042000000010000004556414c5f54454d503a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433170.0055833,
+      "count": 17,
+      "event_id": 428
+    },
+    "housekeeping": {
+      "mid": 2560,
+      "sequence": 21,
+      "bytes": 18,
+      "name": "EVAL_TEMP_HkTlm_t",
+      "app": "eval_temp",
+      "source": "cFS/apps/eval_temp/config/default_eval_temp_msgstruct.h",
+      "values": {
+        "CommandCounter": 2,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a00c015000b000f467c809b000000000200",
+      "received_at": 1795433173.4268107,
+      "count": 20,
+      "event_id": 448
+    }
+  },
+  {
+    "app": "eval_temp",
+    "repetition": 3,
+    "command": "EVAL_TEMP_RESET_COUNTERS_CC",
+    "baseline": {
+      "mid": 2560,
+      "sequence": 21,
+      "bytes": 18,
+      "name": "EVAL_TEMP_HkTlm_t",
+      "app": "eval_temp",
+      "source": "cFS/apps/eval_temp/config/default_eval_temp_msgstruct.h",
+      "values": {
+        "CommandCounter": 2,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a00c015000b000f467c809b000000000200",
+      "received_at": 1795433173.4268107,
+      "count": 20,
+      "event_id": 448
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 52,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_TEMP",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_TEMP: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c03400a9000f4678ffdb000000004556414c5f54454d500000000000000000000000000000000300020042000000010000004556414c5f54454d503a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433170.0055833,
+        "count": 17,
+        "event_id": 428
+      }
+    },
+    "expected_counter": 0,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_TEMP_RESET_COUNTERS_CC",
+      "app": "eval_temp",
+      "mid": 6656,
+      "code": 1,
+      "values": {},
+      "sent_at": 1795433173.5055084,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a00c00000010125",
+      "event_id": 451
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 53,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_TEMP",
+        "PacketID.EventID": 4,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_TEMP: RESET command",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c03500a9000f467cfde6000000004556414c5f54454d500000000000000000000000000000000400020042000000010000004556414c5f54454d503a20524553455420636f6d6d616e6400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433173.9996986,
+      "count": 18,
+      "event_id": 453
+    },
+    "housekeeping": {
+      "mid": 2560,
+      "sequence": 22,
+      "bytes": 18,
+      "name": "EVAL_TEMP_HkTlm_t",
+      "app": "eval_temp",
+      "source": "cFS/apps/eval_temp/config/default_eval_temp_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a00c016000b000f4680809c000000000000",
+      "received_at": 1795433177.482698,
+      "count": 21,
+      "event_id": 470
+    }
+  },
+  {
+    "app": "eval_temp",
+    "repetition": 3,
+    "command": "EVAL_TEMP_NOOP_CC",
+    "baseline": {
+      "mid": 2560,
+      "sequence": 22,
+      "bytes": 18,
+      "name": "EVAL_TEMP_HkTlm_t",
+      "app": "eval_temp",
+      "source": "cFS/apps/eval_temp/config/default_eval_temp_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a00c016000b000f4680809c000000000000",
+      "received_at": 1795433177.482698,
+      "count": 21,
+      "event_id": 470
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 53,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_TEMP",
+          "PacketID.EventID": 4,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_TEMP: RESET command",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c03500a9000f467cfde6000000004556414c5f54454d500000000000000000000000000000000400020042000000010000004556414c5f54454d503a20524553455420636f6d6d616e6400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433173.9996986,
+        "count": 18,
+        "event_id": 453
+      }
+    },
+    "expected_counter": 1,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_TEMP_NOOP_CC",
+      "app": "eval_temp",
+      "mid": 6656,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433177.5348313,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a00c00000010024",
+      "event_id": 473
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 54,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_TEMP",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_TEMP: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c03600a9000f4680fe58000000004556414c5f54454d500000000000000000000000000000000300020042000000010000004556414c5f54454d503a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433177.9248583,
+      "count": 19,
+      "event_id": 477
+    },
+    "housekeeping": {
+      "mid": 2560,
+      "sequence": 23,
+      "bytes": 18,
+      "name": "EVAL_TEMP_HkTlm_t",
+      "app": "eval_temp",
+      "source": "cFS/apps/eval_temp/config/default_eval_temp_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a00c017000b000f4684809a000000000100",
+      "received_at": 1795433181.476642,
+      "count": 22,
+      "event_id": 493
+    }
+  },
+  {
+    "app": "eval_mag",
+    "repetition": 1,
+    "command": "EVAL_MAG_NOOP_CC",
+    "baseline": {
+      "mid": 2562,
+      "sequence": 23,
+      "bytes": 18,
+      "name": "EVAL_MAG_HkTlm_t",
+      "app": "eval_mag",
+      "source": "cFS/apps/eval_mag/config/default_eval_mag_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a02c017000b000f46848036000000000000",
+      "received_at": 1795433181.4764695,
+      "count": 22,
+      "event_id": 491
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 54,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_TEMP",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_TEMP: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c03600a9000f4680fe58000000004556414c5f54454d500000000000000000000000000000000300020042000000010000004556414c5f54454d503a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433177.9248583,
+        "count": 19,
+        "event_id": 477
+      }
+    },
+    "expected_counter": 1,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_MAG_NOOP_CC",
+      "app": "eval_mag",
+      "mid": 6659,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433181.5327494,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a03c00000010027",
+      "event_id": 496
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 55,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_MAG",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_MAG: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c03700a9000f4684fece000000004556414c5f4d4147000000000000000000000000000000000300020042000000010000004556414c5f4d41473a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433181.9128253,
+      "count": 20,
+      "event_id": 500
+    },
+    "housekeeping": {
+      "mid": 2562,
+      "sequence": 24,
+      "bytes": 18,
+      "name": "EVAL_MAG_HkTlm_t",
+      "app": "eval_mag",
+      "source": "cFS/apps/eval_mag/config/default_eval_mag_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a02c018000b000f46888073000000000100",
+      "received_at": 1795433185.4682748,
+      "count": 23,
+      "event_id": 514
+    }
+  },
+  {
+    "app": "eval_mag",
+    "repetition": 1,
+    "command": "EVAL_MAG_RESET_COUNTERS_CC",
+    "baseline": {
+      "mid": 2562,
+      "sequence": 24,
+      "bytes": 18,
+      "name": "EVAL_MAG_HkTlm_t",
+      "app": "eval_mag",
+      "source": "cFS/apps/eval_mag/config/default_eval_mag_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a02c018000b000f46888073000000000100",
+      "received_at": 1795433185.4682748,
+      "count": 23,
+      "event_id": 514
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 55,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_MAG",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_MAG: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c03700a9000f4684fece000000004556414c5f4d4147000000000000000000000000000000000300020042000000010000004556414c5f4d41473a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433181.9128253,
+        "count": 20,
+        "event_id": 500
+      }
+    },
+    "expected_counter": 0,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_MAG_RESET_COUNTERS_CC",
+      "app": "eval_mag",
+      "mid": 6659,
+      "code": 1,
+      "values": {},
+      "sent_at": 1795433185.5366118,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a03c00000010126",
+      "event_id": 519
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 56,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_MAG",
+        "PacketID.EventID": 4,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_MAG: RESET command",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c03800a9000f4688ff51000000004556414c5f4d4147000000000000000000000000000000000400020042000000010000004556414c5f4d41473a20524553455420636f6d6d616e640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433185.9807854,
+      "count": 21,
+      "event_id": 521
+    },
+    "housekeeping": {
+      "mid": 2562,
+      "sequence": 25,
+      "bytes": 18,
+      "name": "EVAL_MAG_HkTlm_t",
+      "app": "eval_mag",
+      "source": "cFS/apps/eval_mag/config/default_eval_mag_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a02c019000b000f468c802f000000000000",
+      "received_at": 1795433189.4627702,
+      "count": 24,
+      "event_id": 538
+    }
+  },
+  {
+    "app": "eval_mag",
+    "repetition": 1,
+    "command": "EVAL_MAG_NOOP_CC",
+    "baseline": {
+      "mid": 2562,
+      "sequence": 25,
+      "bytes": 18,
+      "name": "EVAL_MAG_HkTlm_t",
+      "app": "eval_mag",
+      "source": "cFS/apps/eval_mag/config/default_eval_mag_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a02c019000b000f468c802f000000000000",
+      "received_at": 1795433189.4627702,
+      "count": 24,
+      "event_id": 538
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 56,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_MAG",
+          "PacketID.EventID": 4,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_MAG: RESET command",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c03800a9000f4688ff51000000004556414c5f4d4147000000000000000000000000000000000400020042000000010000004556414c5f4d41473a20524553455420636f6d6d616e640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433185.9807854,
+        "count": 21,
+        "event_id": 521
+      }
+    },
+    "expected_counter": 1,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_MAG_NOOP_CC",
+      "app": "eval_mag",
+      "mid": 6659,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433189.5236921,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a03c00000010027",
+      "event_id": 543
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 57,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_MAG",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_MAG: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c03900a9000f468cffd1000000004556414c5f4d4147000000000000000000000000000000000300020042000000010000004556414c5f4d41473a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433189.9809692,
+      "count": 22,
+      "event_id": 544
+    },
+    "housekeeping": {
+      "mid": 2562,
+      "sequence": 26,
+      "bytes": 18,
+      "name": "EVAL_MAG_HkTlm_t",
+      "app": "eval_mag",
+      "source": "cFS/apps/eval_mag/config/default_eval_mag_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a02c01a000b000f46908072000000000100",
+      "received_at": 1795433193.465823,
+      "count": 25,
+      "event_id": 559
+    }
+  },
+  {
+    "app": "eval_mag",
+    "repetition": 2,
+    "command": "EVAL_MAG_NOOP_CC",
+    "baseline": {
+      "mid": 2562,
+      "sequence": 26,
+      "bytes": 18,
+      "name": "EVAL_MAG_HkTlm_t",
+      "app": "eval_mag",
+      "source": "cFS/apps/eval_mag/config/default_eval_mag_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a02c01a000b000f46908072000000000100",
+      "received_at": 1795433193.465823,
+      "count": 25,
+      "event_id": 559
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 57,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_MAG",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_MAG: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c03900a9000f468cffd1000000004556414c5f4d4147000000000000000000000000000000000300020042000000010000004556414c5f4d41473a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433189.9809692,
+        "count": 22,
+        "event_id": 544
+      }
+    },
+    "expected_counter": 2,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_MAG_NOOP_CC",
+      "app": "eval_mag",
+      "mid": 6659,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433193.556737,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a03c00000010027",
+      "event_id": 565
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 58,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_MAG",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_MAG: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c03a00a9000f4690fdda000000004556414c5f4d4147000000000000000000000000000000000300020042000000010000004556414c5f4d41473a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433193.9096155,
+      "count": 23,
+      "event_id": 567
+    },
+    "housekeeping": {
+      "mid": 2562,
+      "sequence": 27,
+      "bytes": 18,
+      "name": "EVAL_MAG_HkTlm_t",
+      "app": "eval_mag",
+      "source": "cFS/apps/eval_mag/config/default_eval_mag_msgstruct.h",
+      "values": {
+        "CommandCounter": 2,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a02c01b000b000f4694802e000000000200",
+      "received_at": 1795433197.4615557,
+      "count": 26,
+      "event_id": 585
+    }
+  },
+  {
+    "app": "eval_mag",
+    "repetition": 2,
+    "command": "EVAL_MAG_RESET_COUNTERS_CC",
+    "baseline": {
+      "mid": 2562,
+      "sequence": 27,
+      "bytes": 18,
+      "name": "EVAL_MAG_HkTlm_t",
+      "app": "eval_mag",
+      "source": "cFS/apps/eval_mag/config/default_eval_mag_msgstruct.h",
+      "values": {
+        "CommandCounter": 2,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a02c01b000b000f4694802e000000000200",
+      "received_at": 1795433197.4615557,
+      "count": 26,
+      "event_id": 585
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 58,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_MAG",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_MAG: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c03a00a9000f4690fdda000000004556414c5f4d4147000000000000000000000000000000000300020042000000010000004556414c5f4d41473a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433193.9096155,
+        "count": 23,
+        "event_id": 567
+      }
+    },
+    "expected_counter": 0,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_MAG_RESET_COUNTERS_CC",
+      "app": "eval_mag",
+      "mid": 6659,
+      "code": 1,
+      "values": {},
+      "sent_at": 1795433197.5401194,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a03c00000010126",
+      "event_id": 590
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 59,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_MAG",
+        "PacketID.EventID": 4,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_MAG: RESET command",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c03b00a9000f4694fe5d000000004556414c5f4d4147000000000000000000000000000000000400020042000000010000004556414c5f4d41473a20524553455420636f6d6d616e640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433197.9609957,
+      "count": 24,
+      "event_id": 592
+    },
+    "housekeeping": {
+      "mid": 2562,
+      "sequence": 28,
+      "bytes": 18,
+      "name": "EVAL_MAG_HkTlm_t",
+      "app": "eval_mag",
+      "source": "cFS/apps/eval_mag/config/default_eval_mag_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a02c01c000b000f46988036000000000000",
+      "received_at": 1795433201.4297042,
+      "count": 27,
+      "event_id": 609
+    }
+  },
+  {
+    "app": "eval_mag",
+    "repetition": 2,
+    "command": "EVAL_MAG_NOOP_CC",
+    "baseline": {
+      "mid": 2562,
+      "sequence": 28,
+      "bytes": 18,
+      "name": "EVAL_MAG_HkTlm_t",
+      "app": "eval_mag",
+      "source": "cFS/apps/eval_mag/config/default_eval_mag_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a02c01c000b000f46988036000000000000",
+      "received_at": 1795433201.4297042,
+      "count": 27,
+      "event_id": 609
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 59,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_MAG",
+          "PacketID.EventID": 4,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_MAG: RESET command",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c03b00a9000f4694fe5d000000004556414c5f4d4147000000000000000000000000000000000400020042000000010000004556414c5f4d41473a20524553455420636f6d6d616e640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433197.9609957,
+        "count": 24,
+        "event_id": 592
+      }
+    },
+    "expected_counter": 1,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_MAG_NOOP_CC",
+      "app": "eval_mag",
+      "mid": 6659,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433201.4582136,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a03c00000010027",
+      "event_id": 614
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 60,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_MAG",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_MAG: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c03c00a9000f4698fecc000000004556414c5f4d4147000000000000000000000000000000000300020042000000010000004556414c5f4d41473a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433201.9548357,
+      "count": 25,
+      "event_id": 616
+    },
+    "housekeeping": {
+      "mid": 2562,
+      "sequence": 29,
+      "bytes": 18,
+      "name": "EVAL_MAG_HkTlm_t",
+      "app": "eval_mag",
+      "source": "cFS/apps/eval_mag/config/default_eval_mag_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a02c01d000b000f469c802b000000000100",
+      "received_at": 1795433205.419736,
+      "count": 28,
+      "event_id": 634
+    }
+  },
+  {
+    "app": "eval_mag",
+    "repetition": 3,
+    "command": "EVAL_MAG_NOOP_CC",
+    "baseline": {
+      "mid": 2562,
+      "sequence": 29,
+      "bytes": 18,
+      "name": "EVAL_MAG_HkTlm_t",
+      "app": "eval_mag",
+      "source": "cFS/apps/eval_mag/config/default_eval_mag_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a02c01d000b000f469c802b000000000100",
+      "received_at": 1795433205.419736,
+      "count": 28,
+      "event_id": 634
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 60,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_MAG",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_MAG: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c03c00a9000f4698fecc000000004556414c5f4d4147000000000000000000000000000000000300020042000000010000004556414c5f4d41473a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433201.9548357,
+        "count": 25,
+        "event_id": 616
+      }
+    },
+    "expected_counter": 2,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_MAG_NOOP_CC",
+      "app": "eval_mag",
+      "mid": 6659,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433205.4985693,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a03c00000010027",
+      "event_id": 639
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 61,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_MAG",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_MAG: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c03d00a9000f469cff4f000000004556414c5f4d4147000000000000000000000000000000000300020042000000010000004556414c5f4d41473a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433205.9536386,
+      "count": 26,
+      "event_id": 640
+    },
+    "housekeeping": {
+      "mid": 2562,
+      "sequence": 30,
+      "bytes": 18,
+      "name": "EVAL_MAG_HkTlm_t",
+      "app": "eval_mag",
+      "source": "cFS/apps/eval_mag/config/default_eval_mag_msgstruct.h",
+      "values": {
+        "CommandCounter": 2,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a02c01e000b000f46a08034000000000200",
+      "received_at": 1795433209.4197936,
+      "count": 29,
+      "event_id": 656
+    }
+  },
+  {
+    "app": "eval_mag",
+    "repetition": 3,
+    "command": "EVAL_MAG_RESET_COUNTERS_CC",
+    "baseline": {
+      "mid": 2562,
+      "sequence": 30,
+      "bytes": 18,
+      "name": "EVAL_MAG_HkTlm_t",
+      "app": "eval_mag",
+      "source": "cFS/apps/eval_mag/config/default_eval_mag_msgstruct.h",
+      "values": {
+        "CommandCounter": 2,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a02c01e000b000f46a08034000000000200",
+      "received_at": 1795433209.4197936,
+      "count": 29,
+      "event_id": 656
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 61,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_MAG",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_MAG: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c03d00a9000f469cff4f000000004556414c5f4d4147000000000000000000000000000000000300020042000000010000004556414c5f4d41473a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433205.9536386,
+        "count": 26,
+        "event_id": 640
+      }
+    },
+    "expected_counter": 0,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_MAG_RESET_COUNTERS_CC",
+      "app": "eval_mag",
+      "mid": 6659,
+      "code": 1,
+      "values": {},
+      "sent_at": 1795433209.4655492,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a03c00000010126",
+      "event_id": 662
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 62,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_MAG",
+        "PacketID.EventID": 4,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_MAG: RESET command",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c03e00a9000f46a0ffd9000000004556414c5f4d4147000000000000000000000000000000000400020042000000010000004556414c5f4d41473a20524553455420636f6d6d616e640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433209.9416552,
+      "count": 27,
+      "event_id": 664
+    },
+    "housekeeping": {
+      "mid": 2562,
+      "sequence": 31,
+      "bytes": 18,
+      "name": "EVAL_MAG_HkTlm_t",
+      "app": "eval_mag",
+      "source": "cFS/apps/eval_mag/config/default_eval_mag_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a02c01f000b000f46a4802e000000000000",
+      "received_at": 1795433213.5338163,
+      "count": 30,
+      "event_id": 678
+    }
+  },
+  {
+    "app": "eval_mag",
+    "repetition": 3,
+    "command": "EVAL_MAG_NOOP_CC",
+    "baseline": {
+      "mid": 2562,
+      "sequence": 31,
+      "bytes": 18,
+      "name": "EVAL_MAG_HkTlm_t",
+      "app": "eval_mag",
+      "source": "cFS/apps/eval_mag/config/default_eval_mag_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a02c01f000b000f46a4802e000000000000",
+      "received_at": 1795433213.5338163,
+      "count": 30,
+      "event_id": 678
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 62,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_MAG",
+          "PacketID.EventID": 4,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_MAG: RESET command",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c03e00a9000f46a0ffd9000000004556414c5f4d4147000000000000000000000000000000000400020042000000010000004556414c5f4d41473a20524553455420636f6d6d616e640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433209.9416552,
+        "count": 27,
+        "event_id": 664
+      }
+    },
+    "expected_counter": 1,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_MAG_NOOP_CC",
+      "app": "eval_mag",
+      "mid": 6659,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433213.6201725,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a03c00000010027",
+      "event_id": 685
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 63,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_MAG",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_MAG: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c03f00a9000f46a4fde4000000004556414c5f4d4147000000000000000000000000000000000300020042000000010000004556414c5f4d41473a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433213.9212158,
+      "count": 28,
+      "event_id": 686
+    },
+    "housekeeping": {
+      "mid": 2562,
+      "sequence": 32,
+      "bytes": 18,
+      "name": "EVAL_MAG_HkTlm_t",
+      "app": "eval_mag",
+      "source": "cFS/apps/eval_mag/config/default_eval_mag_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a02c020000b000f46a88072000000000100",
+      "received_at": 1795433217.5196238,
+      "count": 31,
+      "event_id": 701
+    }
+  },
+  {
+    "app": "eval_mpu",
+    "repetition": 1,
+    "command": "EVAL_MPU_NOOP_CC",
+    "baseline": {
+      "mid": 2564,
+      "sequence": 32,
+      "bytes": 18,
+      "name": "EVAL_MPU_HkTlm_t",
+      "app": "eval_mpu",
+      "source": "cFS/apps/eval_mpu/config/default_eval_mpu_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a04c020000b000f46a881e7000000000000",
+      "received_at": 1795433217.5201921,
+      "count": 31,
+      "event_id": 705
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 63,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_MAG",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_MAG: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c03f00a9000f46a4fde4000000004556414c5f4d4147000000000000000000000000000000000300020042000000010000004556414c5f4d41473a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433213.9212158,
+        "count": 28,
+        "event_id": 686
+      }
+    },
+    "expected_counter": 1,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_MPU_NOOP_CC",
+      "app": "eval_mpu",
+      "mid": 6662,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433217.5879939,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a06c00000010022",
+      "event_id": 706
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 64,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_MPU",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_MPU: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c04000a9000f46a8fe4f000000004556414c5f4d5055000000000000000000000000000000000300020042000000010000004556414c5f4d50553a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433217.9293694,
+      "count": 29,
+      "event_id": 707
+    },
+    "housekeeping": {
+      "mid": 2564,
+      "sequence": 33,
+      "bytes": 18,
+      "name": "EVAL_MPU_HkTlm_t",
+      "app": "eval_mpu",
+      "source": "cFS/apps/eval_mpu/config/default_eval_mpu_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a04c021000b000f46ac81e7000000000100",
+      "received_at": 1795433221.4234092,
+      "count": 32,
+      "event_id": 730
+    }
+  },
+  {
+    "app": "eval_mpu",
+    "repetition": 1,
+    "command": "EVAL_MPU_RESET_COUNTERS_CC",
+    "baseline": {
+      "mid": 2564,
+      "sequence": 33,
+      "bytes": 18,
+      "name": "EVAL_MPU_HkTlm_t",
+      "app": "eval_mpu",
+      "source": "cFS/apps/eval_mpu/config/default_eval_mpu_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a04c021000b000f46ac81e7000000000100",
+      "received_at": 1795433221.4234092,
+      "count": 32,
+      "event_id": 730
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 64,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_MPU",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_MPU: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c04000a9000f46a8fe4f000000004556414c5f4d5055000000000000000000000000000000000300020042000000010000004556414c5f4d50553a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433217.9293694,
+        "count": 29,
+        "event_id": 707
+      }
+    },
+    "expected_counter": 0,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_MPU_RESET_COUNTERS_CC",
+      "app": "eval_mpu",
+      "mid": 6662,
+      "code": 1,
+      "values": {},
+      "sent_at": 1795433221.4646604,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a06c00000010123",
+      "event_id": 731
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 65,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_MPU",
+        "PacketID.EventID": 4,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_MPU: RESET command",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c04100a9000f46acfed0000000004556414c5f4d5055000000000000000000000000000000000400020042000000010000004556414c5f4d50553a20524553455420636f6d6d616e640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433221.9229295,
+      "count": 30,
+      "event_id": 733
+    },
+    "housekeeping": {
+      "mid": 2564,
+      "sequence": 34,
+      "bytes": 18,
+      "name": "EVAL_MPU_HkTlm_t",
+      "app": "eval_mpu",
+      "source": "cFS/apps/eval_mpu/config/default_eval_mpu_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a04c022000b000f46b081e8000000000000",
+      "received_at": 1795433225.4231882,
+      "count": 33,
+      "event_id": 753
+    }
+  },
+  {
+    "app": "eval_mpu",
+    "repetition": 1,
+    "command": "EVAL_MPU_NOOP_CC",
+    "baseline": {
+      "mid": 2564,
+      "sequence": 34,
+      "bytes": 18,
+      "name": "EVAL_MPU_HkTlm_t",
+      "app": "eval_mpu",
+      "source": "cFS/apps/eval_mpu/config/default_eval_mpu_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a04c022000b000f46b081e8000000000000",
+      "received_at": 1795433225.4231882,
+      "count": 33,
+      "event_id": 753
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 65,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_MPU",
+          "PacketID.EventID": 4,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_MPU: RESET command",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c04100a9000f46acfed0000000004556414c5f4d5055000000000000000000000000000000000400020042000000010000004556414c5f4d50553a20524553455420636f6d6d616e640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433221.9229295,
+        "count": 30,
+        "event_id": 733
+      }
+    },
+    "expected_counter": 1,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_MPU_NOOP_CC",
+      "app": "eval_mpu",
+      "mid": 6662,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433225.4806144,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a06c00000010022",
+      "event_id": 754
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 66,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_MPU",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_MPU: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c04200a9000f46b0ff51000000004556414c5f4d5055000000000000000000000000000000000300020042000000010000004556414c5f4d50553a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433225.9340634,
+      "count": 31,
+      "event_id": 757
+    },
+    "housekeeping": {
+      "mid": 2564,
+      "sequence": 35,
+      "bytes": 18,
+      "name": "EVAL_MPU_HkTlm_t",
+      "app": "eval_mpu",
+      "source": "cFS/apps/eval_mpu/config/default_eval_mpu_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a04c023000b000f46b481e6000000000100",
+      "received_at": 1795433229.446752,
+      "count": 34,
+      "event_id": 778
+    }
+  },
+  {
+    "app": "eval_mpu",
+    "repetition": 2,
+    "command": "EVAL_MPU_NOOP_CC",
+    "baseline": {
+      "mid": 2564,
+      "sequence": 35,
+      "bytes": 18,
+      "name": "EVAL_MPU_HkTlm_t",
+      "app": "eval_mpu",
+      "source": "cFS/apps/eval_mpu/config/default_eval_mpu_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a04c023000b000f46b481e6000000000100",
+      "received_at": 1795433229.446752,
+      "count": 34,
+      "event_id": 778
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 66,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_MPU",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_MPU: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c04200a9000f46b0ff51000000004556414c5f4d5055000000000000000000000000000000000300020042000000010000004556414c5f4d50553a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433225.9340634,
+        "count": 31,
+        "event_id": 757
+      }
+    },
+    "expected_counter": 2,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_MPU_NOOP_CC",
+      "app": "eval_mpu",
+      "mid": 6662,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433229.5268598,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a06c00000010022",
+      "event_id": 779
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 67,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_MPU",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_MPU: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c04300a9000f46b4ffd4000000004556414c5f4d5055000000000000000000000000000000000300020042000000010000004556414c5f4d50553a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433229.922276,
+      "count": 32,
+      "event_id": 782
+    },
+    "housekeeping": {
+      "mid": 2564,
+      "sequence": 36,
+      "bytes": 18,
+      "name": "EVAL_MPU_HkTlm_t",
+      "app": "eval_mpu",
+      "source": "cFS/apps/eval_mpu/config/default_eval_mpu_msgstruct.h",
+      "values": {
+        "CommandCounter": 2,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a04c024000b000f46b881e6000000000200",
+      "received_at": 1795433233.507825,
+      "count": 35,
+      "event_id": 799
+    }
+  },
+  {
+    "app": "eval_mpu",
+    "repetition": 2,
+    "command": "EVAL_MPU_RESET_COUNTERS_CC",
+    "baseline": {
+      "mid": 2564,
+      "sequence": 36,
+      "bytes": 18,
+      "name": "EVAL_MPU_HkTlm_t",
+      "app": "eval_mpu",
+      "source": "cFS/apps/eval_mpu/config/default_eval_mpu_msgstruct.h",
+      "values": {
+        "CommandCounter": 2,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a04c024000b000f46b881e6000000000200",
+      "received_at": 1795433233.507825,
+      "count": 35,
+      "event_id": 799
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 67,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_MPU",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_MPU: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c04300a9000f46b4ffd4000000004556414c5f4d5055000000000000000000000000000000000300020042000000010000004556414c5f4d50553a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433229.922276,
+        "count": 32,
+        "event_id": 782
+      }
+    },
+    "expected_counter": 0,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_MPU_RESET_COUNTERS_CC",
+      "app": "eval_mpu",
+      "mid": 6662,
+      "code": 1,
+      "values": {},
+      "sent_at": 1795433233.698923,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a06c00000010123",
+      "event_id": 801
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 68,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_MPU",
+        "PacketID.EventID": 4,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_MPU: RESET command",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c04400a9000f46b8fddf000000004556414c5f4d5055000000000000000000000000000000000400020042000000010000004556414c5f4d50553a20524553455420636f6d6d616e640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433233.9092495,
+      "count": 33,
+      "event_id": 803
+    },
+    "housekeeping": {
+      "mid": 2564,
+      "sequence": 37,
+      "bytes": 18,
+      "name": "EVAL_MPU_HkTlm_t",
+      "app": "eval_mpu",
+      "source": "cFS/apps/eval_mpu/config/default_eval_mpu_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a04c025000b000f46bc81e5000000000000",
+      "received_at": 1795433237.4274676,
+      "count": 36,
+      "event_id": 823
+    }
+  },
+  {
+    "app": "eval_mpu",
+    "repetition": 2,
+    "command": "EVAL_MPU_NOOP_CC",
+    "baseline": {
+      "mid": 2564,
+      "sequence": 37,
+      "bytes": 18,
+      "name": "EVAL_MPU_HkTlm_t",
+      "app": "eval_mpu",
+      "source": "cFS/apps/eval_mpu/config/default_eval_mpu_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a04c025000b000f46bc81e5000000000000",
+      "received_at": 1795433237.4274676,
+      "count": 36,
+      "event_id": 823
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 68,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_MPU",
+          "PacketID.EventID": 4,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_MPU: RESET command",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c04400a9000f46b8fddf000000004556414c5f4d5055000000000000000000000000000000000400020042000000010000004556414c5f4d50553a20524553455420636f6d6d616e640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433233.9092495,
+        "count": 33,
+        "event_id": 803
+      }
+    },
+    "expected_counter": 1,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_MPU_NOOP_CC",
+      "app": "eval_mpu",
+      "mid": 6662,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433237.5074608,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a06c00000010022",
+      "event_id": 824
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 69,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_MPU",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_MPU: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c04500a9000f46bcfe55000000004556414c5f4d5055000000000000000000000000000000000300020042000000010000004556414c5f4d50553a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433237.9249644,
+      "count": 34,
+      "event_id": 825
+    },
+    "housekeeping": {
+      "mid": 2564,
+      "sequence": 38,
+      "bytes": 18,
+      "name": "EVAL_MPU_HkTlm_t",
+      "app": "eval_mpu",
+      "source": "cFS/apps/eval_mpu/config/default_eval_mpu_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a04c026000b000f46c081e5000000000100",
+      "received_at": 1795433241.4893308,
+      "count": 37,
+      "event_id": 850
+    }
+  },
+  {
+    "app": "eval_mpu",
+    "repetition": 3,
+    "command": "EVAL_MPU_NOOP_CC",
+    "baseline": {
+      "mid": 2564,
+      "sequence": 38,
+      "bytes": 18,
+      "name": "EVAL_MPU_HkTlm_t",
+      "app": "eval_mpu",
+      "source": "cFS/apps/eval_mpu/config/default_eval_mpu_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a04c026000b000f46c081e5000000000100",
+      "received_at": 1795433241.4893308,
+      "count": 37,
+      "event_id": 850
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 69,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_MPU",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_MPU: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c04500a9000f46bcfe55000000004556414c5f4d5055000000000000000000000000000000000300020042000000010000004556414c5f4d50553a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433237.9249644,
+        "count": 34,
+        "event_id": 825
+      }
+    },
+    "expected_counter": 2,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_MPU_NOOP_CC",
+      "app": "eval_mpu",
+      "mid": 6662,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433241.572304,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a06c00000010022",
+      "event_id": 851
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 70,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_MPU",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_MPU: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c04600a9000f46c0fed1000000004556414c5f4d5055000000000000000000000000000000000300020042000000010000004556414c5f4d50553a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433241.9130518,
+      "count": 35,
+      "event_id": 852
+    },
+    "housekeeping": {
+      "mid": 2564,
+      "sequence": 39,
+      "bytes": 18,
+      "name": "EVAL_MPU_HkTlm_t",
+      "app": "eval_mpu",
+      "source": "cFS/apps/eval_mpu/config/default_eval_mpu_msgstruct.h",
+      "values": {
+        "CommandCounter": 2,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a04c027000b000f46c481e6000000000200",
+      "received_at": 1795433245.5006366,
+      "count": 38,
+      "event_id": 868
+    }
+  },
+  {
+    "app": "eval_mpu",
+    "repetition": 3,
+    "command": "EVAL_MPU_RESET_COUNTERS_CC",
+    "baseline": {
+      "mid": 2564,
+      "sequence": 39,
+      "bytes": 18,
+      "name": "EVAL_MPU_HkTlm_t",
+      "app": "eval_mpu",
+      "source": "cFS/apps/eval_mpu/config/default_eval_mpu_msgstruct.h",
+      "values": {
+        "CommandCounter": 2,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a04c027000b000f46c481e6000000000200",
+      "received_at": 1795433245.5006366,
+      "count": 38,
+      "event_id": 868
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 70,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_MPU",
+          "PacketID.EventID": 3,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_MPU: NOOP command v7.0.2-rc1-oss",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c04600a9000f46c0fed1000000004556414c5f4d5055000000000000000000000000000000000300020042000000010000004556414c5f4d50553a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433241.9130518,
+        "count": 35,
+        "event_id": 852
+      }
+    },
+    "expected_counter": 0,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_MPU_RESET_COUNTERS_CC",
+      "app": "eval_mpu",
+      "mid": 6662,
+      "code": 1,
+      "values": {},
+      "sent_at": 1795433245.578948,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a06c00000010123",
+      "event_id": 870
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 71,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_MPU",
+        "PacketID.EventID": 4,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_MPU: RESET command",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c04700a9000f46c4ff4e000000004556414c5f4d5055000000000000000000000000000000000400020042000000010000004556414c5f4d50553a20524553455420636f6d6d616e640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433245.9161499,
+      "count": 36,
+      "event_id": 874
+    },
+    "housekeeping": {
+      "mid": 2564,
+      "sequence": 40,
+      "bytes": 18,
+      "name": "EVAL_MPU_HkTlm_t",
+      "app": "eval_mpu",
+      "source": "cFS/apps/eval_mpu/config/default_eval_mpu_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a04c028000b000f46c881e7000000000000",
+      "received_at": 1795433249.4710011,
+      "count": 39,
+      "event_id": 894
+    }
+  },
+  {
+    "app": "eval_mpu",
+    "repetition": 3,
+    "command": "EVAL_MPU_NOOP_CC",
+    "baseline": {
+      "mid": 2564,
+      "sequence": 40,
+      "bytes": 18,
+      "name": "EVAL_MPU_HkTlm_t",
+      "app": "eval_mpu",
+      "source": "cFS/apps/eval_mpu/config/default_eval_mpu_msgstruct.h",
+      "values": {
+        "CommandCounter": 0,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a04c028000b000f46c881e7000000000000",
+      "received_at": 1795433249.4710011,
+      "count": 39,
+      "event_id": 894
+    },
+    "event_baselines": {
+      "2056": {
+        "mid": 2056,
+        "sequence": 71,
+        "bytes": 176,
+        "name": "CFE_EVS_LongEventTlm_t",
+        "app": "cfe_evs",
+        "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+        "values": {
+          "PacketID.AppName": "EVAL_MPU",
+          "PacketID.EventID": 4,
+          "PacketID.EventType": 2,
+          "PacketID.SpacecraftID": 66,
+          "PacketID.ProcessorID": 1,
+          "Message": "EVAL_MPU: RESET command",
+          "Padding": [
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0808c04700a9000f46c4ff4e000000004556414c5f4d5055000000000000000000000000000000000400020042000000010000004556414c5f4d50553a20524553455420636f6d6d616e640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "received_at": 1795433245.9161499,
+        "count": 36,
+        "event_id": 874
+      }
+    },
+    "expected_counter": 1,
+    "expected_error_counter": 0,
+    "status": "passed",
+    "passed": true,
+    "sent": {
+      "id": "EVAL_MPU_NOOP_CC",
+      "app": "eval_mpu",
+      "mid": 6662,
+      "code": 0,
+      "values": {},
+      "sent_at": 1795433249.516838,
+      "bytes": 8,
+      "status": "sent",
+      "hex": "1a06c00000010022",
+      "event_id": 895
+    },
+    "event": {
+      "mid": 2056,
+      "sequence": 72,
+      "bytes": 176,
+      "name": "CFE_EVS_LongEventTlm_t",
+      "app": "cfe_evs",
+      "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+      "values": {
+        "PacketID.AppName": "EVAL_MPU",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "EVAL_MPU: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "errors": [],
+      "hex": "0808c04800a9000f46c8ffce000000004556414c5f4d5055000000000000000000000000000000000300020042000000010000004556414c5f4d50553a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f7373000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795433249.9805171,
+      "count": 37,
+      "event_id": 896
+    },
+    "housekeeping": {
+      "mid": 2564,
+      "sequence": 41,
+      "bytes": 18,
+      "name": "EVAL_MPU_HkTlm_t",
+      "app": "eval_mpu",
+      "source": "cFS/apps/eval_mpu/config/default_eval_mpu_msgstruct.h",
+      "values": {
+        "CommandCounter": 1,
+        "CommandErrorCounter": 0
+      },
+      "errors": [],
+      "hex": "0a04c029000b000f46cc81dd000000000100",
+      "received_at": 1795433253.4744296,
+      "count": 40,
+      "event_id": 918
+    }
+  }
+]

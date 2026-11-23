@@ -1,0 +1,155 @@
+{"elapsed_s": 1.9516945829964243, "line": "$ /usr/bin/python3 project/manage.py check-build --target qemu"}
+{"elapsed_s": 2.1667913679993944, "line": "{\"build\": \"current\"}"}
+{"elapsed_s": 2.1743693349999376, "line": "$ /usr/bin/python3 sensors/runtime.py prepare"}
+{"elapsed_s": 2.9481254819984315, "line": "Sensor values applied."}
+{"elapsed_s": 4.3440766139974585, "line": "$ ssh -T -o ConnectTimeout=8 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o BatchMode=yes -F /tmp/flight-evaluation-20261123-final/flight/hardware/.runtime/ssh/config -o 'UserKnownHostsFile=\"/tmp/flight-evaluation-20261123-final/flight/board/known_hosts\"' -o GlobalKnownHostsFile=none -o StrictHostKeyChecking=yes -o UpdateHostKeys=no -o HostKeyAlgorithms=ssh-ed25519 -o HostKeyAlias=flight-studio-qemu -o HostName=127.0.0.1 -p 23876 pi4-cfs 'python3 -u - directory '\"'\"'[\"/opt/cFS/build-rpi_linux/exe/cpu1.upload-1795420585503478914\", true]'\"'\"''"}
+{"elapsed_s": 5.492560216996935, "line": "$ scp -q -o ConnectTimeout=8 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o BatchMode=yes -F /tmp/flight-evaluation-20261123-final/flight/hardware/.runtime/ssh/config -o 'UserKnownHostsFile=\"/tmp/flight-evaluation-20261123-final/flight/board/known_hosts\"' -o GlobalKnownHostsFile=none -o StrictHostKeyChecking=yes -o UpdateHostKeys=no -o HostKeyAlgorithms=ssh-ed25519 -o HostKeyAlias=flight-studio-qemu -o HostName=127.0.0.1 -P 23876 -- /tmp/flight-evaluation-20261123-final/flight/hardware/.runtime/tmphxvdr3ir.tar pi4-cfs:/opt/cFS/build-rpi_linux/exe/cpu1.upload-1795420585503478914/.flight-upload.tar"}
+{"elapsed_s": 17.410206651999033, "line": "$ ssh -T -o ConnectTimeout=8 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o BatchMode=yes -F /tmp/flight-evaluation-20261123-final/flight/hardware/.runtime/ssh/config -o 'UserKnownHostsFile=\"/tmp/flight-evaluation-20261123-final/flight/board/known_hosts\"' -o GlobalKnownHostsFile=none -o StrictHostKeyChecking=yes -o UpdateHostKeys=no -o HostKeyAlgorithms=ssh-ed25519 -o HostKeyAlias=flight-studio-qemu -o HostName=127.0.0.1 -p 23876 pi4-cfs 'python3 -u - unpack '\"'\"'[\"/opt/cFS/build-rpi_linux/exe/cpu1.upload-1795420585503478914\"]'\"'\"''"}
+{"elapsed_s": 20.143896191999374, "line": "$ ssh -T -o ConnectTimeout=8 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o BatchMode=yes -F /tmp/flight-evaluation-20261123-final/flight/hardware/.runtime/ssh/config -o 'UserKnownHostsFile=\"/tmp/flight-evaluation-20261123-final/flight/board/known_hosts\"' -o GlobalKnownHostsFile=none -o StrictHostKeyChecking=yes -o UpdateHostKeys=no -o HostKeyAlgorithms=ssh-ed25519 -o HostKeyAlias=flight-studio-qemu -o HostName=127.0.0.1 -p 23876 pi4-cfs 'python3 -u - start-emulator '\"'\"'[\"/opt/cFS/build-rpi_linux/exe/cpu1\", \"/opt/cFS/build-rpi_linux/exe/cpu1.upload-1795420585503478914\"]'\"'\"''"}
+{"elapsed_s": 21.82349706000241, "line": "$ ssh -T -o ConnectTimeout=8 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o BatchMode=yes -F /tmp/flight-evaluation-20261123-final/flight/hardware/.runtime/ssh/config -o 'UserKnownHostsFile=\"/tmp/flight-evaluation-20261123-final/flight/board/known_hosts\"' -o GlobalKnownHostsFile=none -o StrictHostKeyChecking=yes -o UpdateHostKeys=no -o HostKeyAlgorithms=ssh-ed25519 -o HostKeyAlias=flight-studio-qemu -o HostName=127.0.0.1 -p 23876 pi4-cfs 'python3 -u - cfs.service 120.0'"}
+{"elapsed_s": 24.479920318997756, "line": "CFE_PSP: Default Reset SubType = 1"}
+{"elapsed_s": 24.48125996899762, "line": "CFE_PSP: Default CPU ID = 1"}
+{"elapsed_s": 24.48282989799918, "line": "CFE_PSP: Default Spacecraft ID = 66"}
+{"elapsed_s": 24.483644448999257, "line": "CFE_PSP: Default CPU Name: cpu1"}
+{"elapsed_s": 24.48370386500028, "line": "OS_Posix_GetSchedulerParams():208:Policy 1: available, min-max: 1-99"}
+{"elapsed_s": 24.484154090998345, "line": "OS_Posix_GetSchedulerParams():208:Policy 2: available, min-max: 1-99"}
+{"elapsed_s": 24.484659797999484, "line": "OS_Posix_TaskAPI_Impl_Init():401:Selected policy 2 for RT tasks, root task = 99"}
+{"elapsed_s": 24.48885290200269, "line": "CFE_PSP: initializing module 'soft_timebase' with ID 0110ff00"}
+{"elapsed_s": 24.48899872000038, "line": "CFE_PSP: Instantiated software timebase 'cFS-Master' running at 10000 usec"}
+{"elapsed_s": 24.490139609995822, "line": "CFE_PSP: initializing module 'timebase_posix_clock' with ID 0110ff01"}
+{"elapsed_s": 24.490170204000606, "line": "CFE_PSP: Using POSIX monotonic clock as CFE timebase"}
+{"elapsed_s": 24.492762435002078, "line": "CFE_PSP: initializing module 'eeprom_mmap_file' with ID 0110ff02"}
+{"elapsed_s": 24.493575232001604, "line": "CFE_PSP: Using MMAP simulated EEPROM implementation"}
+{"elapsed_s": 24.493606235002517, "line": "CFE_PSP: initializing module 'port_notimpl' with ID 0110ff03"}
+{"elapsed_s": 24.493922638001095, "line": "CFE_PSP: I/O Port access not implemented"}
+{"elapsed_s": 24.497693986995728, "line": "CFE_PSP: initializing module 'iodriver' with ID 0110ff04"}
+{"elapsed_s": 24.497989240000607, "line": "CFE_PSP: initializing module 'linux_sysmon' with ID 0110ff05"}
+{"elapsed_s": 24.499012979998952, "line": "CFE_PSP: initializing module 'endian_api' with ID 0110ff06"}
+{"elapsed_s": 24.4990401249961, "line": "CFE_PSP: Host CPU Endian=LITTLE"}
+{"elapsed_s": 24.50163306199829, "line": "CFE_PSP: initializing module 'ram_notimpl' with ID 0110ff07"}
+{"elapsed_s": 24.50289021199569, "line": "CFE_PSP: Physical RAM access not implemented"}
+{"elapsed_s": 24.50292825899669, "line": "CFE_PSP: EEPROM Range (2) created: Start Address = 7F951BE000, Size = 00080000 Status = 0"}
+{"elapsed_s": 24.50299425599951, "line": "CFE_PSP: Normal exit from previous cFE instance"}
+{"elapsed_s": 24.505750413998612, "line": "CFE_PSP: Starting the cFE with a PROCESSOR reset."}
+{"elapsed_s": 24.506064864996006, "line": "1980-001-00:06:52.05024 CFE_ES_Main: CFE_ES_Main in EARLY_INIT state"}
+{"elapsed_s": 24.50876227200206, "line": "1980-001-00:06:52.05323 CFE_ES_InitializeFileSystems: Volatile Disk has 100 Percent free space."}
+{"elapsed_s": 24.50880411399703, "line": "Number of addresses returned by backtrace = 1"}
+{"elapsed_s": 24.512750287998642, "line": "CFE_PSP: CFE_PSP_AttachExceptions called"}
+{"elapsed_s": 24.513021238002693, "line": "1980-001-00:06:52.05541 CFE_ES_Main: CFE_ES_Main entering CORE_STARTUP state"}
+{"elapsed_s": 24.51433535799879, "line": "1980-001-00:06:52.05548 CFE_ES_CreateObjects: Starting Object Creation calls."}
+{"elapsed_s": 24.51436034699873, "line": "1980-001-00:06:52.05552 CFE_ES_CreateObjects: Calling EarlyInit for CFE_CONFIG"}
+{"elapsed_s": 24.517755430999387, "line": "1980-001-00:06:52.05666 CFE_ES_CreateObjects: Calling EarlyInit for CFE_ES"}
+{"elapsed_s": 24.51903669299645, "line": "1980-001-00:06:52.05832 CFE_ES_CreateObjects: Calling EarlyInit for CFE_EVS"}
+{"elapsed_s": 24.519056673001614, "line": "1980-001-00:06:52.05915 CFE_EVS_EarlyInit: Event Log restored, n=0, c=20, f=1, m=1, o=126"}
+{"elapsed_s": 24.51963578700088, "line": "1980-001-00:06:52.05922 CFE_ES_CreateObjects: Calling EarlyInit for CFE_FS"}
+{"elapsed_s": 24.522668525998597, "line": "1980-001-00:06:52.05941 CFE_ES_CreateObjects: Calling EarlyInit for CFE_SB"}
+{"elapsed_s": 24.52384283200081, "line": "1980-001-00:06:52.06550 CFE_ES_CreateObjects: Calling EarlyInit for CFE_TBL"}
+{"elapsed_s": 24.52385560699622, "line": "1980-001-00:06:52.07078 CFE_ES_CreateObjects: Calling EarlyInit for CFE_TIME"}
+{"elapsed_s": 24.524825251995935, "line": "EVS Port1 1980-012-14:03:30.96980 66/1/CFE_ES 1: cFE ES Initialized: CFE_ES v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled"}
+{"elapsed_s": 24.528128469995863, "line": "EVS Port1 1980-012-14:03:30.97320 66/1/CFE_ES 2: cFS Versions: cfe v7.0.2-rc1-oss, osal v7.0.2-rc1-oss, psp v7.0.2-rc1-oss. cFE chksm 563"}
+{"elapsed_s": 24.52995370199642, "line": "EVS Port1 1980-012-14:03:30.97360 66/1/CFE_ES 91: Version Info: Mission SampleMission, version git:a4d305d"}
+{"elapsed_s": 24.529995386998053, "line": "EVS Port1 1980-012-14:03:30.97380 66/1/CFE_ES 91: Version Info: Module CORE_API, version git:3673163"}
+{"elapsed_s": 24.531270804000087, "line": "EVS Port1 1980-012-14:03:30.97386 66/1/CFE_ES 91: Version Info: Module CONFIG, version git:3673163"}
+{"elapsed_s": 24.532839530002093, "line": "EVS Port1 1980-012-14:03:30.97390 66/1/CFE_ES 91: Version Info: Module ES, version git:3673163"}
+{"elapsed_s": 24.534708065002633, "line": "EVS Port1 1980-012-14:03:30.97395 66/1/CFE_ES 91: Version Info: Module EVS, version git:3673163"}
+{"elapsed_s": 24.534739239999908, "line": "EVS Port1 1980-012-14:03:30.97398 66/1/CFE_ES 91: Version Info: Module FS, version git:3673163"}
+{"elapsed_s": 24.53498659699835, "line": "EVS Port1 1980-012-14:03:30.97402 66/1/CFE_ES 91: Version Info: Module SB, version git:3673163"}
+{"elapsed_s": 24.53866391199699, "line": "EVS Port1 1980-012-14:03:30.97406 66/1/CFE_ES 91: Version Info: Module TBL, version git:3673163"}
+{"elapsed_s": 24.540626934998727, "line": "EVS Port1 1980-012-14:03:30.97410 66/1/CFE_ES 91: Version Info: Module TIME, version git:3673163"}
+{"elapsed_s": 24.540644654996868, "line": "EVS Port1 1980-012-14:03:30.97415 66/1/CFE_ES 91: Version Info: Module OSAL, version git:2a96a4f"}
+{"elapsed_s": 24.540866638002626, "line": "EVS Port1 1980-012-14:03:30.97418 66/1/CFE_ES 91: Version Info: Module PSP, version git:5c8a969"}
+{"elapsed_s": 24.543672933999915, "line": "EVS Port1 1980-012-14:03:30.97422 66/1/CFE_ES 91: Version Info: Module MSG, version git:3673163"}
+{"elapsed_s": 24.54581787299685, "line": "EVS Port1 1980-012-14:03:30.97425 66/1/CFE_ES 91: Version Info: Module SBR, version git:3673163"}
+{"elapsed_s": 24.54596660599782, "line": "EVS Port1 1980-012-14:03:30.97430 66/1/CFE_ES 91: Version Info: Module RESOURCEID, version git:3673163"}
+{"elapsed_s": 24.546637583996926, "line": "EVS Port1 1980-012-14:03:30.97438 66/1/CFE_ES 92: Build 202611230700 by rodriger@c40a666e2cd8, config sample"}
+{"elapsed_s": 24.550184382002044, "line": "EVS Port1 1980-012-14:03:31.06454 66/1/CFE_EVS 1: cFE EVS Initialized: CFE_EVS v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled"}
+{"elapsed_s": 24.552106376002484, "line": "1980-012-14:03:31.16635 CFE_SB_AppInit: Registered 4 events for filtering"}
+{"elapsed_s": 24.55213041800016, "line": "EVS Port1 1980-012-14:03:31.16769 66/1/CFE_SB 1: cFE SB Initialized: CFE_SB v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled"}
+{"elapsed_s": 24.55249165600253, "line": "EVS Port1 1980-012-14:03:31.16792 66/1/CFE_SB 14: No subscribers for MsgId 0x808,sender CFE_SB"}
+{"elapsed_s": 24.555216333996214, "line": "EVS Port1 1980-012-14:03:31.26773 66/1/CFE_TBL 1: cFE TBL Initialized: CFE_TBL v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled"}
+{"elapsed_s": 24.557179645998986, "line": "EVS Port1 1980-012-14:03:31.26788 66/1/CFE_SB 14: No subscribers for MsgId 0x808,sender CFE_TBL"}
+{"elapsed_s": 24.557201515999623, "line": "EVS Port1 1980-012-14:03:31.37185 66/1/CFE_TIME 1: cFE TIME Initialized: CFE_TIME v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled"}
+{"elapsed_s": 24.55744607700035, "line": "EVS Port1 1980-012-14:03:31.37202 66/1/CFE_SB 14: No subscribers for MsgId 0x808,sender CFE_TIME"}
+{"elapsed_s": 24.558713958002045, "line": "OS_FileOpen_Impl():110:open(/dev/shm/osal:RAM/cfe_es_startup.scr): No such file or directory"}
+{"elapsed_s": 24.560092188999988, "line": "1980-012-14:03:31.41803 CFE_ES_CreateObjects: Finished ES CreateObject table entries."}
+{"elapsed_s": 24.560106760000053, "line": "1980-012-14:03:31.41812 CFE_ES_Main: CFE_ES_Main entering CORE_READY state"}
+{"elapsed_s": 24.56093665699882, "line": "1980-012-14:03:31.42019 CFE_ES_OpenStartupScript: Cannot Open Volatile Startup file: /ram/cfe_es_startup.scr, Trying Nonvolatile."}
+{"elapsed_s": 24.564136059001612, "line": "1980-012-14:03:31.42040 CFE_ES_OpenStartupScript: Opened ES App Startup file: /cf/cfe_es_startup.scr"}
+{"elapsed_s": 24.565334106999217, "line": "1980-012-14:03:31.42255 CFE_ES_ParseFileEntry: Loading shared library: /cf/cfe_assert.so"}
+{"elapsed_s": 24.565347556999768, "line": "1980-012-14:03:31.42844 [BEGIN] CFE FUNCTIONAL TEST"}
+{"elapsed_s": 24.565625379997073, "line": "1980-012-14:03:31.42893 [BEGIN] 01 CFE-STARTUP"}
+{"elapsed_s": 24.567739858001005, "line": "1980-012-14:03:31.43016 CFE_ES_ParseFileEntry: Loading shared library: /cf/sample_lib.so"}
+{"elapsed_s": 24.568027203000383, "line": "SAMPLE Lib Initialized.Sample Lib v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled"}
+{"elapsed_s": 24.568676308997965, "line": "1980-012-14:03:31.43283 CFE_ES_ParseFileEntry: Loading shared library: /cf/linux_i2c_lib.so"}
+{"elapsed_s": 24.568983463999757, "line": "Linux I2C library 0.1.0 initialized."}
+{"elapsed_s": 24.57265782199829, "line": "1980-012-14:03:31.43549 CFE_ES_ParseFileEntry: Loading shared library: /cf/hal_sensor.so"}
+{"elapsed_s": 24.57393628799764, "line": "1980-012-14:03:31.43786 CFE_ES_ParseFileEntry: Loading shared library: /cf/tmp105_lib.so"}
+{"elapsed_s": 24.573968566000985, "line": "1980-012-14:03:31.44038 CFE_ES_ParseFileEntry: Loading shared library: /cf/lsm303dlhc_mag_lib.so"}
+{"elapsed_s": 24.574020952000865, "line": "1980-012-14:03:31.44273 CFE_ES_ParseFileEntry: Loading shared library: /cf/mpu6050_lib.so"}
+{"elapsed_s": 24.577745727001457, "line": "1980-012-14:03:31.44535 CFE_ES_ParseFileEntry: Loading file: /cf/sch_lab.so, APP: SCH_LAB"}
+{"elapsed_s": 24.57891602900054, "line": "1980-012-14:03:31.44905 CFE_ES_ParseFileEntry: Loading file: /cf/ci_lab.so, APP: CI_LAB"}
+{"elapsed_s": 24.578956359000586, "line": "1980-012-14:03:31.45234 CFE_ES_ParseFileEntry: Loading file: /cf/to_lab.so, APP: TO_LAB"}
+{"elapsed_s": 24.57925940000132, "line": "1980-012-14:03:31.45573 CFE_ES_ParseFileEntry: Loading file: /cf/sample_app.so, APP: SAMPLE_APP"}
+{"elapsed_s": 24.58175897500041, "line": "1980-012-14:03:31.45850 CFE_ES_ParseFileEntry: Loading file: /cf/lc.so, APP: LC"}
+{"elapsed_s": 24.58311387499998, "line": "1980-012-14:03:31.46164 CFE_ES_ParseFileEntry: Loading file: /cf/cf.so, APP: CF"}
+{"elapsed_s": 24.583124115997634, "line": "1980-012-14:03:31.46580 CFE_ES_ParseFileEntry: Loading file: /cf/ds.so, APP: DS"}
+{"elapsed_s": 24.583407004000037, "line": "1980-012-14:03:31.47024 CFE_ES_ParseFileEntry: Loading file: /cf/fm.so, APP: FM"}
+{"elapsed_s": 24.586727429996245, "line": "1980-012-14:03:31.47456 CFE_ES_ParseFileEntry: Loading file: /cf/hk.so, APP: HK"}
+{"elapsed_s": 24.58785825999803, "line": "1980-012-14:03:31.47858 CFE_ES_ParseFileEntry: Loading file: /cf/hs.so, APP: HS"}
+{"elapsed_s": 24.58786905300076, "line": "1980-012-14:03:31.48259 CFE_ES_ParseFileEntry: Loading file: /cf/sc.so, APP: SC"}
+{"elapsed_s": 24.588278809998883, "line": "1980-012-14:03:31.48653 CFE_ES_ParseFileEntry: Loading file: /cf/md.so, APP: MD"}
+{"elapsed_s": 24.590673439997772, "line": "1980-012-14:03:31.49104 CFE_ES_ParseFileEntry: Loading file: /cf/cs.so, APP: CS"}
+{"elapsed_s": 24.590981030996772, "line": "1980-012-14:03:31.49539 CFE_ES_ParseFileEntry: Loading file: /cf/eval_temp.so, APP: EVAL_TEMP"}
+{"elapsed_s": 24.592583740995906, "line": "1980-012-14:03:31.49874 CFE_ES_ParseFileEntry: Loading file: /cf/eval_mag.so, APP: EVAL_MAG"}
+{"elapsed_s": 24.592592369997874, "line": "1980-012-14:03:31.50185 CFE_ES_ParseFileEntry: Loading file: /cf/eval_mpu.so, APP: EVAL_MPU"}
+{"elapsed_s": 24.594732129000477, "line": "SCH Lab Initialized.SCH Lab v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled"}
+{"elapsed_s": 24.59672241399676, "line": "1980-012-14:03:31.56411 CI_LAB listening on UDP port: 1234"}
+{"elapsed_s": 24.59673943300004, "line": "EVS Port1 1980-012-14:03:31.56427 66/1/CI_LAB 3: CI Lab Initialized.CI Lab App v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled"}
+{"elapsed_s": 24.59705340799701, "line": "EVS Port1 1980-012-14:03:31.56436 66/1/CFE_SB 14: No subscribers for MsgId 0x808,sender CI_LAB"}
+{"elapsed_s": 24.59837657400203, "line": "EVS Port1 1980-012-14:03:31.56591 66/1/TO_LAB 1: TO Lab Initialized.TO Lab v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled, Awaiting enable command."}
+{"elapsed_s": 24.601107832000707, "line": "EVS Port1 1980-012-14:03:31.56698 66/1/SAMPLE_APP 1: Sample App Initialized.Sample App v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled"}
+{"elapsed_s": 24.601126333996945, "line": "EVS Port1 1980-012-14:03:31.56809 66/1/EVAL_MPU 1: Eval Mpu Initialized.Eval Mpu v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled"}
+{"elapsed_s": 24.60407627499808, "line": "EVS Port1 1980-012-14:03:31.56936 66/1/EVAL_MAG 1: Eval Mag Initialized.Eval Mag v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled"}
+{"elapsed_s": 24.604985346995818, "line": "EVS Port1 1980-012-14:03:31.57060 66/1/EVAL_TEMP 1: Eval Temp Initialized.Eval Temp v7.0.2-rc1-oss (Draco) DEV BUILD, based on v7.0.1, EDS disabled"}
+{"elapsed_s": 24.607255342001736, "line": "EVS Port1 1980-012-14:03:31.57383 66/1/CS 144: CS EEPROM Table verification results: good = 0, bad = 0, unused = 16"}
+{"elapsed_s": 24.607297747999837, "line": "EVS Port1 1980-012-14:03:31.57443 66/1/CS 107: CS EEPROM Table: No valid entries in the table"}
+{"elapsed_s": 24.610171166001237, "line": "EVS Port1 1980-012-14:03:31.57502 66/1/CS 143: CS Memory Table verification results: good = 0, bad = 0, unused = 16"}
+{"elapsed_s": 24.61026263399981, "line": "EVS Port1 1980-012-14:03:31.57516 66/1/CS 107: CS Memory Table: No valid entries in the table"}
+{"elapsed_s": 24.61176593699929, "line": "EVS Port1 1980-012-14:03:31.57565 66/1/CS 139: CS Tables Table verification results: good = 1, bad = 0, unused = 23"}
+{"elapsed_s": 24.61180095299642, "line": "EVS Port1 1980-012-14:03:31.57664 66/1/CS 142: CS Apps Table verification results: good = 0, bad = 0, unused = 24"}
+{"elapsed_s": 24.616736677999143, "line": "EVS Port1 1980-012-14:03:31.57682 66/1/CS 108: CS Apps Table: No valid entries in the table"}
+{"elapsed_s": 24.617836069999612, "line": "EVS Port1 1980-012-14:03:31.57711 66/1/CS 127: OS Text Segment disabled due to platform"}
+{"elapsed_s": 24.61895645000186, "line": "EVS Port1 1980-012-14:03:31.57720 66/1/CS 1: CS Initialized. Version 7.0.2.255"}
+{"elapsed_s": 24.618983123000362, "line": "EVS Port1 1980-012-14:03:31.57873 66/1/MD 52: MD Dwell Tbl verify results: good = 0, bad = 0, unused = 25"}
+{"elapsed_s": 24.622122474997013, "line": "EVS Port1 1980-012-14:03:31.57934 66/1/MD 3: Recovered Dwell Table #1 is valid and has been copied to the MD App"}
+{"elapsed_s": 24.623884838998492, "line": "EVS Port1 1980-012-14:03:31.57957 66/1/MD 52: MD Dwell Tbl verify results: good = 0, bad = 0, unused = 25"}
+{"elapsed_s": 24.623915142998158, "line": "EVS Port1 1980-012-14:03:31.57963 66/1/MD 3: Recovered Dwell Table #2 is valid and has been copied to the MD App"}
+{"elapsed_s": 24.625018082995666, "line": "EVS Port1 1980-012-14:03:31.57974 66/1/MD 52: MD Dwell Tbl verify results: good = 0, bad = 0, unused = 25"}
+{"elapsed_s": 24.627120268996805, "line": "EVS Port1 1980-012-14:03:31.57980 66/1/MD 3: Recovered Dwell Table #3 is valid and has been copied to the MD App"}
+{"elapsed_s": 24.629149284999585, "line": "EVS Port1 1980-012-14:03:31.57989 66/1/MD 52: MD Dwell Tbl verify results: good = 0, bad = 0, unused = 25"}
+{"elapsed_s": 24.629188435996184, "line": "EVS Port1 1980-012-14:03:31.57994 66/1/MD 3: Recovered Dwell Table #4 is valid and has been copied to the MD App"}
+{"elapsed_s": 24.630127828000695, "line": "EVS Port1 1980-012-14:03:31.58000 66/1/MD 7: Dwell Tables Recovered: 4, Dwell Tables Initialized: 0"}
+{"elapsed_s": 24.63187593800103, "line": "EVS Port1 1980-012-14:03:31.58013 66/1/MD 1: MD Initialized.  Version 7.0.2.255"}
+{"elapsed_s": 24.63292994799849, "line": "EVS Port1 1980-012-14:03:31.58419 66/1/SC 21: RTS table files not loaded at initialization = 0 of 4"}
+{"elapsed_s": 24.634081628995773, "line": "EVS Port1 1980-012-14:03:31.58468 66/1/SC 9: SC Initialized. Version 7.0.2.255"}
+{"elapsed_s": 24.634105837998504, "line": "EVS Port1 1980-012-14:03:31.58654 66/1/HS 54: ExeCount verify results: good = 5, bad = 0, unused = 27"}
+{"elapsed_s": 24.63823343200056, "line": "EVS Port1 1980-012-14:03:31.58737 66/1/HS 50: AppMon verify results: good = 0, bad = 0, unused = 32"}
+{"elapsed_s": 24.639982745000452, "line": "EVS Port1 1980-012-14:03:31.58782 66/1/HS 52: EventMon verify results: good = 0, bad = 0, unused = 16"}
+{"elapsed_s": 24.6400166109961, "line": "EVS Port1 1980-012-14:03:31.58827 66/1/HS 56: MsgActs verify results: good = 2, bad = 0, unused = 6"}
+{"elapsed_s": 24.640293327996915, "line": "1980-012-14:03:31.58960 HS_SysMonInit(): System Monitor using PSP device ID 0110ff05"}
+{"elapsed_s": 24.642902410996612, "line": "EVS Port1 1980-012-14:03:31.59304 66/1/HK 1: HK Initialized.  Version 7.0.2.255"}
+{"elapsed_s": 24.64345906199742, "line": "EVS Port1 1980-012-14:03:31.59469 66/1/FM 80: Free Space Table verify results: good entries = 3, bad = 0, unused = 5"}
+{"elapsed_s": 24.64533644200128, "line": "EVS Port1 1980-012-14:03:31.59622 66/1/FM 1: Initialization complete: version 7.0.2.255"}
+{"elapsed_s": 24.645360198999697, "line": "EVS Port1 1980-012-14:03:31.59825 66/1/DS 10: Destination file table verify results: good entries = 6, bad = 0, unused = 10"}
+{"elapsed_s": 24.6497090260018, "line": "EVS Port1 1980-012-14:03:31.59902 66/1/DS 12: Filter table verify results: good entries = 14, bad = 0, unused = 242"}
+{"elapsed_s": 24.651197045001027, "line": "EVS Port1 1980-012-14:03:31.60023 66/1/DS 1: Application initialized, version 7.0.2.255, data at 0x7f94bd0458"}
+{"elapsed_s": 24.651242473999446, "line": "EVS Port1 1980-012-14:03:31.60810 66/1/CF 20: CF Initialized. Version 7.0.2.255"}
+{"elapsed_s": 24.651403547999507, "line": "EVS Port1 1980-012-14:03:31.62268 66/1/LC 56: WDT verify results: good = 0, bad = 0, unused = 176"}
+{"elapsed_s": 24.654804842000885, "line": "EVS Port1 1980-012-14:03:31.62376 66/1/LC 66: ADT verify results: good = 0, bad = 0, unused = 176"}
+{"elapsed_s": 24.655384507001145, "line": "EVS Port1 1980-012-14:03:31.62454 66/1/LC 23: LC use of Critical Data Store disabled, activity mask = 0x00991990"}
+{"elapsed_s": 24.656986469999538, "line": "EVS Port1 1980-012-14:03:31.62475 66/1/LC 2: LC Initialized. Version 7.0.2.255"}
+{"elapsed_s": 24.65701197100134, "line": "CFE_PSP(Linux_SysMon): Started CPU utilization monitoring on 4 CPU(s)"}
+{"elapsed_s": 24.659942441998282, "line": "EVS Port1 1980-012-14:03:31.62640 66/1/HS 1: HS Initialized.  Version 7.0.2.255"}
+{"elapsed_s": 24.661545237999235, "line": "1980-012-14:03:31.65496 CFE_ES_Main: CFE_ES_Main entering APPS_INIT state"}
+{"elapsed_s": 25.508509335995768, "line": "1980-012-14:03:31.65513 CFE_ES_Main: CFE_ES_Main entering OPERATIONAL state"}
+{"elapsed_s": 25.508837558001687, "line": "EVS Port1 1980-012-14:03:31.67333 66/1/TO_LAB 19: L549 TO Lab subscribed to 37 messages from the table"}

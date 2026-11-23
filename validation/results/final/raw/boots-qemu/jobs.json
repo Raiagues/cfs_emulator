@@ -1,0 +1,278 @@
+[
+  {
+    "action": "boot",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:41:51.237011+00:00",
+    "phases": [],
+    "guest_ssh_ready_observed_s": 77.31597586299904,
+    "status": "succeeded",
+    "result": {
+      "linux_ready": true
+    },
+    "elapsed_s": 80.84013958200376,
+    "ended_utc": "2026-11-23T07:43:12.077159+00:00"
+  },
+  {
+    "action": "run",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:43:12.077377+00:00",
+    "phases": [
+      {
+        "phase": "payload_transfer",
+        "start_s": 9.190417046003859,
+        "end_s": 22.545932360000734,
+        "elapsed_s": 13.355515479001042
+      }
+    ],
+    "operational_observed_s": 28.72504216300149,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "296e3d31931eefde52e11f7bc2c8c2ab550ebc72137c31c57fd78efd7b5538ed",
+      "built_at": 1795417273.7588363,
+      "deployed_at": 1795419797.4771736
+    },
+    "elapsed_s": 29.028351526001643,
+    "ended_utc": "2026-11-23T07:43:41.105737+00:00"
+  },
+  {
+    "action": "stop",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:43:46.346748+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 2.79623340699618,
+    "ended_utc": "2026-11-23T07:43:49.142997+00:00"
+  },
+  {
+    "action": "shutdown",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:43:49.143244+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 9.416345154997543,
+    "ended_utc": "2026-11-23T07:43:58.559598+00:00"
+  },
+  {
+    "action": "boot",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:43:58.560346+00:00",
+    "phases": [],
+    "guest_ssh_ready_observed_s": 74.57194854999398,
+    "status": "succeeded",
+    "result": {
+      "linux_ready": true
+    },
+    "elapsed_s": 78.17771344699577,
+    "ended_utc": "2026-11-23T07:45:16.738069+00:00"
+  },
+  {
+    "action": "run",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:45:16.738510+00:00",
+    "phases": [
+      {
+        "phase": "payload_transfer",
+        "start_s": 4.590915687003871,
+        "end_s": 17.43656426200323,
+        "elapsed_s": 12.845648762995552
+      }
+    ],
+    "operational_observed_s": 23.469214894998004,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "296e3d31931eefde52e11f7bc2c8c2ab550ebc72137c31c57fd78efd7b5538ed",
+      "built_at": 1795417273.7588363,
+      "deployed_at": 1795419918.7007322
+    },
+    "elapsed_s": 23.761363848003384,
+    "ended_utc": "2026-11-23T07:45:40.499886+00:00"
+  },
+  {
+    "action": "stop",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:45:45.730560+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 2.553216678003082,
+    "ended_utc": "2026-11-23T07:45:48.283793+00:00"
+  },
+  {
+    "action": "shutdown",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:45:48.284146+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 9.618737388002046,
+    "ended_utc": "2026-11-23T07:45:57.902895+00:00"
+  },
+  {
+    "action": "boot",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:45:57.903772+00:00",
+    "phases": [],
+    "guest_ssh_ready_observed_s": 68.65405472100247,
+    "status": "succeeded",
+    "result": {
+      "linux_ready": true
+    },
+    "elapsed_s": 72.05146108600457,
+    "ended_utc": "2026-11-23T07:47:09.955242+00:00"
+  },
+  {
+    "action": "run",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:47:09.955603+00:00",
+    "phases": [
+      {
+        "phase": "payload_transfer",
+        "start_s": 4.645158466002613,
+        "end_s": 17.399041930002568,
+        "elapsed_s": 12.753883599994879
+      }
+    ],
+    "operational_observed_s": 23.467604006997135,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "296e3d31931eefde52e11f7bc2c8c2ab550ebc72137c31c57fd78efd7b5538ed",
+      "built_at": 1795417273.7588363,
+      "deployed_at": 1795420031.9480722
+    },
+    "elapsed_s": 23.650139801997284,
+    "ended_utc": "2026-11-23T07:47:33.605752+00:00"
+  },
+  {
+    "action": "stop",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:47:39.123584+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 2.5275145740015432,
+    "ended_utc": "2026-11-23T07:47:41.651113+00:00"
+  },
+  {
+    "action": "shutdown",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:47:41.651526+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 9.835637072996178,
+    "ended_utc": "2026-11-23T07:47:51.487187+00:00"
+  },
+  {
+    "action": "boot",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:47:51.489732+00:00",
+    "phases": [],
+    "guest_ssh_ready_observed_s": 69.23408563299745,
+    "status": "succeeded",
+    "result": {
+      "linux_ready": true
+    },
+    "elapsed_s": 72.39334146900364,
+    "ended_utc": "2026-11-23T07:49:03.883082+00:00"
+  },
+  {
+    "action": "run",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:49:03.883512+00:00",
+    "phases": [
+      {
+        "phase": "payload_transfer",
+        "start_s": 4.417690009002399,
+        "end_s": 17.29745637800079,
+        "elapsed_s": 12.879766493002535
+      }
+    ],
+    "operational_observed_s": 23.010445159001392,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "296e3d31931eefde52e11f7bc2c8c2ab550ebc72137c31c57fd78efd7b5538ed",
+      "built_at": 1795417273.7588363,
+      "deployed_at": 1795420145.7962148
+    },
+    "elapsed_s": 23.18034998499934,
+    "ended_utc": "2026-11-23T07:49:27.063872+00:00"
+  },
+  {
+    "action": "stop",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:49:32.762041+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 2.5266870109990123,
+    "ended_utc": "2026-11-23T07:49:35.288753+00:00"
+  },
+  {
+    "action": "shutdown",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:49:35.289189+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 9.22971263499494,
+    "ended_utc": "2026-11-23T07:49:44.518915+00:00"
+  },
+  {
+    "action": "boot",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:49:44.520022+00:00",
+    "phases": [],
+    "guest_ssh_ready_observed_s": 69.26709725899855,
+    "status": "succeeded",
+    "result": {
+      "linux_ready": true
+    },
+    "elapsed_s": 73.09585083700222,
+    "ended_utc": "2026-11-23T07:50:57.615881+00:00"
+  },
+  {
+    "action": "run",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:50:57.616332+00:00",
+    "phases": [
+      {
+        "phase": "payload_transfer",
+        "start_s": 4.391996869002469,
+        "end_s": 17.32467083499796,
+        "elapsed_s": 12.932674155999848
+      }
+    ],
+    "operational_observed_s": 22.954713357998116,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "296e3d31931eefde52e11f7bc2c8c2ab550ebc72137c31c57fd78efd7b5538ed",
+      "built_at": 1795417273.7588363,
+      "deployed_at": 1795420259.4070983
+    },
+    "elapsed_s": 23.126247581996722,
+    "ended_utc": "2026-11-23T07:51:20.742589+00:00"
+  }
+]

@@ -1,0 +1,1622 @@
+[
+  {
+    "model": "tmp105",
+    "app": "eval_temp",
+    "level": 0,
+    "mid": 2561,
+    "expected_scaled": {
+      "temperature": 21537
+    },
+    "tolerance_scaled": {
+      "temperature": 32.25
+    },
+    "units": {
+      "temperature": "°C"
+    },
+    "field_mapping": {
+      "temperature": "Value"
+    },
+    "raw_registers": {
+      "at": 1795416973.0698292,
+      "status": "read",
+      "hex": "15900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "operation": "read_native_register_image",
+      "path": "hardware/.runtime/devices/i2c1-0x48.bin"
+    },
+    "packets": [
+      {
+        "mid": 2561,
+        "sequence": 89,
+        "bytes": 36,
+        "name": "EVAL_TEMP_Sample_Tlm_t",
+        "app": "eval_temp",
+        "source": "cFS/apps/eval_temp/fsw/src/sensors/eval_temp_sample_sensor.h",
+        "values": {
+          "Value": 21562,
+          "Status": 0,
+          "ReadCounter": 89,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a01c059001d000f46da801b000000003a54000000000000590000000000000001000000",
+        "received_at": 1795416975.0020182,
+        "count": 81,
+        "event_id": 1017
+      },
+      {
+        "mid": 2561,
+        "sequence": 90,
+        "bytes": 36,
+        "name": "EVAL_TEMP_Sample_Tlm_t",
+        "app": "eval_temp",
+        "source": "cFS/apps/eval_temp/fsw/src/sensors/eval_temp_sample_sensor.h",
+        "values": {
+          "Value": 21562,
+          "Status": 0,
+          "ReadCounter": 90,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a01c05a001d000f46dc8018000000003a540000000000005a0000000000000001000000",
+        "received_at": 1795416977.0008707,
+        "count": 82,
+        "event_id": 1030
+      },
+      {
+        "mid": 2561,
+        "sequence": 91,
+        "bytes": 36,
+        "name": "EVAL_TEMP_Sample_Tlm_t",
+        "app": "eval_temp",
+        "source": "cFS/apps/eval_temp/fsw/src/sensors/eval_temp_sample_sensor.h",
+        "values": {
+          "Value": 21562,
+          "Status": 0,
+          "ReadCounter": 91,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a01c05b001d000f46de8013000000003a540000000000005b0000000000000001000000",
+        "received_at": 1795416979.0020797,
+        "count": 83,
+        "event_id": 1041
+      },
+      {
+        "mid": 2561,
+        "sequence": 92,
+        "bytes": 36,
+        "name": "EVAL_TEMP_Sample_Tlm_t",
+        "app": "eval_temp",
+        "source": "cFS/apps/eval_temp/fsw/src/sensors/eval_temp_sample_sensor.h",
+        "values": {
+          "Value": 21562,
+          "Status": 0,
+          "ReadCounter": 92,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a01c05c001d000f46e0802a000000003a540000000000005c0000000000000001000000",
+        "received_at": 1795416981.0012605,
+        "count": 84,
+        "event_id": 1053
+      },
+      {
+        "mid": 2561,
+        "sequence": 93,
+        "bytes": 36,
+        "name": "EVAL_TEMP_Sample_Tlm_t",
+        "app": "eval_temp",
+        "source": "cFS/apps/eval_temp/fsw/src/sensors/eval_temp_sample_sensor.h",
+        "values": {
+          "Value": 21562,
+          "Status": 0,
+          "ReadCounter": 93,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a01c05d001d000f46e28003000000003a540000000000005d0000000000000001000000",
+        "received_at": 1795416983.0001252,
+        "count": 85,
+        "event_id": 1065
+      }
+    ],
+    "passed": true,
+    "status": "passed",
+    "valid_expected": true,
+    "input_applied_at": 1795416973.0674398
+  },
+  {
+    "model": "lsm303dlhc_mag",
+    "app": "eval_mag",
+    "level": 0,
+    "mid": 2563,
+    "expected_scaled": {
+      "mag-x": 18123,
+      "mag-y": -12457,
+      "mag-z": 38912
+    },
+    "tolerance_scaled": {
+      "mag-x": 46.45454545454545,
+      "mag-y": 46.45454545454545,
+      "mag-z": 52.02040816326531
+    },
+    "units": {
+      "mag-x": "µT",
+      "mag-y": "µT",
+      "mag-z": "µT"
+    },
+    "field_mapping": {
+      "mag-x": "Value.X",
+      "mag-y": "Value.Y",
+      "mag-z": "Value.Z"
+    },
+    "raw_registers": {
+      "at": 1795416983.1219323,
+      "status": "read",
+      "hex": "10200000c7017dff7701483433000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "operation": "read_native_register_image",
+      "path": "hardware/.runtime/devices/i2c1-0x1e.bin"
+    },
+    "packets": [
+      {
+        "mid": 2563,
+        "sequence": 89,
+        "bytes": 44,
+        "name": "EVAL_MAG_Sample_Tlm_t",
+        "app": "eval_mag",
+        "source": "cFS/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.h",
+        "values": {
+          "Value.X": 18090,
+          "Value.Y": -12454,
+          "Value.Z": 38877,
+          "Status": 0,
+          "ReadCounter": 89,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a03c0590025000f46da800e00000000aa4600005acfffffdd97000000000000590000000000000001000000",
+        "received_at": 1795416974.9994376,
+        "count": 81,
+        "event_id": 1015
+      },
+      {
+        "mid": 2563,
+        "sequence": 90,
+        "bytes": 44,
+        "name": "EVAL_MAG_Sample_Tlm_t",
+        "app": "eval_mag",
+        "source": "cFS/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.h",
+        "values": {
+          "Value.X": 18090,
+          "Value.Y": -12454,
+          "Value.Z": 38877,
+          "Status": 0,
+          "ReadCounter": 90,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a03c05a0025000f46dc800800000000aa4600005acfffffdd970000000000005a0000000000000001000000",
+        "received_at": 1795416976.9992185,
+        "count": 82,
+        "event_id": 1025
+      },
+      {
+        "mid": 2563,
+        "sequence": 91,
+        "bytes": 44,
+        "name": "EVAL_MAG_Sample_Tlm_t",
+        "app": "eval_mag",
+        "source": "cFS/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.h",
+        "values": {
+          "Value.X": 18090,
+          "Value.Y": -12454,
+          "Value.Z": 38877,
+          "Status": 0,
+          "ReadCounter": 91,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a03c05b0025000f46de801200000000aa4600005acfffffdd970000000000005b0000000000000001000000",
+        "received_at": 1795416979.0008152,
+        "count": 83,
+        "event_id": 1039
+      },
+      {
+        "mid": 2563,
+        "sequence": 92,
+        "bytes": 44,
+        "name": "EVAL_MAG_Sample_Tlm_t",
+        "app": "eval_mag",
+        "source": "cFS/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.h",
+        "values": {
+          "Value.X": 18090,
+          "Value.Y": -12454,
+          "Value.Z": 38877,
+          "Status": 0,
+          "ReadCounter": 92,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a03c05c0025000f46e0800c00000000aa4600005acfffffdd970000000000005c0000000000000001000000",
+        "received_at": 1795416981.0003393,
+        "count": 84,
+        "event_id": 1051
+      },
+      {
+        "mid": 2563,
+        "sequence": 93,
+        "bytes": 44,
+        "name": "EVAL_MAG_Sample_Tlm_t",
+        "app": "eval_mag",
+        "source": "cFS/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.h",
+        "values": {
+          "Value.X": 18090,
+          "Value.Y": -12454,
+          "Value.Z": 38877,
+          "Status": 0,
+          "ReadCounter": 93,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a03c05d0025000f46e2800400000000aa4600005acfffffdd970000000000005d0000000000000001000000",
+        "received_at": 1795416983.0009887,
+        "count": 85,
+        "event_id": 1066
+      }
+    ],
+    "passed": true,
+    "status": "passed",
+    "valid_expected": true,
+    "input_applied_at": 1795416973.0678732
+  },
+  {
+    "model": "mpu6050",
+    "app": "eval_mpu",
+    "level": 0,
+    "mid": 2565,
+    "expected_scaled": {
+      "accel-x": 13,
+      "accel-y": -21,
+      "accel-z": 998,
+      "temperature": 24137,
+      "gyro-x": 317,
+      "gyro-y": -541,
+      "gyro-z": 129
+    },
+    "tolerance_scaled": {
+      "accel-x": 1.030517578125,
+      "accel-y": 1.030517578125,
+      "accel-z": 1.030517578125,
+      "temperature": 2.4705882352941178,
+      "gyro-x": 4.816793893129772,
+      "gyro-y": 4.816793893129772,
+      "gyro-z": 4.816793893129772
+    },
+    "units": {
+      "accel-x": "g",
+      "accel-y": "g",
+      "accel-z": "g",
+      "temperature": "°C",
+      "gyro-x": "°/s",
+      "gyro-y": "°/s",
+      "gyro-z": "°/s"
+    },
+    "field_mapping": {
+      "accel-x": "Value.Value_accel_x",
+      "accel-y": "Value.Value_accel_y",
+      "accel-z": "Value.Value_accel_z",
+      "temperature": "Value.Value_temperature",
+      "gyro-x": "Value.Value_gyro_x",
+      "gyro-y": "Value.Value_gyro_y",
+      "gyro-z": "Value.Value_gyro_z"
+    },
+    "raw_registers": {
+      "at": 1795416983.256973,
+      "status": "read",
+      "hex": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000d5fea83fdfef8a002affb90011000000000000000000000000000000000000000000000000000000000000000000000100000000000000000068000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "operation": "read_native_register_image",
+      "path": "hardware/.runtime/devices/i2c1-0x68.bin"
+    },
+    "packets": [
+      {
+        "mid": 2565,
+        "sequence": 89,
+        "bytes": 60,
+        "name": "EVAL_MPU_Sample_Tlm_t",
+        "app": "eval_mpu",
+        "source": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.h",
+        "values": {
+          "Value.Value_accel_x": 13,
+          "Value.Value_accel_y": -20,
+          "Value.Value_accel_z": 997,
+          "Value.Value_temperature": 24136,
+          "Value.Value_gyro_x": 320,
+          "Value.Value_gyro_y": -541,
+          "Value.Value_gyro_z": 129,
+          "Status": 0,
+          "ReadCounter": 89,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a05c0590035000f46da800e000000000d000000ecffffffe5030000485e000040010000e3fdffff8100000000000000590000000000000001000000",
+        "received_at": 1795416975.0008254,
+        "count": 81,
+        "event_id": 1016
+      },
+      {
+        "mid": 2565,
+        "sequence": 90,
+        "bytes": 60,
+        "name": "EVAL_MPU_Sample_Tlm_t",
+        "app": "eval_mpu",
+        "source": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.h",
+        "values": {
+          "Value.Value_accel_x": 13,
+          "Value.Value_accel_y": -20,
+          "Value.Value_accel_z": 997,
+          "Value.Value_temperature": 24136,
+          "Value.Value_gyro_x": 320,
+          "Value.Value_gyro_y": -541,
+          "Value.Value_gyro_z": 129,
+          "Status": 0,
+          "ReadCounter": 90,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a05c05a0035000f46dc8009000000000d000000ecffffffe5030000485e000040010000e3fdffff81000000000000005a0000000000000001000000",
+        "received_at": 1795416977.000241,
+        "count": 82,
+        "event_id": 1026
+      },
+      {
+        "mid": 2565,
+        "sequence": 91,
+        "bytes": 60,
+        "name": "EVAL_MPU_Sample_Tlm_t",
+        "app": "eval_mpu",
+        "source": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.h",
+        "values": {
+          "Value.Value_accel_x": 13,
+          "Value.Value_accel_y": -20,
+          "Value.Value_accel_z": 997,
+          "Value.Value_temperature": 24136,
+          "Value.Value_gyro_x": 320,
+          "Value.Value_gyro_y": -541,
+          "Value.Value_gyro_z": 129,
+          "Status": 0,
+          "ReadCounter": 91,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a05c05b0035000f46de800c000000000d000000ecffffffe5030000485e000040010000e3fdffff81000000000000005b0000000000000001000000",
+        "received_at": 1795416978.998994,
+        "count": 83,
+        "event_id": 1037
+      },
+      {
+        "mid": 2565,
+        "sequence": 92,
+        "bytes": 60,
+        "name": "EVAL_MPU_Sample_Tlm_t",
+        "app": "eval_mpu",
+        "source": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.h",
+        "values": {
+          "Value.Value_accel_x": 13,
+          "Value.Value_accel_y": -20,
+          "Value.Value_accel_z": 997,
+          "Value.Value_temperature": 24136,
+          "Value.Value_gyro_x": 320,
+          "Value.Value_gyro_y": -541,
+          "Value.Value_gyro_z": 129,
+          "Status": 0,
+          "ReadCounter": 92,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a05c05c0035000f46e08000000000000d000000ecffffffe5030000485e000040010000e3fdffff81000000000000005c0000000000000001000000",
+        "received_at": 1795416980.9991455,
+        "count": 84,
+        "event_id": 1048
+      },
+      {
+        "mid": 2565,
+        "sequence": 93,
+        "bytes": 60,
+        "name": "EVAL_MPU_Sample_Tlm_t",
+        "app": "eval_mpu",
+        "source": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.h",
+        "values": {
+          "Value.Value_accel_x": 13,
+          "Value.Value_accel_y": -20,
+          "Value.Value_accel_z": 997,
+          "Value.Value_temperature": 24136,
+          "Value.Value_gyro_x": 320,
+          "Value.Value_gyro_y": -541,
+          "Value.Value_gyro_z": 129,
+          "Status": 0,
+          "ReadCounter": 93,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a05c05d0035000f46e28002000000000d000000ecffffffe5030000485e000040010000e3fdffff81000000000000005d0000000000000001000000",
+        "received_at": 1795416982.9991667,
+        "count": 85,
+        "event_id": 1064
+      }
+    ],
+    "passed": true,
+    "status": "passed",
+    "valid_expected": true,
+    "input_applied_at": 1795416973.0683086
+  },
+  {
+    "model": "tmp105",
+    "app": "eval_temp",
+    "level": 1,
+    "mid": 2561,
+    "expected_scaled": {
+      "temperature": -3241
+    },
+    "tolerance_scaled": {
+      "temperature": 32.25
+    },
+    "units": {
+      "temperature": "°C"
+    },
+    "field_mapping": {
+      "temperature": "Value"
+    },
+    "raw_registers": {
+      "at": 1795416983.394174,
+      "status": "read",
+      "hex": "fcc00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "operation": "read_native_register_image",
+      "path": "hardware/.runtime/devices/i2c1-0x48.bin"
+    },
+    "packets": [
+      {
+        "mid": 2561,
+        "sequence": 94,
+        "bytes": 36,
+        "name": "EVAL_TEMP_Sample_Tlm_t",
+        "app": "eval_temp",
+        "source": "cFS/apps/eval_temp/fsw/src/sensors/eval_temp_sample_sensor.h",
+        "values": {
+          "Value": -3250,
+          "Status": 0,
+          "ReadCounter": 94,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a01c05e001d000f46e48007000000004ef3ffff000000005e0000000000000001000000",
+        "received_at": 1795416985.0025668,
+        "count": 86,
+        "event_id": 1072
+      },
+      {
+        "mid": 2561,
+        "sequence": 95,
+        "bytes": 36,
+        "name": "EVAL_TEMP_Sample_Tlm_t",
+        "app": "eval_temp",
+        "source": "cFS/apps/eval_temp/fsw/src/sensors/eval_temp_sample_sensor.h",
+        "values": {
+          "Value": -3250,
+          "Status": 0,
+          "ReadCounter": 95,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a01c05f001d000f46e67ffe000000004ef3ffff000000005f0000000000000001000000",
+        "received_at": 1795416986.9990778,
+        "count": 87,
+        "event_id": 1086
+      },
+      {
+        "mid": 2561,
+        "sequence": 96,
+        "bytes": 36,
+        "name": "EVAL_TEMP_Sample_Tlm_t",
+        "app": "eval_temp",
+        "source": "cFS/apps/eval_temp/fsw/src/sensors/eval_temp_sample_sensor.h",
+        "values": {
+          "Value": -3250,
+          "Status": 0,
+          "ReadCounter": 96,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a01c060001d000f46e88016000000004ef3ffff00000000600000000000000001000000",
+        "received_at": 1795416989.008821,
+        "count": 88,
+        "event_id": 1098
+      },
+      {
+        "mid": 2561,
+        "sequence": 97,
+        "bytes": 36,
+        "name": "EVAL_TEMP_Sample_Tlm_t",
+        "app": "eval_temp",
+        "source": "cFS/apps/eval_temp/fsw/src/sensors/eval_temp_sample_sensor.h",
+        "values": {
+          "Value": -3250,
+          "Status": 0,
+          "ReadCounter": 97,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a01c061001d000f46ea800c000000004ef3ffff00000000610000000000000001000000",
+        "received_at": 1795416991.00397,
+        "count": 89,
+        "event_id": 1110
+      },
+      {
+        "mid": 2561,
+        "sequence": 98,
+        "bytes": 36,
+        "name": "EVAL_TEMP_Sample_Tlm_t",
+        "app": "eval_temp",
+        "source": "cFS/apps/eval_temp/fsw/src/sensors/eval_temp_sample_sensor.h",
+        "values": {
+          "Value": -3250,
+          "Status": 0,
+          "ReadCounter": 98,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a01c062001d000f46ec8028000000004ef3ffff00000000620000000000000001000000",
+        "received_at": 1795416993.0130184,
+        "count": 90,
+        "event_id": 1122
+      }
+    ],
+    "passed": true,
+    "status": "passed",
+    "valid_expected": true,
+    "input_applied_at": 1795416983.3876522
+  },
+  {
+    "model": "lsm303dlhc_mag",
+    "app": "eval_mag",
+    "level": 1,
+    "mid": 2563,
+    "expected_scaled": {
+      "mag-x": -25317,
+      "mag-y": 8961,
+      "mag-z": 42133
+    },
+    "tolerance_scaled": {
+      "mag-x": 46.45454545454545,
+      "mag-y": 46.45454545454545,
+      "mag-z": 52.02040816326531
+    },
+    "units": {
+      "mag-x": "µT",
+      "mag-y": "µT",
+      "mag-z": "µT"
+    },
+    "field_mapping": {
+      "mag-x": "Value.X",
+      "mag-y": "Value.Y",
+      "mag-z": "Value.Z"
+    },
+    "raw_registers": {
+      "at": 1795416993.0832806,
+      "status": "read",
+      "hex": "102000feea019d006301483433000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "operation": "read_native_register_image",
+      "path": "hardware/.runtime/devices/i2c1-0x1e.bin"
+    },
+    "packets": [
+      {
+        "mid": 2563,
+        "sequence": 94,
+        "bytes": 44,
+        "name": "EVAL_MAG_Sample_Tlm_t",
+        "app": "eval_mag",
+        "source": "cFS/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.h",
+        "values": {
+          "Value.X": -25272,
+          "Value.Y": 9000,
+          "Value.Z": 42142,
+          "Status": 0,
+          "ReadCounter": 94,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a03c05e0025000f46e4800800000000489dffff282300009ea40000000000005e0000000000000001000000",
+        "received_at": 1795416985.0033538,
+        "count": 86,
+        "event_id": 1073
+      },
+      {
+        "mid": 2563,
+        "sequence": 95,
+        "bytes": 44,
+        "name": "EVAL_MAG_Sample_Tlm_t",
+        "app": "eval_mag",
+        "source": "cFS/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.h",
+        "values": {
+          "Value.X": -25272,
+          "Value.Y": 9000,
+          "Value.Z": 42142,
+          "Status": 0,
+          "ReadCounter": 95,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a03c05f0025000f46e6800100000000489dffff282300009ea40000000000005f0000000000000001000000",
+        "received_at": 1795416987.0001187,
+        "count": 87,
+        "event_id": 1087
+      },
+      {
+        "mid": 2563,
+        "sequence": 96,
+        "bytes": 44,
+        "name": "EVAL_MAG_Sample_Tlm_t",
+        "app": "eval_mag",
+        "source": "cFS/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.h",
+        "values": {
+          "Value.X": -25272,
+          "Value.Y": 9000,
+          "Value.Z": 42142,
+          "Status": 0,
+          "ReadCounter": 96,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a03c0600025000f46e8801200000000489dffff282300009ea4000000000000600000000000000001000000",
+        "received_at": 1795416989.0077808,
+        "count": 88,
+        "event_id": 1097
+      },
+      {
+        "mid": 2563,
+        "sequence": 97,
+        "bytes": 44,
+        "name": "EVAL_MAG_Sample_Tlm_t",
+        "app": "eval_mag",
+        "source": "cFS/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.h",
+        "values": {
+          "Value.X": -25272,
+          "Value.Y": 9000,
+          "Value.Z": 42142,
+          "Status": 0,
+          "ReadCounter": 97,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a03c0610025000f46ea801200000000489dffff282300009ea4000000000000610000000000000001000000",
+        "received_at": 1795416991.0054774,
+        "count": 89,
+        "event_id": 1112
+      },
+      {
+        "mid": 2563,
+        "sequence": 98,
+        "bytes": 44,
+        "name": "EVAL_MAG_Sample_Tlm_t",
+        "app": "eval_mag",
+        "source": "cFS/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.h",
+        "values": {
+          "Value.X": -25272,
+          "Value.Y": 9000,
+          "Value.Z": 42142,
+          "Status": 0,
+          "ReadCounter": 98,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a03c0620025000f46ec800300000000489dffff282300009ea4000000000000620000000000000001000000",
+        "received_at": 1795416993.010982,
+        "count": 90,
+        "event_id": 1117
+      }
+    ],
+    "passed": true,
+    "status": "passed",
+    "valid_expected": true,
+    "input_applied_at": 1795416983.3885708
+  },
+  {
+    "model": "mpu6050",
+    "app": "eval_mpu",
+    "level": 1,
+    "mid": 2565,
+    "expected_scaled": {
+      "accel-x": 501,
+      "accel-y": -12,
+      "accel-z": 866,
+      "temperature": 27139,
+      "gyro-x": -1243,
+      "gyro-y": 731,
+      "gyro-z": -437
+    },
+    "tolerance_scaled": {
+      "accel-x": 1.030517578125,
+      "accel-y": 1.030517578125,
+      "accel-z": 1.030517578125,
+      "temperature": 2.4705882352941178,
+      "gyro-x": 4.816793893129772,
+      "gyro-y": 4.816793893129772,
+      "gyro-z": 4.816793893129772
+    },
+    "units": {
+      "accel-x": "g",
+      "accel-y": "g",
+      "accel-z": "g",
+      "temperature": "°C",
+      "gyro-x": "°/s",
+      "gyro-y": "°/s",
+      "gyro-z": "°/s"
+    },
+    "field_mapping": {
+      "accel-x": "Value.Value_accel_x",
+      "accel-y": "Value.Value_accel_y",
+      "accel-z": "Value.Value_accel_z",
+      "temperature": "Value.Value_temperature",
+      "gyro-x": "Value.Value_gyro_x",
+      "gyro-y": "Value.Value_gyro_y",
+      "gyro-z": "Value.Value_gyro_z"
+    },
+    "raw_registers": {
+      "at": 1795416993.2199652,
+      "status": "read",
+      "hex": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002010ff3b376df387ff5d0060ffc7000000000000000000000000000000000000000000000000000000000000000000000100000000000000000068000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "operation": "read_native_register_image",
+      "path": "hardware/.runtime/devices/i2c1-0x68.bin"
+    },
+    "packets": [
+      {
+        "mid": 2565,
+        "sequence": 94,
+        "bytes": 60,
+        "name": "EVAL_MPU_Sample_Tlm_t",
+        "app": "eval_mpu",
+        "source": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.h",
+        "values": {
+          "Value.Value_accel_x": 500,
+          "Value.Value_accel_y": -12,
+          "Value.Value_accel_z": 866,
+          "Value.Value_temperature": 27139,
+          "Value.Value_gyro_x": -1244,
+          "Value.Value_gyro_y": 732,
+          "Value.Value_gyro_z": -435,
+          "Status": 0,
+          "ReadCounter": 94,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a05c05e0035000f46e4800b00000000f4010000f4ffffff62030000036a000024fbffffdc0200004dfeffff000000005e0000000000000001000000",
+        "received_at": 1795416985.0040176,
+        "count": 86,
+        "event_id": 1074
+      },
+      {
+        "mid": 2565,
+        "sequence": 95,
+        "bytes": 60,
+        "name": "EVAL_MPU_Sample_Tlm_t",
+        "app": "eval_mpu",
+        "source": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.h",
+        "values": {
+          "Value.Value_accel_x": 500,
+          "Value.Value_accel_y": -12,
+          "Value.Value_accel_z": 866,
+          "Value.Value_temperature": 27139,
+          "Value.Value_gyro_x": -1244,
+          "Value.Value_gyro_y": 732,
+          "Value.Value_gyro_z": -435,
+          "Status": 0,
+          "ReadCounter": 95,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a05c05f0035000f46e6800200000000f4010000f4ffffff62030000036a000024fbffffdc0200004dfeffff000000005f0000000000000001000000",
+        "received_at": 1795416987.0009542,
+        "count": 87,
+        "event_id": 1088
+      },
+      {
+        "mid": 2565,
+        "sequence": 96,
+        "bytes": 60,
+        "name": "EVAL_MPU_Sample_Tlm_t",
+        "app": "eval_mpu",
+        "source": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.h",
+        "values": {
+          "Value.Value_accel_x": 500,
+          "Value.Value_accel_y": -12,
+          "Value.Value_accel_z": 866,
+          "Value.Value_temperature": 27139,
+          "Value.Value_gyro_x": -1244,
+          "Value.Value_gyro_y": 732,
+          "Value.Value_gyro_z": -435,
+          "Status": 0,
+          "ReadCounter": 96,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a05c0600035000f46e8801700000000f4010000f4ffffff62030000036a000024fbffffdc0200004dfeffff00000000600000000000000001000000",
+        "received_at": 1795416989.0097208,
+        "count": 88,
+        "event_id": 1099
+      },
+      {
+        "mid": 2565,
+        "sequence": 97,
+        "bytes": 60,
+        "name": "EVAL_MPU_Sample_Tlm_t",
+        "app": "eval_mpu",
+        "source": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.h",
+        "values": {
+          "Value.Value_accel_x": 500,
+          "Value.Value_accel_y": -12,
+          "Value.Value_accel_z": 866,
+          "Value.Value_temperature": 27139,
+          "Value.Value_gyro_x": -1244,
+          "Value.Value_gyro_y": 732,
+          "Value.Value_gyro_z": -435,
+          "Status": 0,
+          "ReadCounter": 97,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a05c0610035000f46ea800f00000000f4010000f4ffffff62030000036a000024fbffffdc0200004dfeffff00000000610000000000000001000000",
+        "received_at": 1795416991.0048234,
+        "count": 89,
+        "event_id": 1111
+      },
+      {
+        "mid": 2565,
+        "sequence": 98,
+        "bytes": 60,
+        "name": "EVAL_MPU_Sample_Tlm_t",
+        "app": "eval_mpu",
+        "source": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.h",
+        "values": {
+          "Value.Value_accel_x": 500,
+          "Value.Value_accel_y": -12,
+          "Value.Value_accel_z": 866,
+          "Value.Value_temperature": 27139,
+          "Value.Value_gyro_x": -1244,
+          "Value.Value_gyro_y": 732,
+          "Value.Value_gyro_z": -435,
+          "Status": 0,
+          "ReadCounter": 98,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a05c0620035000f46ec801200000000f4010000f4ffffff62030000036a000024fbffffdc0200004dfeffff00000000620000000000000001000000",
+        "received_at": 1795416993.012038,
+        "count": 90,
+        "event_id": 1119
+      }
+    ],
+    "passed": true,
+    "status": "passed",
+    "valid_expected": true,
+    "input_applied_at": 1795416983.3897884
+  },
+  {
+    "model": "tmp105",
+    "app": "eval_temp",
+    "level": 2,
+    "mid": 2561,
+    "expected_scaled": {
+      "temperature": 31719
+    },
+    "tolerance_scaled": {
+      "temperature": 32.25
+    },
+    "units": {
+      "temperature": "°C"
+    },
+    "field_mapping": {
+      "temperature": "Value"
+    },
+    "raw_registers": {
+      "at": 1795416993.3608837,
+      "status": "read",
+      "hex": "1fc00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "operation": "read_native_register_image",
+      "path": "hardware/.runtime/devices/i2c1-0x48.bin"
+    },
+    "packets": [
+      {
+        "mid": 2561,
+        "sequence": 99,
+        "bytes": 36,
+        "name": "EVAL_TEMP_Sample_Tlm_t",
+        "app": "eval_temp",
+        "source": "cFS/apps/eval_temp/fsw/src/sensors/eval_temp_sample_sensor.h",
+        "values": {
+          "Value": 31750,
+          "Status": 0,
+          "ReadCounter": 99,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a01c063001d000f46ee804500000000067c000000000000630000000000000001000000",
+        "received_at": 1795416995.0024972,
+        "count": 91,
+        "event_id": 1138
+      },
+      {
+        "mid": 2561,
+        "sequence": 100,
+        "bytes": 36,
+        "name": "EVAL_TEMP_Sample_Tlm_t",
+        "app": "eval_temp",
+        "source": "cFS/apps/eval_temp/fsw/src/sensors/eval_temp_sample_sensor.h",
+        "values": {
+          "Value": 31750,
+          "Status": 0,
+          "ReadCounter": 100,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a01c064001d000f46f07f8900000000067c000000000000640000000000000001000000",
+        "received_at": 1795416997.002271,
+        "count": 92,
+        "event_id": 1148
+      },
+      {
+        "mid": 2561,
+        "sequence": 101,
+        "bytes": 36,
+        "name": "EVAL_TEMP_Sample_Tlm_t",
+        "app": "eval_temp",
+        "source": "cFS/apps/eval_temp/fsw/src/sensors/eval_temp_sample_sensor.h",
+        "values": {
+          "Value": 31750,
+          "Status": 0,
+          "ReadCounter": 101,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a01c065001d000f46f2800500000000067c000000000000650000000000000001000000",
+        "received_at": 1795416998.9998498,
+        "count": 93,
+        "event_id": 1158
+      },
+      {
+        "mid": 2561,
+        "sequence": 102,
+        "bytes": 36,
+        "name": "EVAL_TEMP_Sample_Tlm_t",
+        "app": "eval_temp",
+        "source": "cFS/apps/eval_temp/fsw/src/sensors/eval_temp_sample_sensor.h",
+        "values": {
+          "Value": 31750,
+          "Status": 0,
+          "ReadCounter": 102,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a01c066001d000f46f4803c00000000067c000000000000660000000000000001000000",
+        "received_at": 1795417001.0125139,
+        "count": 94,
+        "event_id": 1169
+      },
+      {
+        "mid": 2561,
+        "sequence": 103,
+        "bytes": 36,
+        "name": "EVAL_TEMP_Sample_Tlm_t",
+        "app": "eval_temp",
+        "source": "cFS/apps/eval_temp/fsw/src/sensors/eval_temp_sample_sensor.h",
+        "values": {
+          "Value": 31750,
+          "Status": 0,
+          "ReadCounter": 103,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a01c067001d000f46f6800b00000000067c000000000000670000000000000001000000",
+        "received_at": 1795417002.9992526,
+        "count": 95,
+        "event_id": 1181
+      }
+    ],
+    "passed": true,
+    "status": "passed",
+    "valid_expected": true,
+    "input_applied_at": 1795416993.3535407
+  },
+  {
+    "model": "lsm303dlhc_mag",
+    "app": "eval_mag",
+    "level": 2,
+    "mid": 2563,
+    "expected_scaled": {
+      "mag-x": 11542,
+      "mag-y": 21489,
+      "mag-z": -32761
+    },
+    "tolerance_scaled": {
+      "mag-x": 46.45454545454545,
+      "mag-y": 46.45454545454545,
+      "mag-z": 52.02040816326531
+    },
+    "units": {
+      "mag-x": "µT",
+      "mag-y": "µT",
+      "mag-z": "µT"
+    },
+    "field_mapping": {
+      "mag-x": "Value.X",
+      "mag-y": "Value.Y",
+      "mag-z": "Value.Z"
+    },
+    "raw_registers": {
+      "at": 1795417003.095525,
+      "status": "read",
+      "hex": "102000007ffebf00ec01483433000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "operation": "read_native_register_image",
+      "path": "hardware/.runtime/devices/i2c1-0x1e.bin"
+    },
+    "packets": [
+      {
+        "mid": 2563,
+        "sequence": 99,
+        "bytes": 44,
+        "name": "EVAL_MAG_Sample_Tlm_t",
+        "app": "eval_mag",
+        "source": "cFS/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.h",
+        "values": {
+          "Value.X": 11545,
+          "Value.Y": 21454,
+          "Value.Z": -32755,
+          "Status": 0,
+          "ReadCounter": 99,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a03c0630025000f46ee802200000000192d0000ce5300000d80ffff00000000630000000000000001000000",
+        "received_at": 1795416994.9994574,
+        "count": 91,
+        "event_id": 1134
+      },
+      {
+        "mid": 2563,
+        "sequence": 100,
+        "bytes": 44,
+        "name": "EVAL_MAG_Sample_Tlm_t",
+        "app": "eval_mag",
+        "source": "cFS/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.h",
+        "values": {
+          "Value.X": 11545,
+          "Value.Y": 21454,
+          "Value.Z": -32755,
+          "Status": 0,
+          "ReadCounter": 100,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a03c0640025000f46f07f5000000000192d0000ce5300000d80ffff00000000640000000000000001000000",
+        "received_at": 1795416996.9991837,
+        "count": 92,
+        "event_id": 1143
+      },
+      {
+        "mid": 2563,
+        "sequence": 101,
+        "bytes": 44,
+        "name": "EVAL_MAG_Sample_Tlm_t",
+        "app": "eval_mag",
+        "source": "cFS/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.h",
+        "values": {
+          "Value.X": 11545,
+          "Value.Y": 21454,
+          "Value.Z": -32755,
+          "Status": 0,
+          "ReadCounter": 101,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a03c0650025000f46f27ffd00000000192d0000ce5300000d80ffff00000000650000000000000001000000",
+        "received_at": 1795416998.9986877,
+        "count": 93,
+        "event_id": 1155
+      },
+      {
+        "mid": 2563,
+        "sequence": 102,
+        "bytes": 44,
+        "name": "EVAL_MAG_Sample_Tlm_t",
+        "app": "eval_mag",
+        "source": "cFS/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.h",
+        "values": {
+          "Value.X": 11545,
+          "Value.Y": 21454,
+          "Value.Z": -32755,
+          "Status": 0,
+          "ReadCounter": 102,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a03c0660025000f46f4801800000000192d0000ce5300000d80ffff00000000660000000000000001000000",
+        "received_at": 1795417001.011791,
+        "count": 94,
+        "event_id": 1168
+      },
+      {
+        "mid": 2563,
+        "sequence": 103,
+        "bytes": 44,
+        "name": "EVAL_MAG_Sample_Tlm_t",
+        "app": "eval_mag",
+        "source": "cFS/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.h",
+        "values": {
+          "Value.X": 11545,
+          "Value.Y": 21454,
+          "Value.Z": -32755,
+          "Status": 0,
+          "ReadCounter": 103,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a03c0670025000f46f6800e00000000192d0000ce5300000d80ffff00000000670000000000000001000000",
+        "received_at": 1795417003.0006611,
+        "count": 95,
+        "event_id": 1182
+      }
+    ],
+    "passed": true,
+    "status": "passed",
+    "valid_expected": true,
+    "input_applied_at": 1795416993.3548286
+  },
+  {
+    "model": "mpu6050",
+    "app": "eval_mpu",
+    "level": 2,
+    "mid": 2565,
+    "expected_scaled": {
+      "accel-x": -707,
+      "accel-y": 8,
+      "accel-z": 706,
+      "temperature": 29513,
+      "gyro-x": 2171,
+      "gyro-y": -1683,
+      "gyro-z": 563
+    },
+    "tolerance_scaled": {
+      "accel-x": 1.030517578125,
+      "accel-y": 1.030517578125,
+      "accel-z": 1.030517578125,
+      "temperature": 2.4705882352941178,
+      "gyro-x": 4.816793893129772,
+      "gyro-y": 4.816793893129772,
+      "gyro-z": 4.816793893129772
+    },
+    "units": {
+      "accel-x": "g",
+      "accel-y": "g",
+      "accel-z": "g",
+      "temperature": "°C",
+      "gyro-x": "°/s",
+      "gyro-y": "°/s",
+      "gyro-z": "°/s"
+    },
+    "field_mapping": {
+      "accel-x": "Value.Value_accel_x",
+      "accel-y": "Value.Value_accel_y",
+      "accel-z": "Value.Value_accel_z",
+      "temperature": "Value.Value_temperature",
+      "gyro-x": "Value.Value_gyro_x",
+      "gyro-y": "Value.Value_gyro_y",
+      "gyro-z": "Value.Value_gyro_z"
+    },
+    "raw_registers": {
+      "at": 1795417003.228962,
+      "status": "read",
+      "hex": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000d2c100832d2ff6ae011cff24004a000000000000000000000000000000000000000000000000000000000000000000000100000000000000000068000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "operation": "read_native_register_image",
+      "path": "hardware/.runtime/devices/i2c1-0x68.bin"
+    },
+    "packets": [
+      {
+        "mid": 2565,
+        "sequence": 99,
+        "bytes": 60,
+        "name": "EVAL_MPU_Sample_Tlm_t",
+        "app": "eval_mpu",
+        "source": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.h",
+        "values": {
+          "Value.Value_accel_x": -706,
+          "Value.Value_accel_y": 7,
+          "Value.Value_accel_z": 705,
+          "Value.Value_temperature": 29513,
+          "Value.Value_gyro_x": 2167,
+          "Value.Value_gyro_y": -1679,
+          "Value.Value_gyro_z": 564,
+          "Status": 0,
+          "ReadCounter": 99,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a05c0630035000f46ee8023000000003efdffff07000000c1020000497300007708000071f9ffff3402000000000000630000000000000001000000",
+        "received_at": 1795416995.0008824,
+        "count": 91,
+        "event_id": 1135
+      },
+      {
+        "mid": 2565,
+        "sequence": 100,
+        "bytes": 60,
+        "name": "EVAL_MPU_Sample_Tlm_t",
+        "app": "eval_mpu",
+        "source": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.h",
+        "values": {
+          "Value.Value_accel_x": -706,
+          "Value.Value_accel_y": 7,
+          "Value.Value_accel_z": 705,
+          "Value.Value_temperature": 29513,
+          "Value.Value_gyro_x": 2167,
+          "Value.Value_gyro_y": -1679,
+          "Value.Value_gyro_z": 564,
+          "Status": 0,
+          "ReadCounter": 100,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a05c0640035000f46f07f66000000003efdffff07000000c1020000497300007708000071f9ffff3402000000000000640000000000000001000000",
+        "received_at": 1795416997.000773,
+        "count": 92,
+        "event_id": 1145
+      },
+      {
+        "mid": 2565,
+        "sequence": 101,
+        "bytes": 60,
+        "name": "EVAL_MPU_Sample_Tlm_t",
+        "app": "eval_mpu",
+        "source": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.h",
+        "values": {
+          "Value.Value_accel_x": -706,
+          "Value.Value_accel_y": 7,
+          "Value.Value_accel_z": 705,
+          "Value.Value_temperature": 29513,
+          "Value.Value_gyro_x": 2167,
+          "Value.Value_gyro_y": -1679,
+          "Value.Value_gyro_z": 564,
+          "Status": 0,
+          "ReadCounter": 101,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a05c0650035000f46f28004000000003efdffff07000000c1020000497300007708000071f9ffff3402000000000000650000000000000001000000",
+        "received_at": 1795416998.9993558,
+        "count": 93,
+        "event_id": 1156
+      },
+      {
+        "mid": 2565,
+        "sequence": 102,
+        "bytes": 60,
+        "name": "EVAL_MPU_Sample_Tlm_t",
+        "app": "eval_mpu",
+        "source": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.h",
+        "values": {
+          "Value.Value_accel_x": -706,
+          "Value.Value_accel_y": 7,
+          "Value.Value_accel_z": 705,
+          "Value.Value_temperature": 29513,
+          "Value.Value_gyro_x": 2167,
+          "Value.Value_gyro_y": -1679,
+          "Value.Value_gyro_z": 564,
+          "Status": 0,
+          "ReadCounter": 102,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a05c0660035000f46f48014000000003efdffff07000000c1020000497300007708000071f9ffff3402000000000000660000000000000001000000",
+        "received_at": 1795417001.0108328,
+        "count": 94,
+        "event_id": 1166
+      },
+      {
+        "mid": 2565,
+        "sequence": 103,
+        "bytes": 60,
+        "name": "EVAL_MPU_Sample_Tlm_t",
+        "app": "eval_mpu",
+        "source": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.h",
+        "values": {
+          "Value.Value_accel_x": -706,
+          "Value.Value_accel_y": 7,
+          "Value.Value_accel_z": 705,
+          "Value.Value_temperature": 29513,
+          "Value.Value_gyro_x": 2167,
+          "Value.Value_gyro_y": -1679,
+          "Value.Value_gyro_z": 564,
+          "Status": 0,
+          "ReadCounter": 103,
+          "ErrorCounter": 0,
+          "Valid": 1,
+          "Reserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "errors": [],
+        "hex": "0a05c0670035000f46f68010000000003efdffff07000000c1020000497300007708000071f9ffff3402000000000000670000000000000001000000",
+        "received_at": 1795417003.0019486,
+        "count": 95,
+        "event_id": 1183
+      }
+    ],
+    "passed": true,
+    "status": "passed",
+    "valid_expected": true,
+    "input_applied_at": 1795416993.3561852
+  }
+]

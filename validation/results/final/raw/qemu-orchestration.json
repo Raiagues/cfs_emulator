@@ -1,0 +1,81 @@
+{
+  "status": "passed",
+  "started_utc": "2026-11-23T07:36:44.009874+00:00",
+  "pid": 613290,
+  "harness_revision": "64add2472dbf6869563612cf6b2c427b181dba5d",
+  "launch": "detached process session; frozen validation functions",
+  "completed": [
+    {
+      "phase": "setup-identity-and-versions",
+      "ended_utc": "2026-11-23T07:36:54.585708+00:00"
+    },
+    {
+      "phase": "first-provisioning-boot",
+      "ended_utc": "2026-11-23T07:41:51.219644+00:00"
+    },
+    {
+      "phase": "five-prepared-guest-boots",
+      "ended_utc": "2026-11-23T07:51:26.438581+00:00"
+    },
+    {
+      "phase": "stop-cfs-with-guest-running",
+      "ended_utc": "2026-11-23T07:51:28.972540+00:00"
+    },
+    {
+      "phase": "ten-cfs-starts",
+      "ended_utc": "2026-11-23T07:56:51.105913+00:00"
+    },
+    {
+      "phase": "commands-sensors-portability",
+      "ended_utc": "2026-11-23T08:00:08.286909+00:00"
+    }
+  ],
+  "phases": [
+    {
+      "phase": "setup-identity-and-versions",
+      "status": "passed",
+      "started_utc": "2026-11-23T07:36:44.010222+00:00",
+      "output_directory": "setup-qemu-final",
+      "ended_utc": "2026-11-23T07:36:54.585708+00:00"
+    },
+    {
+      "phase": "first-provisioning-boot",
+      "status": "passed",
+      "started_utc": "2026-11-23T07:36:54.586040+00:00",
+      "output_directory": "first-boot-qemu",
+      "ended_utc": "2026-11-23T07:41:51.219644+00:00"
+    },
+    {
+      "phase": "five-prepared-guest-boots",
+      "status": "passed",
+      "started_utc": "2026-11-23T07:41:51.220114+00:00",
+      "output_directory": "boots-qemu",
+      "ended_utc": "2026-11-23T07:51:26.438581+00:00"
+    },
+    {
+      "phase": "stop-cfs-with-guest-running",
+      "status": "passed",
+      "started_utc": "2026-11-23T07:51:26.438951+00:00",
+      "output_directory": "between-qemu-series",
+      "ended_utc": "2026-11-23T07:51:28.972540+00:00"
+    },
+    {
+      "phase": "ten-cfs-starts",
+      "status": "passed",
+      "started_utc": "2026-11-23T07:51:28.972819+00:00",
+      "output_directory": "starts-qemu",
+      "ended_utc": "2026-11-23T07:56:51.105913+00:00"
+    },
+    {
+      "phase": "commands-sensors-portability",
+      "status": "passed",
+      "started_utc": "2026-11-23T07:56:51.106233+00:00",
+      "output_directory": "qemu",
+      "ended_utc": "2026-11-23T08:00:08.286909+00:00"
+    }
+  ],
+  "phase": "commands-sensors-portability",
+  "phase_started_utc": "2026-11-23T07:56:51.106233+00:00",
+  "ended_utc": "2026-11-23T08:00:08.287378+00:00",
+  "guest_left_running_for_review": true
+}

@@ -1,0 +1,4 @@
+target,model,sample_index,sequence,received_after_restore_s,valid,status
+native,tmp105,0,110,1.8849527835845947,1,0
+native,lsm303dlhc_mag,0,117,1.8951635360717773,1,0
+native,mpu6050,0,124,1.87872314453125,1,0

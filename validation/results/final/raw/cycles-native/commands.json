@@ -1,0 +1,532 @@
+{
+  "started_utc": "2026-11-23T06:43:27.083229+00:00",
+  "commands": [
+    {
+      "name": "create-eval_cycle_01",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_cycle_01",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:43:27.083276+00:00",
+      "stdout": "001-create-eval_cycle_01.stdout.log",
+      "stderr": "001-create-eval_cycle_01.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1.2678482449991861,
+      "ended_utc": "2026-11-23T06:43:28.351140+00:00"
+    },
+    {
+      "name": "build-eval_cycle_01",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "native",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:43:29.149222+00:00",
+      "stdout": "002-build-eval_cycle_01.stdout.log",
+      "stderr": "002-build-eval_cycle_01.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 76.39527245900535,
+      "ended_utc": "2026-11-23T06:44:45.544535+00:00"
+    },
+    {
+      "name": "delete-eval_cycle_01",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "app",
+        "delete",
+        "eval_cycle_01",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:44:45.545440+00:00",
+      "stdout": "003-delete-eval_cycle_01.stdout.log",
+      "stderr": "003-delete-eval_cycle_01.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 2.619813190001878,
+      "ended_utc": "2026-11-23T06:44:48.165302+00:00"
+    },
+    {
+      "name": "create-eval_cycle_02",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_cycle_02",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:44:48.166482+00:00",
+      "stdout": "004-create-eval_cycle_02.stdout.log",
+      "stderr": "004-create-eval_cycle_02.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1.5688210970038199,
+      "ended_utc": "2026-11-23T06:44:49.735341+00:00"
+    },
+    {
+      "name": "build-eval_cycle_02",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "native",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:44:50.603985+00:00",
+      "stdout": "005-build-eval_cycle_02.stdout.log",
+      "stderr": "005-build-eval_cycle_02.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 32.6893462750013,
+      "ended_utc": "2026-11-23T06:45:23.293367+00:00"
+    },
+    {
+      "name": "delete-eval_cycle_02",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "app",
+        "delete",
+        "eval_cycle_02",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:45:23.293753+00:00",
+      "stdout": "006-delete-eval_cycle_02.stdout.log",
+      "stderr": "006-delete-eval_cycle_02.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 2.6223163489994477,
+      "ended_utc": "2026-11-23T06:45:25.916092+00:00"
+    },
+    {
+      "name": "create-eval_cycle_03",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_cycle_03",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:45:25.916930+00:00",
+      "stdout": "007-create-eval_cycle_03.stdout.log",
+      "stderr": "007-create-eval_cycle_03.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1.568098238996754,
+      "ended_utc": "2026-11-23T06:45:27.485049+00:00"
+    },
+    {
+      "name": "build-eval_cycle_03",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "native",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:45:28.302956+00:00",
+      "stdout": "008-build-eval_cycle_03.stdout.log",
+      "stderr": "008-build-eval_cycle_03.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 32.194947618001606,
+      "ended_utc": "2026-11-23T06:46:00.497943+00:00"
+    },
+    {
+      "name": "delete-eval_cycle_03",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "app",
+        "delete",
+        "eval_cycle_03",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:46:00.498421+00:00",
+      "stdout": "009-delete-eval_cycle_03.stdout.log",
+      "stderr": "009-delete-eval_cycle_03.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 2.621029413996439,
+      "ended_utc": "2026-11-23T06:46:03.119470+00:00"
+    },
+    {
+      "name": "create-eval_cycle_04",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_cycle_04",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:46:03.120872+00:00",
+      "stdout": "010-create-eval_cycle_04.stdout.log",
+      "stderr": "010-create-eval_cycle_04.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1.719976100997883,
+      "ended_utc": "2026-11-23T06:46:04.840891+00:00"
+    },
+    {
+      "name": "build-eval_cycle_04",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "native",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:46:05.649246+00:00",
+      "stdout": "011-build-eval_cycle_04.stdout.log",
+      "stderr": "011-build-eval_cycle_04.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 32.33986415399704,
+      "ended_utc": "2026-11-23T06:46:37.989172+00:00"
+    },
+    {
+      "name": "delete-eval_cycle_04",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "app",
+        "delete",
+        "eval_cycle_04",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:46:37.990288+00:00",
+      "stdout": "012-delete-eval_cycle_04.stdout.log",
+      "stderr": "012-delete-eval_cycle_04.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 2.622156025005097,
+      "ended_utc": "2026-11-23T06:46:40.612504+00:00"
+    },
+    {
+      "name": "create-eval_cycle_05",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_cycle_05",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:46:40.614083+00:00",
+      "stdout": "013-create-eval_cycle_05.stdout.log",
+      "stderr": "013-create-eval_cycle_05.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1.519597241000156,
+      "ended_utc": "2026-11-23T06:46:42.133722+00:00"
+    },
+    {
+      "name": "build-eval_cycle_05",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "native",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:46:42.945217+00:00",
+      "stdout": "014-build-eval_cycle_05.stdout.log",
+      "stderr": "014-build-eval_cycle_05.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 31.691020606995153,
+      "ended_utc": "2026-11-23T06:47:14.636273+00:00"
+    },
+    {
+      "name": "delete-eval_cycle_05",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "app",
+        "delete",
+        "eval_cycle_05",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:47:14.636892+00:00",
+      "stdout": "015-delete-eval_cycle_05.stdout.log",
+      "stderr": "015-delete-eval_cycle_05.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 2.620313822000753,
+      "ended_utc": "2026-11-23T06:47:17.257232+00:00"
+    },
+    {
+      "name": "create-eval_cycle_06",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_cycle_06",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:47:17.258964+00:00",
+      "stdout": "016-create-eval_cycle_06.stdout.log",
+      "stderr": "016-create-eval_cycle_06.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1.5197326320048887,
+      "ended_utc": "2026-11-23T06:47:18.778741+00:00"
+    },
+    {
+      "name": "build-eval_cycle_06",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "native",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:47:19.571573+00:00",
+      "stdout": "017-build-eval_cycle_06.stdout.log",
+      "stderr": "017-build-eval_cycle_06.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 32.04079746599746,
+      "ended_utc": "2026-11-23T06:47:51.612419+00:00"
+    },
+    {
+      "name": "delete-eval_cycle_06",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "app",
+        "delete",
+        "eval_cycle_06",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:47:51.613620+00:00",
+      "stdout": "018-delete-eval_cycle_06.stdout.log",
+      "stderr": "018-delete-eval_cycle_06.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 2.6220329709976795,
+      "ended_utc": "2026-11-23T06:47:54.235705+00:00"
+    },
+    {
+      "name": "create-eval_cycle_07",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_cycle_07",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:47:54.237642+00:00",
+      "stdout": "019-create-eval_cycle_07.stdout.log",
+      "stderr": "019-create-eval_cycle_07.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1.6200721069981228,
+      "ended_utc": "2026-11-23T06:47:55.857759+00:00"
+    },
+    {
+      "name": "build-eval_cycle_07",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "native",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:47:56.655317+00:00",
+      "stdout": "020-build-eval_cycle_07.stdout.log",
+      "stderr": "020-build-eval_cycle_07.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 32.190449173998786,
+      "ended_utc": "2026-11-23T06:48:28.845853+00:00"
+    },
+    {
+      "name": "delete-eval_cycle_07",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "app",
+        "delete",
+        "eval_cycle_07",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:48:28.847150+00:00",
+      "stdout": "021-delete-eval_cycle_07.stdout.log",
+      "stderr": "021-delete-eval_cycle_07.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 2.622894849999284,
+      "ended_utc": "2026-11-23T06:48:31.470091+00:00"
+    },
+    {
+      "name": "create-eval_cycle_08",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_cycle_08",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:48:31.471121+00:00",
+      "stdout": "022-create-eval_cycle_08.stdout.log",
+      "stderr": "022-create-eval_cycle_08.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1.5685623160024988,
+      "ended_utc": "2026-11-23T06:48:33.039703+00:00"
+    },
+    {
+      "name": "build-eval_cycle_08",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "native",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:48:33.865595+00:00",
+      "stdout": "023-build-eval_cycle_08.stdout.log",
+      "stderr": "023-build-eval_cycle_08.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 32.095433470996795,
+      "ended_utc": "2026-11-23T06:49:05.961068+00:00"
+    },
+    {
+      "name": "delete-eval_cycle_08",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "app",
+        "delete",
+        "eval_cycle_08",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:49:05.963063+00:00",
+      "stdout": "024-delete-eval_cycle_08.stdout.log",
+      "stderr": "024-delete-eval_cycle_08.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 2.624253738002153,
+      "ended_utc": "2026-11-23T06:49:08.587389+00:00"
+    },
+    {
+      "name": "create-eval_cycle_09",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_cycle_09",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:49:08.589394+00:00",
+      "stdout": "025-create-eval_cycle_09.stdout.log",
+      "stderr": "025-create-eval_cycle_09.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1.520232495997334,
+      "ended_utc": "2026-11-23T06:49:10.109673+00:00"
+    },
+    {
+      "name": "build-eval_cycle_09",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "native",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:49:10.913055+00:00",
+      "stdout": "026-build-eval_cycle_09.stdout.log",
+      "stderr": "026-build-eval_cycle_09.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 31.98946334500215,
+      "ended_utc": "2026-11-23T06:49:42.902559+00:00"
+    },
+    {
+      "name": "delete-eval_cycle_09",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "app",
+        "delete",
+        "eval_cycle_09",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:49:42.904332+00:00",
+      "stdout": "027-delete-eval_cycle_09.stdout.log",
+      "stderr": "027-delete-eval_cycle_09.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 2.622159146994818,
+      "ended_utc": "2026-11-23T06:49:45.526548+00:00"
+    },
+    {
+      "name": "create-eval_cycle_10",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "app",
+        "new",
+        "eval_cycle_10",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:49:45.527277+00:00",
+      "stdout": "028-create-eval_cycle_10.stdout.log",
+      "stderr": "028-create-eval_cycle_10.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1.6682720290045836,
+      "ended_utc": "2026-11-23T06:49:47.195567+00:00"
+    },
+    {
+      "name": "build-eval_cycle_10",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "native",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:49:48.001495+00:00",
+      "stdout": "029-build-eval_cycle_10.stdout.log",
+      "stderr": "029-build-eval_cycle_10.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 32.138136932000634,
+      "ended_utc": "2026-11-23T06:50:20.139670+00:00"
+    },
+    {
+      "name": "delete-eval_cycle_10",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "app",
+        "delete",
+        "eval_cycle_10",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:50:20.141167+00:00",
+      "stdout": "030-delete-eval_cycle_10.stdout.log",
+      "stderr": "030-delete-eval_cycle_10.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 2.6729891750001116,
+      "ended_utc": "2026-11-23T06:50:22.814204+00:00"
+    },
+    {
+      "name": "restore-base-mission",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "build",
+        "--target",
+        "native",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T06:50:23.611246+00:00",
+      "stdout": "031-restore-base-mission.stdout.log",
+      "stderr": "031-restore-base-mission.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 75.89532709199557,
+      "ended_utc": "2026-11-23T06:51:39.506613+00:00"
+    }
+  ]
+}

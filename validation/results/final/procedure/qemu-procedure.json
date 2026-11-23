@@ -1,0 +1,18 @@
+{
+  "recorded_utc": "2026-11-23T07:30:02.147767+00:00",
+  "executed_script": "run-qemu-campaign.py",
+  "preserved_script": "procedure/run-qemu-campaign.py",
+  "sha256": "c8a09a77b604ce439c4f95358d9d68122559809174ff7dbbcca07c0ca51ac547",
+  "harness_commit": "64add2472dbf6869563612cf6b2c427b181dba5d",
+  "contains_connection_values": false,
+  "status": "launched",
+  "launched_utc": "2026-11-23T07:36:43.606962+00:00",
+  "pid": 613290,
+  "argv": [
+    "/usr/bin/python3",
+    "-B",
+    "/tmp/flight-evaluation-20261123-final/run-qemu-campaign.py"
+  ],
+  "stdout": "qemu-orchestration.log",
+  "start_new_session": true
+}

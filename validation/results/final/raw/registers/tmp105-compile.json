@@ -1,0 +1,17 @@
+[
+  [
+    "cc",
+    "-std=c99",
+    "-O2",
+    "-fPIC",
+    "-shared",
+    "-I",
+    "/tmp/flight-evaluation-20261123-final/flight/project/drivers/hal/include",
+    "-I",
+    "/tmp/evaluation-hal-m0xnwhus",
+    "/tmp/flight-evaluation-20261123-final/flight/project/drivers/hal/src/hal_sensor.c",
+    "/tmp/flight-evaluation-20261123-final/flight/sensors/scenario_bus.c",
+    "-o",
+    "/tmp/evaluation-hal-m0xnwhus/sensor.so"
+  ]
+]

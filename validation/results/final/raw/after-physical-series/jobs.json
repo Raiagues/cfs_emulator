@@ -1,0 +1,14 @@
+[
+  {
+    "action": "stop",
+    "target": "physical",
+    "started_utc": "2026-11-23T11:28:07.924490+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 2.474942478002049,
+    "ended_utc": "2026-11-23T11:28:10.399446+00:00"
+  }
+]

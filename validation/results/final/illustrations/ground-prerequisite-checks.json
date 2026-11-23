@@ -1,0 +1,171 @@
+{
+  "purpose": "Real prerequisite checks to open post-collection Ground illustration; no build, boot or cFS command",
+  "started_utc": "2026-11-23T11:19:26.628525+00:00",
+  "targets": [
+    {
+      "target": "native",
+      "status": "complete",
+      "ready": true,
+      "checks": [
+        {
+          "label": "git",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 1
+        },
+        {
+          "label": "cmake",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 37
+        },
+        {
+          "label": "make",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 26
+        },
+        {
+          "label": "cc",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 84
+        },
+        {
+          "label": "stdbuf",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 23
+        },
+        {
+          "label": "pgrep",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 2
+        },
+        {
+          "label": "Python",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 0
+        },
+        {
+          "label": "POSIX message queues",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 65
+        },
+        {
+          "label": "NASA cFS source",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 539
+        }
+      ]
+    },
+    {
+      "target": "qemu",
+      "status": "complete",
+      "ready": true,
+      "checks": [
+        {
+          "label": "git",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 1
+        },
+        {
+          "label": "cmake",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 6
+        },
+        {
+          "label": "make",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 1
+        },
+        {
+          "label": "cc",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 1
+        },
+        {
+          "label": "stdbuf",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 1
+        },
+        {
+          "label": "pgrep",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 2
+        },
+        {
+          "label": "docker",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 9
+        },
+        {
+          "label": "ssh",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 3
+        },
+        {
+          "label": "scp",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 102
+        },
+        {
+          "label": "Python",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 1
+        },
+        {
+          "label": "Docker engine \u2265 23",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 99
+        },
+        {
+          "label": "Docker Buildx \u2265 0.10",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 1146
+        },
+        {
+          "label": "Emulator image",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 13
+        },
+        {
+          "label": "Emulator SSH identity",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 88
+        },
+        {
+          "label": "Local SSH port",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 63
+        },
+        {
+          "label": "NASA cFS source",
+          "ready": true,
+          "exit_code": 0,
+          "duration_ms": 183
+        }
+      ]
+    }
+  ],
+  "finished_utc": "2026-11-23T11:19:31.231349+00:00"
+}

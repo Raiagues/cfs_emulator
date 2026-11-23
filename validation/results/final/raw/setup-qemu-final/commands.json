@@ -1,0 +1,39 @@
+{
+  "started_utc": "2026-11-23T07:36:44.010692+00:00",
+  "commands": [
+    {
+      "name": "prepare-emulator-key",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "emulator",
+        "key",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T07:36:44.050738+00:00",
+      "stdout": "001-prepare-emulator-key.stdout.log",
+      "stderr": "001-prepare-emulator-key.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 0.3805333009950118,
+      "ended_utc": "2026-11-23T07:36:44.431294+00:00"
+    },
+    {
+      "name": "qemu-version",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--entrypoint",
+        "/usr/bin/qemu-system-aarch64",
+        "flight-studio-evaluation:4ecbaffff931",
+        "--version"
+      ],
+      "started_utc": "2026-11-23T07:36:44.433187+00:00",
+      "stdout": "002-qemu-version.stdout.log",
+      "stderr": "002-qemu-version.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 10.15132124700176,
+      "ended_utc": "2026-11-23T07:36:54.584558+00:00"
+    }
+  ]
+}

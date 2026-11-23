@@ -1,0 +1,1455 @@
+{"elapsed_s": 3.8009693950007204, "line": "Board cFS stopped."}
+{"elapsed_s": 3.8809760750009445, "line": "$ bash boot.sh"}
+{"elapsed_s": 4.635136668999621, "line": "[emulator] Image ready. Opening the guest disk."}
+{"elapsed_s": 5.301478468994901, "line": "b2b89bf59df390200b621f03169c22a106d3612a776b0fc83db27c54afd1e0d3"}
+{"elapsed_s": 7.047857503996056, "line": "Preparing the guest disk for its first boot..."}
+{"elapsed_s": 17.121545526999398, "line": "[Boot: 10s] Waiting for guest SSH"}
+{"elapsed_s": 27.131322481000097, "line": "[Boot: 20s] Waiting for guest SSH"}
+{"elapsed_s": 37.14165959099773, "line": "[Boot: 30s] Waiting for guest SSH"}
+{"elapsed_s": 47.151619199998095, "line": "[Boot: 40s] Waiting for guest SSH"}
+{"elapsed_s": 55.67816290100018, "line": "[emulator] Disk copied. Provisioning the guest SSH key."}
+{"elapsed_s": 57.153980222996324, "line": "[Boot: 50s] Waiting for guest SSH"}
+{"elapsed_s": 67.16455252499873, "line": "[Boot: 60s] Waiting for guest SSH"}
+{"elapsed_s": 77.17447927299509, "line": "[Boot: 70s] Waiting for guest SSH"}
+{"elapsed_s": 87.18435116500041, "line": "[Boot: 80s] Waiting for guest SSH"}
+{"elapsed_s": 97.18784271799814, "line": "[Boot: 90s] Waiting for guest SSH"}
+{"elapsed_s": 107.19789214599587, "line": "[Boot: 100s] Waiting for guest SSH"}
+{"elapsed_s": 108.36018965399853, "line": "[emulator] Disk ready. Starting the guest kernel."}
+{"elapsed_s": 108.53065306099597, "line": "qemu-system-aarch64: warning: bcm2711 dtb: brcm,bcm2711-pcie has been disabled!"}
+{"elapsed_s": 108.5307255709995, "line": "qemu-system-aarch64: warning: bcm2711 dtb: brcm,bcm2711-rng200 has been disabled!"}
+{"elapsed_s": 108.53076539899484, "line": "qemu-system-aarch64: warning: bcm2711 dtb: brcm,bcm2711-thermal has been disabled!"}
+{"elapsed_s": 108.53078815399931, "line": "qemu-system-aarch64: warning: bcm2711 dtb: brcm,bcm2711-genet-v5 has been disabled!"}
+{"elapsed_s": 112.2630960549941, "line": "[    0.000000] Booting Linux on physical CPU 0x0000000000 [0x410fd083]"}
+{"elapsed_s": 112.26316403199598, "line": ""}
+{"elapsed_s": 112.26464630999544, "line": "[    0.000000] Linux version 6.18.50+rpt-rpi-v8 (serge@raspberrypi.com) (aarch64-linux-gnu-gcc-14 (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP PREEMPT Debian 1:6.18.50-1+rpt1 (2026-09-11)"}
+{"elapsed_s": 112.26468189599836, "line": ""}
+{"elapsed_s": 112.26476749399444, "line": "[    0.000000] KASLR disabled due to lack of seed"}
+{"elapsed_s": 112.26478369699907, "line": ""}
+{"elapsed_s": 112.26494721399649, "line": "[    0.000000] Machine model: Raspberry Pi 4 Model B"}
+{"elapsed_s": 112.26497648199438, "line": ""}
+{"elapsed_s": 112.26508902500063, "line": "[    0.000000] efi: UEFI not found."}
+{"elapsed_s": 112.26511311299691, "line": ""}
+{"elapsed_s": 112.26553229300043, "line": "[    0.000000] Reserved memory: created CMA memory pool at 0x000000002c000000, size 64 MiB"}
+{"elapsed_s": 112.26555448499857, "line": ""}
+{"elapsed_s": 112.26592126899777, "line": "[    0.000000] OF: reserved mem: initialized node linux,cma, compatible id shared-dma-pool"}
+{"elapsed_s": 112.26594510200084, "line": ""}
+{"elapsed_s": 112.26626922399737, "line": "[    0.000000] OF: reserved mem: 0x000000002c000000..0x000000002fffffff (65536 KiB) map reusable linux,cma"}
+{"elapsed_s": 112.26630229799775, "line": ""}
+{"elapsed_s": 112.26652384000045, "line": "[    0.000000] NUMA: Faking a node at [mem 0x0000000000000000-0x000000003bffffff]"}
+{"elapsed_s": 112.26654397099628, "line": ""}
+{"elapsed_s": 112.26684677099547, "line": "[    0.000000] NODE_DATA(0) allocated [mem 0x3bddb380-0x3bdde0ff]"}
+{"elapsed_s": 112.2668632040004, "line": ""}
+{"elapsed_s": 112.26697113299451, "line": "[    0.000000] Zone ranges:"}
+{"elapsed_s": 112.2669956949976, "line": ""}
+{"elapsed_s": 112.26732727299532, "line": "[    0.000000]   DMA      [mem 0x0000000000000000-0x000000003bffffff]"}
+{"elapsed_s": 112.26734718899388, "line": ""}
+{"elapsed_s": 112.2675920019974, "line": "[    0.000000]   DMA32    empty"}
+{"elapsed_s": 112.26760921599634, "line": ""}
+{"elapsed_s": 112.2677494909949, "line": "[    0.000000]   Normal   empty"}
+{"elapsed_s": 112.26778186199954, "line": ""}
+{"elapsed_s": 112.26790631599579, "line": "[    0.000000] Movable zone start for each node"}
+{"elapsed_s": 112.26792648199626, "line": ""}
+{"elapsed_s": 112.26810569100053, "line": "[    0.000000] Early memory node ranges"}
+{"elapsed_s": 112.26812246899499, "line": ""}
+{"elapsed_s": 112.26858560499386, "line": "[    0.000000]   node   0: [mem 0x0000000000000000-0x000000003bffffff]"}
+{"elapsed_s": 112.26860319399566, "line": ""}
+{"elapsed_s": 112.26905574899865, "line": "[    0.000000] Initmem setup node 0 [mem 0x0000000000000000-0x000000003bffffff]"}
+{"elapsed_s": 112.26907146599842, "line": ""}
+{"elapsed_s": 112.26929598699644, "line": "[    0.000000] On node 0, zone DMA: 16384 pages in unavailable ranges"}
+{"elapsed_s": 112.26931131199672, "line": ""}
+{"elapsed_s": 112.26954600099998, "line": "[    0.000000] percpu: Embedded 33 pages/cpu s95896 r8192 d31080 u135168"}
+{"elapsed_s": 112.26956721899478, "line": ""}
+{"elapsed_s": 112.26978002399846, "line": "[    0.000000] Detected PIPT I-cache on CPU0"}
+{"elapsed_s": 112.26979952799593, "line": ""}
+{"elapsed_s": 112.2699762379998, "line": "[    0.000000] CPU features: detected: Spectre-v2"}
+{"elapsed_s": 112.26999050099403, "line": ""}
+{"elapsed_s": 112.27017983199767, "line": "[    0.000000] CPU features: detected: Spectre-v3a"}
+{"elapsed_s": 112.27022068699443, "line": ""}
+{"elapsed_s": 112.27038494299632, "line": "[    0.000000] CPU features: detected: Spectre-v4"}
+{"elapsed_s": 112.27040942799795, "line": ""}
+{"elapsed_s": 112.27057458899799, "line": "[    0.000000] CPU features: detected: Spectre-BHB"}
+{"elapsed_s": 112.27058884899452, "line": ""}
+{"elapsed_s": 112.27077767899755, "line": "[    0.000000] CPU features: detected: ARM erratum 1742098"}
+{"elapsed_s": 112.27078988399444, "line": ""}
+{"elapsed_s": 112.27102071099944, "line": "[    0.000000] CPU features: detected: ARM errata 1165522, 1319367, or 1530923"}
+{"elapsed_s": 112.2710336589953, "line": ""}
+{"elapsed_s": 112.27140161599527, "line": "[    0.000000] alternatives: applying boot alternatives"}
+{"elapsed_s": 112.271422040998, "line": ""}
+{"elapsed_s": 112.27221217499755, "line": "[    0.000000] Kernel command line: console=ttyAMA1 root=/dev/mmcblk1p2 rw rootwait watchdog_disarm=0 systemd.default_device_timeout_sec=300"}
+{"elapsed_s": 112.27224516199931, "line": ""}
+{"elapsed_s": 112.2727510439945, "line": "[    0.000000] Unknown kernel command line parameters \"watchdog_disarm=0\", will be passed to user space."}
+{"elapsed_s": 112.27277733999654, "line": ""}
+{"elapsed_s": 112.27310489500087, "line": "[    0.000000] printk: log buffer data + meta data: 131072 + 458752 = 589824 bytes"}
+{"elapsed_s": 112.27316997299931, "line": ""}
+{"elapsed_s": 112.27346080999996, "line": "[    0.000000] Dentry cache hash table entries: 131072 (order: 8, 1048576 bytes, linear)"}
+{"elapsed_s": 112.27348337399599, "line": ""}
+{"elapsed_s": 112.27413504599826, "line": "[    0.000000] Inode-cache hash table entries: 65536 (order: 7, 524288 bytes, linear)"}
+{"elapsed_s": 112.27415558999928, "line": ""}
+{"elapsed_s": 112.27438248399994, "line": "[    0.000000] Fallback order for Node 0: 0 "}
+{"elapsed_s": 112.27440703199682, "line": ""}
+{"elapsed_s": 112.27464312899974, "line": "[    0.000000] Built 1 zonelists, mobility grouping on.  Total pages: 245760"}
+{"elapsed_s": 112.27466941899911, "line": ""}
+{"elapsed_s": 112.27475814299396, "line": "[    0.000000] Policy zone: DMA"}
+{"elapsed_s": 112.27478434399382, "line": ""}
+{"elapsed_s": 112.27497032799874, "line": "[    0.000000] mem auto-init: stack:all(zero), heap alloc:off, heap free:off"}
+{"elapsed_s": 112.27498669099441, "line": ""}
+{"elapsed_s": 112.2753889769956, "line": "[    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=4, Nodes=1"}
+{"elapsed_s": 112.27540862000023, "line": ""}
+{"elapsed_s": 112.2757206919996, "line": "[    0.000000] ftrace: allocating 46803 entries in 184 pages"}
+{"elapsed_s": 112.2757457169937, "line": ""}
+{"elapsed_s": 112.27596260800055, "line": "[    0.000000] ftrace: allocated 184 pages with 4 groups"}
+{"elapsed_s": 112.27599176199874, "line": ""}
+{"elapsed_s": 112.27627100199607, "line": "[    0.000000] rcu: Preemptible hierarchical RCU implementation."}
+{"elapsed_s": 112.27629118299956, "line": ""}
+{"elapsed_s": 112.27645097200002, "line": "[    0.000000] rcu: \tRCU event tracing is enabled."}
+{"elapsed_s": 112.27646913699573, "line": ""}
+{"elapsed_s": 112.27667041499808, "line": "[    0.000000] \tTrampoline variant of Tasks RCU enabled."}
+{"elapsed_s": 112.27668206499948, "line": ""}
+{"elapsed_s": 112.27691229099582, "line": "[    0.000000] \tRude variant of Tasks RCU enabled."}
+{"elapsed_s": 112.27693052099494, "line": ""}
+{"elapsed_s": 112.27713676399435, "line": "[    0.000000] \tTracing variant of Tasks RCU enabled."}
+{"elapsed_s": 112.27716328899987, "line": ""}
+{"elapsed_s": 112.2775481169956, "line": "[    0.000000] rcu: RCU calculated value of scheduler-enlistment delay is 25 jiffies."}
+{"elapsed_s": 112.27756317400053, "line": ""}
+{"elapsed_s": 112.27792418999888, "line": "[    0.000000] RCU Tasks: Setting shift to 2 and lim to 1 rcu_task_cb_adjust=1 rcu_task_cpu_ids=4."}
+{"elapsed_s": 112.27794468099455, "line": ""}
+{"elapsed_s": 112.27828807100013, "line": "[    0.000000] RCU Tasks Rude: Setting shift to 2 and lim to 1 rcu_task_cb_adjust=1 rcu_task_cpu_ids=4."}
+{"elapsed_s": 112.27831056599825, "line": ""}
+{"elapsed_s": 112.27862863599876, "line": "[    0.000000] RCU Tasks Trace: Setting shift to 2 and lim to 1 rcu_task_cb_adjust=1 rcu_task_cpu_ids=4."}
+{"elapsed_s": 112.27865046999796, "line": ""}
+{"elapsed_s": 112.2787983859962, "line": "[    0.000000] NR_IRQS: 64, nr_irqs: 64, preallocated irqs: 0"}
+{"elapsed_s": 112.27882094699453, "line": ""}
+{"elapsed_s": 112.27897424399998, "line": "[    0.000000] Root IRQ handler: gic_handle_irq"}
+{"elapsed_s": 112.27898831099446, "line": ""}
+{"elapsed_s": 112.27915972699702, "line": "[    0.000000] GIC: Using split EOI/Deactivate mode"}
+{"elapsed_s": 112.27917859699664, "line": ""}
+{"elapsed_s": 112.27976292099629, "line": "[    0.000000] rcu: srcu_init: Setting srcu_struct sizes based on contention."}
+{"elapsed_s": 112.27977888399619, "line": ""}
+{"elapsed_s": 112.28034806999494, "line": "[    0.000000] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 7645041785100000 ns"}
+{"elapsed_s": 112.28037630099425, "line": ""}
+{"elapsed_s": 112.2806015909955, "line": "[    0.000000] arch_timer: cp15 timer running at 62.50MHz (phys)."}
+{"elapsed_s": 112.28062175399828, "line": ""}
+{"elapsed_s": 112.28109838999808, "line": "[    0.000000] clocksource: arch_sys_counter: mask: 0x1ffffffffffffff max_cycles: 0x1cd42e208c, max_idle_ns: 881590405314 ns"}
+{"elapsed_s": 112.28111796399753, "line": ""}
+{"elapsed_s": 112.28153180999652, "line": "[    0.000055] sched_clock: 57 bits at 63MHz, resolution 16ns, wraps every 4398046511096ns"}
+{"elapsed_s": 112.2815586910001, "line": ""}
+{"elapsed_s": 112.2816984960009, "line": "[    0.010672] Console: colour dummy device 80x25"}
+{"elapsed_s": 112.28171502099576, "line": ""}
+{"elapsed_s": 112.28217423199385, "line": "[    0.013504] Calibrating delay loop (skipped), value calculated using timer frequency.. 125.00 BogoMIPS (lpj=250000)"}
+{"elapsed_s": 112.2821942849987, "line": ""}
+{"elapsed_s": 112.28240021199599, "line": "[    0.013702] pid_max: default: 32768 minimum: 301"}
+{"elapsed_s": 112.2824171559987, "line": ""}
+{"elapsed_s": 112.28262906099553, "line": "[    0.017110] LSM: initializing lsm=capability"}
+{"elapsed_s": 112.28264912099985, "line": ""}
+{"elapsed_s": 112.28296447899629, "line": "[    0.020694] Mount-cache hash table entries: 2048 (order: 2, 16384 bytes, linear)"}
+{"elapsed_s": 112.28298113100027, "line": ""}
+{"elapsed_s": 112.28350585299631, "line": "[    0.020744] Mountpoint-cache hash table entries: 2048 (order: 2, 16384 bytes, linear)"}
+{"elapsed_s": 112.28352615699987, "line": ""}
+{"elapsed_s": 112.28380549899884, "line": "[    0.072519] rcu: Hierarchical SRCU implementation."}
+{"elapsed_s": 112.28382726799464, "line": ""}
+{"elapsed_s": 112.28401813199889, "line": "[    0.072566] rcu: \tMax phase no-delay instances is 1000."}
+{"elapsed_s": 112.28403090399661, "line": ""}
+{"elapsed_s": 112.28443704799429, "line": "[    0.073928] Timer migration: 1 hierarchy levels; 8 children per group; 1 crossnode level"}
+{"elapsed_s": 112.28446056399844, "line": ""}
+{"elapsed_s": 112.28466898099578, "line": "[    0.079408] EFI services will not be available."}
+{"elapsed_s": 112.28468561099726, "line": ""}
+{"elapsed_s": 112.28488081899559, "line": "[    0.080782] smp: Bringing up secondary CPUs ..."}
+{"elapsed_s": 112.28490285899898, "line": ""}
+{"elapsed_s": 112.2850596979988, "line": "[    0.088631] Detected PIPT I-cache on CPU1"}
+{"elapsed_s": 112.28507300400088, "line": ""}
+{"elapsed_s": 112.28538736399787, "line": "[    0.089901] CPU1: Booted secondary processor 0x0000000001 [0x410fd083]"}
+{"elapsed_s": 112.28540569699544, "line": ""}
+{"elapsed_s": 112.28560277799988, "line": "[    0.095609] Detected PIPT I-cache on CPU2"}
+{"elapsed_s": 112.28561732999515, "line": ""}
+{"elapsed_s": 112.28590255199379, "line": "[    0.096069] CPU2: Booted secondary processor 0x0000000002 [0x410fd083]"}
+{"elapsed_s": 112.2859283949947, "line": ""}
+{"elapsed_s": 112.2860896860002, "line": "[    0.098763] Detected PIPT I-cache on CPU3"}
+{"elapsed_s": 112.28611220099992, "line": ""}
+{"elapsed_s": 112.2863644809986, "line": "[    0.099159] CPU3: Booted secondary processor 0x0000000003 [0x410fd083]"}
+{"elapsed_s": 112.28638121800032, "line": ""}
+{"elapsed_s": 112.28650818599999, "line": "[    0.099720] smp: Brought up 1 node, 4 CPUs"}
+{"elapsed_s": 112.2865199480002, "line": ""}
+{"elapsed_s": 112.28672382499644, "line": "[    0.099756] SMP: Total of 4 processors activated."}
+{"elapsed_s": 112.28673475699907, "line": ""}
+{"elapsed_s": 112.28693407899846, "line": "[    0.099784] CPU: All CPU(s) started at EL2"}
+{"elapsed_s": 112.28695479999442, "line": ""}
+{"elapsed_s": 112.28730600499694, "line": "[    0.100090] CPU features: detected: 32-bit EL0 Support"}
+{"elapsed_s": 112.28733804499643, "line": ""}
+{"elapsed_s": 112.28760776799754, "line": "[    0.100109] CPU features: detected: 32-bit EL1 Support"}
+{"elapsed_s": 112.28762978599843, "line": ""}
+{"elapsed_s": 112.28776525199646, "line": "[    0.100168] CPU features: detected: CRC32 instructions"}
+{"elapsed_s": 112.28777782899851, "line": ""}
+{"elapsed_s": 112.28790182800003, "line": "[    0.100556] CPU features: detected: PMUv3"}
+{"elapsed_s": 112.28791207299946, "line": ""}
+{"elapsed_s": 112.288152780995, "line": "[    0.113732] alternatives: applying system-wide alternatives"}
+{"elapsed_s": 112.28817168100068, "line": ""}
+{"elapsed_s": 112.28862006499548, "line": "[    0.145294] Memory: 849876K/983040K available (15104K kernel code, 2446K rwdata, 5096K rodata, 2048K init, 505K bss, 62340K reserved, 65536K cma-reserved)"}
+{"elapsed_s": 112.28863655799796, "line": ""}
+{"elapsed_s": 112.28872089099605, "line": "[    0.176754] devtmpfs: initialized"}
+{"elapsed_s": 112.28873279699474, "line": ""}
+{"elapsed_s": 112.28890181399765, "line": "[    0.210094] Enabled cp15_barrier support"}
+{"elapsed_s": 112.2889236389965, "line": ""}
+{"elapsed_s": 112.28902363000088, "line": "[    0.210284] Enabled setend support"}
+{"elapsed_s": 112.28903397300019, "line": ""}
+{"elapsed_s": 112.28931936699519, "line": "[    0.214695] posixtimers hash table entries: 2048 (order: 3, 32768 bytes, linear)"}
+{"elapsed_s": 112.28934053699777, "line": ""}
+{"elapsed_s": 112.28957925999566, "line": "[    0.217570] futex hash table entries: 1024 (65536 bytes on 1 NUMA nodes, total 64 KiB, linear)."}
+{"elapsed_s": 112.28960013199685, "line": ""}
+{"elapsed_s": 112.28973858999962, "line": "[    0.220733] 26416 pages in range for non-PLT usage"}
+{"elapsed_s": 112.28975142899435, "line": ""}
+{"elapsed_s": 112.28987867999967, "line": "[    0.220788] 517936 pages in range for PLT usage"}
+{"elapsed_s": 112.289892367, "line": ""}
+{"elapsed_s": 112.29011728399928, "line": "[    0.224196] pinctrl core: initialized pinctrl subsystem"}
+{"elapsed_s": 112.29013907199987, "line": ""}
+{"elapsed_s": 112.29025924799498, "line": "[    0.236603] DMI not present or invalid."}
+{"elapsed_s": 112.29030833899742, "line": ""}
+{"elapsed_s": 112.290530071994, "line": "[    0.264653] NET: Registered PF_NETLINK/PF_ROUTE protocol family"}
+{"elapsed_s": 112.29054887999519, "line": ""}
+{"elapsed_s": 112.29074102299637, "line": "[    0.279601] DMA: preallocated 128 KiB GFP_KERNEL pool for atomic allocations"}
+{"elapsed_s": 112.29075778999686, "line": ""}
+{"elapsed_s": 112.2909677189964, "line": "[    0.281166] DMA: preallocated 128 KiB GFP_KERNEL|GFP_DMA pool for atomic allocations"}
+{"elapsed_s": 112.29098270999384, "line": ""}
+{"elapsed_s": 112.29144982999424, "line": "[    0.282591] DMA: preallocated 128 KiB GFP_KERNEL|GFP_DMA32 pool for atomic allocations"}
+{"elapsed_s": 112.29146997600037, "line": ""}
+{"elapsed_s": 112.29173968699615, "line": "[    0.282883] audit: initializing netlink subsys (disabled)"}
+{"elapsed_s": 112.29175997799757, "line": ""}
+{"elapsed_s": 112.29206434999651, "line": "[    0.286979] audit: type=2000 audit(0.260:1): state=initialized audit_enabled=0 res=1"}
+{"elapsed_s": 112.29207816999406, "line": ""}
+{"elapsed_s": 112.29229925999971, "line": "[    0.292447] thermal_sys: Registered thermal governor 'step_wise'"}
+{"elapsed_s": 112.29235268699995, "line": ""}
+{"elapsed_s": 112.29249656799948, "line": "[    0.292993] cpuidle: using governor menu"}
+{"elapsed_s": 112.29251148299954, "line": ""}
+{"elapsed_s": 112.29272987899458, "line": "[    0.294409] hw-breakpoint: found 6 breakpoint and 4 watchpoint registers."}
+{"elapsed_s": 112.29274252899631, "line": ""}
+{"elapsed_s": 112.29289928799699, "line": "[    0.295657] ASID allocator initialised with 65536 entries"}
+{"elapsed_s": 112.29291044399724, "line": ""}
+{"elapsed_s": 112.29305619200022, "line": "[    0.298157] Serial: AMBA PL011 UART driver"}
+{"elapsed_s": 112.29306911099411, "line": ""}
+{"elapsed_s": 112.29346269799862, "line": "[    0.315489] /soc/interrupt-controller@40041000: Fixed dependency cycle(s) with /soc/interrupt-controller@40041000"}
+{"elapsed_s": 112.29348302300059, "line": ""}
+{"elapsed_s": 112.2936087249982, "line": "[    0.328058] bcm2835-mbox fe00b880.mailbox: mailbox enabled"}
+{"elapsed_s": 112.29362278899498, "line": ""}
+{"elapsed_s": 112.29402467399632, "line": "[    0.348790] raspberrypi-firmware soc:firmware: Attached to firmware from 1970-01-05T00:12:17, variant unknown"}
+{"elapsed_s": 112.2940701080006, "line": ""}
+{"elapsed_s": 112.29440993199387, "line": "[    0.352920] raspberrypi-firmware soc:firmware: Firmware hash is 0000000000000000000000000000000000000000"}
+{"elapsed_s": 112.29442710399599, "line": ""}
+{"elapsed_s": 112.2946310499974, "line": "[    0.386580] bcm2835-dma fe007000.dma-controller: DMA legacy API manager, dmachans=0x1"}
+{"elapsed_s": 112.29464657299832, "line": ""}
+{"elapsed_s": 112.29475959100091, "line": "[    0.397838] iommu: Default domain type: Translated"}
+{"elapsed_s": 112.29480490899732, "line": ""}
+{"elapsed_s": 112.29499046199635, "line": "[    0.397886] iommu: DMA domain TLB invalidation policy: strict mode"}
+{"elapsed_s": 112.29500338199432, "line": ""}
+{"elapsed_s": 112.29525537399604, "line": "[    0.407797] SCSI subsystem initialized"}
+{"elapsed_s": 112.29528175099404, "line": ""}
+{"elapsed_s": 112.295523433997, "line": "[    0.409653] usbcore: registered new interface driver usbfs"}
+{"elapsed_s": 112.29557544399722, "line": ""}
+{"elapsed_s": 112.29575118699722, "line": "[    0.410138] usbcore: registered new interface driver hub"}
+{"elapsed_s": 112.29576923399873, "line": ""}
+{"elapsed_s": 112.29594688100042, "line": "[    0.410358] usbcore: registered new device driver usb"}
+{"elapsed_s": 112.29599494699505, "line": ""}
+{"elapsed_s": 112.29618013699655, "line": "[    0.413809] pps_core: LinuxPPS API ver. 1 registered"}
+{"elapsed_s": 112.29623919200094, "line": ""}
+{"elapsed_s": 112.29653664999933, "line": "[    0.413827] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>"}
+{"elapsed_s": 112.29656089399941, "line": ""}
+{"elapsed_s": 113.1040432439986, "line": "[    0.413892] PTP clock support registered"}
+{"elapsed_s": 113.10421538999799, "line": ""}
+{"elapsed_s": 113.10517636299483, "line": "[    0.439472] vgaarb: loaded"}
+{"elapsed_s": 113.10526538299746, "line": ""}
+{"elapsed_s": 113.10588423399895, "line": "[    0.442848] clocksource: Switched to clocksource arch_sys_counter"}
+{"elapsed_s": 113.10593305999646, "line": ""}
+{"elapsed_s": 113.10694940699614, "line": "[    1.186779] VFS: Disk quotas dquot_6.6.0"}
+{"elapsed_s": 113.10701098099526, "line": ""}
+{"elapsed_s": 113.10818552300043, "line": "[    1.186897] VFS: Dquot-cache hash table entries: 512 (order 0, 4096 bytes)"}
+{"elapsed_s": 113.10825439299515, "line": ""}
+{"elapsed_s": 113.1096063139994, "line": "[    1.221215] NET: Registered PF_INET protocol family"}
+{"elapsed_s": 113.10970095399534, "line": ""}
+{"elapsed_s": 113.11067578099755, "line": "[    1.223104] IP idents hash table entries: 16384 (order: 5, 131072 bytes, linear)"}
+{"elapsed_s": 113.11073889899853, "line": ""}
+{"elapsed_s": 113.11229661899415, "line": "[    1.233921] tcp_listen_portaddr_hash hash table entries: 512 (order: 1, 8192 bytes, linear)"}
+{"elapsed_s": 113.11237068999617, "line": ""}
+{"elapsed_s": 113.1136648479951, "line": "[    1.233998] Table-perturb hash table entries: 65536 (order: 6, 262144 bytes, linear)"}
+{"elapsed_s": 113.1137210559973, "line": ""}
+{"elapsed_s": 113.11462824599585, "line": "[    1.234063] TCP established hash table entries: 8192 (order: 4, 65536 bytes, linear)"}
+{"elapsed_s": 113.1146878399959, "line": ""}
+{"elapsed_s": 113.11591223299911, "line": "[    1.235381] TCP bind hash table entries: 8192 (order: 6, 262144 bytes, linear)"}
+{"elapsed_s": 113.11597991299641, "line": ""}
+{"elapsed_s": 113.11685637899791, "line": "[    1.235702] TCP: Hash tables configured (established 8192 bind 8192)"}
+{"elapsed_s": 113.1168982609961, "line": ""}
+{"elapsed_s": 113.11735359299928, "line": "[    1.237670] MPTCP token hash table entries: 1024 (order: 3, 24576 bytes, linear)"}
+{"elapsed_s": 113.11739065899746, "line": ""}
+{"elapsed_s": 113.11803152599896, "line": "[    1.238005] UDP hash table entries: 512 (order: 3, 32768 bytes, linear)"}
+{"elapsed_s": 113.11808378999558, "line": ""}
+{"elapsed_s": 113.11873523499526, "line": "[    1.238283] UDP-Lite hash table entries: 512 (order: 3, 32768 bytes, linear)"}
+{"elapsed_s": 113.11877572099911, "line": ""}
+{"elapsed_s": 113.11939528099902, "line": "[    1.240683] NET: Registered PF_UNIX/PF_LOCAL protocol family"}
+{"elapsed_s": 113.11944098700042, "line": ""}
+{"elapsed_s": 113.12016913499974, "line": "[    1.247610] RPC: Registered named UNIX socket transport module."}
+{"elapsed_s": 113.12025353199715, "line": ""}
+{"elapsed_s": 113.12066010799754, "line": "[    1.247671] RPC: Registered udp transport module."}
+{"elapsed_s": 113.12069554199843, "line": ""}
+{"elapsed_s": 113.12091214099928, "line": "[    1.247681] RPC: Registered tcp transport module."}
+{"elapsed_s": 113.12093161499797, "line": ""}
+{"elapsed_s": 113.12131615600083, "line": "[    1.247690] RPC: Registered tcp-with-tls transport module."}
+{"elapsed_s": 113.12135577799927, "line": ""}
+{"elapsed_s": 113.12164024999947, "line": "[    1.247698] RPC: Registered tcp NFSv4.1 backchannel transport module."}
+{"elapsed_s": 113.12166230599541, "line": ""}
+{"elapsed_s": 113.12185352399683, "line": "[    1.247860] PCI: CLS 0 bytes, default 64"}
+{"elapsed_s": 113.12187505999464, "line": ""}
+{"elapsed_s": 113.12216473999433, "line": "[    1.253866] Trying to unpack rootfs image as initramfs..."}
+{"elapsed_s": 113.12218651500007, "line": ""}
+{"elapsed_s": 113.12240353999368, "line": "[    1.260059] kvm [1]: nv: 568 coarse grained trap handlers"}
+{"elapsed_s": 113.12242335799965, "line": ""}
+{"elapsed_s": 113.12262552399625, "line": "[    1.261401] kvm [1]: IPA Size Limit: 44 bits"}
+{"elapsed_s": 113.12270233399613, "line": ""}
+{"elapsed_s": 113.12284759999602, "line": "[    1.269092] kvm [1]: vgic interrupt IRQ9"}
+{"elapsed_s": 113.122870950996, "line": ""}
+{"elapsed_s": 113.12313678399369, "line": "[    1.270352] kvm [1]: Hyp nVHE mode initialized successfully"}
+{"elapsed_s": 113.12317823199555, "line": ""}
+{"elapsed_s": 113.12352305999957, "line": "[    1.279385] Initialise system trusted keyrings"}
+{"elapsed_s": 113.12354106799467, "line": ""}
+{"elapsed_s": 113.12427212599869, "line": "[    1.282035] workingset: timestamp_bits=42 max_order=18 bucket_order=0"}
+{"elapsed_s": 113.12430570399738, "line": ""}
+{"elapsed_s": 113.12448566300009, "line": "[    1.287853] NFS: Registering the id_resolver key type"}
+{"elapsed_s": 113.12450779599749, "line": ""}
+{"elapsed_s": 113.12474134899821, "line": "[    1.288356] Key type id_resolver registered"}
+{"elapsed_s": 113.12476166299894, "line": ""}
+{"elapsed_s": 113.12714598299499, "line": "[    1.288421] Key type id_legacy registered"}
+{"elapsed_s": 113.12718094799493, "line": ""}
+{"elapsed_s": 113.1271951939998, "line": "[    1.288847] nfs4filelayout_init: NFSv4 File Layout Driver Registering..."}
+{"elapsed_s": 113.12720602899935, "line": ""}
+{"elapsed_s": 113.12721387900092, "line": "[    1.289034] nfs4flexfilelayout_init: NFSv4 Flexfile Layout Driver Registering..."}
+{"elapsed_s": 113.12722378999752, "line": ""}
+{"elapsed_s": 113.12723285699758, "line": "[    1.298091] Key type asymmetric registered"}
+{"elapsed_s": 113.12724065799557, "line": ""}
+{"elapsed_s": 113.1272481499982, "line": "[    1.298207] Asymmetric key parser 'x509' registered"}
+{"elapsed_s": 113.12725426199904, "line": ""}
+{"elapsed_s": 113.1272593209942, "line": "[    1.298694] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 246)"}
+{"elapsed_s": 113.12726758999634, "line": ""}
+{"elapsed_s": 113.12727529699623, "line": "[    1.300002] io scheduler mq-deadline registered"}
+{"elapsed_s": 113.12728406099632, "line": ""}
+{"elapsed_s": 113.12729145000048, "line": "[    1.300079] io scheduler kyber registered"}
+{"elapsed_s": 113.1273018399952, "line": ""}
+{"elapsed_s": 113.12730832599482, "line": "[    1.300388] io scheduler bfq registered"}
+{"elapsed_s": 113.12731698299467, "line": ""}
+{"elapsed_s": 113.12760090899974, "line": "[    1.319765] pinctrl-bcm2835 fe200000.gpio: GPIO_OUT persistence: yes"}
+{"elapsed_s": 113.12762838100025, "line": ""}
+{"elapsed_s": 113.12821046599856, "line": "[    1.323041] raspberrypi-exp-gpio soc:firmware:gpio: Failed to get GPIO 0 config (0 80)"}
+{"elapsed_s": 113.12824512599764, "line": ""}
+{"elapsed_s": 113.12851757899625, "line": "[    1.323226] raspberrypi-exp-gpio soc:firmware:gpio: Failed to get GPIO 1 config (0 81)"}
+{"elapsed_s": 113.1285421499997, "line": ""}
+{"elapsed_s": 113.12880666399724, "line": "[    1.323341] raspberrypi-exp-gpio soc:firmware:gpio: Failed to get GPIO 2 config (0 82)"}
+{"elapsed_s": 113.12883375599631, "line": ""}
+{"elapsed_s": 113.12908943799994, "line": "[    1.323479] raspberrypi-exp-gpio soc:firmware:gpio: Failed to get GPIO 3 config (0 83)"}
+{"elapsed_s": 113.12911815699772, "line": ""}
+{"elapsed_s": 113.12934827499703, "line": "[    1.323579] raspberrypi-exp-gpio soc:firmware:gpio: Failed to get GPIO 4 config (0 84)"}
+{"elapsed_s": 113.12936392299889, "line": ""}
+{"elapsed_s": 113.12963017899892, "line": "[    1.323673] raspberrypi-exp-gpio soc:firmware:gpio: Failed to get GPIO 5 config (0 85)"}
+{"elapsed_s": 113.12964926700079, "line": ""}
+{"elapsed_s": 113.1300126329952, "line": "[    1.323767] raspberrypi-exp-gpio soc:firmware:gpio: Failed to get GPIO 6 config (0 86)"}
+{"elapsed_s": 113.13003235499491, "line": ""}
+{"elapsed_s": 113.13027460299782, "line": "[    1.323861] raspberrypi-exp-gpio soc:firmware:gpio: Failed to get GPIO 7 config (0 87)"}
+{"elapsed_s": 113.13028933399619, "line": ""}
+{"elapsed_s": 113.13041276999866, "line": "[    1.807727] Freeing initrd memory: 16068K"}
+{"elapsed_s": 113.1304406939962, "line": ""}
+{"elapsed_s": 113.1310232859978, "line": "[    1.844135] raspberrypi-exp-gpio soc:firmware:gpio: Failed to get GPIO 2 config (0 82)"}
+{"elapsed_s": 113.13106621199404, "line": ""}
+{"elapsed_s": 113.131759813994, "line": "[    1.844406] raspberrypi-exp-gpio soc:firmware:gpio: Failed to get GPIO 2 config (0 82)"}
+{"elapsed_s": 113.13179431699973, "line": ""}
+{"elapsed_s": 113.13218676499673, "line": "[    1.844534] leds-gpio leds: probe with driver leds-gpio failed with error -5"}
+{"elapsed_s": 113.13221207599418, "line": ""}
+{"elapsed_s": 113.13244842999848, "line": "[    1.850977] ledtrig-cpu: registered to indicate activity on CPUs"}
+{"elapsed_s": 113.13246881899977, "line": ""}
+{"elapsed_s": 113.13271674299904, "line": "[    1.860656] bcm2708_fb soc:fb: FB found 1 display(s)"}
+{"elapsed_s": 113.132775348, "line": ""}
+{"elapsed_s": 113.13304882800003, "line": "[    1.896028] Console: switching to colour frame buffer device 100x30"}
+{"elapsed_s": 113.13306414399995, "line": ""}
+{"elapsed_s": 113.1335948699998, "line": "[    1.900491] bcm2708_fb soc:fb: Registered framebuffer for display 0, size 800x480"}
+{"elapsed_s": 113.13365872299619, "line": ""}
+{"elapsed_s": 113.13398649799637, "line": "[    1.919364] vc-mem: phys_addr:0x00000000 mem_base=0x00000000 mem_size:0x00000000(0 MiB)"}
+{"elapsed_s": 113.1340094729967, "line": ""}
+{"elapsed_s": 113.13412805400003, "line": "[    1.973748] brd: module loaded"}
+{"elapsed_s": 113.13416520899773, "line": ""}
+{"elapsed_s": 113.13431625199883, "line": "[    1.992819] loop: module loaded"}
+{"elapsed_s": 113.13433917699876, "line": ""}
+{"elapsed_s": 113.13452506099566, "line": "[    1.996072] Loading iSCSI transport class v2.0-870."}
+{"elapsed_s": 113.13456553300057, "line": ""}
+{"elapsed_s": 113.13479605799512, "line": "[    2.006790] usbcore: registered new interface driver lan78xx"}
+{"elapsed_s": 113.1348142029965, "line": ""}
+{"elapsed_s": 113.13505363599688, "line": "[    2.006897] usbcore: registered new interface driver smsc95xx"}
+{"elapsed_s": 113.13507439899695, "line": ""}
+{"elapsed_s": 113.13550336199842, "line": "[    2.007616] dwc_otg: version 3.00a 10-AUG-2012 (platform bus)"}
+{"elapsed_s": 113.13552372599952, "line": ""}
+{"elapsed_s": 113.13587661999918, "line": "[    2.014723] dwc2 fe980000.usb: supply vusb_d not found, using dummy regulator"}
+{"elapsed_s": 113.13589163199504, "line": ""}
+{"elapsed_s": 113.13619674499932, "line": "[    2.015783] dwc2 fe980000.usb: supply vusb_a not found, using dummy regulator"}
+{"elapsed_s": 113.13621486399643, "line": ""}
+{"elapsed_s": 113.13643404499453, "line": "[    2.077603] dwc2 fe980000.usb: dwc2_check_params: Invalid parameter max_packet_count=511"}
+{"elapsed_s": 113.1364541649964, "line": ""}
+{"elapsed_s": 113.13667535699642, "line": "[    2.077731] dwc2 fe980000.usb: dwc2_check_params: Invalid parameter max_transfer_size=65535"}
+{"elapsed_s": 113.13670075399568, "line": ""}
+{"elapsed_s": 113.13686180099467, "line": "[    2.088363] dwc2 fe980000.usb: DWC OTG Controller"}
+{"elapsed_s": 113.13687901799858, "line": ""}
+{"elapsed_s": 113.1370550770007, "line": "[    2.089551] dwc2 fe980000.usb: new USB bus registered, assigned bus number 1"}
+{"elapsed_s": 113.13707237999915, "line": ""}
+{"elapsed_s": 113.13723620100063, "line": "[    2.091486] dwc2 fe980000.usb: irq 26, io mem 0xfe980000"}
+{"elapsed_s": 113.13725345399871, "line": ""}
+{"elapsed_s": 113.13747698299994, "line": "[    2.100943] usb usb1: New USB device found, idVendor=1d6b, idProduct=0002, bcdDevice= 6.18"}
+{"elapsed_s": 113.13748769700032, "line": ""}
+{"elapsed_s": 113.1376939729962, "line": "[    2.101002] usb usb1: New USB device strings: Mfr=3, Product=2, SerialNumber=1"}
+{"elapsed_s": 113.13770857399504, "line": ""}
+{"elapsed_s": 113.13782463999814, "line": "[    2.101023] usb usb1: Product: DWC OTG Controller"}
+{"elapsed_s": 113.1378373119951, "line": ""}
+{"elapsed_s": 113.13811847799661, "line": "[    2.101042] usb usb1: Manufacturer: Linux 6.18.50+rpt-rpi-v8 dwc2_hsotg"}
+{"elapsed_s": 113.1381414399948, "line": ""}
+{"elapsed_s": 113.13828887599811, "line": "[    2.101060] usb usb1: SerialNumber: fe980000.usb"}
+{"elapsed_s": 113.13830593099556, "line": ""}
+{"elapsed_s": 113.13841064299777, "line": "[    2.106067] hub 1-0:1.0: USB hub found"}
+{"elapsed_s": 113.13842435999686, "line": ""}
+{"elapsed_s": 113.13856983499863, "line": "[    2.106914] hub 1-0:1.0: 1 port detected"}
+{"elapsed_s": 113.13859290300024, "line": ""}
+{"elapsed_s": 113.13876653499756, "line": "[    2.114970] usbcore: registered new interface driver uas"}
+{"elapsed_s": 113.13877915399644, "line": ""}
+{"elapsed_s": 113.1390260679982, "line": "[    2.115359] usbcore: registered new interface driver usb-storage"}
+{"elapsed_s": 113.13904964899848, "line": ""}
+{"elapsed_s": 113.1393459999963, "line": "[    2.117546] mousedev: PS/2 mouse device common for all mice"}
+{"elapsed_s": 113.13936586799537, "line": ""}
+{"elapsed_s": 113.13974285799486, "line": "[    2.137784] sdhci: Secure Digital Host Controller Interface driver"}
+{"elapsed_s": 113.1397614479938, "line": ""}
+{"elapsed_s": 113.139918062996, "line": "[    2.137809] sdhci: Copyright(c) Pierre Ossman"}
+{"elapsed_s": 113.1399403799951, "line": ""}
+{"elapsed_s": 113.14011638899683, "line": "[    2.138117] sdhci-pltfm: SDHCI platform and OF driver helper"}
+{"elapsed_s": 113.1401346509956, "line": ""}
+{"elapsed_s": 113.14030480999645, "line": "[    2.139617] hid: raw HID events driver (C) Jiri Kosina"}
+{"elapsed_s": 113.14031742500083, "line": ""}
+{"elapsed_s": 113.14052471799369, "line": "[    2.140480] usbcore: registered new interface driver usbhid"}
+{"elapsed_s": 113.14053731599415, "line": ""}
+{"elapsed_s": 113.14069333500083, "line": "[    2.140503] usbhid: USB HID core driver"}
+{"elapsed_s": 113.14071319299546, "line": ""}
+{"elapsed_s": 113.14105319399823, "line": "[    2.159773] hw perfevents: enabled with armv8_cortex_a72 PMU driver, 7 (0,8000003f) counters available"}
+{"elapsed_s": 113.14106946899847, "line": ""}
+{"elapsed_s": 113.14120939200075, "line": "[    2.165234] NET: Registered PF_PACKET protocol family"}
+{"elapsed_s": 113.1412260979996, "line": ""}
+{"elapsed_s": 113.1413368059948, "line": "[    2.167575] Key type dns_resolver registered"}
+{"elapsed_s": 113.14135142499435, "line": ""}
+{"elapsed_s": 113.14148889899661, "line": "[    2.215561] registered taskstats version 1"}
+{"elapsed_s": 113.14150110699848, "line": ""}
+{"elapsed_s": 113.1416665479992, "line": "[    2.218024] Loading compiled-in X.509 certificates"}
+{"elapsed_s": 113.14168489899748, "line": ""}
+{"elapsed_s": 113.14178934799565, "line": "[    2.243249] Demotion targets for Node 0: null"}
+{"elapsed_s": 113.14180849900004, "line": ""}
+{"elapsed_s": 113.14196507299494, "line": "[    2.243832] Key type .fscrypt registered"}
+{"elapsed_s": 113.14197616699676, "line": ""}
+{"elapsed_s": 113.14211996299855, "line": "[    2.243854] Key type fscrypt-provisioning registered"}
+{"elapsed_s": 113.14213115999883, "line": ""}
+{"elapsed_s": 113.14243384399742, "line": "[    2.259738] uart-pl011 fe201000.serial: there is not valid maps for state default"}
+{"elapsed_s": 113.14245143199514, "line": ""}
+{"elapsed_s": 113.14262921999762, "line": "[    2.261130] uart-pl011 fe201000.serial: cts_event_workaround enabled"}
+{"elapsed_s": 113.14263975699578, "line": ""}
+{"elapsed_s": 113.14304642699426, "line": "[    2.264834] fe201000.serial: ttyAMA1 at MMIO 0xfe201000 (irq = 32, base_baud = 0) is a PL011 rev3"}
+{"elapsed_s": 113.1430580649976, "line": ""}
+{"elapsed_s": 113.14343091099727, "line": "[    2.268047] printk: console [ttyAMA1] enabled"}
+{"elapsed_s": 113.14344868400076, "line": ""}
+{"elapsed_s": 113.14380095999513, "line": "[    2.275710] raspberrypi-exp-gpio soc:firmware:gpio: Failed to get GPIO 6 config (0 86)"}
+{"elapsed_s": 113.14381444899482, "line": ""}
+{"elapsed_s": 113.14418952099368, "line": "[    2.275815] raspberrypi-exp-gpio soc:firmware:gpio: Failed to get GPIO 5 config (0 85)"}
+{"elapsed_s": 113.14421250799933, "line": ""}
+{"elapsed_s": 113.14455326399911, "line": "[    2.278269] bcm2835-aux-uart fe215040.serial: there is not valid maps for state default"}
+{"elapsed_s": 113.14456868999696, "line": ""}
+{"elapsed_s": 113.14489407999645, "line": "[    2.278683] raspberrypi-exp-gpio soc:firmware:gpio: Failed to get GPIO 4 config (0 84)"}
+{"elapsed_s": 113.1449139749966, "line": ""}
+{"elapsed_s": 113.14527528799954, "line": "[    2.279302] raspberrypi-exp-gpio soc:firmware:gpio: Failed to get GPIO 4 config (0 84)"}
+{"elapsed_s": 113.1453072660006, "line": ""}
+{"elapsed_s": 113.14563020899368, "line": "[    2.279737] gpio-regulator regulator-sd-io-1v8: setup of GPIO (default) failed: -5"}
+{"elapsed_s": 113.1456505419992, "line": ""}
+{"elapsed_s": 113.14606478699716, "line": "[    2.279766] gpio-regulator regulator-sd-io-1v8: probe with driver gpio-regulator failed with error -5"}
+{"elapsed_s": 113.14608950699767, "line": ""}
+{"elapsed_s": 113.14647390399477, "line": "[    2.279824] raspberrypi-exp-gpio soc:firmware:gpio: Failed to get GPIO 5 config (0 85)"}
+{"elapsed_s": 113.14649184299924, "line": ""}
+{"elapsed_s": 113.1468154030008, "line": "[    2.279898] reg-fixed-voltage regulator-cam1: setup of GPIO (default) failed: -5"}
+{"elapsed_s": 113.14682741499564, "line": ""}
+{"elapsed_s": 113.14836551699409, "line": "[    2.279965] reg-fixed-voltage regulator-cam1: error -EIO: can't get GPIO"}
+{"elapsed_s": 113.14839088699955, "line": ""}
+{"elapsed_s": 113.14894442799414, "line": "[    2.280400] reg-fixed-voltage regulator-cam1: probe with driver reg-fixed-voltage failed with error -5"}
+{"elapsed_s": 113.14896731099725, "line": ""}
+{"elapsed_s": 113.14926911799557, "line": "[    2.281621] raspberrypi-exp-gpio soc:firmware:gpio: Failed to get GPIO 6 config (0 86)"}
+{"elapsed_s": 113.14935089599749, "line": ""}
+{"elapsed_s": 113.14959423999971, "line": "[    2.281724] reg-fixed-voltage regulator-sd-vcc: setup of GPIO (default) failed: -5"}
+{"elapsed_s": 113.14962046899745, "line": ""}
+{"elapsed_s": 113.14983879499778, "line": "[    2.281751] reg-fixed-voltage regulator-sd-vcc: error -EIO: can't get GPIO"}
+{"elapsed_s": 113.14986077600042, "line": ""}
+{"elapsed_s": 113.15020537699456, "line": "[    2.281775] reg-fixed-voltage regulator-sd-vcc: probe with driver reg-fixed-voltage failed with error -5"}
+{"elapsed_s": 113.1502240119953, "line": ""}
+{"elapsed_s": 113.15051918599784, "line": "[    2.287012] bcm2835-aux-uart fe215040.serial: error -EINVAL: unable to register 8250 port"}
+{"elapsed_s": 113.15054054799839, "line": ""}
+{"elapsed_s": 113.15098222899542, "line": "[    2.287628] bcm2835-aux-uart fe215040.serial: probe with driver bcm2835-aux-uart failed with error -22"}
+{"elapsed_s": 113.15099951499724, "line": ""}
+{"elapsed_s": 113.15167007899436, "line": "[    2.295102] bcm2835-wdt bcm2835-wdt: Broadcom BCM2835 watchdog timer"}
+{"elapsed_s": 113.15169396899728, "line": ""}
+{"elapsed_s": 113.15191863599466, "line": "[    2.296451] bcm2835-power bcm2835-power: ASB register ID returned 0x00000000"}
+{"elapsed_s": 113.15197306799382, "line": ""}
+{"elapsed_s": 113.15221354999812, "line": "[    3.113770] mmc-bcm2835 fe300000.mmcnr: mmc_debug:0 mmc_debug2:0"}
+{"elapsed_s": 113.15222852399893, "line": ""}
+{"elapsed_s": 113.15243465099775, "line": "[    3.113986] mmc-bcm2835 fe300000.mmcnr: DMA channel allocated"}
+{"elapsed_s": 113.15245677799976, "line": ""}
+{"elapsed_s": 113.15256514199427, "line": "[    3.155958] of_cfs_init"}
+{"elapsed_s": 113.15258597199863, "line": ""}
+{"elapsed_s": 113.15274448799755, "line": "[    3.159321] of_cfs_init: OK"}
+{"elapsed_s": 113.15275886799645, "line": ""}
+{"elapsed_s": 113.16837662999751, "line": "[    3.174749] mmc1: host does not support reading read-only switch, assuming write-enable"}
+{"elapsed_s": 113.16841943899635, "line": ""}
+{"elapsed_s": 113.16857840699959, "line": "[    3.174746] usb 1-1: new full-speed USB device number 2 using dwc2"}
+{"elapsed_s": 113.16860636699857, "line": ""}
+{"elapsed_s": 113.1698568110005, "line": "[    3.176723] mmc1: new high speed SDHC card at address 1553"}
+{"elapsed_s": 113.16988937399583, "line": ""}
+{"elapsed_s": 113.17438160799793, "line": "[    3.181193] mmcblk1: mmc1:1553 QEMU! 4.00 GiB"}
+{"elapsed_s": 113.17441482199501, "line": ""}
+{"elapsed_s": 113.19320697299554, "line": "[    3.199782]  mmcblk1: p1 p2"}
+{"elapsed_s": 113.1932531689963, "line": ""}
+{"elapsed_s": 113.1960404059937, "line": "[    3.202320] mmcblk1: mmc1:1553 QEMU! 4.00 GiB"}
+{"elapsed_s": 113.1961560139971, "line": ""}
+{"elapsed_s": 113.37389492499642, "line": "[    3.379624] usb 1-1: New USB device found, idVendor=0409, idProduct=55aa, bcdDevice= 1.01"}
+{"elapsed_s": 113.37402574899897, "line": ""}
+{"elapsed_s": 113.37452431400015, "line": "[    3.379765] usb 1-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3"}
+{"elapsed_s": 113.3746009259994, "line": ""}
+{"elapsed_s": 113.37511914899369, "line": "[    3.379831] usb 1-1: Product: QEMU USB Hub"}
+{"elapsed_s": 113.37517493400082, "line": ""}
+{"elapsed_s": 113.37575111399929, "line": "[    3.379885] usb 1-1: Manufacturer: QEMU"}
+{"elapsed_s": 113.37581886299449, "line": ""}
+{"elapsed_s": 113.37661595199461, "line": "[    3.379908] usb 1-1: SerialNumber: 314159-1"}
+{"elapsed_s": 113.37666059399635, "line": ""}
+{"elapsed_s": 113.37837803099683, "line": "[    3.385109] hub 1-1:1.0: USB hub found"}
+{"elapsed_s": 113.378403152994, "line": ""}
+{"elapsed_s": 113.37851541099371, "line": "[    3.385397] hub 1-1:1.0: 8 ports detected"}
+{"elapsed_s": 113.37853418099985, "line": ""}
+{"elapsed_s": 113.41494283999782, "line": "[    3.420956] clk: Disabling unused clocks"}
+{"elapsed_s": 113.41500149099738, "line": ""}
+{"elapsed_s": 113.41619353699934, "line": "[    3.422961] PM: genpd: Disabling unused power domains"}
+{"elapsed_s": 113.41621906399814, "line": ""}
+{"elapsed_s": 113.47626271899935, "line": "[    3.482640] Freeing unused kernel memory: 2048K"}
+{"elapsed_s": 113.4763017869991, "line": ""}
+{"elapsed_s": 113.47867966599733, "line": "[    3.485380] Run /init as init process"}
+{"elapsed_s": 113.47875457099872, "line": ""}
+{"elapsed_s": 113.62091288599913, "line": "Loading, please wait..."}
+{"elapsed_s": 113.62094849399728, "line": ""}
+{"elapsed_s": 113.66443015099503, "line": "[    3.670641] usb 1-1.1: new full-speed USB device number 3 using dwc2"}
+{"elapsed_s": 113.66446385299787, "line": ""}
+{"elapsed_s": 113.7568920699996, "line": "usbnet: failed control transaction: request 0x8006 value 0x600 index 0x0 length 0xa"}
+{"elapsed_s": 113.7576871209967, "line": "usbnet: failed control transaction: request 0x8006 value 0x600 index 0x0 length 0xa"}
+{"elapsed_s": 113.75869188799697, "line": "usbnet: failed control transaction: request 0x8006 value 0x600 index 0x0 length 0xa"}
+{"elapsed_s": 113.7679852959991, "line": "[    3.773986] usb 1-1.1: New USB device found, idVendor=0525, idProduct=a4a2, bcdDevice= 0.00"}
+{"elapsed_s": 113.76804047000041, "line": ""}
+{"elapsed_s": 113.76850692299922, "line": "[    3.774091] usb 1-1.1: New USB device strings: Mfr=1, Product=2, SerialNumber=10"}
+{"elapsed_s": 113.76853929099889, "line": ""}
+{"elapsed_s": 113.76876748799987, "line": "[    3.774139] usb 1-1.1: Product: RNDIS/QEMU USB Network Device"}
+{"elapsed_s": 113.76879578199441, "line": ""}
+{"elapsed_s": 113.7689302699946, "line": "[    3.774165] usb 1-1.1: Manufacturer: QEMU"}
+{"elapsed_s": 113.7689490499979, "line": ""}
+{"elapsed_s": 113.76906339199923, "line": "[    3.774188] usb 1-1.1: SerialNumber: 1-1.1"}
+{"elapsed_s": 113.76907562799897, "line": ""}
+{"elapsed_s": 113.92120151599374, "line": "Starting systemd-udevd version 257.13-1~deb13u1"}
+{"elapsed_s": 113.92123934799747, "line": ""}
+{"elapsed_s": 113.92124802399485, "line": ""}
+{"elapsed_s": 115.37462974299706, "line": "[    5.380089] cdc_ether 1-1.1:1.0 usb0: register 'cdc_ether' at usb-fe980000.usb-1.1, CDC Ethernet Device, 52:54:00:12:34:57"}
+{"elapsed_s": 115.37466566299554, "line": ""}
+{"elapsed_s": 115.37629672799812, "line": "[    5.383018] usbcore: registered new interface driver cdc_ether"}
+{"elapsed_s": 115.37631821099785, "line": ""}
+{"elapsed_s": 116.10024465400056, "line": "Begin: Loading essential drivers ... done."}
+{"elapsed_s": 116.10028320299898, "line": ""}
+{"elapsed_s": 116.1182495749963, "line": "Begin: Running /scripts/init-premount ... done."}
+{"elapsed_s": 116.11829741499969, "line": ""}
+{"elapsed_s": 116.12839517300017, "line": "Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done."}
+{"elapsed_s": 116.12844278699777, "line": ""}
+{"elapsed_s": 116.17134821999935, "line": "Begin: Running /scripts/local-premount ... done."}
+{"elapsed_s": 116.17139863899502, "line": ""}
+{"elapsed_s": 116.30982100099936, "line": "Begin: Will now check root file system ... fsck from util-linux 2.41.5"}
+{"elapsed_s": 116.30985740100004, "line": ""}
+{"elapsed_s": 116.46675727699767, "line": "[/sbin/fsck.ext4 (1) -- /dev/mmcblk1p2] fsck.ext4 -a -C0 /dev/mmcblk1p2 "}
+{"elapsed_s": 116.46679280899843, "line": ""}
+{"elapsed_s": 116.52377974899719, "line": "rootfs: clean, 73555/154736 files, 507426/618496 blocks"}
+{"elapsed_s": 116.52381551700091, "line": ""}
+{"elapsed_s": 116.54416449699784, "line": "done."}
+{"elapsed_s": 116.54420064199803, "line": ""}
+{"elapsed_s": 116.93526868799381, "line": "[    6.940419] EXT4-fs (mmcblk1p2): mounted filesystem 02f61d5e-92cb-4f9c-a781-099d97795020 r/w with ordered data mode. Quota mode: none."}
+{"elapsed_s": 116.93531083499693, "line": ""}
+{"elapsed_s": 116.93843713999377, "line": "done."}
+{"elapsed_s": 116.93847160999576, "line": ""}
+{"elapsed_s": 117.1992062759964, "line": "[Boot: 110s] Waiting for guest SSH"}
+{"elapsed_s": 119.8523241859948, "line": "Begin: Running /scripts/local-bottom ... done."}
+{"elapsed_s": 119.85236238499783, "line": ""}
+{"elapsed_s": 120.03347291299724, "line": "Begin: Running /scripts/init-bottom ... done."}
+{"elapsed_s": 120.03351286099496, "line": ""}
+{"elapsed_s": 123.7132029439963, "line": "[   13.719482] systemd[1]: System time advanced to timestamp on /var/lib/systemd/timesync/clock: Tue 2026-10-06 01:27:36 BST"}
+{"elapsed_s": 123.71324363799795, "line": ""}
+{"elapsed_s": 124.48305721100041, "line": "[   14.489579] NET: Registered PF_INET6 protocol family"}
+{"elapsed_s": 124.48310395199951, "line": ""}
+{"elapsed_s": 124.49439880599675, "line": "[   14.501130] Segment Routing with IPv6"}
+{"elapsed_s": 124.49444012599997, "line": ""}
+{"elapsed_s": 124.49478064799769, "line": "[   14.501513] In-situ OAM (IOAM) with IPv6"}
+{"elapsed_s": 124.49480414699792, "line": ""}
+{"elapsed_s": 125.04464723899582, "line": "\u001b[!p\u001b]104\u0007\u001b[?7h[   15.049678] systemd[1]: systemd 257.13-1~deb13u1 running in system mode (+PAM +AUDIT +SELINUX +APPARMOR +IMA +IPE +SMACK +SECCOMP +GCRYPT -GNUTLS +OPENSSL +ACL +BLKID +CURL +ELFUTILS +FIDO2 +IDN2 -IDN +IPTC +KMOD +LIBCRYPTSETUP +LIBCRYPTSETUP_PLUGINS +LIBFDISK +PCRE2 +PWQUALITY +P11KIT +QRENCODE +TPM2 +BZIP2 +LZ4 +XZ +ZLIB +ZSTD +BPF_FRAMEWORK +BTF -XKBCOMMON -UTMP +SYSVINIT +LIBARCHIVE)"}
+{"elapsed_s": 125.04469050099578, "line": ""}
+{"elapsed_s": 125.04636271399795, "line": "[   15.050733] systemd[1]: Detected architecture arm64."}
+{"elapsed_s": 125.04639058199973, "line": ""}
+{"elapsed_s": 125.04850643700047, "line": "[   15.055253] systemd[1]: Detected first boot."}
+{"elapsed_s": 125.0485360629973, "line": ""}
+{"elapsed_s": 125.12159771200095, "line": ""}
+{"elapsed_s": 125.12171441799728, "line": ""}
+{"elapsed_s": 125.12175121600012, "line": "\u001b[0;1;39mWelcome to \u001b[0m\u001b[1mDebian GNU/Linux 13 (trixie)\u001b[0m\u001b[0;1;39m!\u001b[0m"}
+{"elapsed_s": 125.12176598699443, "line": ""}
+{"elapsed_s": 125.12180614799581, "line": ""}
+{"elapsed_s": 125.12183861099766, "line": ""}
+{"elapsed_s": 125.12187322499813, "line": ""}
+{"elapsed_s": 125.15122289300052, "line": "[   15.157873] systemd[1]: Hostname set to <raspberrypi>."}
+{"elapsed_s": 125.15126038799644, "line": ""}
+{"elapsed_s": 125.1941637619966, "line": "[   15.200774] systemd[1]: Initializing machine ID from random generator."}
+{"elapsed_s": 125.19419600499532, "line": ""}
+{"elapsed_s": 126.27426944799663, "line": "[   16.280619] systemd[1]: bpf-restrict-fs: BPF LSM hook not enabled in the kernel, BPF LSM not supported."}
+{"elapsed_s": 126.27430494399596, "line": ""}
+{"elapsed_s": 127.20028003499465, "line": "[Boot: 120s] Waiting for guest SSH"}
+{"elapsed_s": 127.71286017399689, "line": "[   17.702807] zram_generator::config[185]: zram0: system has too much memory (916MB), limit is 0MB, ignoring."}
+{"elapsed_s": 127.71291276499687, "line": ""}
+{"elapsed_s": 129.01400895799452, "line": "[   19.018972] random: crng init done"}
+{"elapsed_s": 129.01404697899852, "line": ""}
+{"elapsed_s": 137.2073300539996, "line": "[Boot: 130s] Waiting for guest SSH"}
+{"elapsed_s": 138.46771447899664, "line": "[   28.473987] systemd[1]: Populated /etc with preset unit settings."}
+{"elapsed_s": 138.46781168999587, "line": ""}
+{"elapsed_s": 139.51519179099705, "line": "[   29.521551] systemd[1]: Queued start job for default target graphical.target."}
+{"elapsed_s": 139.51526743299473, "line": ""}
+{"elapsed_s": 139.6615733639992, "line": "[   29.668003] systemd[1]: Created slice system-getty.slice - Slice /system/getty."}
+{"elapsed_s": 139.6616132880008, "line": ""}
+{"elapsed_s": 139.66514400899905, "line": "[\u001b[0;32m  OK  \u001b[0m] Created slice \u001b[0;1;39msystem-getty.slice\u001b[0m - Slice /system/getty."}
+{"elapsed_s": 139.66516642299393, "line": ""}
+{"elapsed_s": 139.66517274899525, "line": ""}
+{"elapsed_s": 139.67368164199434, "line": "[   29.680128] systemd[1]: Created slice system-modprobe.slice - Slice /system/modprobe."}
+{"elapsed_s": 139.6737193279987, "line": ""}
+{"elapsed_s": 139.67408616899775, "line": "[\u001b[0;32m  OK  \u001b[0m] Created slice \u001b[0;1;39msystem-modprobe.slice\u001b[0m - Slice /system/modprobe."}
+{"elapsed_s": 139.67410502599523, "line": ""}
+{"elapsed_s": 139.67411125299986, "line": ""}
+{"elapsed_s": 139.68149446099414, "line": "[   29.687940] systemd[1]: Created slice system-rpi\\x2dsetup\\x2dloop.slice - Slice /system/rpi-setup-loop."}
+{"elapsed_s": 139.68152821699914, "line": ""}
+{"elapsed_s": 139.6823395839965, "line": "[\u001b[0;32m  OK  \u001b[0m] Created slice \u001b[0;1;39msystem-rpi\\x2dsetup\\…ice\u001b[0m - Slice /system/rpi-setup-loop."}
+{"elapsed_s": 139.68236899399926, "line": ""}
+{"elapsed_s": 139.68237768799736, "line": ""}
+{"elapsed_s": 139.68977668899606, "line": "[   29.696222] systemd[1]: Created slice system-serial\\x2dgetty.slice - Slice /system/serial-getty."}
+{"elapsed_s": 139.68981213199731, "line": ""}
+{"elapsed_s": 139.69027362899942, "line": "[\u001b[0;32m  OK  \u001b[0m] Created slice \u001b[0;1;39msystem-serial\\x2dget…slice\u001b[0m - Slice /system/serial-getty."}
+{"elapsed_s": 139.69029953999416, "line": ""}
+{"elapsed_s": 139.69030703799945, "line": ""}
+{"elapsed_s": 139.6975452580009, "line": "[   29.704025] systemd[1]: Created slice system-systemd\\x2dfsck.slice - Slice /system/systemd-fsck."}
+{"elapsed_s": 139.6975747309989, "line": ""}
+{"elapsed_s": 139.6978850949963, "line": "[\u001b[0;32m  OK  \u001b[0m] Created slice \u001b[0;1;39msystem-systemd\\x2dfs…slice\u001b[0m - Slice /system/systemd-fsck."}
+{"elapsed_s": 139.69790344099601, "line": ""}
+{"elapsed_s": 139.69791049699415, "line": ""}
+{"elapsed_s": 139.705157751996, "line": "[   29.711507] systemd[1]: Created slice system-systemd\\x2dzram\\x2dsetup.slice - Slice /system/systemd-zram-setup."}
+{"elapsed_s": 139.70521974099393, "line": ""}
+{"elapsed_s": 139.70639045899588, "line": "[\u001b[0;32m  OK  \u001b[0m] Created slice \u001b[0;1;39msystem-systemd\\x2dzr…\u001b[0m- Slice /system/systemd-zram-setup."}
+{"elapsed_s": 139.70643152199773, "line": ""}
+{"elapsed_s": 139.7064414829947, "line": ""}
+{"elapsed_s": 139.7118467179971, "line": "[   29.718286] systemd[1]: Created slice user.slice - User and Session Slice."}
+{"elapsed_s": 139.7118843759963, "line": ""}
+{"elapsed_s": 139.7121662579957, "line": "[\u001b[0;32m  OK  \u001b[0m] Created slice \u001b[0;1;39muser.slice\u001b[0m - User and Session Slice."}
+{"elapsed_s": 139.71218534500076, "line": ""}
+{"elapsed_s": 139.71219634199952, "line": ""}
+{"elapsed_s": 139.71634963099496, "line": "[   29.722924] systemd[1]: Started systemd-ask-password-console.path - Dispatch Password Requests to Console Directory Watch."}
+{"elapsed_s": 139.71637930599536, "line": ""}
+{"elapsed_s": 139.71691303499392, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39msystemd-ask-password-conso…\u001b[0mequests to Console Directory Watch."}
+{"elapsed_s": 139.71693062099803, "line": ""}
+{"elapsed_s": 139.7169372749995, "line": ""}
+{"elapsed_s": 139.718904688998, "line": "[   29.725413] systemd[1]: Started systemd-ask-password-wall.path - Forward Password Requests to Wall Directory Watch."}
+{"elapsed_s": 139.7189317960001, "line": ""}
+{"elapsed_s": 139.71972016200016, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39msystemd-ask-password-wall.…\u001b[0md Requests to Wall Directory Watch."}
+{"elapsed_s": 139.7197444609992, "line": ""}
+{"elapsed_s": 139.71975117799593, "line": ""}
+{"elapsed_s": 139.7287587030005, "line": "[   29.734945] systemd[1]: Set up automount proc-sys-fs-binfmt_misc.automount - Arbitrary Executable File Formats File System Automount Point."}
+{"elapsed_s": 139.72878605699952, "line": ""}
+{"elapsed_s": 139.72913187899394, "line": "[\u001b[0;32m  OK  \u001b[0m] Set up automount \u001b[0;1;39mproc-sys-fs-binfm…\u001b[0mormats File System Automount Point."}
+{"elapsed_s": 139.7291894919981, "line": ""}
+{"elapsed_s": 139.72919903000002, "line": ""}
+{"elapsed_s": 139.7320671569978, "line": "[   29.738333] systemd[1]: Expecting device dev-disk-by\\x2dpartuuid-27b94958\\x2d01.device - /dev/disk/by-partuuid/27b94958-01..."}
+{"elapsed_s": 139.73209907499404, "line": ""}
+{"elapsed_s": 139.73252446200058, "line": "         Expecting device \u001b[0;1;39mdev-disk-by\\x2dpa…\u001b[0mdev/disk/by-partuuid/27b94958-01..."}
+{"elapsed_s": 139.7325401679991, "line": ""}
+{"elapsed_s": 139.73254606899718, "line": ""}
+{"elapsed_s": 139.73390767099772, "line": "[   29.740495] systemd[1]: Expecting device dev-ttyAMA1.device - /dev/ttyAMA1..."}
+{"elapsed_s": 139.73395402099413, "line": ""}
+{"elapsed_s": 139.73424185499607, "line": "         Expecting device \u001b[0;1;39mdev-ttyAMA1.device\u001b[0m - /dev/ttyAMA1..."}
+{"elapsed_s": 139.73426667899912, "line": ""}
+{"elapsed_s": 139.7342748939991, "line": ""}
+{"elapsed_s": 139.73542572999577, "line": "[   29.741955] systemd[1]: Expecting device dev-zram0.device - /dev/zram0..."}
+{"elapsed_s": 139.73545011799433, "line": ""}
+{"elapsed_s": 139.73599370999727, "line": "         Expecting device \u001b[0;1;39mdev-zram0.device\u001b[0m - /dev/zram0..."}
+{"elapsed_s": 139.73600620899379, "line": ""}
+{"elapsed_s": 139.73601137499645, "line": ""}
+{"elapsed_s": 139.738836257995, "line": "[   29.744944] systemd[1]: Reached target paths.target - Path Units."}
+{"elapsed_s": 139.73887367099815, "line": ""}
+{"elapsed_s": 139.73923794899747, "line": "[\u001b[0;32m  OK  \u001b[0m] Reached target \u001b[0;1;39mpaths.target\u001b[0m - Path Units."}
+{"elapsed_s": 139.73925713000062, "line": ""}
+{"elapsed_s": 139.7392640609978, "line": ""}
+{"elapsed_s": 139.7405779519977, "line": "[   29.747358] systemd[1]: Reached target remote-fs.target - Remote File Systems."}
+{"elapsed_s": 139.7405955869981, "line": ""}
+{"elapsed_s": 139.74098267599766, "line": "[\u001b[0;32m  OK  \u001b[0m] Reached target \u001b[0;1;39mremote-fs.target\u001b[0m - Remote File Systems."}
+{"elapsed_s": 139.74099643199588, "line": ""}
+{"elapsed_s": 139.74100334099785, "line": ""}
+{"elapsed_s": 139.74203518399736, "line": "[   29.748758] systemd[1]: Reached target slices.target - Slice Units."}
+{"elapsed_s": 139.74206052699446, "line": ""}
+{"elapsed_s": 139.7423881539944, "line": "[\u001b[0;32m  OK  \u001b[0m] Reached target \u001b[0;1;39mslices.target\u001b[0m - Slice Units."}
+{"elapsed_s": 139.74240316500072, "line": ""}
+{"elapsed_s": 139.74241117399652, "line": ""}
+{"elapsed_s": 139.75720228999853, "line": "[   29.763790] systemd[1]: Listening on systemd-creds.socket - Credential Encryption/Decryption."}
+{"elapsed_s": 139.75722831299936, "line": ""}
+{"elapsed_s": 139.75769054899865, "line": "[\u001b[0;32m  OK  \u001b[0m] Listening on \u001b[0;1;39msystemd-creds.socket\u001b[0m - Credential Encryption/Decryption."}
+{"elapsed_s": 139.75771266299853, "line": ""}
+{"elapsed_s": 139.75772018799762, "line": ""}
+{"elapsed_s": 139.7606708710009, "line": "[   29.767355] systemd[1]: Listening on systemd-initctl.socket - initctl Compatibility Named Pipe."}
+{"elapsed_s": 139.76070215099753, "line": ""}
+{"elapsed_s": 139.7610596259983, "line": "[\u001b[0;32m  OK  \u001b[0m] Listening on \u001b[0;1;39msystemd-initctl.socke…\u001b[0m- initctl Compatibility Named Pipe."}
+{"elapsed_s": 139.76107708500058, "line": ""}
+{"elapsed_s": 139.7610960699967, "line": ""}
+{"elapsed_s": 139.7677971039957, "line": "[   29.774048] systemd[1]: Listening on systemd-journald-audit.socket - Journal Audit Socket."}
+{"elapsed_s": 139.7678339769991, "line": ""}
+{"elapsed_s": 139.76828728799592, "line": "[\u001b[0;32m  OK  \u001b[0m] Listening on \u001b[0;1;39msystemd-journald-audit.socket\u001b[0m - Journal Audit Socket."}
+{"elapsed_s": 139.76830350199452, "line": ""}
+{"elapsed_s": 139.7683116449989, "line": ""}
+{"elapsed_s": 139.77126330099418, "line": "[   29.777818] systemd[1]: Listening on systemd-journald-dev-log.socket - Journal Socket (/dev/log)."}
+{"elapsed_s": 139.77129112200055, "line": ""}
+{"elapsed_s": 139.77196093800012, "line": "[\u001b[0;32m  OK  \u001b[0m] Listening on \u001b[0;1;39msystemd-journald-dev-…socket\u001b[0m - Journal Socket (/dev/log)."}
+{"elapsed_s": 139.77198019999923, "line": ""}
+{"elapsed_s": 139.771987960994, "line": ""}
+{"elapsed_s": 139.77445844699832, "line": "[   29.781140] systemd[1]: Listening on systemd-journald.socket - Journal Sockets."}
+{"elapsed_s": 139.77449096000055, "line": ""}
+{"elapsed_s": 139.7748651219954, "line": "[\u001b[0;32m  OK  \u001b[0m] Listening on \u001b[0;1;39msystemd-journald.socket\u001b[0m - Journal Sockets."}
+{"elapsed_s": 139.77487936599937, "line": ""}
+{"elapsed_s": 139.77488520299812, "line": ""}
+{"elapsed_s": 139.77810214299825, "line": "[   29.784739] systemd[1]: Listening on systemd-networkd.socket - Network Service Netlink Socket."}
+{"elapsed_s": 139.77813085499656, "line": ""}
+{"elapsed_s": 139.7784746299949, "line": "[\u001b[0;32m  OK  \u001b[0m] Listening on \u001b[0;1;39msystemd-networkd.socket\u001b[0m - Network Service Netlink Socket."}
+{"elapsed_s": 139.77848786299728, "line": ""}
+{"elapsed_s": 139.77849364999565, "line": ""}
+{"elapsed_s": 139.7808272369948, "line": "[   29.787304] systemd[1]: systemd-pcrextend.socket - TPM PCR Measurements skipped, unmet condition check ConditionSecurity=measured-uki"}
+{"elapsed_s": 139.78085233599995, "line": ""}
+{"elapsed_s": 139.78151943699777, "line": "[   29.788054] systemd[1]: systemd-pcrlock.socket - Make TPM PCR Policy skipped, unmet condition check ConditionSecurity=measured-uki"}
+{"elapsed_s": 139.78154137199454, "line": ""}
+{"elapsed_s": 139.78306484099448, "line": "[   29.789820] systemd[1]: Listening on systemd-udevd-control.socket - udev Control Socket."}
+{"elapsed_s": 139.78309069600073, "line": ""}
+{"elapsed_s": 139.78365071299777, "line": "[\u001b[0;32m  OK  \u001b[0m] Listening on \u001b[0;1;39msystemd-udevd-control.socket\u001b[0m - udev Control Socket."}
+{"elapsed_s": 139.7836721529966, "line": ""}
+{"elapsed_s": 139.78367851499934, "line": ""}
+{"elapsed_s": 139.78559485200094, "line": "[   29.792253] systemd[1]: Listening on systemd-udevd-kernel.socket - udev Kernel Socket."}
+{"elapsed_s": 139.78561290499783, "line": ""}
+{"elapsed_s": 139.78590595099377, "line": "[\u001b[0;32m  OK  \u001b[0m] Listening on \u001b[0;1;39msystemd-udevd-kernel.socket\u001b[0m - udev Kernel Socket."}
+{"elapsed_s": 139.7859187149952, "line": ""}
+{"elapsed_s": 139.78592441799992, "line": ""}
+{"elapsed_s": 139.78958763699484, "line": "[   29.795855] systemd[1]: dev-hugepages.mount - Huge Pages File System skipped, unmet condition check ConditionPathExists=/sys/kernel/mm/hugepages"}
+{"elapsed_s": 139.78961554299894, "line": ""}
+{"elapsed_s": 139.89946472199517, "line": "[   29.905839] systemd[1]: Mounting dev-mqueue.mount - POSIX Message Queue File System..."}
+{"elapsed_s": 139.8995022989984, "line": ""}
+{"elapsed_s": 139.89986415900057, "line": "         Mounting \u001b[0;1;39mdev-mqueue.mount\u001b[0m - POSIX Message Queue File System..."}
+{"elapsed_s": 139.89988739999535, "line": ""}
+{"elapsed_s": 139.89989515299385, "line": ""}
+{"elapsed_s": 139.91634757599968, "line": "[   29.922770] systemd[1]: Mounting run-lock.mount - Legacy Locks Directory /run/lock..."}
+{"elapsed_s": 139.91639283999393, "line": ""}
+{"elapsed_s": 139.91688983399945, "line": "         Mounting \u001b[0;1;39mrun-lock.mount\u001b[0m - Legacy Locks Directory /run/lock..."}
+{"elapsed_s": 139.91692145799607, "line": ""}
+{"elapsed_s": 139.91692779299774, "line": ""}
+{"elapsed_s": 139.9305604359979, "line": "[   29.936845] systemd[1]: Mounting sys-kernel-debug.mount - Kernel Debug File System..."}
+{"elapsed_s": 139.9306122880007, "line": ""}
+{"elapsed_s": 139.93116306999582, "line": "         Mounting \u001b[0;1;39msys-kernel-debug.mount\u001b[0m - Kernel Debug File System..."}
+{"elapsed_s": 139.93118947599578, "line": ""}
+{"elapsed_s": 139.9312001579965, "line": ""}
+{"elapsed_s": 139.94991622799716, "line": "[   29.955925] systemd[1]: Mounting sys-kernel-tracing.mount - Kernel Trace File System..."}
+{"elapsed_s": 139.94996173699474, "line": ""}
+{"elapsed_s": 139.9504995479947, "line": "         Mounting \u001b[0;1;39msys-kernel-tracing.mount\u001b[0m - Kernel Trace File System..."}
+{"elapsed_s": 139.95052959599707, "line": ""}
+{"elapsed_s": 139.9505413549996, "line": ""}
+{"elapsed_s": 140.05376161099412, "line": "[   30.060123] systemd[1]: Starting keyboard-setup.service - Set the console keyboard layout..."}
+{"elapsed_s": 140.05381348099763, "line": ""}
+{"elapsed_s": 140.05475119900075, "line": "         Starting \u001b[0;1;39mkeyboard-setup.service\u001b[0m - Set the console keyboard layout..."}
+{"elapsed_s": 140.05478876699635, "line": ""}
+{"elapsed_s": 140.0547993299988, "line": ""}
+{"elapsed_s": 140.11417213099776, "line": "         Starting \u001b[0;1;39mkmod-static-nodes.service\u001b[0m…eate List of Static Device Nodes..."}
+{"elapsed_s": 140.1142280319982, "line": ""}
+{"elapsed_s": 140.11424221099878, "line": ""}
+{"elapsed_s": 140.11613105099968, "line": "[   30.120146] systemd[1]: Starting kmod-static-nodes.service - Create List of Static Device Nodes..."}
+{"elapsed_s": 140.11616442399827, "line": ""}
+{"elapsed_s": 140.15443325199885, "line": "[   30.160550] systemd[1]: Starting modprobe@configfs.service - Load Kernel Module configfs..."}
+{"elapsed_s": 140.154468282999, "line": ""}
+{"elapsed_s": 140.15515077199962, "line": "         Starting \u001b[0;1;39mmodprobe@configfs.service\u001b[0m - Load Kernel Module configfs..."}
+{"elapsed_s": 140.15516916699562, "line": ""}
+{"elapsed_s": 140.1551757559937, "line": ""}
+{"elapsed_s": 140.2040914600002, "line": "[   30.210192] systemd[1]: Starting modprobe@drm.service - Load Kernel Module drm..."}
+{"elapsed_s": 140.20414843899925, "line": ""}
+{"elapsed_s": 140.20483148299536, "line": "         Starting \u001b[0;1;39mmodprobe@drm.service\u001b[0m - Load Kernel Module drm..."}
+{"elapsed_s": 140.20491956399928, "line": ""}
+{"elapsed_s": 140.20493402699503, "line": ""}
+{"elapsed_s": 140.28517995599395, "line": "[   30.291394] systemd[1]: Starting modprobe@efi_pstore.service - Load Kernel Module efi_pstore..."}
+{"elapsed_s": 140.2852293399992, "line": ""}
+{"elapsed_s": 140.28566995800065, "line": "         Starting \u001b[0;1;39mmodprobe@efi_pstore.servi…\u001b[0m - Load Kernel Module efi_pstore..."}
+{"elapsed_s": 140.28569923999748, "line": ""}
+{"elapsed_s": 140.28570977699565, "line": ""}
+{"elapsed_s": 140.34747298399452, "line": "[   30.353574] systemd[1]: Starting modprobe@fuse.service - Load Kernel Module fuse..."}
+{"elapsed_s": 140.34752650899463, "line": ""}
+{"elapsed_s": 140.348699148999, "line": "         Starting \u001b[0;1;39mmodprobe@fuse.service\u001b[0m - Load Kernel Module fuse..."}
+{"elapsed_s": 140.34873128999607, "line": ""}
+{"elapsed_s": 140.34873937199882, "line": ""}
+{"elapsed_s": 140.3539325679958, "line": "[   30.359898] systemd[1]: netplan-ovs-cleanup.service - OpenVSwitch configuration for cleanup skipped, unmet condition check ConditionFileIsExecutable=/usr/bin/ovs-vsctl"}
+{"elapsed_s": 140.35396308099735, "line": ""}
+{"elapsed_s": 140.38135058899934, "line": "[   30.387769] systemd[1]: Starting nftables.service - nftables..."}
+{"elapsed_s": 140.38138478799374, "line": ""}
+{"elapsed_s": 140.3818863599954, "line": "         Starting \u001b[0;1;39mnftables.service\u001b[0m - nftables..."}
+{"elapsed_s": 140.3819165649984, "line": ""}
+{"elapsed_s": 140.38192719899962, "line": ""}
+{"elapsed_s": 140.39046854199842, "line": "[   30.396219] systemd[1]: systemd-fsck-root.service - File System Check on Root Device skipped, unmet condition check ConditionPathExists=!/run/initramfs/fsck-root"}
+{"elapsed_s": 140.39053142199555, "line": ""}
+{"elapsed_s": 140.39267246999952, "line": "[   30.398315] systemd[1]: systemd-hibernate-clear.service - Clear Stale Hibernate Storage Info skipped, unmet condition check ConditionPathExists=/sys/firmware/efi/efivars/HibernateLocation-8cf2644b-4b0b-428f-9387-6d876050dc67"}
+{"elapsed_s": 140.39271454499976, "line": ""}
+{"elapsed_s": 140.55625030699593, "line": "[   30.560261] systemd[1]: Starting systemd-journald.service - Journal Service..."}
+{"elapsed_s": 140.55630407799617, "line": ""}
+{"elapsed_s": 140.566572730997, "line": "         Starting \u001b[0;1;39msystemd-journald.service\u001b[0m - Journal Service..."}
+{"elapsed_s": 140.5666212799988, "line": ""}
+{"elapsed_s": 140.5666327269937, "line": ""}
+{"elapsed_s": 140.75821323099808, "line": "[   30.764445] systemd[1]: Starting systemd-modules-load.service - Load Kernel Modules..."}
+{"elapsed_s": 140.75826015799976, "line": ""}
+{"elapsed_s": 140.7587070369991, "line": "         Starting \u001b[0;1;39msystemd-modules-load.service\u001b[0m - Load Kernel Modules..."}
+{"elapsed_s": 140.75873859399871, "line": ""}
+{"elapsed_s": 140.75875112899666, "line": ""}
+{"elapsed_s": 140.79839479599468, "line": "[   30.804298] systemd[1]: Starting systemd-network-generator.service - Generate Network Units from Kernel Command Line..."}
+{"elapsed_s": 140.79844679199596, "line": ""}
+{"elapsed_s": 140.7989454119961, "line": "         Starting \u001b[0;1;39msystemd-network-generator…\u001b[0mk Units from Kernel Command Line..."}
+{"elapsed_s": 140.79897500799416, "line": ""}
+{"elapsed_s": 140.79898699699697, "line": ""}
+{"elapsed_s": 140.81098029999703, "line": "[   30.816979] systemd[1]: systemd-pcrmachine.service - TPM PCR Machine ID Measurement skipped, unmet condition check ConditionSecurity=measured-uki"}
+{"elapsed_s": 140.8110192249951, "line": ""}
+{"elapsed_s": 140.84870778399636, "line": "[   30.855121] fuse: init (API version 7.45)"}
+{"elapsed_s": 140.84874783399573, "line": ""}
+{"elapsed_s": 140.93121083200094, "line": "[   30.937187] systemd[1]: Starting systemd-remount-fs.service - Remount Root and Kernel File Systems..."}
+{"elapsed_s": 140.9312632000001, "line": ""}
+{"elapsed_s": 140.9397249149988, "line": "         Starting \u001b[0;1;39msystemd-remount-fs.servic…\u001b[0munt Root and Kernel File Systems..."}
+{"elapsed_s": 140.93977726599405, "line": ""}
+{"elapsed_s": 140.9397911729975, "line": ""}
+{"elapsed_s": 140.9414726239993, "line": "[   30.947874] systemd[1]: systemd-tpm2-setup-early.service - Early TPM SRK Setup skipped, unmet condition check ConditionSecurity=measured-uki"}
+{"elapsed_s": 140.941513011996, "line": ""}
+{"elapsed_s": 141.02017880399944, "line": "[   31.026539] systemd[1]: Starting systemd-udev-load-credentials.service - Load udev Rules from Credentials..."}
+{"elapsed_s": 141.02022231599403, "line": ""}
+{"elapsed_s": 141.02074730899767, "line": "         Starting \u001b[0;1;39msystemd-udev-load-credent…\u001b[0mLoad udev Rules from Credentials..."}
+{"elapsed_s": 141.0207741119957, "line": ""}
+{"elapsed_s": 141.0207821340009, "line": ""}
+{"elapsed_s": 141.49987573099497, "line": "[   31.506075] systemd[1]: Starting systemd-udev-trigger.service - Coldplug All udev Devices..."}
+{"elapsed_s": 141.49991237899667, "line": ""}
+{"elapsed_s": 141.84381767499872, "line": "         Starting \u001b[0;1;39msystemd-udev-trigger.service\u001b[0m - Coldplug All udev Devices..."}
+{"elapsed_s": 141.84385457199824, "line": ""}
+{"elapsed_s": 141.84386249499948, "line": ""}
+{"elapsed_s": 142.0559386629975, "line": "[   32.061434] zram: Added device: zram0"}
+{"elapsed_s": 142.05597539599694, "line": ""}
+{"elapsed_s": 142.23488038299547, "line": "[   32.240429] systemd[1]: Mounted dev-mqueue.mount - POSIX Message Queue File System."}
+{"elapsed_s": 142.2349323390008, "line": ""}
+{"elapsed_s": 142.23705175500072, "line": "[\u001b[0;32m  OK  \u001b[0m] Mounted \u001b[0;1;39mdev-mqueue.mount\u001b[0m - POSIX Message Queue File System."}
+{"elapsed_s": 142.23710218699853, "line": ""}
+{"elapsed_s": 142.23711342299794, "line": ""}
+{"elapsed_s": 142.2416064289937, "line": "[   32.247226] EXT4-fs (mmcblk1p2): re-mounted 02f61d5e-92cb-4f9c-a781-099d97795020."}
+{"elapsed_s": 142.24164696699881, "line": ""}
+{"elapsed_s": 142.25087133600027, "line": "[   32.257286] systemd[1]: Mounted run-lock.mount - Legacy Locks Directory /run/lock."}
+{"elapsed_s": 142.2509231189979, "line": ""}
+{"elapsed_s": 142.25226656099403, "line": "[\u001b[0;32m  OK  \u001b[0m] Mounted \u001b[0;1;39mrun-lock.mount\u001b[0m - Legacy Locks Directory /run/lock."}
+{"elapsed_s": 142.2523126889937, "line": ""}
+{"elapsed_s": 142.2523265139971, "line": ""}
+{"elapsed_s": 142.27279407400056, "line": "[   32.279187] systemd[1]: Mounted sys-kernel-debug.mount - Kernel Debug File System."}
+{"elapsed_s": 142.27284559599502, "line": ""}
+{"elapsed_s": 142.27407236599538, "line": "[\u001b[0;32m  OK  \u001b[0m] Mounted \u001b[0;1;39msys-kernel-debug.mount\u001b[0m - Kernel Debug File System."}
+{"elapsed_s": 142.27411793200008, "line": ""}
+{"elapsed_s": 142.27412878699397, "line": ""}
+{"elapsed_s": 142.30401639799675, "line": "[   32.310140] systemd[1]: Mounted sys-kernel-tracing.mount - Kernel Trace File System."}
+{"elapsed_s": 142.30405754399544, "line": ""}
+{"elapsed_s": 142.30536379199475, "line": "[\u001b[0;32m  OK  \u001b[0m] Mounted \u001b[0;1;39msys-kernel-tracing.mount\u001b[0m - Kernel Trace File System."}
+{"elapsed_s": 142.3054009099942, "line": ""}
+{"elapsed_s": 142.305411507994, "line": ""}
+{"elapsed_s": 142.3643938219975, "line": "[   32.369224] systemd[1]: Finished keyboard-setup.service - Set the console keyboard layout."}
+{"elapsed_s": 142.36443642899394, "line": ""}
+{"elapsed_s": 142.3700889939937, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39mkeyboard-setup.service\u001b[0m - Set the console keyboard layout."}
+{"elapsed_s": 142.37013133199798, "line": ""}
+{"elapsed_s": 142.37014255599934, "line": ""}
+{"elapsed_s": 142.4027650509961, "line": "[   32.409010] systemd[1]: Finished kmod-static-nodes.service - Create List of Static Device Nodes."}
+{"elapsed_s": 142.4028021310005, "line": ""}
+{"elapsed_s": 142.40481942000042, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39mkmod-static-nodes.service\u001b[0m…Create List of Static Device Nodes."}
+{"elapsed_s": 142.4048464419975, "line": ""}
+{"elapsed_s": 142.40485429600085, "line": ""}
+{"elapsed_s": 142.4169127319983, "line": "[   32.423304] systemd[1]: modprobe@configfs.service: Deactivated successfully."}
+{"elapsed_s": 142.4169552999956, "line": ""}
+{"elapsed_s": 142.43767272799596, "line": "[   32.443827] systemd[1]: Finished modprobe@configfs.service - Load Kernel Module configfs."}
+{"elapsed_s": 142.43770836199838, "line": ""}
+{"elapsed_s": 142.4389811459987, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39mmodprobe@configfs.service\u001b[0m - Load Kernel Module configfs."}
+{"elapsed_s": 142.43902190399967, "line": ""}
+{"elapsed_s": 142.43903395899542, "line": ""}
+{"elapsed_s": 142.44943549899472, "line": "[   32.455863] systemd[1]: modprobe@drm.service: Deactivated successfully."}
+{"elapsed_s": 142.44948251800088, "line": ""}
+{"elapsed_s": 142.45540242599964, "line": "[   32.461741] systemd[1]: Finished modprobe@drm.service - Load Kernel Module drm."}
+{"elapsed_s": 142.45545266399859, "line": ""}
+{"elapsed_s": 142.45677133400022, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39mmodprobe@drm.service\u001b[0m - Load Kernel Module drm."}
+{"elapsed_s": 142.4568020959996, "line": ""}
+{"elapsed_s": 142.45680956099386, "line": ""}
+{"elapsed_s": 142.4627490329949, "line": "[   32.469125] systemd[1]: modprobe@efi_pstore.service: Deactivated successfully."}
+{"elapsed_s": 142.46277237300092, "line": ""}
+{"elapsed_s": 142.46728686899587, "line": "[   32.473591] systemd[1]: Finished modprobe@efi_pstore.service - Load Kernel Module efi_pstore."}
+{"elapsed_s": 142.46731558299507, "line": ""}
+{"elapsed_s": 142.46926928500034, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39mmodprobe@efi_pstore.service\u001b[0m - Load Kernel Module efi_pstore."}
+{"elapsed_s": 142.4693258970001, "line": ""}
+{"elapsed_s": 142.469339311996, "line": ""}
+{"elapsed_s": 142.47458828899835, "line": "[   32.480923] systemd[1]: modprobe@fuse.service: Deactivated successfully."}
+{"elapsed_s": 142.47464350999508, "line": ""}
+{"elapsed_s": 142.479597998994, "line": "[   32.485929] systemd[1]: Finished modprobe@fuse.service - Load Kernel Module fuse."}
+{"elapsed_s": 142.47964669799694, "line": ""}
+{"elapsed_s": 142.48242800300068, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39mmodprobe@fuse.service\u001b[0m - Load Kernel Module fuse."}
+{"elapsed_s": 142.48247654599982, "line": ""}
+{"elapsed_s": 142.4824875419945, "line": ""}
+{"elapsed_s": 142.5107532539987, "line": "[   32.517185] systemd[1]: Finished nftables.service - nftables."}
+{"elapsed_s": 142.5107988939999, "line": ""}
+{"elapsed_s": 142.512125852998, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39mnftables.service\u001b[0m - nftables."}
+{"elapsed_s": 142.51216709699656, "line": ""}
+{"elapsed_s": 142.51218038399384, "line": ""}
+{"elapsed_s": 142.5222088349983, "line": "[   32.528346] systemd[1]: Finished systemd-modules-load.service - Load Kernel Modules."}
+{"elapsed_s": 142.52225760899455, "line": ""}
+{"elapsed_s": 142.5245685359987, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msystemd-modules-load.service\u001b[0m - Load Kernel Modules."}
+{"elapsed_s": 142.5246052989969, "line": ""}
+{"elapsed_s": 142.52461285099707, "line": ""}
+{"elapsed_s": 142.55086616299377, "line": "[   32.557169] systemd[1]: Finished systemd-network-generator.service - Generate Network Units from Kernel Command Line."}
+{"elapsed_s": 142.55091687199456, "line": ""}
+{"elapsed_s": 142.552405548995, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msystemd-network-generator…\u001b[0mork Units from Kernel Command Line."}
+{"elapsed_s": 142.55245762999402, "line": ""}
+{"elapsed_s": 142.5524740719993, "line": ""}
+{"elapsed_s": 142.5562769889948, "line": "[   32.562794] systemd-journald[258]: Collecting audit messages is enabled."}
+{"elapsed_s": 142.5563252360007, "line": ""}
+{"elapsed_s": 142.5603082749949, "line": "[   32.566151] systemd[1]: Finished systemd-remount-fs.service - Remount Root and Kernel File Systems."}
+{"elapsed_s": 142.56035942499875, "line": ""}
+{"elapsed_s": 142.5616486039944, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msystemd-remount-fs.servic…\u001b[0mmount Root and Kernel File Systems."}
+{"elapsed_s": 142.5616961439955, "line": ""}
+{"elapsed_s": 142.5617080919983, "line": ""}
+{"elapsed_s": 142.5650513319997, "line": "[   32.570843] audit: type=1130 audit(1791246475.698:2): pid=1 uid=0 auid=4294967295 ses=4294967295 msg='unit=systemd-remount-fs comm=\"systemd\" exe=\"/usr/lib/systemd/systemd\" hostname=? addr=? terminal=? res=success'"}
+{"elapsed_s": 142.5651056679999, "line": ""}
+{"elapsed_s": 142.5712413059955, "line": "[   32.577490] systemd[1]: Finished systemd-udev-load-credentials.service - Load udev Rules from Credentials."}
+{"elapsed_s": 142.57128298699536, "line": ""}
+{"elapsed_s": 142.5723072949986, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msystemd-udev-load-credent…\u001b[0m- Load udev Rules from Credentials."}
+{"elapsed_s": 142.57233260199428, "line": ""}
+{"elapsed_s": 142.5723401819996, "line": ""}
+{"elapsed_s": 142.57407955699455, "line": "[   32.580105] audit: type=1130 audit(1791246475.710:3): pid=1 uid=0 auid=4294967295 ses=4294967295 msg='unit=systemd-udev-load-credentials comm=\"systemd\" exe=\"/usr/lib/systemd/systemd\" hostname=? addr=? terminal=? res=success'"}
+{"elapsed_s": 142.574127752996, "line": ""}
+{"elapsed_s": 142.5818880299994, "line": "[   32.588239] systemd[1]: Reached target network-pre.target - Preparation for Network."}
+{"elapsed_s": 142.5819377719963, "line": ""}
+{"elapsed_s": 142.5827368829996, "line": "[\u001b[0;32m  OK  \u001b[0m] Reached target \u001b[0;1;39mnetwork-pre.target\u001b[0m - Preparation for Network."}
+{"elapsed_s": 142.58279416000005, "line": ""}
+{"elapsed_s": 142.5828067179973, "line": ""}
+{"elapsed_s": 142.59897317699506, "line": "[   32.605328] systemd[1]: Starting regenerate_ssh_host_keys.service - Regenerate SSH host keys..."}
+{"elapsed_s": 142.5990086479942, "line": ""}
+{"elapsed_s": 142.6001296789982, "line": "         Starting \u001b[0;1;39mregenerate_ssh_host_keys.…rvice\u001b[0m - Regenerate SSH host keys..."}
+{"elapsed_s": 142.6001550929941, "line": ""}
+{"elapsed_s": 142.60016246199666, "line": ""}
+{"elapsed_s": 142.6185070979991, "line": "[   32.624595] systemd[1]: Starting rpi-resize-swap-file.service - rpi-resize-var-swap-service - resize swapfile..."}
+{"elapsed_s": 142.6185413380008, "line": ""}
+{"elapsed_s": 142.62659487199562, "line": "         Starting \u001b[0;1;39mrpi-resize-swap-file.serv…\u001b[0mr-swap-service - resize swapfile..."}
+{"elapsed_s": 142.62665023099544, "line": ""}
+{"elapsed_s": 142.62666552599694, "line": ""}
+{"elapsed_s": 142.6507591099944, "line": "[   32.656968] systemd[1]: Starting systemd-growfs-root.service - Grow Root File System..."}
+{"elapsed_s": 142.65080840899464, "line": ""}
+{"elapsed_s": 142.6598049959939, "line": "         Starting \u001b[0;1;39msystemd-growfs-root.service\u001b[0m - Grow Root File System..."}
+{"elapsed_s": 142.65985560699482, "line": ""}
+{"elapsed_s": 142.6598676299982, "line": ""}
+{"elapsed_s": 142.6794526159938, "line": "[   32.685504] systemd[1]: systemd-hwdb-update.service - Rebuild Hardware Database skipped, no trigger condition checks were met."}
+{"elapsed_s": 142.67950157800078, "line": ""}
+{"elapsed_s": 142.68964567299554, "line": "[   32.695358] systemd[1]: systemd-pcrlock-file-system.service - Lock File Systems to TPM PCR Policy skipped, unmet condition check ConditionSecurity=measured-uki"}
+{"elapsed_s": 142.68969432599988, "line": ""}
+{"elapsed_s": 142.69066031499824, "line": "[   32.696669] systemd[1]: systemd-pcrlock-machine-id.service - Lock Machine ID to TPM PCR Policy skipped, unmet condition check ConditionSecurity=measured-uki"}
+{"elapsed_s": 142.6907220369976, "line": ""}
+{"elapsed_s": 142.69254239099973, "line": "[   32.698313] systemd[1]: systemd-pstore.service - Platform Persistent Storage Archival skipped, unmet condition check ConditionDirectoryNotEmpty=/sys/fs/pstore"}
+{"elapsed_s": 142.69259261599655, "line": ""}
+{"elapsed_s": 142.75491753999813, "line": "[   32.761070] systemd[1]: Starting systemd-random-seed.service - Load/Save OS Random Seed..."}
+{"elapsed_s": 142.75497010199615, "line": ""}
+{"elapsed_s": 142.75666930999432, "line": "         Starting \u001b[0;1;39msystemd-random-seed.service\u001b[0m - Load/Save OS Random Seed..."}
+{"elapsed_s": 142.7567039469941, "line": ""}
+{"elapsed_s": 142.7567122429973, "line": ""}
+{"elapsed_s": 142.8394187429949, "line": "[   32.844720] systemd[1]: Starting systemd-sysctl.service - Apply Kernel Variables..."}
+{"elapsed_s": 142.83946953099803, "line": ""}
+{"elapsed_s": 142.84512276999885, "line": "         Starting \u001b[0;1;39msystemd-sysctl.service\u001b[0m - Apply Kernel Variables..."}
+{"elapsed_s": 142.84516176499892, "line": ""}
+{"elapsed_s": 142.8451701899976, "line": ""}
+{"elapsed_s": 143.01441896699544, "line": "[   33.020608] systemd[1]: Starting systemd-tmpfiles-setup-dev-early.service - Create Static Device Nodes in /dev gracefully..."}
+{"elapsed_s": 143.01447552099853, "line": ""}
+{"elapsed_s": 143.01494164699398, "line": "         Starting \u001b[0;1;39msystemd-tmpfiles-setup-de…\u001b[0m Device Nodes in /dev gracefully..."}
+{"elapsed_s": 143.0149844339976, "line": ""}
+{"elapsed_s": 143.01499686899479, "line": ""}
+{"elapsed_s": 143.02887442000065, "line": "[   33.034917] systemd[1]: systemd-tpm2-setup.service - TPM SRK Setup skipped, unmet condition check ConditionSecurity=measured-uki"}
+{"elapsed_s": 143.02891874399938, "line": ""}
+{"elapsed_s": 143.02962128599756, "line": "[   33.035579] systemd[1]: systemd-pcrlock-firmware-code.service - Lock Firmware Code to TPM PCR Policy skipped, unmet condition check ConditionSecurity=measured-uki"}
+{"elapsed_s": 143.02966896499856, "line": ""}
+{"elapsed_s": 143.0304705449962, "line": "[   33.036182] systemd[1]: systemd-pcrlock-firmware-config.service - Lock Firmware Configuration to TPM PCR Policy skipped, unmet condition check ConditionSecurity=measured-uki"}
+{"elapsed_s": 143.03053893899778, "line": ""}
+{"elapsed_s": 143.03145218499412, "line": "[   33.036678] systemd[1]: systemd-pcrlock-secureboot-authority.service - Lock UEFI SecureBoot Authority to TPM PCR Policy skipped, unmet condition check ConditionSecurity=measured-uki"}
+{"elapsed_s": 143.03147772199736, "line": ""}
+{"elapsed_s": 143.03274063099525, "line": "[   33.037185] systemd[1]: systemd-pcrlock-secureboot-policy.service - Lock UEFI SecureBoot Policy to TPM PCR Policy skipped, unmet condition check ConditionSecurity=measured-uki"}
+{"elapsed_s": 143.03277886999422, "line": ""}
+{"elapsed_s": 143.03342130099918, "line": "[   33.037423] systemd[1]: systemd-pcrlock-make-policy.service - Make TPM PCR Policy skipped, unmet condition check ConditionSecurity=measured-uki"}
+{"elapsed_s": 143.03345295499457, "line": ""}
+{"elapsed_s": 143.239696533994, "line": "[   33.245852] systemd[1]: Mounting sys-fs-fuse-connections.mount - FUSE Control File System..."}
+{"elapsed_s": 143.2397464589958, "line": ""}
+{"elapsed_s": 143.26152078299492, "line": "         Mounting \u001b[0;1;39msys-fs-fuse-connections.mount\u001b[0m - FUSE Control File System..."}
+{"elapsed_s": 143.26157753599546, "line": ""}
+{"elapsed_s": 143.26159045299573, "line": ""}
+{"elapsed_s": 143.44725165599812, "line": "         Mounting \u001b[0;1;39msys-kernel-config.mount\u001b[0m - Kernel Configuration File System..."}
+{"elapsed_s": 143.44730361499387, "line": ""}
+{"elapsed_s": 143.44731714899535, "line": ""}
+{"elapsed_s": 143.454406689998, "line": "[   33.452862] systemd[1]: Mounting sys-kernel-config.mount - Kernel Configuration File System..."}
+{"elapsed_s": 143.45445368500077, "line": ""}
+{"elapsed_s": 143.56587905099877, "line": "[   33.571765] systemd[1]: Started systemd-journald.service - Journal Service."}
+{"elapsed_s": 143.56594068499544, "line": ""}
+{"elapsed_s": 143.56735545399715, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39msystemd-journald.service\u001b[0m - Journal Service."}
+{"elapsed_s": 143.5674020239967, "line": ""}
+{"elapsed_s": 143.56741354199767, "line": ""}
+{"elapsed_s": 143.5846088469989, "line": "[   33.590750] audit: type=1130 audit(1791246476.706:4): pid=1 uid=0 auid=4294967295 ses=4294967295 msg='unit=systemd-journald comm=\"systemd\" exe=\"/usr/lib/systemd/systemd\" hostname=? addr=? terminal=? res=success'"}
+{"elapsed_s": 143.5846647549988, "line": ""}
+{"elapsed_s": 143.72813065299852, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msystemd-random-seed.service\u001b[0m - Load/Save OS Random Seed."}
+{"elapsed_s": 143.7281855639958, "line": ""}
+{"elapsed_s": 143.72819816099945, "line": ""}
+{"elapsed_s": 143.7620996189944, "line": "[   33.762717] audit: type=1130 audit(1791246476.866:5): pid=1 uid=0 auid=4294967295 ses=4294967295 msg='unit=systemd-random-seed comm=\"systemd\" exe=\"/usr/lib/systemd/systemd\" hostname=? addr=? terminal=? res=success'"}
+{"elapsed_s": 143.76215299699834, "line": ""}
+{"elapsed_s": 144.3007415749962, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msystemd-sysctl.service\u001b[0m - Apply Kernel Variables."}
+{"elapsed_s": 144.30077940299816, "line": ""}
+{"elapsed_s": 144.30078726200009, "line": ""}
+{"elapsed_s": 144.388998962997, "line": "[\u001b[0;32m  OK  \u001b[0m] Mounted \u001b[0;1;39msys-kernel-config.mount\u001b[0m - Kernel Configuration File System."}
+{"elapsed_s": 144.3890555129983, "line": ""}
+{"elapsed_s": 144.38906813100039, "line": ""}
+{"elapsed_s": 144.5422049139961, "line": "[\u001b[0;32m  OK  \u001b[0m] Mounted \u001b[0;1;39msys-fs-fuse-connections.mount\u001b[0m - FUSE Control File System."}
+{"elapsed_s": 144.54224455499934, "line": ""}
+{"elapsed_s": 144.5422522519948, "line": ""}
+{"elapsed_s": 145.0413850499972, "line": "         Starting \u001b[0;1;39msystemd-journal-flush.ser…\u001b[0msh Journal to Persistent Storage..."}
+{"elapsed_s": 145.0414518069956, "line": ""}
+{"elapsed_s": 145.04146494499582, "line": ""}
+{"elapsed_s": 145.0836696549959, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msystemd-growfs-root.service\u001b[0m - Grow Root File System."}
+{"elapsed_s": 145.0837247599993, "line": ""}
+{"elapsed_s": 145.08373936599673, "line": ""}
+{"elapsed_s": 145.19884615799674, "line": "         Starting \u001b[0;1;39mrpi-resize.service\u001b[0m - Grow…im root filesystem on first boot..."}
+{"elapsed_s": 145.19890041499457, "line": ""}
+{"elapsed_s": 145.19891405899398, "line": ""}
+{"elapsed_s": 145.2692995519974, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msystemd-tmpfiles-setup-de…\u001b[0mic Device Nodes in /dev gracefully."}
+{"elapsed_s": 145.26935606799816, "line": ""}
+{"elapsed_s": 145.2693703420009, "line": ""}
+{"elapsed_s": 145.36671381999622, "line": "         Starting \u001b[0;1;39msystemd-sysusers.service\u001b[0m - Create System Users..."}
+{"elapsed_s": 145.36676803199953, "line": ""}
+{"elapsed_s": 145.36678234599822, "line": ""}
+{"elapsed_s": 145.72986634999688, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msystemd-journal-flush.ser…\u001b[0mlush Journal to Persistent Storage."}
+{"elapsed_s": 145.72993334299827, "line": ""}
+{"elapsed_s": 145.72994667999592, "line": ""}
+{"elapsed_s": 145.93125983799837, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msystemd-sysusers.service\u001b[0m - Create System Users."}
+{"elapsed_s": 145.9313221919947, "line": ""}
+{"elapsed_s": 145.93133572700026, "line": ""}
+{"elapsed_s": 146.00066122599674, "line": "         Starting \u001b[0;1;39msystemd-timesyncd.service\u001b[0m - Network Time Synchronization..."}
+{"elapsed_s": 146.00070984599733, "line": ""}
+{"elapsed_s": 146.0007212279961, "line": ""}
+{"elapsed_s": 146.02514274399437, "line": "         Starting \u001b[0;1;39msystemd-tmpfiles-setup-de…\u001b[0meate Static Device Nodes in /dev..."}
+{"elapsed_s": 146.02519555899926, "line": ""}
+{"elapsed_s": 146.02520776799793, "line": ""}
+{"elapsed_s": 146.05785210400063, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msystemd-udev-trigger.service\u001b[0m - Coldplug All udev Devices."}
+{"elapsed_s": 146.05790471399814, "line": ""}
+{"elapsed_s": 146.05791638999654, "line": ""}
+{"elapsed_s": 147.20979892600008, "line": "[Boot: 140s] Waiting for guest SSH"}
+{"elapsed_s": 155.64952094299952, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39msystemd-timesyncd.service\u001b[0m - Network Time Synchronization."}
+{"elapsed_s": 155.6495611709979, "line": ""}
+{"elapsed_s": 155.64957022699673, "line": ""}
+{"elapsed_s": 155.67287092499464, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39mrpi-resize-swap-file.serv…\u001b[0mvar-swap-service - resize swapfile."}
+{"elapsed_s": 155.67290036899794, "line": ""}
+{"elapsed_s": 155.6729076479969, "line": ""}
+{"elapsed_s": 155.68189355799404, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39mregenerate_ssh_host_keys.service\u001b[0m - Regenerate SSH host keys."}
+{"elapsed_s": 155.6819640419999, "line": ""}
+{"elapsed_s": 155.68197285899805, "line": ""}
+{"elapsed_s": 155.69334344199888, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msystemd-tmpfiles-setup-de…\u001b[0mCreate Static Device Nodes in /dev."}
+{"elapsed_s": 155.6933902679957, "line": ""}
+{"elapsed_s": 155.6934019679975, "line": ""}
+{"elapsed_s": 155.74062415599474, "line": "[\u001b[0;32m  OK  \u001b[0m] Reached target \u001b[0;1;39mlocal-fs-pre.target\u001b[0m…Preparation for Local File Systems."}
+{"elapsed_s": 155.74066665699502, "line": ""}
+{"elapsed_s": 155.74067647099582, "line": ""}
+{"elapsed_s": 155.74510157499753, "line": "[\u001b[0;32m  OK  \u001b[0m] Reached target \u001b[0;1;39mtime-set.target\u001b[0m - System Time Set."}
+{"elapsed_s": 155.7451339629988, "line": ""}
+{"elapsed_s": 155.74514181699487, "line": ""}
+{"elapsed_s": 155.76240066699393, "line": "         Starting \u001b[0;1;39mrpi-setup-loop@var-swap.s…\u001b[0moop - set up file on loop device..."}
+{"elapsed_s": 155.76246821200039, "line": ""}
+{"elapsed_s": 155.76248262899753, "line": ""}
+{"elapsed_s": 155.78605612200045, "line": "         Starting \u001b[0;1;39msystemd-udevd.service\u001b[0m - R…ager for Device Events and Files..."}
+{"elapsed_s": 155.78611391899904, "line": ""}
+{"elapsed_s": 155.78612781099946, "line": ""}
+{"elapsed_s": 156.08195021400024, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39mrpi-resize.service\u001b[0m - Grow…trim root filesystem on first boot."}
+{"elapsed_s": 156.08198984900082, "line": ""}
+{"elapsed_s": 156.081998662994, "line": ""}
+{"elapsed_s": 156.42119042999548, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39mrpi-setup-loop@var-swap.s…\u001b[0m-loop - set up file on loop device."}
+{"elapsed_s": 156.4213097039974, "line": ""}
+{"elapsed_s": 156.4213270149994, "line": ""}
+{"elapsed_s": 157.0895592579982, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39msystemd-udevd.service\u001b[0m - Ru…anager for Device Events and Files."}
+{"elapsed_s": 157.0896228509955, "line": ""}
+{"elapsed_s": 157.08964019300038, "line": ""}
+{"elapsed_s": 157.16351970699907, "line": "         Starting \u001b[0;1;39msystemd-networkd.service\u001b[0m - Network Configuration..."}
+{"elapsed_s": 157.16357450399664, "line": ""}
+{"elapsed_s": 157.1635869889942, "line": ""}
+{"elapsed_s": 157.210422655, "line": "[Boot: 150s] Waiting for guest SSH"}
+{"elapsed_s": 157.40999462299806, "line": "[\u001b[0;32m  OK  \u001b[0m] Found device \u001b[0;1;39mdev-zram0.device\u001b[0m - /dev/zram0."}
+{"elapsed_s": 157.4100342649981, "line": ""}
+{"elapsed_s": 157.41004317199986, "line": ""}
+{"elapsed_s": 157.4392057849982, "line": "         Starting \u001b[0;1;39msystemd-zram-setup@zram0.…vice\u001b[0m - Create swap on /dev/zram0..."}
+{"elapsed_s": 157.4392580929998, "line": ""}
+{"elapsed_s": 157.4392712839981, "line": ""}
+{"elapsed_s": 158.8023462009951, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msystemd-zram-setup@zram0.service\u001b[0m - Create swap on /dev/zram0."}
+{"elapsed_s": 158.80239689399605, "line": ""}
+{"elapsed_s": 158.80241076099628, "line": ""}
+{"elapsed_s": 158.95986505899782, "line": "         Activating swap \u001b[0;1;39mdev-zram0.swap\u001b[0m - r… managed swap device (zram+file)..."}
+{"elapsed_s": 158.95991094199417, "line": ""}
+{"elapsed_s": 158.95991995000077, "line": ""}
+{"elapsed_s": 159.86696888999722, "line": "[\u001b[0;32m  OK  \u001b[0m] Activated swap \u001b[0;1;39mdev-zram0.swap\u001b[0m - rp…ap managed swap device (zram+file)."}
+{"elapsed_s": 159.86700962900068, "line": ""}
+{"elapsed_s": 159.867018248995, "line": ""}
+{"elapsed_s": 159.8792636299986, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39msystemd-networkd.service\u001b[0m - Network Configuration."}
+{"elapsed_s": 159.87931684399518, "line": ""}
+{"elapsed_s": 159.8793286769942, "line": ""}
+{"elapsed_s": 159.96503141200083, "line": "[\u001b[0;32m  OK  \u001b[0m] Reached target \u001b[0;1;39mswap.target\u001b[0m - Swaps."}
+{"elapsed_s": 159.96508699699916, "line": ""}
+{"elapsed_s": 159.96510736399796, "line": ""}
+{"elapsed_s": 160.05986778299848, "line": "         Mounting \u001b[0;1;39mtmp.mount\u001b[0m - Temporary Directory /tmp..."}
+{"elapsed_s": 160.05990948600083, "line": ""}
+{"elapsed_s": 160.05991776699375, "line": ""}
+{"elapsed_s": 160.16626288800035, "line": "         Starting \u001b[0;1;39msystemd-networkd-persiste…\u001b[0mtent Storage in systemd-networkd..."}
+{"elapsed_s": 160.1663065249959, "line": ""}
+{"elapsed_s": 160.16631617299572, "line": ""}
+{"elapsed_s": 160.5984679989997, "line": "[\u001b[0;32m  OK  \u001b[0m] Mounted \u001b[0;1;39mtmp.mount\u001b[0m - Temporary Directory /tmp."}
+{"elapsed_s": 160.59852073499496, "line": ""}
+{"elapsed_s": 160.59853304699936, "line": ""}
+{"elapsed_s": 161.26306305999606, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msystemd-networkd-persiste…\u001b[0mistent Storage in systemd-networkd."}
+{"elapsed_s": 161.26311342899862, "line": ""}
+{"elapsed_s": 161.26313236799615, "line": ""}
+{"elapsed_s": 161.350344819999, "line": "[\u001b[0;32m  OK  \u001b[0m] Found device \u001b[0;1;39mdev-ttyAMA1.device\u001b[0m - /dev/ttyAMA1."}
+{"elapsed_s": 161.35039708399563, "line": ""}
+{"elapsed_s": 161.35040974599542, "line": ""}
+{"elapsed_s": 161.49227328800043, "line": "[\u001b[0;32m  OK  \u001b[0m] Found device \u001b[0;1;39mdev-disk-by\\x2dpartuu…\u001b[0m /dev/disk/by-partuuid/27b94958-01."}
+{"elapsed_s": 161.49232473199663, "line": ""}
+{"elapsed_s": 161.49233637200086, "line": ""}
+{"elapsed_s": 161.5168107319987, "line": "         Starting \u001b[0;1;39msystemd-fsck@dev-disk-by\\…\u001b[0mdev/disk/by-partuuid/27b94958-01..."}
+{"elapsed_s": 161.51687415099877, "line": ""}
+{"elapsed_s": 161.51688894399558, "line": ""}
+{"elapsed_s": 163.6766390289995, "line": "[\u001b[0m\u001b[0;31m*     \u001b[0m] Job systemd-fsck@dev-disk-by\\x2dpar…ice/start running (24s / no limit)"}
+{"elapsed_s": 163.67669550799474, "line": ""}
+{"elapsed_s": 163.67671061999863, "line": ""}
+{"elapsed_s": 164.14131734699913, "line": "\u001bM"}
+{"elapsed_s": 164.14136924599734, "line": "\u001b[K[\u001b[0;1;31m*\u001b[0m\u001b[0;31m*    \u001b[0m] Job systemd-fsck@dev-disk-by\\x2dpar…ice/start running (24s / no limit)"}
+{"elapsed_s": 164.14138879099482, "line": ""}
+{"elapsed_s": 164.1413990889996, "line": ""}
+{"elapsed_s": 164.63805891899392, "line": "\u001bM"}
+{"elapsed_s": 164.6381053389996, "line": "\u001b[K[\u001b[0;31m*\u001b[0;1;31m*\u001b[0m\u001b[0;31m*   \u001b[0m] Job systemd-fsck@dev-disk-by\\x2dpar…ice/start running (25s / no limit)"}
+{"elapsed_s": 164.63812173299812, "line": ""}
+{"elapsed_s": 164.6381286379983, "line": ""}
+{"elapsed_s": 165.13715892899927, "line": "\u001bM"}
+{"elapsed_s": 165.1371934380004, "line": "\u001b[K[ \u001b[0;31m*\u001b[0;1;31m*\u001b[0m\u001b[0;31m*  \u001b[0m] Job systemd-fsck@dev-disk-by\\x2dpar…ice/start running (25s / no limit)"}
+{"elapsed_s": 165.13720709199697, "line": ""}
+{"elapsed_s": 165.1372138049992, "line": ""}
+{"elapsed_s": 165.30346089799423, "line": "\u001bM"}
+{"elapsed_s": 165.30350822999753, "line": "\u001b[K[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msystemd-fsck@dev-disk-by\\…\u001b[0m /dev/disk/by-partuuid/27b94958-01."}
+{"elapsed_s": 165.3035238329976, "line": ""}
+{"elapsed_s": 165.30353078999906, "line": ""}
+{"elapsed_s": 165.41870824299986, "line": "\u001b[K         Mounting \u001b[0;1;39mboot-firmware.mount\u001b[0m - /boot/firmware..."}
+{"elapsed_s": 165.41876303499885, "line": ""}
+{"elapsed_s": 165.41877702099737, "line": ""}
+{"elapsed_s": 165.7903221289962, "line": "[\u001b[0;32m  OK  \u001b[0m] Mounted \u001b[0;1;39mboot-firmware.mount\u001b[0m - /boot/firmware."}
+{"elapsed_s": 165.79036041799554, "line": ""}
+{"elapsed_s": 165.7903693039989, "line": ""}
+{"elapsed_s": 165.82605450599658, "line": "[\u001b[0;32m  OK  \u001b[0m] Reached target \u001b[0;1;39mlocal-fs.target\u001b[0m - Local File Systems."}
+{"elapsed_s": 165.82609798599879, "line": ""}
+{"elapsed_s": 165.82612970499758, "line": ""}
+{"elapsed_s": 165.8685930329957, "line": "[\u001b[0;32m  OK  \u001b[0m] Listening on \u001b[0;1;39msystemd-sysext.socket\u001b[0m… System Extension Image Management."}
+{"elapsed_s": 165.8686351149954, "line": ""}
+{"elapsed_s": 165.86864411599527, "line": ""}
+{"elapsed_s": 165.8943811499994, "line": "         Starting \u001b[0;1;39mconsole-setup.service\u001b[0m - Set console font and keymap..."}
+{"elapsed_s": 165.89441691299726, "line": ""}
+{"elapsed_s": 165.89442503800092, "line": ""}
+{"elapsed_s": 165.96428850599477, "line": "         Starting \u001b[0;1;39msystemd-binfmt.service\u001b[0m - Set Up Additional Binary Formats..."}
+{"elapsed_s": 165.9643420930006, "line": ""}
+{"elapsed_s": 165.96435530899907, "line": ""}
+{"elapsed_s": 165.99599700499675, "line": "         Starting \u001b[0;1;39msystemd-tmpfiles-setup.se…\u001b[0mate System Files and Directories..."}
+{"elapsed_s": 165.99608459799492, "line": ""}
+{"elapsed_s": 165.9961527389969, "line": ""}
+{"elapsed_s": 166.28859679199377, "line": "         Mounting \u001b[0;1;39mproc-sys-fs-binfmt_misc.m…\u001b[0mcutable File Formats File System..."}
+{"elapsed_s": 166.28866666300019, "line": ""}
+{"elapsed_s": 166.288681041995, "line": ""}
+{"elapsed_s": 167.12806197299506, "line": "[\u001b[0;32m  OK  \u001b[0m] Mounted \u001b[0;1;39mproc-sys-fs-binfmt_misc.mo…\u001b[0mxecutable File Formats File System."}
+{"elapsed_s": 167.12812306499836, "line": ""}
+{"elapsed_s": 167.1281360629946, "line": ""}
+{"elapsed_s": 167.2112644689987, "line": "[Boot: 160s] Waiting for guest SSH"}
+{"elapsed_s": 167.22264344099676, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msystemd-binfmt.service\u001b[0m - Set Up Additional Binary Formats."}
+{"elapsed_s": 167.2226894150008, "line": ""}
+{"elapsed_s": 167.22270138399472, "line": ""}
+{"elapsed_s": 167.4265987760009, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msystemd-tmpfiles-setup.se…\u001b[0mreate System Files and Directories."}
+{"elapsed_s": 167.4266446679976, "line": ""}
+{"elapsed_s": 167.4266533409973, "line": ""}
+{"elapsed_s": 167.46294682699954, "line": "[\u001b[0;32m  OK  \u001b[0m] Listening on \u001b[0;1;39msystemd-rfkill.socket\u001b[0m…ll Switch Status /dev/rfkill Watch."}
+{"elapsed_s": 167.46300599999813, "line": ""}
+{"elapsed_s": 167.4630190839962, "line": ""}
+{"elapsed_s": 167.49281289799546, "line": "         Starting \u001b[0;1;39mldconfig.service\u001b[0m - Rebuild Dynamic Linker Cache..."}
+{"elapsed_s": 167.49285853099718, "line": ""}
+{"elapsed_s": 167.49286706799467, "line": ""}
+{"elapsed_s": 167.55635440100014, "line": "         Starting \u001b[0;1;39msystemd-firstboot.service\u001b[0m - First Boot Wizard..."}
+{"elapsed_s": 167.55641020599433, "line": ""}
+{"elapsed_s": 167.55642366699612, "line": ""}
+{"elapsed_s": 167.73617607099732, "line": "         Starting \u001b[0;1;39msystemd-journal-catalog-u…ervice\u001b[0m - Rebuild Journal Catalog..."}
+{"elapsed_s": 167.7362307519943, "line": ""}
+{"elapsed_s": 167.7362443919992, "line": ""}
+{"elapsed_s": 168.30121654799586, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msystemd-firstboot.service\u001b[0m - First Boot Wizard."}
+{"elapsed_s": 168.30126880799799, "line": ""}
+{"elapsed_s": 168.30128283699742, "line": ""}
+{"elapsed_s": 168.5630497549937, "line": "[\u001b[0;32m  OK  \u001b[0m] Reached target \u001b[0;1;39mfirst-boot-complete.target\u001b[0m - First Boot Complete."}
+{"elapsed_s": 168.56310069299798, "line": ""}
+{"elapsed_s": 168.563116213998, "line": ""}
+{"elapsed_s": 168.7787688909957, "line": "         Starting \u001b[0;1;39msystemd-machine-id-commit…\u001b[0mave Transient machine-id to Disk..."}
+{"elapsed_s": 168.7788047199938, "line": ""}
+{"elapsed_s": 168.7788130359986, "line": ""}
+{"elapsed_s": 169.46600860999752, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msystemd-machine-id-commit…\u001b[0m Save Transient machine-id to Disk."}
+{"elapsed_s": 169.46604662000027, "line": ""}
+{"elapsed_s": 169.4660543680002, "line": ""}
+{"elapsed_s": 169.49414392799372, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msystemd-journal-catalog-u….service\u001b[0m - Rebuild Journal Catalog."}
+{"elapsed_s": 169.49419192099595, "line": ""}
+{"elapsed_s": 169.49420509999618, "line": ""}
+{"elapsed_s": 171.64282612600073, "line": "[  \u001b[0;31m*\u001b[0;1;31m*\u001b[0m\u001b[0;31m* \u001b[0m] (2 of 2) Job ldconfig.service/start running (32s / no limit)"}
+{"elapsed_s": 171.6428778499976, "line": ""}
+{"elapsed_s": 171.64289292399917, "line": ""}
+{"elapsed_s": 172.13901588099543, "line": "\u001bM"}
+{"elapsed_s": 172.13904915299645, "line": "\u001b[K[   \u001b[0;31m*\u001b[0;1;31m*\u001b[0m\u001b[0;31m*\u001b[0m] (2 of 2) Job ldconfig.service/start running (32s / no limit)"}
+{"elapsed_s": 172.13905885900022, "line": ""}
+{"elapsed_s": 172.13906482099992, "line": ""}
+{"elapsed_s": 172.64280560299812, "line": "\u001bM"}
+{"elapsed_s": 172.6428411119996, "line": "\u001b[K[    \u001b[0;31m*\u001b[0;1;31m*\u001b[0m] (1 of 2) Job console-setup.service/start running (33s / no limit)"}
+{"elapsed_s": 172.6428517940003, "line": ""}
+{"elapsed_s": 172.6428695020004, "line": ""}
+{"elapsed_s": 173.15487090299575, "line": "\u001bM"}
+{"elapsed_s": 173.15490410799976, "line": "\u001b[K[     \u001b[0;31m*\u001b[0m] (1 of 2) Job console-setup.service/start running (33s / no limit)"}
+{"elapsed_s": 173.15491374799603, "line": ""}
+{"elapsed_s": 173.15491973399912, "line": ""}
+{"elapsed_s": 173.6423050289959, "line": "\u001bM"}
+{"elapsed_s": 173.64235129299777, "line": "\u001b[K[    \u001b[0;31m*\u001b[0;1;31m*\u001b[0m] (1 of 2) Job console-setup.service/start running (34s / no limit)"}
+{"elapsed_s": 173.64236619999429, "line": ""}
+{"elapsed_s": 173.6423749569949, "line": ""}
+{"elapsed_s": 174.16843668899674, "line": "\u001bM"}
+{"elapsed_s": 174.1684813019965, "line": "\u001b[K[   \u001b[0;31m*\u001b[0;1;31m*\u001b[0m\u001b[0;31m*\u001b[0m] (2 of 2) Job ldconfig.service/start running (34s / no limit)"}
+{"elapsed_s": 174.16849552599888, "line": ""}
+{"elapsed_s": 174.16850456699467, "line": ""}
+{"elapsed_s": 174.6426433069937, "line": "\u001bM"}
+{"elapsed_s": 174.6426934859992, "line": "\u001b[K[  \u001b[0;31m*\u001b[0;1;31m*\u001b[0m\u001b[0;31m* \u001b[0m] (2 of 2) Job ldconfig.service/start running (35s / no limit)"}
+{"elapsed_s": 174.64270884599682, "line": ""}
+{"elapsed_s": 174.64271848699718, "line": ""}
+{"elapsed_s": 175.13883597499807, "line": "\u001bM"}
+{"elapsed_s": 175.13886803999776, "line": "\u001b[K[ \u001b[0;31m*\u001b[0;1;31m*\u001b[0m\u001b[0;31m*  \u001b[0m] (2 of 2) Job ldconfig.service/start running (35s / no limit)"}
+{"elapsed_s": 175.13887761399383, "line": ""}
+{"elapsed_s": 175.13888344999577, "line": ""}
+{"elapsed_s": 175.65703141599806, "line": "\u001bM"}
+{"elapsed_s": 175.65707275900058, "line": "\u001b[K[\u001b[0;31m*\u001b[0;1;31m*\u001b[0m\u001b[0;31m*   \u001b[0m] (1 of 2) Job console-setup.service/start running (36s / no limit)"}
+{"elapsed_s": 175.65708659499796, "line": ""}
+{"elapsed_s": 175.65710173700063, "line": ""}
+{"elapsed_s": 176.18022492099408, "line": "\u001bM"}
+{"elapsed_s": 176.18027306499425, "line": "\u001b[K[\u001b[0;1;31m*\u001b[0m\u001b[0;31m*    \u001b[0m] (1 of 2) Job console-setup.service/start running (36s / no limit)"}
+{"elapsed_s": 176.18028760699963, "line": ""}
+{"elapsed_s": 176.18029600099544, "line": ""}
+{"elapsed_s": 176.66951916399557, "line": "\u001bM"}
+{"elapsed_s": 176.6696207069981, "line": "\u001b[K[\u001b[0m\u001b[0;31m*     \u001b[0m] (1 of 2) Job console-setup.service/start running (37s / no limit)"}
+{"elapsed_s": 176.66963371999736, "line": ""}
+{"elapsed_s": 176.66964096499578, "line": ""}
+{"elapsed_s": 177.1409793040002, "line": "\u001bM"}
+{"elapsed_s": 177.1410682059941, "line": "\u001b[K[\u001b[0;1;31m*\u001b[0m\u001b[0;31m*    \u001b[0m] (2 of 2) Job ldconfig.service/start running (37s / no limit)"}
+{"elapsed_s": 177.14114900999994, "line": ""}
+{"elapsed_s": 177.14116484999977, "line": ""}
+{"elapsed_s": 177.1769565909999, "line": "\u001bM"}
+{"elapsed_s": 177.17700920700008, "line": "\u001b[K[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39mldconfig.service\u001b[0m - Rebuild Dynamic Linker Cache."}
+{"elapsed_s": 177.17702564299543, "line": ""}
+{"elapsed_s": 177.1770348459977, "line": ""}
+{"elapsed_s": 177.21224339000037, "line": "[Boot: 170s] Waiting for guest SSH"}
+{"elapsed_s": 177.2135927729978, "line": "\u001b[K         Starting \u001b[0;1;39msystemd-update-done.service\u001b[0m - Update is Completed..."}
+{"elapsed_s": 177.21363993799605, "line": ""}
+{"elapsed_s": 177.2136518949992, "line": ""}
+{"elapsed_s": 177.4708946699975, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msystemd-update-done.service\u001b[0m - Update is Completed."}
+{"elapsed_s": 177.47094611999637, "line": ""}
+{"elapsed_s": 177.47096107499965, "line": ""}
+{"elapsed_s": 177.48031024800002, "line": "[\u001b[0;32m  OK  \u001b[0m] Reached target \u001b[0;1;39msysinit.target\u001b[0m - System Initialization."}
+{"elapsed_s": 177.48035788799461, "line": ""}
+{"elapsed_s": 177.48037116100022, "line": ""}
+{"elapsed_s": 177.49176798299595, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39mapt-daily.timer\u001b[0m - Daily apt download activities."}
+{"elapsed_s": 177.49183556899516, "line": ""}
+{"elapsed_s": 177.4918501919965, "line": ""}
+{"elapsed_s": 177.49632849999762, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39mapt-daily-upgrade.timer\u001b[0m - …y apt upgrade and clean activities."}
+{"elapsed_s": 177.49637779199838, "line": ""}
+{"elapsed_s": 177.49638953799877, "line": ""}
+{"elapsed_s": 177.50210160799907, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39mapt-listchanges.timer\u001b[0m - Tr…e apt-listchanges database for APT."}
+{"elapsed_s": 177.50218220999523, "line": ""}
+{"elapsed_s": 177.502234364998, "line": ""}
+{"elapsed_s": 177.50799899599951, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39mdpkg-db-backup.timer\u001b[0m - Daily dpkg database backup timer."}
+{"elapsed_s": 177.50804019899806, "line": ""}
+{"elapsed_s": 177.5080516839953, "line": ""}
+{"elapsed_s": 177.5139840060001, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39me2scrub_all.timer\u001b[0m - Period…Metadata Check for All Filesystems."}
+{"elapsed_s": 177.51402122599393, "line": ""}
+{"elapsed_s": 177.5140285919988, "line": ""}
+{"elapsed_s": 177.51865194599668, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39mfstrim.timer\u001b[0m - Discard unused filesystem blocks once a week."}
+{"elapsed_s": 177.51870517899806, "line": ""}
+{"elapsed_s": 177.5187158819972, "line": ""}
+{"elapsed_s": 177.52314200600085, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39mlogrotate.timer\u001b[0m - Daily rotation of log files."}
+{"elapsed_s": 177.5231930029986, "line": ""}
+{"elapsed_s": 177.52320128099382, "line": ""}
+{"elapsed_s": 177.5282938159944, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39mman-db.timer\u001b[0m - Daily man-db regeneration."}
+{"elapsed_s": 177.52833105199534, "line": ""}
+{"elapsed_s": 177.52833875799843, "line": ""}
+{"elapsed_s": 177.5309909179996, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39mrpi-zram-writeback.timer\u001b[0m - zram writeback timer."}
+{"elapsed_s": 177.5310288929977, "line": ""}
+{"elapsed_s": 177.531040226997, "line": ""}
+{"elapsed_s": 177.5335438349939, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39msystemd-tmpfiles-clean.tim…\u001b[0my Cleanup of Temporary Directories."}
+{"elapsed_s": 177.5335793339982, "line": ""}
+{"elapsed_s": 177.53358698299417, "line": ""}
+{"elapsed_s": 177.53744856399862, "line": "[\u001b[0;32m  OK  \u001b[0m] Reached target \u001b[0;1;39mtimers.target\u001b[0m - Timer Units."}
+{"elapsed_s": 177.53747967699746, "line": ""}
+{"elapsed_s": 177.53748740999436, "line": ""}
+{"elapsed_s": 177.5457074779988, "line": "[\u001b[0;32m  OK  \u001b[0m] Listening on \u001b[0;1;39mavahi-daemon.socket\u001b[0m -…DNS/DNS-SD Stack Activation Socket."}
+{"elapsed_s": 177.5457621079986, "line": ""}
+{"elapsed_s": 177.5457751799986, "line": ""}
+{"elapsed_s": 177.5496726709971, "line": "[\u001b[0;32m  OK  \u001b[0m] Listening on \u001b[0;1;39mdbus.socket\u001b[0m - D-Bus System Message Bus Socket."}
+{"elapsed_s": 177.54971146099706, "line": ""}
+{"elapsed_s": 177.54971953799395, "line": ""}
+{"elapsed_s": 177.57840559599572, "line": "[\u001b[0;32m  OK  \u001b[0m] Listening on \u001b[0;1;39msshd-unix-local.socke…\u001b[0mtemd-ssh-generator, AF_UNIX Local)."}
+{"elapsed_s": 177.5784815559964, "line": ""}
+{"elapsed_s": 177.57854922999832, "line": ""}
+{"elapsed_s": 177.5862598379972, "line": "[\u001b[0;32m  OK  \u001b[0m] Listening on \u001b[0;1;39msystemd-hostnamed.socket\u001b[0m - Hostname Service Socket."}
+{"elapsed_s": 177.58630806099973, "line": ""}
+{"elapsed_s": 177.5863172649988, "line": ""}
+{"elapsed_s": 177.59060688599857, "line": "[\u001b[0;32m  OK  \u001b[0m] Reached target \u001b[0;1;39msockets.target\u001b[0m - Socket Units."}
+{"elapsed_s": 177.59065746399574, "line": ""}
+{"elapsed_s": 177.59066860500025, "line": ""}
+{"elapsed_s": 177.59573641599854, "line": "[\u001b[0;32m  OK  \u001b[0m] Reached target \u001b[0;1;39mbasic.target\u001b[0m - Basic System."}
+{"elapsed_s": 177.59578817099828, "line": ""}
+{"elapsed_s": 177.5958185309937, "line": ""}
+{"elapsed_s": 177.628690007994, "line": "         Starting \u001b[0;1;39mavahi-daemon.service\u001b[0m - Avahi mDNS/DNS-SD Stack..."}
+{"elapsed_s": 177.62878886299586, "line": ""}
+{"elapsed_s": 177.62880161499925, "line": ""}
+{"elapsed_s": 177.6622977789957, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39mcron.service\u001b[0m - Regular background program processing daemon."}
+{"elapsed_s": 177.662349446, "line": ""}
+{"elapsed_s": 177.66236308999942, "line": ""}
+{"elapsed_s": 177.70448091699654, "line": "         Starting \u001b[0;1;39mdbus.service\u001b[0m - D-Bus System Message Bus..."}
+{"elapsed_s": 177.7045328039967, "line": ""}
+{"elapsed_s": 177.70454563299427, "line": ""}
+{"elapsed_s": 177.8791152699996, "line": "         Starting \u001b[0;1;39me2scrub_reap.service\u001b[0m - Re…ne ext4 Metadata Check Snapshots..."}
+{"elapsed_s": 177.87922843499837, "line": ""}
+{"elapsed_s": 177.8792454229988, "line": ""}
+{"elapsed_s": 178.0695811639962, "line": "         Starting \u001b[0;1;39mfstrim.service\u001b[0m - Discard …s on filesystems from /etc/fstab..."}
+{"elapsed_s": 178.06963380799425, "line": ""}
+{"elapsed_s": 178.06964692099427, "line": ""}
+{"elapsed_s": 178.25288588599506, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39mrpi-usb-gadget-ics.service\u001b[0m… auto-switcher (client <-> shared)."}
+{"elapsed_s": 178.252941120998, "line": ""}
+{"elapsed_s": 178.25295310799993, "line": ""}
+{"elapsed_s": 178.4187228390001, "line": "         Starting \u001b[0;1;39msshd-keygen.service\u001b[0m - Gen…ate sshd host keys on first boot..."}
+{"elapsed_s": 178.41877656299766, "line": ""}
+{"elapsed_s": 178.41878975799773, "line": ""}
+{"elapsed_s": 178.51413482399948, "line": "         Starting \u001b[0;1;39msshswitch.service\u001b[0m - Turn …or /boot/firmware/ssh is present..."}
+{"elapsed_s": 178.51431482299813, "line": ""}
+{"elapsed_s": 178.51432883500092, "line": ""}
+{"elapsed_s": 178.94030495299376, "line": "         Starting \u001b[0;1;39msystemd-logind.service\u001b[0m - User Login Management..."}
+{"elapsed_s": 178.9403579360005, "line": ""}
+{"elapsed_s": 178.9403690830004, "line": ""}
+{"elapsed_s": 179.02348846499808, "line": "         Starting \u001b[0;1;39mudisks2.service\u001b[0m - Disk Manager..."}
+{"elapsed_s": 179.0235390769958, "line": ""}
+{"elapsed_s": 179.0235515039967, "line": ""}
+{"elapsed_s": 179.48712156299734, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39mdbus.service\u001b[0m - D-Bus System Message Bus."}
+{"elapsed_s": 179.48715509799513, "line": ""}
+{"elapsed_s": 179.48716335099743, "line": ""}
+{"elapsed_s": 180.09819421800057, "line": "         Starting \u001b[0;1;39mwpa_supplicant.service\u001b[0m - WPA supplicant..."}
+{"elapsed_s": 180.09823472899734, "line": ""}
+{"elapsed_s": 180.0982433209938, "line": ""}
+{"elapsed_s": 180.2184009449993, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msshd-keygen.service\u001b[0m - Generate sshd host keys on first boot."}
+{"elapsed_s": 180.21845404799387, "line": ""}
+{"elapsed_s": 180.21846622999874, "line": ""}
+{"elapsed_s": 180.36228356399806, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msshswitch.service\u001b[0m - Turn …h or /boot/firmware/ssh is present."}
+{"elapsed_s": 180.36234005000006, "line": ""}
+{"elapsed_s": 180.36235463499906, "line": ""}
+{"elapsed_s": 180.48256577999564, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39me2scrub_reap.service\u001b[0m - Re…line ext4 Metadata Check Snapshots."}
+{"elapsed_s": 180.4826168840009, "line": ""}
+{"elapsed_s": 180.48263080899778, "line": ""}
+{"elapsed_s": 180.77309936600068, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39mavahi-daemon.service\u001b[0m - Avahi mDNS/DNS-SD Stack."}
+{"elapsed_s": 180.7731498439971, "line": ""}
+{"elapsed_s": 180.77316404399608, "line": ""}
+{"elapsed_s": 181.61255082599382, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39mwpa_supplicant.service\u001b[0m - WPA supplicant."}
+{"elapsed_s": 181.6126030259984, "line": ""}
+{"elapsed_s": 181.61263079299533, "line": ""}
+{"elapsed_s": 181.61599153399584, "line": "[\u001b[0;32m  OK  \u001b[0m] Reached target \u001b[0;1;39mnetwork.target\u001b[0m - Network."}
+{"elapsed_s": 181.61604060899845, "line": ""}
+{"elapsed_s": 181.61605444099405, "line": ""}
+{"elapsed_s": 181.706275257995, "line": "         Starting \u001b[0;1;39mssh.service\u001b[0m - OpenBSD Secure Shell server..."}
+{"elapsed_s": 181.70632764699985, "line": ""}
+{"elapsed_s": 181.7063369440002, "line": ""}
+{"elapsed_s": 181.75701719299832, "line": "         Starting \u001b[0;1;39msystemd-user-sessions.service\u001b[0m - Permit User Sessions..."}
+{"elapsed_s": 181.75705998899502, "line": ""}
+{"elapsed_s": 181.75707307499397, "line": ""}
+{"elapsed_s": 181.77385075699567, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39mconsole-setup.service\u001b[0m - Set console font and keymap."}
+{"elapsed_s": 181.77389236899762, "line": ""}
+{"elapsed_s": 181.77390080999612, "line": ""}
+{"elapsed_s": 182.6734804250009, "line": "[\u001b[0;32m  OK  \u001b[0m] Finished \u001b[0;1;39msystemd-user-sessions.service\u001b[0m - Permit User Sessions."}
+{"elapsed_s": 182.67351857199537, "line": ""}
+{"elapsed_s": 182.6735271389989, "line": ""}
+{"elapsed_s": 182.78923349499382, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39mgetty@tty1.service\u001b[0m - Getty on tty1."}
+{"elapsed_s": 182.78929127399897, "line": ""}
+{"elapsed_s": 182.78930581799796, "line": ""}
+{"elapsed_s": 183.01506351599528, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39mserial-getty@ttyAMA1.service\u001b[0m - Serial Getty on ttyAMA1."}
+{"elapsed_s": 183.0151096769987, "line": ""}
+{"elapsed_s": 183.01511844999914, "line": ""}
+{"elapsed_s": 183.0401614939983, "line": "[\u001b[0;32m  OK  \u001b[0m] Reached target \u001b[0;1;39mgetty.target\u001b[0m - Login Prompts."}
+{"elapsed_s": 183.04025104799803, "line": ""}
+{"elapsed_s": 183.04029644399998, "line": ""}
+{"elapsed_s": 183.26611695299653, "line": "         Starting \u001b[0;1;39mpolkit.service\u001b[0m - Authorization Manager..."}
+{"elapsed_s": 183.26617316199554, "line": ""}
+{"elapsed_s": 183.266185253, "line": ""}
+{"elapsed_s": 183.26968181199481, "line": "[\u001b[0;32m  OK  \u001b[0m] Started \u001b[0;1;39msystemd-logind.service\u001b[0m - User Login Management."}
+{"elapsed_s": 183.26973654399626, "line": ""}
+{"elapsed_s": 183.26974806399812, "line": ""}
+{"elapsed_s": 187.21629607499926, "line": "[Boot: 180s] Waiting for guest SSH"}
+{"elapsed_s": 197.22646049600007, "line": "[Boot: 190s] Waiting for guest SSH"}
+{"elapsed_s": 207.23374205599976, "line": "[Boot: 200s] Waiting for guest SSH"}
+{"elapsed_s": 209.55642102099955, "line": "\u001b[!p\u001b]104\u0007\u001b[?7h\u001b[6n\u001b[32766;32766H\u001b[6n\u001b[!p\u001b]104\u0007\u001b[?7h\u001b[6n\u001b[32766;32766H\u001b[6nFLIGHT_STUDIO_SSH_READY"}
+{"elapsed_s": 209.5564923769998, "line": ""}
+{"elapsed_s": 209.5906834599955, "line": ""}
+{"elapsed_s": 209.5907306730005, "line": ""}
+{"elapsed_s": 209.59074254599545, "line": ""}
+{"elapsed_s": 209.5912426270006, "line": "Debian GNU/Linux 13 raspberrypi ttyAMA1"}
+{"elapsed_s": 209.59127602799708, "line": ""}
+{"elapsed_s": 209.6240760829969, "line": ""}
+{"elapsed_s": 209.62412668999605, "line": ""}
+{"elapsed_s": 209.6241393349992, "line": "My IP address is 10.0.2.15 fec0::5054:ff:fe12:3457"}
+{"elapsed_s": 209.62415430399415, "line": ""}
+{"elapsed_s": 209.62424766999902, "line": ""}
+{"elapsed_s": 209.62433282499842, "line": ""}
+{"elapsed_s": 209.62569564300065, "line": "raspberrypi login: root (automatic login)"}
+{"elapsed_s": 209.6257322829988, "line": ""}
+{"elapsed_s": 209.62609041199903, "line": ""}
+{"elapsed_s": 209.6261465879943, "line": ""}
+{"elapsed_s": 209.62619616099983, "line": ""}
+{"elapsed_s": 219.73341940399405, "line": "Linux raspberrypi 6.18.50+rpt-rpi-v8 #1 SMP PREEMPT Debian 1:6.18.50-1+rpt1 (2026-09-11) aarch64"}
+{"elapsed_s": 219.73347827699763, "line": ""}
+{"elapsed_s": 219.90633803399396, "line": ""}
+{"elapsed_s": 219.90644333700038, "line": ""}
+{"elapsed_s": 219.90846791999502, "line": "The programs included with the Debian GNU/Linux system are free software;"}
+{"elapsed_s": 219.90858854499675, "line": ""}
+{"elapsed_s": 219.91027196399955, "line": "the exact distribution terms for each program are described in the"}
+{"elapsed_s": 219.91037021399825, "line": ""}
+{"elapsed_s": 219.91260207199957, "line": "individual files in /usr/share/doc/*/copyright."}
+{"elapsed_s": 219.91268413999933, "line": ""}
+{"elapsed_s": 219.91271787200094, "line": ""}
+{"elapsed_s": 219.91274415799853, "line": ""}
+{"elapsed_s": 219.9148252399973, "line": "Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent"}
+{"elapsed_s": 219.91522249599802, "line": ""}
+{"elapsed_s": 219.9155928849941, "line": "permitted by applicable law."}
+{"elapsed_s": 219.91566107700055, "line": ""}
+{"elapsed_s": 241.21605408399773, "line": "[emulator] Linux SSH ready."}
+{"elapsed_s": 241.71273253099935, "line": "@qmp-write {\"device\": \"eval_temp\", \"property\": \"temperature\", \"value\": 21537, \"confirmed_at\": 1795419656.3678057}"}
+{"elapsed_s": 241.71340133599733, "line": "@qmp-write {\"device\": \"eval_mag\", \"property\": \"mag-x\", \"value\": 18123, \"confirmed_at\": 1795419656.3685205}"}
+{"elapsed_s": 241.71387116499682, "line": "@qmp-write {\"device\": \"eval_mag\", \"property\": \"mag-y\", \"value\": -12457, \"confirmed_at\": 1795419656.3689828}"}
+{"elapsed_s": 241.71450125800038, "line": "@qmp-write {\"device\": \"eval_mag\", \"property\": \"mag-z\", \"value\": 38912, \"confirmed_at\": 1795419656.3696556}"}
+{"elapsed_s": 241.7151292310009, "line": "@qmp-write {\"device\": \"eval_mpu\", \"property\": \"accel-x\", \"value\": 13, \"confirmed_at\": 1795419656.3702683}"}
+{"elapsed_s": 241.71580235099827, "line": "@qmp-write {\"device\": \"eval_mpu\", \"property\": \"accel-y\", \"value\": -21, \"confirmed_at\": 1795419656.3709457}"}
+{"elapsed_s": 241.71628228799818, "line": "@qmp-write {\"device\": \"eval_mpu\", \"property\": \"accel-z\", \"value\": 998, \"confirmed_at\": 1795419656.3714275}"}
+{"elapsed_s": 241.7167659359984, "line": "@qmp-write {\"device\": \"eval_mpu\", \"property\": \"temperature\", \"value\": 24137, \"confirmed_at\": 1795419656.3719275}"}
+{"elapsed_s": 241.7172001489962, "line": "@qmp-write {\"device\": \"eval_mpu\", \"property\": \"gyro-x\", \"value\": 317, \"confirmed_at\": 1795419656.3723667}"}
+{"elapsed_s": 241.71764970100048, "line": "@qmp-write {\"device\": \"eval_mpu\", \"property\": \"gyro-y\", \"value\": -541, \"confirmed_at\": 1795419656.3728154}"}
+{"elapsed_s": 241.71826067299844, "line": "@qmp-write {\"device\": \"eval_mpu\", \"property\": \"gyro-z\", \"value\": 129, \"confirmed_at\": 1795419656.3733952}"}
+{"elapsed_s": 241.71838076099812, "line": "Sensor values applied."}
+{"elapsed_s": 241.72549758999958, "line": ""}
+{"elapsed_s": 241.7255518699967, "line": "Raspberry Pi ready. Run ./start --no-ui run --target qemu to start cFS."}
+{"elapsed_s": 241.726883118994, "line": "$ ssh -T -o ConnectTimeout=30 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o BatchMode=yes -F /tmp/flight-evaluation-20261123-final/flight/hardware/.runtime/ssh/config -o 'UserKnownHostsFile=\"/tmp/flight-evaluation-20261123-final/flight/board/known_hosts\"' -o GlobalKnownHostsFile=none -o StrictHostKeyChecking=yes -o UpdateHostKeys=no -o HostKeyAlgorithms=ssh-ed25519 -o HostKeyAlias=flight-studio-qemu -o HostName=127.0.0.1 -p 23876 pi4-cfs 'systemctl stop cfs.service'"}

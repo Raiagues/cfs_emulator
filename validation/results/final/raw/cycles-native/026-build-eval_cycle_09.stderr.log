@@ -1,0 +1,1352 @@
+$ /usr/bin/python3 project/manage.py sync
+{"changed": [], "deleted": [], "check": false}
+$ bash scripts/build-cfs.sh --target native
+{"changed": [], "deleted": [], "check": false}
+-- OMIT_DEPRECATED=false: Deprecated elements included in build
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Search path for modules: /tmp/flight-evaluation-20261123-final/flight/cFS/apps;/tmp/flight-evaluation-20261123-final/flight/cFS/libs;/tmp/flight-evaluation-20261123-final/flight/mission/apps;/tmp/flight-evaluation-20261123-final/flight/mission/libs;apps;libs;psp/fsw/modules;cfe/modules
+-- Module 'core_api' found at /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/core_api
+-- Module 'core_private' found at /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/core_private
+-- Module 'ci_lab' found at /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ci_lab
+-- Module 'to_lab' found at /tmp/flight-evaluation-20261123-final/flight/cFS/apps/to_lab
+-- Module 'sch_lab' found at /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sch_lab
+-- Module 'linux_i2c_lib' found at /tmp/flight-evaluation-20261123-final/flight/cFS/libs/linux_i2c_lib
+-- Module 'hal_sensor' found at /tmp/flight-evaluation-20261123-final/flight/cFS/libs/hal_sensor
+-- Module 'tmp105_lib' found at /tmp/flight-evaluation-20261123-final/flight/cFS/libs/tmp105_lib
+-- Module 'lsm303dlhc_mag_lib' found at /tmp/flight-evaluation-20261123-final/flight/cFS/libs/lsm303dlhc_mag_lib
+-- Module 'mpu6050_lib' found at /tmp/flight-evaluation-20261123-final/flight/cFS/libs/mpu6050_lib
+-- Module 'eval_cycle_09' found at /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09
+-- Module 'eval_mag' found at /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag
+-- Module 'eval_mpu' found at /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu
+-- Module 'eval_temp' found at /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp
+-- Module 'cfe_assert' found at /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/cfe_assert
+-- Module 'cfe_testcase' found at /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/cfe_testcase
+-- Module 'sample_app' found at /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app
+-- Module 'sample_lib' found at /tmp/flight-evaluation-20261123-final/flight/cFS/libs/sample_lib
+-- Module 'cf' found at /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cf
+-- Module 'hs' found at /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs
+-- Module 'md' found at /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md
+-- Module 'cs' found at /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs
+-- Module 'fm' found at /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm
+-- Module 'lc' found at /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc
+-- Module 'sc' found at /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc
+-- Module 'ds' found at /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds
+-- Module 'hk' found at /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hk
+-- Module 'sbn' found at /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn
+-- Module 'sbn_udp' found at /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn_udp
+-- Module 'sbn_f_remap' found at /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn_f_remap
+-- Module 'config' found at /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/config
+-- Module 'es' found at /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/es
+-- Module 'evs' found at /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/evs
+-- Module 'fs' found at /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/fs
+-- Module 'sb' found at /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/sb
+-- Module 'tbl' found at /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/tbl
+-- Module 'time' found at /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/time
+-- Module 'osal' found at /tmp/flight-evaluation-20261123-final/flight/cFS/osal
+-- Module 'psp' found at /tmp/flight-evaluation-20261123-final/flight/cFS/psp
+-- Module 'msg' found at /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/msg
+-- Module 'sbr' found at /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/sbr
+-- Module 'resourceid' found at /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/resourceid
+-- OSAL_SYSTEM_BSPTYPE not defined, no OSAL implementation will be compiled
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/cfe_core_api_interface_cfg_values.h for core_api_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/core_api/config/default_cfe_core_api_msgid_mapping.h for core_api_msgid_mapping.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/core_api/config/default_cfe_mission_cfg.h for mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/cfe_perfids.h for perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ci_lab/config/default_ci_lab_fcncode_values.h for ci_lab_fcncode_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ci_lab/config/default_ci_lab_interface_cfg_values.h for ci_lab_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ci_lab/config/default_ci_lab_mission_cfg.h for ci_lab_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ci_lab/config/default_ci_lab_perfids.h for ci_lab_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ci_lab/config/default_ci_lab_msg.h for ci_lab_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ci_lab/config/default_ci_lab_msgdefs.h for ci_lab_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ci_lab/config/default_ci_lab_msgstruct.h for ci_lab_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ci_lab/config/default_ci_lab_topicid_values.h for ci_lab_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/to_lab/config/default_to_lab_fcncode_values.h for to_lab_fcncode_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/to_lab/config/default_to_lab_interface_cfg_values.h for to_lab_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/to_lab/config/default_to_lab_mission_cfg.h for to_lab_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/to_lab/config/default_to_lab_perfids.h for to_lab_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/to_lab/config/default_to_lab_msg.h for to_lab_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/to_lab/config/default_to_lab_msgdefs.h for to_lab_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/to_lab/config/default_to_lab_msgstruct.h for to_lab_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/to_lab/config/default_to_lab_tbl.h for to_lab_tbl.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/to_lab/config/default_to_lab_tbldefs.h for to_lab_tbldefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/to_lab/config/default_to_lab_tblstruct.h for to_lab_tblstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/to_lab/config/default_to_lab_topicid_values.h for to_lab_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sch_lab/config/default_sch_lab_interface_cfg_values.h for sch_lab_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sch_lab/config/default_sch_lab_mission_cfg.h for sch_lab_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sch_lab/config/default_sch_lab_perfids.h for sch_lab_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sch_lab/config/default_sch_lab_tbl.h for sch_lab_tbl.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sch_lab/config/default_sch_lab_tbldefs.h for sch_lab_tbldefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sch_lab/config/default_sch_lab_tblstruct.h for sch_lab_tblstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09/config/default_eval_cycle_09_fcncode_values.h for eval_cycle_09_fcncode_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09/config/default_eval_cycle_09_interface_cfg_values.h for eval_cycle_09_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09/config/default_eval_cycle_09_mission_cfg.h for eval_cycle_09_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09/config/default_eval_cycle_09_perfids.h for eval_cycle_09_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09/config/default_eval_cycle_09_msg.h for eval_cycle_09_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09/config/default_eval_cycle_09_msgdefs.h for eval_cycle_09_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09/config/default_eval_cycle_09_msgstruct.h for eval_cycle_09_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09/config/default_eval_cycle_09_tbl.h for eval_cycle_09_tbl.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09/config/default_eval_cycle_09_tbldefs.h for eval_cycle_09_tbldefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09/config/default_eval_cycle_09_tblstruct.h for eval_cycle_09_tblstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09/config/default_eval_cycle_09_topicid_values.h for eval_cycle_09_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag/config/default_eval_mag_fcncode_values.h for eval_mag_fcncode_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag/config/default_eval_mag_interface_cfg_values.h for eval_mag_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag/config/default_eval_mag_mission_cfg.h for eval_mag_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag/config/default_eval_mag_perfids.h for eval_mag_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag/config/default_eval_mag_msg.h for eval_mag_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag/config/default_eval_mag_msgdefs.h for eval_mag_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag/config/default_eval_mag_msgstruct.h for eval_mag_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag/config/default_eval_mag_tbl.h for eval_mag_tbl.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag/config/default_eval_mag_tbldefs.h for eval_mag_tbldefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag/config/default_eval_mag_tblstruct.h for eval_mag_tblstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag/config/default_eval_mag_topicid_values.h for eval_mag_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu/config/default_eval_mpu_fcncode_values.h for eval_mpu_fcncode_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu/config/default_eval_mpu_interface_cfg_values.h for eval_mpu_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu/config/default_eval_mpu_mission_cfg.h for eval_mpu_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu/config/default_eval_mpu_perfids.h for eval_mpu_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu/config/default_eval_mpu_msg.h for eval_mpu_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu/config/default_eval_mpu_msgdefs.h for eval_mpu_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu/config/default_eval_mpu_msgstruct.h for eval_mpu_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu/config/default_eval_mpu_tbl.h for eval_mpu_tbl.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu/config/default_eval_mpu_tbldefs.h for eval_mpu_tbldefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu/config/default_eval_mpu_tblstruct.h for eval_mpu_tblstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu/config/default_eval_mpu_topicid_values.h for eval_mpu_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp/config/default_eval_temp_fcncode_values.h for eval_temp_fcncode_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp/config/default_eval_temp_interface_cfg_values.h for eval_temp_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp/config/default_eval_temp_mission_cfg.h for eval_temp_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp/config/default_eval_temp_perfids.h for eval_temp_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp/config/default_eval_temp_msg.h for eval_temp_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp/config/default_eval_temp_msgdefs.h for eval_temp_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp/config/default_eval_temp_msgstruct.h for eval_temp_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp/config/default_eval_temp_tbl.h for eval_temp_tbl.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp/config/default_eval_temp_tbldefs.h for eval_temp_tbldefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp/config/default_eval_temp_tblstruct.h for eval_temp_tblstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp/config/default_eval_temp_topicid_values.h for eval_temp_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/cfe_testcase/config/default_cfe_test_msg.h for test_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/cfe_testcase/config/default_cfe_test_msgdefs.h for test_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/cfe_testcase/config/default_cfe_test_msgstruct.h for test_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/cfe_testcase/config/default_cfe_test_msgids.h for test_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/cfe_testcase/config/default_cfe_test_msgid_values.h for test_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/cfe_testcase/config/default_cfe_test_tbl.h for test_tbl.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/cfe_testcase/config/default_cfe_test_tblstruct.h for test_tblstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/cfe_testcase/config/default_cfe_test_topicid_values.h for test_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/config/default_sample_app_fcncode_values.h for sample_app_fcncode_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/config/default_sample_app_interface_cfg_values.h for sample_app_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/config/default_sample_app_mission_cfg.h for sample_app_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/config/default_sample_app_perfids.h for sample_app_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/config/default_sample_app_msg.h for sample_app_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/config/default_sample_app_msgdefs.h for sample_app_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/config/default_sample_app_msgstruct.h for sample_app_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/config/default_sample_app_tbl.h for sample_app_tbl.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/config/default_sample_app_tbldefs.h for sample_app_tbldefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/config/default_sample_app_tblstruct.h for sample_app_tblstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/config/default_sample_app_topicid_values.h for sample_app_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cf/config/default_cf_extern_typedefs.h for cf_extern_typedefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cf/config/default_cf_fcncode_values.h for cf_fcncode_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cf/config/default_cf_interface_cfg_values.h for cf_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cf/config/default_cf_mission_cfg.h for cf_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cf/config/default_cf_msgdefs.h for cf_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cf/config/default_cf_msg.h for cf_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cf/config/default_cf_msgstruct.h for cf_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cf/config/default_cf_tbldefs.h for cf_tbldefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cf/config/default_cf_tbl.h for cf_tbl.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cf/config/default_cf_tblstruct.h for cf_tblstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cf/config/default_cf_topicid_values.h for cf_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/config/default_hs_fcncode_values.h for hs_fcncode_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/config/default_hs_interface_cfg_values.h for hs_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/config/default_hs_mission_cfg.h for hs_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/config/default_hs_msgdefs.h for hs_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/config/default_hs_msg.h for hs_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/config/default_hs_msgstruct.h for hs_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/config/default_hs_tbldefs.h for hs_tbldefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/config/default_hs_tbl.h for hs_tbl.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/config/default_hs_tblstruct.h for hs_tblstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/config/default_hs_topicid_values.h for hs_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/config/default_md_fcncode_values.h for md_fcncode_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/config/default_md_interface_cfg_values.h for md_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/config/default_md_mission_cfg.h for md_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/config/default_md_perfids.h for md_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/config/default_md_msg.h for md_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/config/default_md_msgdefs.h for md_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/config/default_md_msgstruct.h for md_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/config/default_md_tbldefs.h for md_tbldefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/config/default_md_tblstruct.h for md_tblstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/config/default_md_topicid_values.h for md_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/config/default_md_extern_typedefs.h for md_extern_typedefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/config/default_cs_extern_typedefs.h for cs_extern_typedefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/config/default_cs_fcncode_values.h for cs_fcncode_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/config/default_cs_interface_cfg_values.h for cs_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/config/default_cs_mission_cfg.h for cs_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/config/default_cs_msgdefs.h for cs_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/config/default_cs_msg.h for cs_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/config/default_cs_msgstruct.h for cs_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/config/default_cs_tbldefs.h for cs_tbldefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/config/default_cs_tbl.h for cs_tbl.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/config/default_cs_topicid_values.h for cs_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm/config/default_fm_fcncode_values.h for fm_fcncode_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm/config/default_fm_interface_cfg_values.h for fm_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm/config/default_fm_mission_cfg.h for fm_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm/config/default_fm_msg.h for fm_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm/config/default_fm_msgdefs.h for fm_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm/config/default_fm_msgstruct.h for fm_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm/config/default_fm_perfids.h for fm_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm/config/default_fm_tbl.h for fm_tbl.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm/config/default_fm_tbldefs.h for fm_tbldefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm/config/default_fm_tblstruct.h for fm_tblstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm/config/default_fm_topicid_values.h for fm_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm/config/default_fm_extern_typedefs.h for fm_extern_typedefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc/config/default_lc_fcncode_values.h for lc_fcncode_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc/config/default_lc_interface_cfg_values.h for lc_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc/config/default_lc_mission_cfg.h for lc_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc/config/default_lc_msgstruct.h for lc_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc/config/default_lc_msgdefs.h for lc_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc/config/default_lc_msg.h for lc_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc/config/default_lc_tblstruct.h for lc_tblstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc/config/default_lc_tbldefs.h for lc_tbldefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc/config/default_lc_tbl.h for lc_tbl.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc/config/default_lc_topicid_values.h for lc_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/config/default_sc_extern_typedefs.h for sc_extern_typedefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/config/default_sc_fcncode_values.h for sc_fcncode_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/config/default_sc_interface_cfg_values.h for sc_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/config/default_sc_mission_cfg.h for sc_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/config/default_sc_msgdefs.h for sc_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/config/default_sc_msg.h for sc_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/config/default_sc_msgstruct.h for sc_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/config/default_sc_tbldefs.h for sc_tbldefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/config/default_sc_tbl.h for sc_tbl.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/config/default_sc_tblstruct.h for sc_tblstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/config/default_sc_topicid_values.h for sc_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds/config/default_ds_fcncode_values.h for ds_fcncode_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds/config/default_ds_interface_cfg_values.h for ds_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds/config/default_ds_mission_cfg.h for ds_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds/config/default_ds_msgdefs.h for ds_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds/config/default_ds_msgstruct.h for ds_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds/config/default_ds_msg.h for ds_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds/config/default_ds_tbldefs.h for ds_tbldefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds/config/default_ds_tblstruct.h for ds_tblstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds/config/default_ds_tbl.h for ds_tbl.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds/config/default_ds_topicid_values.h for ds_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hk/config/default_hk_fcncode_values.h for hk_fcncode_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hk/config/default_hk_interface_cfg_values.h for hk_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hk/config/default_hk_mission_cfg.h for hk_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hk/config/default_hk_msgdefs.h for hk_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hk/config/default_hk_msg.h for hk_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hk/config/default_hk_msgstruct.h for hk_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hk/config/default_hk_tbldefs.h for hk_tbldefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hk/config/default_hk_tbl.h for hk_tbl.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hk/config/default_hk_tblstruct.h for hk_tblstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hk/config/default_hk_topicid_values.h for hk_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn/config/default_sbn_extern_typedefs.h for sbn_extern_typedefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn/config/default_sbn_fcncode_values.h for sbn_fcncode_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn/config/default_sbn_interface_cfg_values.h for sbn_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn/config/default_sbn_mission_cfg.h for sbn_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn/config/default_sbn_perfids.h for sbn_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn/config/default_sbn_msg.h for sbn_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn/config/default_sbn_msgdefs.h for sbn_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn/config/default_sbn_msgstruct.h for sbn_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn/config/default_sbn_tbl.h for sbn_tbl.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn/config/default_sbn_tbldefs.h for sbn_tbldefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn/config/default_sbn_tblstruct.h for sbn_tblstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn/config/default_sbn_topicid_values.h for sbn_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/es/config/default_cfe_es_mission_cfg.h for es_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/es/config/default_cfe_es_interface_cfg_values.h for es_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/es/config/default_cfe_es_memaddress.h for es_memaddress.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/es/config/default_cfe_es_extern_typedefs.h for es_extern_typedefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/es/config/default_cfe_es_fcncode_values.h for es_fcncode_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/es/config/default_cfe_es_msgdefs.h for es_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/es/config/default_cfe_es_msg.h for es_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/es/config/default_cfe_es_msgstruct.h for es_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/es/config/default_cfe_es_topicid_values.h for es_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/evs/config/default_cfe_evs_mission_cfg.h for evs_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/evs/config/default_cfe_evs_interface_cfg_values.h for evs_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/evs/config/default_cfe_evs_extern_typedefs.h for evs_extern_typedefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/evs/config/default_cfe_evs_fcncode_values.h for evs_fcncode_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/evs/config/default_cfe_evs_msgdefs.h for evs_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/evs/config/default_cfe_evs_msg.h for evs_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h for evs_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/evs/config/default_cfe_evs_topicid_values.h for evs_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/fs/config/default_cfe_fs_mission_cfg.h for fs_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/fs/config/default_cfe_fs_interface_cfg_values.h for fs_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/fs/config/default_cfe_fs_filedef.h for fs_filedef.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/fs/config/default_cfe_fs_extern_typedefs.h for fs_extern_typedefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/sb/config/default_cfe_sb_mission_cfg.h for sb_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/sb/config/default_cfe_sb_interface_cfg_values.h for sb_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/sb/config/default_cfe_sb_extern_typedefs.h for sb_extern_typedefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/sb/config/default_cfe_sb_fcncode_values.h for sb_fcncode_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/sb/config/default_cfe_sb_msgdefs.h for sb_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/sb/config/default_cfe_sb_msg.h for sb_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/sb/config/default_cfe_sb_msgstruct.h for sb_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/sb/config/default_cfe_sb_topicid_values.h for sb_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/tbl/config/default_cfe_tbl_mission_cfg.h for tbl_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/tbl/config/default_cfe_tbl_interface_cfg_values.h for tbl_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/tbl/config/default_cfe_tbl_extern_typedefs.h for tbl_extern_typedefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/tbl/config/default_cfe_tbl_fcncode_values.h for tbl_fcncode_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/tbl/config/default_cfe_tbl_msgdefs.h for tbl_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/tbl/config/default_cfe_tbl_msg.h for tbl_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/tbl/config/default_cfe_tbl_msgstruct.h for tbl_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/tbl/config/default_cfe_tbl_topicid_values.h for tbl_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/time/config/default_cfe_time_mission_cfg.h for time_mission_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/time/config/default_cfe_time_interface_cfg_values.h for time_interface_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/time/config/default_cfe_time_extern_typedefs.h for time_extern_typedefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/time/config/default_cfe_time_fcncode_values.h for time_fcncode_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/time/config/default_cfe_time_msgdefs.h for time_msgdefs.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/time/config/default_cfe_time_msg.h for time_msg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/time/config/default_cfe_time_msgstruct.h for time_msgstruct.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/time/config/default_cfe_time_topicid_values.h for time_topicid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/msg/option_inc/default_cfe_msg_hdr_pri.h for cfe_msg_hdr.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/msg/option_inc/default_cfe_msg_sechdr.h for cfe_msg_sechdr.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/resourceid/option_inc/cfe_resourceid_simple.h for cfe_resourceid_typedef.h
+-- Configuring for system arch: native/default_cpu1
+-- OMIT_DEPRECATED=false: Deprecated elements included in build
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/cpu1/cfe_core_api_base_msgid_values.h for cfe_core_api_base_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/core_api/config/default_cfe_msgids.h for cfe_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/core_private/config/default_cfe_platform_cfg.h for platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/core_private/config/default_cfe_core_private_internal_cfg.h for cfe_core_private_internal_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ci_lab/config/default_ci_lab_internal_cfg_values.h for ci_lab_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ci_lab/config/default_ci_lab_platform_cfg.h for ci_lab_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ci_lab/config/default_ci_lab_perfids.h for ci_lab_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ci_lab/config/default_ci_lab_msgids.h for ci_lab_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ci_lab/config/default_ci_lab_msgid_values.h for ci_lab_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/to_lab/config/default_to_lab_internal_cfg_values.h for to_lab_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/to_lab/config/default_to_lab_platform_cfg.h for to_lab_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/to_lab/config/default_to_lab_perfids.h for to_lab_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/to_lab/config/default_to_lab_msgids.h for to_lab_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/to_lab/config/default_to_lab_msgid_values.h for to_lab_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sch_lab/config/default_sch_lab_internal_cfg_values.h for sch_lab_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sch_lab/config/default_sch_lab_platform_cfg.h for sch_lab_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sch_lab/config/default_sch_lab_perfids.h for sch_lab_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09/config/default_eval_cycle_09_internal_cfg_values.h for eval_cycle_09_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09/config/default_eval_cycle_09_platform_cfg.h for eval_cycle_09_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09/config/default_eval_cycle_09_perfids.h for eval_cycle_09_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09/config/default_eval_cycle_09_msgids.h for eval_cycle_09_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09/config/default_eval_cycle_09_msgid_values.h for eval_cycle_09_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag/config/default_eval_mag_internal_cfg_values.h for eval_mag_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag/config/default_eval_mag_platform_cfg.h for eval_mag_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag/config/default_eval_mag_perfids.h for eval_mag_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag/config/default_eval_mag_msgids.h for eval_mag_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag/config/default_eval_mag_msgid_values.h for eval_mag_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu/config/default_eval_mpu_internal_cfg_values.h for eval_mpu_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu/config/default_eval_mpu_platform_cfg.h for eval_mpu_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu/config/default_eval_mpu_perfids.h for eval_mpu_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu/config/default_eval_mpu_msgids.h for eval_mpu_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu/config/default_eval_mpu_msgid_values.h for eval_mpu_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp/config/default_eval_temp_internal_cfg_values.h for eval_temp_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp/config/default_eval_temp_platform_cfg.h for eval_temp_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp/config/default_eval_temp_perfids.h for eval_temp_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp/config/default_eval_temp_msgids.h for eval_temp_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp/config/default_eval_temp_msgid_values.h for eval_temp_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/cfe_testcase/config/default_cfe_test_msgids.h for cfe_test_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/cfe_testcase/config/default_cfe_test_msgid_values.h for cfe_test_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/config/default_sample_app_internal_cfg_values.h for sample_app_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/config/default_sample_app_platform_cfg.h for sample_app_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/config/default_sample_app_perfids.h for sample_app_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/config/default_sample_app_msgids.h for sample_app_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/config/default_sample_app_msgid_values.h for sample_app_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cf/config/default_cf_internal_cfg_values.h for cf_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cf/config/default_cf_msgid_values.h for cf_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cf/config/default_cf_msgids.h for cf_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cf/config/default_cf_platform_cfg.h for cf_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/config/default_hs_internal_cfg_values.h for hs_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/config/default_hs_msgid_values.h for hs_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/config/default_hs_msgids.h for hs_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/config/default_hs_platform_cfg.h for hs_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/config/default_md_internal_cfg_values.h for md_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/config/default_md_platform_cfg.h for md_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/config/default_md_perfids.h for md_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/config/default_md_msgids.h for md_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/config/default_md_msgid_values.h for md_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/config/default_cs_internal_cfg_values.h for cs_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/config/default_cs_msgid_values.h for cs_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/config/default_cs_msgids.h for cs_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/config/default_cs_platform_cfg.h for cs_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm/config/default_fm_internal_cfg_values.h for fm_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm/config/default_fm_platform_cfg.h for fm_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm/config/default_fm_msgid_values.h for fm_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm/config/default_fm_msgids.h for fm_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc/config/default_lc_internal_cfg_values.h for lc_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc/config/default_lc_platform_cfg.h for lc_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc/config/default_lc_msgid_values.h for lc_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc/config/default_lc_msgids.h for lc_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/config/default_sc_internal_cfg_values.h for sc_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/config/default_sc_platform_cfg.h for sc_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/config/default_sc_perfids.h for sc_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/config/default_sc_msgids.h for sc_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/config/default_sc_msgid_values.h for sc_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds/config/default_ds_internal_cfg_values.h for ds_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds/config/default_ds_msgid_values.h for ds_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds/config/default_ds_msgids.h for ds_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds/config/default_ds_platform_cfg.h for ds_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hk/config/default_hk_internal_cfg_values.h for hk_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hk/config/default_hk_msgids.h for hk_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hk/config/default_hk_msgid_values.h for hk_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hk/config/default_hk_platform_cfg.h for hk_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn/config/default_sbn_internal_cfg_values.h for sbn_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/cpu1/sbn_msgids.h for sbn_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn/config/default_sbn_msgid_values.h for sbn_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn/config/default_sbn_platform_cfg.h for sbn_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/es/config/default_cfe_es_internal_cfg_values.h for cfe_es_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/es/config/default_cfe_es_msgid_values.h for cfe_es_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/es/config/default_cfe_es_msgids.h for cfe_es_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/es/config/default_cfe_es_platform_cfg.h for cfe_es_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/evs/config/default_cfe_evs_internal_cfg_values.h for cfe_evs_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/evs/config/default_cfe_evs_msgid_values.h for cfe_evs_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/evs/config/default_cfe_evs_msgids.h for cfe_evs_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/evs/config/default_cfe_evs_platform_cfg.h for cfe_evs_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/sb/config/default_cfe_sb_internal_cfg_values.h for cfe_sb_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/sb/config/default_cfe_sb_msgid_values.h for cfe_sb_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/sb/config/default_cfe_sb_msgids.h for cfe_sb_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/sb/config/default_cfe_sb_platform_cfg.h for cfe_sb_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/tbl/config/default_cfe_tbl_internal_cfg_values.h for cfe_tbl_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/tbl/config/default_cfe_tbl_msgid_values.h for cfe_tbl_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/tbl/config/default_cfe_tbl_msgids.h for cfe_tbl_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/tbl/config/default_cfe_tbl_platform_cfg.h for cfe_tbl_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/time/config/default_cfe_time_internal_cfg_values.h for cfe_time_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/time/config/default_cfe_time_msgid_values.h for cfe_time_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/time/config/default_cfe_time_msgids.h for cfe_time_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/time/config/default_cfe_time_platform_cfg.h for cfe_time_platform_cfg.h
+-- BSP Selection: generic-linux at /tmp/flight-evaluation-20261123-final/flight/cFS/osal/src/bsp/generic-linux
+-- OSAL Selection: posix at /tmp/flight-evaluation-20261123-final/flight/cFS/osal/src/os/posix
+-- OSAL Compile Definitions: _XOPEN_SOURCE=600;_POSIX_OS_
+-- PSP Selection: pc-linux
+-- Building Core Module: core_api
+-- Building Core Module: core_private
+-- Building Core Module: config
+-- Building Core Module: es
+-- Building Core Module: evs
+-- Building Core Module: fs
+-- Building Core Module: sb
+-- Building Core Module: tbl
+-- Building Core Module: time
+-- Building Core Module: psp
+-- Building Core Module: msg
+-- CCSDS primary header included in message header (not including CCSDS extended header)
+-- Message Id version 1 in use (MsgId V1)
+-- Building Core Module: sbr
+-- Using hashed map software bus routing implementation
+-- Building Core Module: resourceid
+-- Building Dynamic App: ci_lab targets=cpu1
+-- Building Dynamic App: to_lab targets=cpu1
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/tables/to_lab_sub.c for to_lab_sub.c
+-- Building Dynamic App: sch_lab targets=cpu1
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/tables/sch_lab_table.c for sch_lab_table.c
+-- Building Dynamic App: linux_i2c_lib targets=cpu1
+-- Building Dynamic App: hal_sensor targets=cpu1
+-- Building Dynamic App: tmp105_lib targets=cpu1
+-- Building Dynamic App: lsm303dlhc_mag_lib targets=cpu1
+-- Building Dynamic App: mpu6050_lib targets=cpu1
+-- Building Dynamic App: eval_cycle_09 targets=cpu1
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09/fsw/tables/eval_cycle_09_tbl.c for eval_cycle_09_tbl.c
+-- Building Dynamic App: eval_mag targets=cpu1
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag/fsw/tables/eval_mag_tbl.c for eval_mag_tbl.c
+-- Building Dynamic App: eval_mpu targets=cpu1
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu/fsw/tables/eval_mpu_tbl.c for eval_mpu_tbl.c
+-- Building Dynamic App: eval_temp targets=cpu1
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp/fsw/tables/eval_temp_tbl.c for eval_temp_tbl.c
+-- Building Dynamic App: cfe_assert targets=cpu1
+-- Building Dynamic App: cfe_testcase targets=cpu1
+NOTE: "cfeTestAppTable" passed to add_cfe_tables is not a previously-defined application target
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/cfe_testcase/tables/cfe_test_tbl.c for cfe_test_tbl.c
+-- Building Dynamic App: sample_app targets=cpu1
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/fsw/tables/sample_app_tbl.c for sample_app_tbl.c
+-- Building Dynamic App: sample_lib targets=cpu1
+-- Building Dynamic App: cf targets=cpu1
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cf/fsw/tables/cf_def_config.c for cf_def_config.c
+-- Building Dynamic App: hs targets=cpu1
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/fsw/tables/hs_mat.c for hs_mat.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/fsw/tables/hs_xct.c for hs_xct.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/fsw/tables/hs_amt.c for hs_amt.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/fsw/tables/hs_emt.c for hs_emt.c
+-- Building Dynamic App: md targets=cpu1
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/fsw/tables/md_dw02.c for md_dw02.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/fsw/tables/md_dw03.c for md_dw03.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/fsw/tables/md_dw04.c for md_dw04.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/fsw/tables/md_dw01.c for md_dw01.c
+-- Building Dynamic App: cs targets=cpu1
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/fsw/tables/cs_apptbl.c for cs_apptbl.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/fsw/tables/cs_eepromtbl.c for cs_eepromtbl.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/fsw/tables/cs_memorytbl.c for cs_memorytbl.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/tables/cs_tablestbl.c for cs_tablestbl.c
+-- Building Dynamic App: fm targets=cpu1
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm/fsw/tables/fm_monitor.c for fm_monitor.c
+-- Building Dynamic App: lc targets=cpu1
+-- Adding math library dependency to LC App...
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc/fsw/tables/lc_def_wdt.c for lc_def_wdt.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc/fsw/tables/lc_def_adt.c for lc_def_adt.c
+-- Building Dynamic App: sc targets=cpu1
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/fsw/tables/sc_ats1.c for sc_ats1.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/fsw/tables/sc_rts001.c for sc_rts001.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/fsw/tables/sc_rts002.c for sc_rts002.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/fsw/tables/sc_rts003.c for sc_rts003.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/fsw/tables/sc_rts004.c for sc_rts004.c
+-- Building Dynamic App: ds targets=cpu1
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds/fsw/tables/ds_filter_tbl.c for ds_filter_tbl.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds/fsw/tables/ds_file_tbl.c for ds_file_tbl.c
+-- Building Dynamic App: hk targets=cpu1
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hk/fsw/tables/hk_cpy_tbl.c for hk_cpy_tbl.c
+-- Building Dynamic App: sbn targets=cpu1
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn/fsw/tables/sbn_conf_tbl.c for sbn_conf_tbl.c
+-- Building Dynamic App: sbn_udp targets=cpu1
+-- Building Dynamic App: sbn_f_remap targets=cpu1
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn_f_remap/fsw/tables/sbn_remap_tbl.c for sbn_remap_tbl.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/tables/sample_app_alt1.c for sample_app_alt1.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/tables/to_lab_sub_alt.c for to_lab_sub_alt.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/tables/to_lab_sub_bad.c for to_lab_sub_bad.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/tables/lc_def_adt-test.c for lc_def_adt-test.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/tables/sc_ats2_test.c for sc_ats2_test.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/tables/sc_append_test.c for sc_append_test.c
+-- Configuring done (0.7s)
+-- Generating done (0.2s)
+-- Build files have been written to: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/native/default_cpu1
+-- Configuring for system arch: native/default_cpu2
+-- OMIT_DEPRECATED=false: Deprecated elements included in build
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Performing Test IS_OPTION_SUPPORTED
+-- Performing Test IS_OPTION_SUPPORTED - Success
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/cpu2/cfe_core_api_base_msgid_values.h for cfe_core_api_base_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/core_api/config/default_cfe_msgids.h for cfe_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/core_private/config/default_cfe_platform_cfg.h for platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/core_private/config/default_cfe_core_private_internal_cfg.h for cfe_core_private_internal_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ci_lab/config/default_ci_lab_internal_cfg_values.h for ci_lab_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ci_lab/config/default_ci_lab_platform_cfg.h for ci_lab_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ci_lab/config/default_ci_lab_perfids.h for ci_lab_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ci_lab/config/default_ci_lab_msgids.h for ci_lab_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ci_lab/config/default_ci_lab_msgid_values.h for ci_lab_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/to_lab/config/default_to_lab_internal_cfg_values.h for to_lab_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/to_lab/config/default_to_lab_platform_cfg.h for to_lab_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/to_lab/config/default_to_lab_perfids.h for to_lab_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/to_lab/config/default_to_lab_msgids.h for to_lab_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/to_lab/config/default_to_lab_msgid_values.h for to_lab_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sch_lab/config/default_sch_lab_internal_cfg_values.h for sch_lab_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sch_lab/config/default_sch_lab_platform_cfg.h for sch_lab_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sch_lab/config/default_sch_lab_perfids.h for sch_lab_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09/config/default_eval_cycle_09_internal_cfg_values.h for eval_cycle_09_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09/config/default_eval_cycle_09_platform_cfg.h for eval_cycle_09_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09/config/default_eval_cycle_09_perfids.h for eval_cycle_09_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09/config/default_eval_cycle_09_msgids.h for eval_cycle_09_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_cycle_09/config/default_eval_cycle_09_msgid_values.h for eval_cycle_09_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag/config/default_eval_mag_internal_cfg_values.h for eval_mag_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag/config/default_eval_mag_platform_cfg.h for eval_mag_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag/config/default_eval_mag_perfids.h for eval_mag_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag/config/default_eval_mag_msgids.h for eval_mag_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mag/config/default_eval_mag_msgid_values.h for eval_mag_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu/config/default_eval_mpu_internal_cfg_values.h for eval_mpu_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu/config/default_eval_mpu_platform_cfg.h for eval_mpu_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu/config/default_eval_mpu_perfids.h for eval_mpu_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu/config/default_eval_mpu_msgids.h for eval_mpu_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_mpu/config/default_eval_mpu_msgid_values.h for eval_mpu_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp/config/default_eval_temp_internal_cfg_values.h for eval_temp_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp/config/default_eval_temp_platform_cfg.h for eval_temp_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp/config/default_eval_temp_perfids.h for eval_temp_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp/config/default_eval_temp_msgids.h for eval_temp_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/eval_temp/config/default_eval_temp_msgid_values.h for eval_temp_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/cfe_testcase/config/default_cfe_test_msgids.h for cfe_test_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/cfe_testcase/config/default_cfe_test_msgid_values.h for cfe_test_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/config/default_sample_app_internal_cfg_values.h for sample_app_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/config/default_sample_app_platform_cfg.h for sample_app_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/config/default_sample_app_perfids.h for sample_app_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/config/default_sample_app_msgids.h for sample_app_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/config/default_sample_app_msgid_values.h for sample_app_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cf/config/default_cf_internal_cfg_values.h for cf_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cf/config/default_cf_msgid_values.h for cf_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cf/config/default_cf_msgids.h for cf_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cf/config/default_cf_platform_cfg.h for cf_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/config/default_hs_internal_cfg_values.h for hs_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/config/default_hs_msgid_values.h for hs_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/config/default_hs_msgids.h for hs_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/config/default_hs_platform_cfg.h for hs_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/config/default_md_internal_cfg_values.h for md_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/config/default_md_platform_cfg.h for md_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/config/default_md_perfids.h for md_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/config/default_md_msgids.h for md_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/config/default_md_msgid_values.h for md_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/config/default_cs_internal_cfg_values.h for cs_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/config/default_cs_msgid_values.h for cs_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/config/default_cs_msgids.h for cs_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/config/default_cs_platform_cfg.h for cs_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm/config/default_fm_internal_cfg_values.h for fm_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm/config/default_fm_platform_cfg.h for fm_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm/config/default_fm_msgid_values.h for fm_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm/config/default_fm_msgids.h for fm_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc/config/default_lc_internal_cfg_values.h for lc_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc/config/default_lc_platform_cfg.h for lc_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc/config/default_lc_msgid_values.h for lc_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc/config/default_lc_msgids.h for lc_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/config/default_sc_internal_cfg_values.h for sc_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/config/default_sc_platform_cfg.h for sc_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/config/default_sc_perfids.h for sc_perfids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/config/default_sc_msgids.h for sc_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/config/default_sc_msgid_values.h for sc_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds/config/default_ds_internal_cfg_values.h for ds_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds/config/default_ds_msgid_values.h for ds_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds/config/default_ds_msgids.h for ds_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds/config/default_ds_platform_cfg.h for ds_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hk/config/default_hk_internal_cfg_values.h for hk_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hk/config/default_hk_msgids.h for hk_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hk/config/default_hk_msgid_values.h for hk_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hk/config/default_hk_platform_cfg.h for hk_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn/config/default_sbn_internal_cfg_values.h for sbn_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/cpu2/sbn_msgids.h for sbn_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn/config/default_sbn_msgid_values.h for sbn_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn/config/default_sbn_platform_cfg.h for sbn_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/es/config/default_cfe_es_internal_cfg_values.h for cfe_es_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/es/config/default_cfe_es_msgid_values.h for cfe_es_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/es/config/default_cfe_es_msgids.h for cfe_es_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/es/config/default_cfe_es_platform_cfg.h for cfe_es_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/evs/config/default_cfe_evs_internal_cfg_values.h for cfe_evs_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/evs/config/default_cfe_evs_msgid_values.h for cfe_evs_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/evs/config/default_cfe_evs_msgids.h for cfe_evs_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/evs/config/default_cfe_evs_platform_cfg.h for cfe_evs_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/sb/config/default_cfe_sb_internal_cfg_values.h for cfe_sb_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/sb/config/default_cfe_sb_msgid_values.h for cfe_sb_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/sb/config/default_cfe_sb_msgids.h for cfe_sb_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/sb/config/default_cfe_sb_platform_cfg.h for cfe_sb_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/tbl/config/default_cfe_tbl_internal_cfg_values.h for cfe_tbl_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/tbl/config/default_cfe_tbl_msgid_values.h for cfe_tbl_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/tbl/config/default_cfe_tbl_msgids.h for cfe_tbl_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/tbl/config/default_cfe_tbl_platform_cfg.h for cfe_tbl_platform_cfg.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/time/config/default_cfe_time_internal_cfg_values.h for cfe_time_internal_cfg_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/time/config/default_cfe_time_msgid_values.h for cfe_time_msgid_values.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/time/config/default_cfe_time_msgids.h for cfe_time_msgids.h
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/time/config/default_cfe_time_platform_cfg.h for cfe_time_platform_cfg.h
+-- BSP Selection: generic-linux at /tmp/flight-evaluation-20261123-final/flight/cFS/osal/src/bsp/generic-linux
+-- OSAL Selection: posix at /tmp/flight-evaluation-20261123-final/flight/cFS/osal/src/os/posix
+-- OSAL Compile Definitions: _XOPEN_SOURCE=600;_POSIX_OS_
+-- PSP Selection: pc-linux
+-- Building Core Module: core_api
+-- Building Core Module: core_private
+-- Building Core Module: config
+-- Building Core Module: es
+-- Building Core Module: evs
+-- Building Core Module: fs
+-- Building Core Module: sb
+-- Building Core Module: tbl
+-- Building Core Module: time
+-- Building Core Module: psp
+-- Building Core Module: msg
+-- CCSDS primary header included in message header (not including CCSDS extended header)
+-- Message Id version 1 in use (MsgId V1)
+-- Building Core Module: sbr
+-- Using hashed map software bus routing implementation
+-- Building Core Module: resourceid
+-- Building Dynamic App: ci_lab targets=cpu2
+-- Building Dynamic App: to_lab targets=cpu2
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/tables/to_lab_sub.c for to_lab_sub.c
+-- Building Dynamic App: sch_lab targets=cpu2
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/tables/sch_lab_table.c for sch_lab_table.c
+-- Building Dynamic App: cfe_assert targets=cpu2
+-- Building Dynamic App: cfe_testcase targets=cpu2
+NOTE: "cfeTestAppTable" passed to add_cfe_tables is not a previously-defined application target
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/cfe/modules/cfe_testcase/tables/cfe_test_tbl.c for cfe_test_tbl.c
+-- Building Dynamic App: sample_app targets=cpu2
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sample_app/fsw/tables/sample_app_tbl.c for sample_app_tbl.c
+-- Building Dynamic App: sample_lib targets=cpu2
+-- Building Dynamic App: cf targets=cpu2
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cf/fsw/tables/cf_def_config.c for cf_def_config.c
+-- Building Dynamic App: hs targets=cpu2
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/fsw/tables/hs_mat.c for hs_mat.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/fsw/tables/hs_xct.c for hs_xct.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/fsw/tables/hs_amt.c for hs_amt.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hs/fsw/tables/hs_emt.c for hs_emt.c
+-- Building Dynamic App: md targets=cpu2
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/fsw/tables/md_dw02.c for md_dw02.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/fsw/tables/md_dw03.c for md_dw03.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/fsw/tables/md_dw04.c for md_dw04.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/md/fsw/tables/md_dw01.c for md_dw01.c
+-- Building Dynamic App: cs targets=cpu2
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/fsw/tables/cs_apptbl.c for cs_apptbl.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/fsw/tables/cs_eepromtbl.c for cs_eepromtbl.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/cs/fsw/tables/cs_memorytbl.c for cs_memorytbl.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/tables/cs_tablestbl.c for cs_tablestbl.c
+-- Building Dynamic App: fm targets=cpu2
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/fm/fsw/tables/fm_monitor.c for fm_monitor.c
+-- Building Dynamic App: lc targets=cpu2
+-- Adding math library dependency to LC App...
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc/fsw/tables/lc_def_wdt.c for lc_def_wdt.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/lc/fsw/tables/lc_def_adt.c for lc_def_adt.c
+-- Building Dynamic App: sc targets=cpu2
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/fsw/tables/sc_ats1.c for sc_ats1.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/fsw/tables/sc_rts001.c for sc_rts001.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/fsw/tables/sc_rts002.c for sc_rts002.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/fsw/tables/sc_rts003.c for sc_rts003.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sc/fsw/tables/sc_rts004.c for sc_rts004.c
+-- Building Dynamic App: ds targets=cpu2
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds/fsw/tables/ds_filter_tbl.c for ds_filter_tbl.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/ds/fsw/tables/ds_file_tbl.c for ds_file_tbl.c
+-- Building Dynamic App: hk targets=cpu2
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/hk/fsw/tables/hk_cpy_tbl.c for hk_cpy_tbl.c
+-- Building Dynamic App: sbn targets=cpu2
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn/fsw/tables/sbn_conf_tbl.c for sbn_conf_tbl.c
+-- Building Dynamic App: sbn_udp targets=cpu2
+-- Building Dynamic App: sbn_f_remap targets=cpu2
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/cFS/apps/sbn_f_remap/fsw/tables/sbn_remap_tbl.c for sbn_remap_tbl.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/tables/sample_app_alt1.c for sample_app_alt1.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/tables/to_lab_sub_alt.c for to_lab_sub_alt.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/tables/to_lab_sub_bad.c for to_lab_sub_bad.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/tables/lc_def_adt-test.c for lc_def_adt-test.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/tables/sc_ats2_test.c for sc_ats2_test.c
+-- Using file: /tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/tables/sc_append_test.c for sc_append_test.c
+-- Configuring done (0.6s)
+-- Generating done (0.1s)
+-- Build files have been written to: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/native/default_cpu2
+-- Configuring done (2.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache
+[ 16%] Built target elf2cfetbl
+[ 16%] Built target cfe-build-env
+[ 16%] Built target cfe-module-version
+[ 16%] Built target mission-version
+[ 25%] Building C object cfeconfig_platformdata_tool/CMakeFiles/cfeconfig_platformdata_native_default_cpu2.dir/cfeconfig_platformdata_table.c.o
+[ 25%] Built target cfeconfig_platformdata_native_default_cpu2
+[ 33%] Building C object cfeconfig_platformdata_tool/CMakeFiles/cfeconfig_platformdata_native_default_cpu1.dir/cfeconfig_platformdata_table.c.o
+[ 33%] Built target cfeconfig_platformdata_native_default_cpu1
+[ 41%] Building C object cfeconfig_platformdata_tool/CMakeFiles/cfeconfig_platformdata_tool.dir/cfeconfig_platformdata_tool.c.o
+[ 50%] Building C object cfeconfig_platformdata_tool/CMakeFiles/cfeconfig_platformdata_tool.dir/__/src/cfe_configid_nametable.c.o
+[ 58%] Building C object cfeconfig_platformdata_tool/CMakeFiles/cfeconfig_platformdata_tool.dir/__/src/cfe_platform_list.c.o
+[ 66%] Linking C executable cfeconfig_platformdata_tool
+[ 66%] Built target cfeconfig_platformdata_tool
+[ 75%] Generating ../src/cfeconfig_platformdata_native_default_cpu1.c
+[ 83%] Generating ../src/cfeconfig_platformdata_native_default_cpu1.list
+[ 83%] Built target cfgtool-execute-native_default_cpu1
+[ 91%] Generating ../src/cfeconfig_platformdata_native_default_cpu2.c
+[100%] Generating ../src/cfeconfig_platformdata_native_default_cpu2.list
+[100%] Built target cfgtool-execute-native_default_cpu2
+[100%] Built target mission-prebuild
+[  6%] Built target tblobj_cpu2_sbn.tbl4f833049da4f1e9fdde0e62b801f574d5586b50c
+[  6%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_sbn.tbl4f833049da4f1e9fdde0e62b801f574d5586b50c.sbn_remap_tbl.d
+[  6%] Built target generate_table_cpu2_sbn_sbn_remap_tbl
+[ 12%] Built target tblobj_cpu2_sample_app.tbla2394641833d54d73230b7f6d62a8bf9dae54fe9
+[ 12%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_sample_app.tbla2394641833d54d73230b7f6d62a8bf9dae54fe9.sample_app_alt1.d
+[ 12%] Built target generate_table_cpu2_sample_app_sample_app_alt1
+[ 18%] Built target tblobj_cpu2_to_lab.tblf8aa674791082985a120cc922b6b1d25ade6aaec
+[ 18%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_to_lab.tblf8aa674791082985a120cc922b6b1d25ade6aaec.to_lab_sub_alt.d
+[ 18%] Built target generate_table_cpu2_to_lab_to_lab_sub_alt
+[ 18%] Built target tblobj_cpu2_to_lab.tblf6191d1e051d32bb404281568e72df0c6a346d6e
+[ 18%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_to_lab.tblf6191d1e051d32bb404281568e72df0c6a346d6e.to_lab_sub_bad.d
+[ 18%] Built target generate_table_cpu2_to_lab_to_lab_sub_bad
+[ 25%] Built target tblobj_cpu2_lc.tblf22913791665de0904a5fcdc7482a6551911cccb
+[ 25%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_lc.tblf22913791665de0904a5fcdc7482a6551911cccb.lc_def_adt-test.d
+[ 25%] Built target generate_table_cpu2_lc_lc_def_adt-test
+[ 25%] Built target tblobj_cpu2_sc.tbl8889ebe409ee13d0538ca0040cd6398e8de550bb
+[ 25%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_sc.tbl8889ebe409ee13d0538ca0040cd6398e8de550bb.sc_ats2_test.d
+[ 25%] Built target generate_table_cpu2_sc_sc_ats2_test
+[ 25%] Built target tblobj_cpu2_sc.tbl96db4f8c4892090ec37705b60ca0f9e3994cc361
+[ 25%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_sc.tbl96db4f8c4892090ec37705b60ca0f9e3994cc361.sc_append_test.d
+[ 25%] Built target generate_table_cpu2_sc_sc_append_test
+[ 25%] Built target tblobj_cpu2_to_lab.tbl85b441648c71c67ffeabd075250d16ae44bd7d7e
+[ 25%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_to_lab.tbl85b441648c71c67ffeabd075250d16ae44bd7d7e.to_lab_sub.d
+[ 25%] Built target generate_table_cpu2_to_lab_to_lab_sub
+[ 31%] Built target tblobj_cpu2_sch_lab.tbld2a05a4742dbdc633d9f675ceb5ff0081d85d0a0
+[ 37%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_sch_lab.tbld2a05a4742dbdc633d9f675ceb5ff0081d85d0a0.sch_lab_table.d
+[ 37%] Built target generate_table_cpu2_sch_lab_sch_lab_table
+[ 37%] Built target tblobj_cpu2_cfeTestAppTable.tbla21dab336c1b2947921fe3ebf71997e4faae3fac
+[ 37%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_cfeTestAppTable.tbla21dab336c1b2947921fe3ebf71997e4faae3fac.cfe_test_tbl.d
+[ 37%] Built target generate_table_cpu2_cfeTestAppTable_cfe_test_tbl
+[ 37%] Built target tblobj_cpu2_sample_app.tbladf45f42b584c967103b50de93ede942dfe4103a
+[ 37%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_sample_app.tbladf45f42b584c967103b50de93ede942dfe4103a.sample_app_tbl.d
+[ 37%] Built target generate_table_cpu2_sample_app_sample_app_tbl
+[ 43%] Built target tblobj_cpu2_cf.tble9eddfcac36effb46b85fee6dc9e598f1032419c
+[ 43%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_cf.tble9eddfcac36effb46b85fee6dc9e598f1032419c.cf_def_config.d
+[ 43%] Built target generate_table_cpu2_cf_cf_def_config
+[ 50%] Built target tblobj_cpu2_hs.tblec93b37bd441b400a42459631e0b304fee292ad6
+[ 50%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_hs.tblec93b37bd441b400a42459631e0b304fee292ad6.hs_mat.d
+[ 50%] Built target generate_table_cpu2_hs_hs_mat
+[ 50%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_hs.tblec93b37bd441b400a42459631e0b304fee292ad6.hs_xct.d
+[ 50%] Built target generate_table_cpu2_hs_hs_xct
+[ 50%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_hs.tblec93b37bd441b400a42459631e0b304fee292ad6.hs_amt.d
+[ 50%] Built target generate_table_cpu2_hs_hs_amt
+[ 50%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_hs.tblec93b37bd441b400a42459631e0b304fee292ad6.hs_emt.d
+[ 50%] Built target generate_table_cpu2_hs_hs_emt
+[ 50%] Built target tblobj_cpu2_md.tblabb8c83913ee9615211a15dfba3d4dc392055fb0
+[ 50%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_md.tblabb8c83913ee9615211a15dfba3d4dc392055fb0.md_dw02.d
+[ 50%] Built target generate_table_cpu2_md_md_dw02
+[ 50%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_md.tblabb8c83913ee9615211a15dfba3d4dc392055fb0.md_dw03.d
+[ 50%] Built target generate_table_cpu2_md_md_dw03
+[ 56%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_md.tblabb8c83913ee9615211a15dfba3d4dc392055fb0.md_dw04.d
+[ 56%] Built target generate_table_cpu2_md_md_dw04
+[ 56%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_md.tblabb8c83913ee9615211a15dfba3d4dc392055fb0.md_dw01.d
+[ 56%] Built target generate_table_cpu2_md_md_dw01
+[ 62%] Built target tblobj_cpu2_cs.tbl3df6defc55bb2bacacbe39521ea4a058dd848210
+[ 62%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_cs.tbl3df6defc55bb2bacacbe39521ea4a058dd848210.cs_apptbl.d
+[ 62%] Built target generate_table_cpu2_cs_cs_apptbl
+[ 68%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_cs.tbl3df6defc55bb2bacacbe39521ea4a058dd848210.cs_eepromtbl.d
+[ 68%] Built target generate_table_cpu2_cs_cs_eepromtbl
+[ 68%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_cs.tbl3df6defc55bb2bacacbe39521ea4a058dd848210.cs_memorytbl.d
+[ 68%] Built target generate_table_cpu2_cs_cs_memorytbl
+[ 68%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_cs.tbl3df6defc55bb2bacacbe39521ea4a058dd848210.cs_tablestbl.d
+[ 68%] Built target generate_table_cpu2_cs_cs_tablestbl
+[ 75%] Built target tblobj_cpu2_fm.tbl36c5759b3376964c0543b0f87309cacc018e180b
+[ 75%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_fm.tbl36c5759b3376964c0543b0f87309cacc018e180b.fm_monitor.d
+[ 75%] Built target generate_table_cpu2_fm_fm_monitor
+[ 75%] Built target tblobj_cpu2_lc.tbld1259d5d0734f925c6bd9bc96c3453194665bef0
+[ 75%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_lc.tbld1259d5d0734f925c6bd9bc96c3453194665bef0.lc_def_wdt.d
+[ 75%] Built target generate_table_cpu2_lc_lc_def_wdt
+[ 81%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_lc.tbld1259d5d0734f925c6bd9bc96c3453194665bef0.lc_def_adt.d
+[ 81%] Built target generate_table_cpu2_lc_lc_def_adt
+[ 87%] Built target tblobj_cpu2_sc.tbl791f4ba0154904a8f582ab0e4f539d55f658c5ce
+[ 93%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_sc.tbl791f4ba0154904a8f582ab0e4f539d55f658c5ce.sc_ats1.d
+[ 93%] Built target generate_table_cpu2_sc_sc_ats1
+[ 93%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_sc.tbl791f4ba0154904a8f582ab0e4f539d55f658c5ce.sc_rts001.d
+[ 93%] Built target generate_table_cpu2_sc_sc_rts001
+[ 93%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_sc.tbl791f4ba0154904a8f582ab0e4f539d55f658c5ce.sc_rts002.d
+[ 93%] Built target generate_table_cpu2_sc_sc_rts002
+[ 93%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_sc.tbl791f4ba0154904a8f582ab0e4f539d55f658c5ce.sc_rts003.d
+[ 93%] Built target generate_table_cpu2_sc_sc_rts003
+[ 93%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_sc.tbl791f4ba0154904a8f582ab0e4f539d55f658c5ce.sc_rts004.d
+[ 93%] Built target generate_table_cpu2_sc_sc_rts004
+[ 93%] Built target tblobj_cpu2_ds.tbl2e2b9b4b5e27a879982c2c58fc6f593be65a88a9
+[ 93%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_ds.tbl2e2b9b4b5e27a879982c2c58fc6f593be65a88a9.ds_filter_tbl.d
+[ 93%] Built target generate_table_cpu2_ds_ds_filter_tbl
+[ 93%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_ds.tbl2e2b9b4b5e27a879982c2c58fc6f593be65a88a9.ds_file_tbl.d
+[ 93%] Built target generate_table_cpu2_ds_ds_file_tbl
+[ 93%] Built target tblobj_cpu2_hk.tble4d71db542703f82cd23babe15c9fffe3e9021ec
+[100%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_hk.tble4d71db542703f82cd23babe15c9fffe3e9021ec.hk_cpy_tbl.d
+[100%] Built target generate_table_cpu2_hk_hk_cpy_tbl
+[100%] Built target tblobj_cpu2_sbn.tbl1976d86b8a6299cc19feb91bd34be0658c98a4c8
+[100%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu2_sbn.tbl1976d86b8a6299cc19feb91bd34be0658c98a4c8.sbn_conf_tbl.d
+[100%] Built target generate_table_cpu2_sbn_sbn_conf_tbl
+[100%] Built target cfetables
+[100%] Built target native_default_cpu2-cfetables
+[  0%] Built target tblobj_cpu1_sbn.tbl4f833049da4f1e9fdde0e62b801f574d5586b50c
+[  6%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_sbn.tbl4f833049da4f1e9fdde0e62b801f574d5586b50c.sbn_remap_tbl.d
+[  6%] Built target generate_table_cpu1_sbn_sbn_remap_tbl
+[  6%] Built target tblobj_cpu1_sample_app.tblc079e2cf53c17e62d3a3cff068ea7d1188a7944d
+[  6%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_sample_app.tblc079e2cf53c17e62d3a3cff068ea7d1188a7944d.sample_app_alt1.d
+[  6%] Built target generate_table_cpu1_sample_app_sample_app_alt1
+[  6%] Building C object CMakeFiles/tblobj_cpu1_to_lab.tbl163f9fe3ea5f2d2d8f4516732027c14ae92518d5.dir/tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/tables/to_lab_sub_alt.c.o
+[  6%] Linking C static library libtblobj_cpu1_to_lab.tbl163f9fe3ea5f2d2d8f4516732027c14ae92518d5.a
+[  6%] Built target tblobj_cpu1_to_lab.tbl163f9fe3ea5f2d2d8f4516732027c14ae92518d5
+[  6%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_to_lab.tbl163f9fe3ea5f2d2d8f4516732027c14ae92518d5.to_lab_sub_alt.d
+[  6%] Built target generate_table_cpu1_to_lab_to_lab_sub_alt
+[ 12%] Building C object CMakeFiles/tblobj_cpu1_to_lab.tbld9e3d9267a9c4ba8093e9f73c9bd76f75da2cc8a.dir/tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/tables/to_lab_sub_bad.c.o
+[ 12%] Linking C static library libtblobj_cpu1_to_lab.tbld9e3d9267a9c4ba8093e9f73c9bd76f75da2cc8a.a
+[ 12%] Built target tblobj_cpu1_to_lab.tbld9e3d9267a9c4ba8093e9f73c9bd76f75da2cc8a
+[ 12%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_to_lab.tbld9e3d9267a9c4ba8093e9f73c9bd76f75da2cc8a.to_lab_sub_bad.d
+[ 12%] Built target generate_table_cpu1_to_lab_to_lab_sub_bad
+[ 12%] Built target tblobj_cpu1_lc.tbl7fd9bb63390c33a0c55a0a888df33fcd2a53e977
+[ 12%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_lc.tbl7fd9bb63390c33a0c55a0a888df33fcd2a53e977.lc_def_adt-test.d
+[ 12%] Built target generate_table_cpu1_lc_lc_def_adt-test
+[ 12%] Built target tblobj_cpu1_sc.tbl4fc706be02ccf6a4630cf4b5c599ba555467bf59
+[ 12%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_sc.tbl4fc706be02ccf6a4630cf4b5c599ba555467bf59.sc_ats2_test.d
+[ 12%] Built target generate_table_cpu1_sc_sc_ats2_test
+[ 18%] Built target tblobj_cpu1_sc.tbl5a502b3e39152a2f53c4821d5d1f0f14cc961e67
+[ 18%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_sc.tbl5a502b3e39152a2f53c4821d5d1f0f14cc961e67.sc_append_test.d
+[ 18%] Built target generate_table_cpu1_sc_sc_append_test
+[ 18%] Building C object apps/to_lab/CMakeFiles/tblobj_cpu1_to_lab.tbl85b441648c71c67ffeabd075250d16ae44bd7d7e.dir/tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/tables/to_lab_sub.c.o
+[ 18%] Linking C static library libtblobj_cpu1_to_lab.tbl85b441648c71c67ffeabd075250d16ae44bd7d7e.a
+[ 18%] Built target tblobj_cpu1_to_lab.tbl85b441648c71c67ffeabd075250d16ae44bd7d7e
+[ 18%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_to_lab.tbl85b441648c71c67ffeabd075250d16ae44bd7d7e.to_lab_sub.d
+[ 18%] Built target generate_table_cpu1_to_lab_to_lab_sub
+[ 25%] Building C object apps/sch_lab/CMakeFiles/tblobj_cpu1_sch_lab.tbld2a05a4742dbdc633d9f675ceb5ff0081d85d0a0.dir/tmp/flight-evaluation-20261123-final/flight/mission/sample_defs/tables/sch_lab_table.c.o
+[ 25%] Linking C static library libtblobj_cpu1_sch_lab.tbld2a05a4742dbdc633d9f675ceb5ff0081d85d0a0.a
+[ 25%] Built target tblobj_cpu1_sch_lab.tbld2a05a4742dbdc633d9f675ceb5ff0081d85d0a0
+[ 25%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_sch_lab.tbld2a05a4742dbdc633d9f675ceb5ff0081d85d0a0.sch_lab_table.d
+[ 25%] Built target generate_table_cpu1_sch_lab_sch_lab_table
+[ 25%] Building C object apps/eval_cycle_09/CMakeFiles/tblobj_cpu1_eval_cycle_09.tbld0361e46531ff7c8845a558720a63507d0eb2361.dir/fsw/tables/eval_cycle_09_tbl.c.o
+[ 25%] Linking C static library libtblobj_cpu1_eval_cycle_09.tbld0361e46531ff7c8845a558720a63507d0eb2361.a
+[ 25%] Built target tblobj_cpu1_eval_cycle_09.tbld0361e46531ff7c8845a558720a63507d0eb2361
+[ 31%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_eval_cycle_09.tbld0361e46531ff7c8845a558720a63507d0eb2361.eval_cycle_09_tbl.d
+[ 31%] Built target generate_table_cpu1_eval_cycle_09_eval_cycle_09_tbl
+[ 31%] Built target tblobj_cpu1_eval_mag.tblfa73183104e75a66f54567b00773861345aa99f8
+[ 31%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_eval_mag.tblfa73183104e75a66f54567b00773861345aa99f8.eval_mag_tbl.d
+[ 31%] Built target generate_table_cpu1_eval_mag_eval_mag_tbl
+[ 31%] Built target tblobj_cpu1_eval_mpu.tblca5db38dab843254f71d31bccae0bc6ced2fa056
+[ 31%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_eval_mpu.tblca5db38dab843254f71d31bccae0bc6ced2fa056.eval_mpu_tbl.d
+[ 31%] Built target generate_table_cpu1_eval_mpu_eval_mpu_tbl
+[ 37%] Built target tblobj_cpu1_eval_temp.tbl8bdf5105ed356d6e8daedb8fad5d1295f25b4979
+[ 37%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_eval_temp.tbl8bdf5105ed356d6e8daedb8fad5d1295f25b4979.eval_temp_tbl.d
+[ 37%] Built target generate_table_cpu1_eval_temp_eval_temp_tbl
+[ 37%] Built target tblobj_cpu1_cfeTestAppTable.tbla21dab336c1b2947921fe3ebf71997e4faae3fac
+[ 37%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_cfeTestAppTable.tbla21dab336c1b2947921fe3ebf71997e4faae3fac.cfe_test_tbl.d
+[ 37%] Built target generate_table_cpu1_cfeTestAppTable_cfe_test_tbl
+[ 37%] Built target tblobj_cpu1_sample_app.tbladf45f42b584c967103b50de93ede942dfe4103a
+[ 37%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_sample_app.tbladf45f42b584c967103b50de93ede942dfe4103a.sample_app_tbl.d
+[ 37%] Built target generate_table_cpu1_sample_app_sample_app_tbl
+[ 37%] Built target tblobj_cpu1_cf.tble9eddfcac36effb46b85fee6dc9e598f1032419c
+[ 37%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_cf.tble9eddfcac36effb46b85fee6dc9e598f1032419c.cf_def_config.d
+[ 37%] Built target generate_table_cpu1_cf_cf_def_config
+[ 43%] Built target tblobj_cpu1_hs.tblec93b37bd441b400a42459631e0b304fee292ad6
+[ 43%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_hs.tblec93b37bd441b400a42459631e0b304fee292ad6.hs_mat.d
+[ 43%] Built target generate_table_cpu1_hs_hs_mat
+[ 43%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_hs.tblec93b37bd441b400a42459631e0b304fee292ad6.hs_xct.d
+[ 43%] Built target generate_table_cpu1_hs_hs_xct
+[ 43%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_hs.tblec93b37bd441b400a42459631e0b304fee292ad6.hs_amt.d
+[ 43%] Built target generate_table_cpu1_hs_hs_amt
+[ 50%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_hs.tblec93b37bd441b400a42459631e0b304fee292ad6.hs_emt.d
+[ 50%] Built target generate_table_cpu1_hs_hs_emt
+[ 56%] Built target tblobj_cpu1_md.tblabb8c83913ee9615211a15dfba3d4dc392055fb0
+[ 56%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_md.tblabb8c83913ee9615211a15dfba3d4dc392055fb0.md_dw02.d
+[ 56%] Built target generate_table_cpu1_md_md_dw02
+[ 56%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_md.tblabb8c83913ee9615211a15dfba3d4dc392055fb0.md_dw03.d
+[ 56%] Built target generate_table_cpu1_md_md_dw03
+[ 56%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_md.tblabb8c83913ee9615211a15dfba3d4dc392055fb0.md_dw04.d
+[ 56%] Built target generate_table_cpu1_md_md_dw04
+[ 62%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_md.tblabb8c83913ee9615211a15dfba3d4dc392055fb0.md_dw01.d
+[ 62%] Built target generate_table_cpu1_md_md_dw01
+[ 68%] Built target tblobj_cpu1_cs.tbl3df6defc55bb2bacacbe39521ea4a058dd848210
+[ 75%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_cs.tbl3df6defc55bb2bacacbe39521ea4a058dd848210.cs_apptbl.d
+[ 75%] Built target generate_table_cpu1_cs_cs_apptbl
+[ 75%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_cs.tbl3df6defc55bb2bacacbe39521ea4a058dd848210.cs_eepromtbl.d
+[ 75%] Built target generate_table_cpu1_cs_cs_eepromtbl
+[ 75%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_cs.tbl3df6defc55bb2bacacbe39521ea4a058dd848210.cs_memorytbl.d
+[ 75%] Built target generate_table_cpu1_cs_cs_memorytbl
+[ 75%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_cs.tbl3df6defc55bb2bacacbe39521ea4a058dd848210.cs_tablestbl.d
+[ 75%] Built target generate_table_cpu1_cs_cs_tablestbl
+[ 75%] Built target tblobj_cpu1_fm.tbl36c5759b3376964c0543b0f87309cacc018e180b
+[ 75%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_fm.tbl36c5759b3376964c0543b0f87309cacc018e180b.fm_monitor.d
+[ 75%] Built target generate_table_cpu1_fm_fm_monitor
+[ 81%] Built target tblobj_cpu1_lc.tbld1259d5d0734f925c6bd9bc96c3453194665bef0
+[ 81%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_lc.tbld1259d5d0734f925c6bd9bc96c3453194665bef0.lc_def_wdt.d
+[ 81%] Built target generate_table_cpu1_lc_lc_def_wdt
+[ 81%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_lc.tbld1259d5d0734f925c6bd9bc96c3453194665bef0.lc_def_adt.d
+[ 81%] Built target generate_table_cpu1_lc_lc_def_adt
+[ 81%] Built target tblobj_cpu1_sc.tbl791f4ba0154904a8f582ab0e4f539d55f658c5ce
+[ 81%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_sc.tbl791f4ba0154904a8f582ab0e4f539d55f658c5ce.sc_ats1.d
+[ 81%] Built target generate_table_cpu1_sc_sc_ats1
+[ 81%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_sc.tbl791f4ba0154904a8f582ab0e4f539d55f658c5ce.sc_rts001.d
+[ 81%] Built target generate_table_cpu1_sc_sc_rts001
+[ 81%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_sc.tbl791f4ba0154904a8f582ab0e4f539d55f658c5ce.sc_rts002.d
+[ 81%] Built target generate_table_cpu1_sc_sc_rts002
+[ 87%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_sc.tbl791f4ba0154904a8f582ab0e4f539d55f658c5ce.sc_rts003.d
+[ 87%] Built target generate_table_cpu1_sc_sc_rts003
+[ 87%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_sc.tbl791f4ba0154904a8f582ab0e4f539d55f658c5ce.sc_rts004.d
+[ 87%] Built target generate_table_cpu1_sc_sc_rts004
+[ 93%] Built target tblobj_cpu1_ds.tbl2e2b9b4b5e27a879982c2c58fc6f593be65a88a9
+[ 93%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_ds.tbl2e2b9b4b5e27a879982c2c58fc6f593be65a88a9.ds_filter_tbl.d
+[ 93%] Built target generate_table_cpu1_ds_ds_filter_tbl
+[ 93%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_ds.tbl2e2b9b4b5e27a879982c2c58fc6f593be65a88a9.ds_file_tbl.d
+[ 93%] Built target generate_table_cpu1_ds_ds_file_tbl
+[ 93%] Built target tblobj_cpu1_hk.tble4d71db542703f82cd23babe15c9fffe3e9021ec
+[ 93%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_hk.tble4d71db542703f82cd23babe15c9fffe3e9021ec.hk_cpy_tbl.d
+[ 93%] Built target generate_table_cpu1_hk_hk_cpy_tbl
+[100%] Built target tblobj_cpu1_sbn.tbl1976d86b8a6299cc19feb91bd34be0658c98a4c8
+[100%] Generating /tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/tables/cpu1_sbn.tbl1976d86b8a6299cc19feb91bd34be0658c98a4c8.sbn_conf_tbl.d
+[100%] Built target generate_table_cpu1_sbn_sbn_conf_tbl
+[100%] Built target cfetables
+[100%] Built target native_default_cpu1-cfetables
+[100%] Built target mission-cfetables
+mkdir: created directory 'elf'
+mkdir: created directory 'elf/cpu1/'
+mkdir: created directory 'staging/cpu1'
+mkdir: created directory 'staging/cpu1/cf/'
+mkdir: created directory 'elf/cpu2/'
+mkdir: created directory 'staging/cpu2'
+mkdir: created directory 'staging/cpu2/cf/'
+Table build completed
+[100%] Built target tabletool-execute
+[  0%] Built target osal_generic-linux_impl
+[  1%] Built target osal_bsp
+[  8%] Built target osal_posix_impl
+[ 14%] Built target osal
+[ 15%] Built target ut_assert
+[ 27%] Built target ut_osapi_stubs
+[ 27%] Generating ../src/cfe_platformcfg_tables.c
+[ 27%] Building C object config/CMakeFiles/config.dir/fsw/src/cfe_config_init.c.o
+[ 27%] Building C object config/CMakeFiles/config.dir/fsw/src/cfe_config_lookup.c.o
+[ 27%] Building C object config/CMakeFiles/config.dir/fsw/src/cfe_config_get.c.o
+[ 27%] Building C object config/CMakeFiles/config.dir/fsw/src/cfe_config_set.c.o
+[ 27%] Building C object config/CMakeFiles/config.dir/tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/src/cfe_configid_nametable.c.o
+[ 27%] Generating ../src/cfe_platformcfg_tables.c
+[ 27%] Building C object config/CMakeFiles/config.dir/__/src/cfe_platformcfg_tables.c.o
+[ 27%] Linking C static library libconfig.a
+[ 28%] Built target config
+[ 28%] Building C object es/CMakeFiles/es.dir/fsw/src/cfe_es_cds_mempool.c.o
+[ 28%] Building C object es/CMakeFiles/es.dir/fsw/src/cfe_es_mempool.c.o
+[ 28%] Building C object es/CMakeFiles/es.dir/fsw/src/cfe_es_task.c.o
+[ 28%] Building C object es/CMakeFiles/es.dir/fsw/src/cfe_es_dispatch.c.o
+[ 28%] Linking C static library libes.a
+[ 31%] Built target es
+[ 31%] Building C object evs/CMakeFiles/evs.dir/fsw/src/cfe_evs_task.c.o
+[ 31%] Linking C static library libevs.a
+[ 32%] Built target evs
+[ 32%] Built target fs
+[ 32%] Building C object sb/CMakeFiles/sb.dir/fsw/src/cfe_sb_init.c.o
+[ 32%] Building C object sb/CMakeFiles/sb.dir/fsw/src/cfe_sb_task.c.o
+[ 32%] Linking C static library libsb.a
+[ 34%] Built target sb
+[ 34%] Building C object tbl/CMakeFiles/tbl.dir/fsw/src/cfe_tbl_load.c.o
+[ 34%] Building C object tbl/CMakeFiles/tbl.dir/fsw/src/cfe_tbl_dump.c.o
+[ 34%] Building C object tbl/CMakeFiles/tbl.dir/fsw/src/cfe_tbl_task.c.o
+[ 34%] Building C object tbl/CMakeFiles/tbl.dir/fsw/src/cfe_tbl_task_cmds.c.o
+[ 34%] Linking C static library libtbl.a
+[ 38%] Built target tbl
+[ 38%] Building C object time/CMakeFiles/time.dir/fsw/src/cfe_time_task.c.o
+[ 38%] Linking C static library libtime.a
+[ 40%] Built target time
+[ 40%] Built target ram_notimpl
+[ 41%] Built target psp-pc-linux-impl
+[ 42%] Built target psp-pc-linux-shared
+[ 42%] Built target soft_timebase
+[ 42%] Built target timebase_posix_clock
+[ 42%] Built target eeprom_mmap_file
+[ 44%] Built target port_notimpl
+[ 44%] Built target iodriver
+[ 44%] Built target linux_sysmon
+[ 45%] Built target endian_api
+[ 45%] Built target psp-pc-linux
+[ 47%] Built target msg
+[ 48%] Built target sbr
+[ 50%] Built target resourceid
+[ 50%] Building C object apps/ci_lab/CMakeFiles/ci_lab.dir/fsw/src/ci_lab_app.c.o
+[ 50%] Building C object apps/ci_lab/CMakeFiles/ci_lab.dir/fsw/src/ci_lab_cmds.c.o
+[ 50%] Building C object apps/ci_lab/CMakeFiles/ci_lab.dir/fsw/src/ci_lab_dispatch.c.o
+[ 50%] Building C object apps/ci_lab/CMakeFiles/ci_lab.dir/fsw/src/ci_lab_passthru_decode.c.o
+[ 51%] Linking C shared module ci_lab.so
+[ 51%] Built target ci_lab
+[ 52%] Building C object apps/to_lab/CMakeFiles/to_lab.dir/fsw/src/to_lab_app.c.o
+[ 52%] Building C object apps/to_lab/CMakeFiles/to_lab.dir/fsw/src/to_lab_cmds.c.o
+[ 52%] Building C object apps/to_lab/CMakeFiles/to_lab.dir/fsw/src/to_lab_passthru_encode.c.o
+[ 52%] Linking C shared module to_lab.so
+[ 52%] Built target to_lab
+[ 52%] Building C object apps/sch_lab/CMakeFiles/sch_lab.dir/fsw/src/sch_lab_app.c.o
+[ 54%] Linking C shared module sch_lab.so
+[ 54%] Built target sch_lab
+[ 55%] Built target linux_i2c_lib
+[ 57%] Built target hal_sensor
+[ 57%] Built target tmp105_lib
+[ 57%] Built target lsm303dlhc_mag_lib
+[ 58%] Built target mpu6050_lib
+[ 60%] Building C object apps/eval_cycle_09/CMakeFiles/eval_cycle_09.dir/fsw/src/eval_cycle_09.c.o
+[ 60%] Building C object apps/eval_cycle_09/CMakeFiles/eval_cycle_09.dir/fsw/src/eval_cycle_09_cmds.c.o
+[ 60%] Building C object apps/eval_cycle_09/CMakeFiles/eval_cycle_09.dir/fsw/src/eval_cycle_09_utils.c.o
+[ 60%] Building C object apps/eval_cycle_09/CMakeFiles/eval_cycle_09.dir/fsw/src/eval_cycle_09_dispatch.c.o
+[ 60%] Building C object apps/eval_cycle_09/CMakeFiles/eval_cycle_09.dir/fsw/src/eval_cycle_09_components.c.o
+[ 60%] Building C object apps/eval_cycle_09/CMakeFiles/eval_cycle_09.dir/fsw/src/eval_cycle_09_user.c.o
+[ 61%] Linking C shared module eval_cycle_09.so
+[ 61%] Built target eval_cycle_09
+[ 61%] Building C object apps/eval_mag/CMakeFiles/eval_mag.dir/fsw/src/eval_mag.c.o
+[ 61%] Building C object apps/eval_mag/CMakeFiles/eval_mag.dir/fsw/src/eval_mag_cmds.c.o
+[ 61%] Building C object apps/eval_mag/CMakeFiles/eval_mag.dir/fsw/src/eval_mag_utils.c.o
+[ 61%] Building C object apps/eval_mag/CMakeFiles/eval_mag.dir/fsw/src/eval_mag_dispatch.c.o
+[ 61%] Linking C shared module eval_mag.so
+[ 62%] Built target eval_mag
+[ 62%] Building C object apps/eval_mpu/CMakeFiles/eval_mpu.dir/fsw/src/eval_mpu.c.o
+[ 62%] Building C object apps/eval_mpu/CMakeFiles/eval_mpu.dir/fsw/src/eval_mpu_cmds.c.o
+[ 62%] Building C object apps/eval_mpu/CMakeFiles/eval_mpu.dir/fsw/src/eval_mpu_utils.c.o
+[ 62%] Building C object apps/eval_mpu/CMakeFiles/eval_mpu.dir/fsw/src/eval_mpu_dispatch.c.o
+[ 62%] Linking C shared module eval_mpu.so
+[ 64%] Built target eval_mpu
+[ 64%] Building C object apps/eval_temp/CMakeFiles/eval_temp.dir/fsw/src/eval_temp.c.o
+[ 64%] Building C object apps/eval_temp/CMakeFiles/eval_temp.dir/fsw/src/eval_temp_cmds.c.o
+[ 64%] Building C object apps/eval_temp/CMakeFiles/eval_temp.dir/fsw/src/eval_temp_utils.c.o
+[ 65%] Building C object apps/eval_temp/CMakeFiles/eval_temp.dir/fsw/src/eval_temp_dispatch.c.o
+[ 65%] Linking C shared module eval_temp.so
+[ 65%] Built target eval_temp
+[ 67%] Built target ut_assert_pic
+[ 68%] Built target cfe_assert
+[ 75%] Built target cfe_testcase
+[ 75%] Building C object apps/sample_app/CMakeFiles/sample_app.dir/fsw/src/sample_app.c.o
+[ 75%] Building C object apps/sample_app/CMakeFiles/sample_app.dir/fsw/src/sample_app_cmds.c.o
+[ 75%] Building C object apps/sample_app/CMakeFiles/sample_app.dir/fsw/src/sample_app_utils.c.o
+[ 75%] Building C object apps/sample_app/CMakeFiles/sample_app.dir/fsw/src/sample_app_dispatch.c.o
+[ 75%] Linking C shared module sample_app.so
+[ 75%] Built target sample_app
+[ 75%] Building C object apps/sample_lib/CMakeFiles/sample_lib.dir/fsw/src/sample_lib.c.o
+[ 77%] Linking C shared module sample_lib.so
+[ 77%] Built target sample_lib
+[ 80%] Built target cf
+[ 82%] Built target hs
+[ 84%] Built target md
+[ 87%] Built target cs
+[ 90%] Built target fm
+[ 91%] Built target lc
+[ 92%] Built target sc
+[ 94%] Built target ds
+[ 94%] Built target hk
+[ 94%] Building C object apps/sbn/CMakeFiles/sbn.dir/fsw/src/sbn_module_bindings.c.o
+[ 94%] Linking C shared module sbn.so
+[ 97%] Built target sbn
+[ 97%] Built target sbn_udp
+[ 97%] Built target sbn_f_remap
+[ 97%] Generating cfe_module_version_table.c
+[ 97%] Generating cfe_build_env_table.c
+[ 97%] Building C object cpu1/CMakeFiles/core-cpu1.dir/cfe_module_version_table.c.o
+[ 97%] Building C object cpu1/CMakeFiles/core-cpu1.dir/cfe_build_env_table.c.o
+[ 98%] Linking C executable core-cpu1
+[100%] Built target core-cpu1
+Install the project...
+-- Install configuration: "release"
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/container-start
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/ci_lab.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/to_lab.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/sch_lab.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/linux_i2c_lib.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/hal_sensor.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/tmp105_lib.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/lsm303dlhc_mag_lib.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/mpu6050_lib.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/eval_cycle_09.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/eval_mag.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/eval_mpu.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/eval_temp.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/cfe_assert.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/cfe_testcase.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/sample_app.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/sample_lib.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/cf.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/hs.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/md.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/cs.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/fm.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/lc.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/sc.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/ds.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/hk.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/cf/sbn.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu1/core-cpu1
+[100%] Built target native_default_cpu1-install
+[  1%] Built target osal_generic-linux_impl
+[  2%] Built target osal_bsp
+[ 10%] Built target osal_posix_impl
+[ 15%] Built target osal
+[ 17%] Built target ut_assert
+[ 30%] Built target ut_osapi_stubs
+[ 31%] Generating ../src/cfe_platformcfg_tables.c
+[ 31%] Building C object config/CMakeFiles/config.dir/fsw/src/cfe_config_init.c.o
+[ 31%] Building C object config/CMakeFiles/config.dir/fsw/src/cfe_config_lookup.c.o
+[ 31%] Building C object config/CMakeFiles/config.dir/fsw/src/cfe_config_get.c.o
+[ 31%] Building C object config/CMakeFiles/config.dir/fsw/src/cfe_config_set.c.o
+[ 31%] Building C object config/CMakeFiles/config.dir/tmp/flight-evaluation-20261123-final/flight/mission/build-native/cache/src/cfe_configid_nametable.c.o
+[ 31%] Generating ../src/cfe_platformcfg_tables.c
+[ 31%] Building C object config/CMakeFiles/config.dir/__/src/cfe_platformcfg_tables.c.o
+[ 31%] Linking C static library libconfig.a
+[ 33%] Built target config
+[ 33%] Building C object es/CMakeFiles/es.dir/fsw/src/cfe_es_cds_mempool.c.o
+[ 33%] Building C object es/CMakeFiles/es.dir/fsw/src/cfe_es_mempool.c.o
+[ 33%] Building C object es/CMakeFiles/es.dir/fsw/src/cfe_es_task.c.o
+[ 33%] Building C object es/CMakeFiles/es.dir/fsw/src/cfe_es_dispatch.c.o
+[ 33%] Linking C static library libes.a
+[ 37%] Built target es
+[ 37%] Building C object evs/CMakeFiles/evs.dir/fsw/src/cfe_evs_task.c.o
+[ 37%] Linking C static library libevs.a
+[ 39%] Built target evs
+[ 40%] Built target fs
+[ 40%] Building C object sb/CMakeFiles/sb.dir/fsw/src/cfe_sb_init.c.o
+[ 40%] Building C object sb/CMakeFiles/sb.dir/fsw/src/cfe_sb_task.c.o
+[ 42%] Linking C static library libsb.a
+[ 43%] Built target sb
+[ 44%] Building C object tbl/CMakeFiles/tbl.dir/fsw/src/cfe_tbl_load.c.o
+[ 44%] Building C object tbl/CMakeFiles/tbl.dir/fsw/src/cfe_tbl_dump.c.o
+[ 44%] Building C object tbl/CMakeFiles/tbl.dir/fsw/src/cfe_tbl_task.c.o
+[ 44%] Building C object tbl/CMakeFiles/tbl.dir/fsw/src/cfe_tbl_task_cmds.c.o
+[ 44%] Linking C static library libtbl.a
+[ 47%] Built target tbl
+[ 47%] Building C object time/CMakeFiles/time.dir/fsw/src/cfe_time_task.c.o
+[ 47%] Linking C static library libtime.a
+[ 49%] Built target time
+[ 49%] Built target ram_notimpl
+[ 50%] Built target psp-pc-linux-impl
+[ 52%] Built target psp-pc-linux-shared
+[ 52%] Built target soft_timebase
+[ 52%] Built target timebase_posix_clock
+[ 53%] Built target eeprom_mmap_file
+[ 55%] Built target port_notimpl
+[ 56%] Built target iodriver
+[ 56%] Built target linux_sysmon
+[ 56%] Built target endian_api
+[ 56%] Built target psp-pc-linux
+[ 57%] Built target msg
+[ 59%] Built target sbr
+[ 60%] Built target resourceid
+[ 60%] Building C object apps/ci_lab/CMakeFiles/ci_lab.dir/fsw/src/ci_lab_app.c.o
+[ 60%] Building C object apps/ci_lab/CMakeFiles/ci_lab.dir/fsw/src/ci_lab_cmds.c.o
+[ 60%] Building C object apps/ci_lab/CMakeFiles/ci_lab.dir/fsw/src/ci_lab_dispatch.c.o
+[ 60%] Building C object apps/ci_lab/CMakeFiles/ci_lab.dir/fsw/src/ci_lab_passthru_decode.c.o
+[ 60%] Linking C shared module ci_lab.so
+[ 60%] Built target ci_lab
+[ 62%] Building C object apps/to_lab/CMakeFiles/to_lab.dir/fsw/src/to_lab_app.c.o
+[ 62%] Building C object apps/to_lab/CMakeFiles/to_lab.dir/fsw/src/to_lab_cmds.c.o
+[ 62%] Building C object apps/to_lab/CMakeFiles/to_lab.dir/fsw/src/to_lab_passthru_encode.c.o
+[ 62%] Linking C shared module to_lab.so
+[ 62%] Built target to_lab
+[ 63%] Building C object apps/sch_lab/CMakeFiles/sch_lab.dir/fsw/src/sch_lab_app.c.o
+[ 63%] Linking C shared module sch_lab.so
+[ 63%] Built target sch_lab
+[ 65%] Built target ut_assert_pic
+[ 66%] Built target cfe_assert
+[ 75%] Built target cfe_testcase
+[ 75%] Building C object apps/sample_app/CMakeFiles/sample_app.dir/fsw/src/sample_app.c.o
+[ 75%] Building C object apps/sample_app/CMakeFiles/sample_app.dir/fsw/src/sample_app_cmds.c.o
+[ 75%] Building C object apps/sample_app/CMakeFiles/sample_app.dir/fsw/src/sample_app_utils.c.o
+[ 75%] Building C object apps/sample_app/CMakeFiles/sample_app.dir/fsw/src/sample_app_dispatch.c.o
+[ 76%] Linking C shared module sample_app.so
+[ 76%] Built target sample_app
+[ 76%] Building C object apps/sample_lib/CMakeFiles/sample_lib.dir/fsw/src/sample_lib.c.o
+[ 76%] Linking C shared module sample_lib.so
+[ 76%] Built target sample_lib
+[ 79%] Built target cf
+[ 81%] Built target hs
+[ 84%] Built target md
+[ 86%] Built target cs
+[ 88%] Built target fm
+[ 89%] Built target lc
+[ 91%] Built target sc
+[ 92%] Built target ds
+[ 94%] Built target hk
+[ 94%] Building C object apps/sbn/CMakeFiles/sbn.dir/fsw/src/sbn_module_bindings.c.o
+[ 94%] Linking C shared module sbn.so
+[ 97%] Built target sbn
+[ 97%] Built target sbn_udp
+[ 97%] Built target sbn_f_remap
+[ 97%] Generating cfe_module_version_table.c
+[ 97%] Generating cfe_build_env_table.c
+[ 97%] Building C object cpu2/CMakeFiles/core-cpu2.dir/cfe_module_version_table.c.o
+[ 97%] Building C object cpu2/CMakeFiles/core-cpu2.dir/cfe_build_env_table.c.o
+[ 97%] Linking C executable core-cpu2
+[100%] Built target core-cpu2
+Install the project...
+-- Install configuration: "release"
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu2/container-start
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu2/cf/ci_lab.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu2/cf/to_lab.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu2/cf/sch_lab.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu2/cf/cfe_assert.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu2/cf/cfe_testcase.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu2/cf/sample_app.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu2/cf/sample_lib.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu2/cf/cf.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu2/cf/hs.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu2/cf/md.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu2/cf/cs.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu2/cf/fm.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu2/cf/lc.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu2/cf/sc.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu2/cf/ds.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu2/cf/hk.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu2/cf/sbn.so
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/cpu2/core-cpu2
+[100%] Built target native_default_cpu2-install
+[  5%] Built target cfeconfig_platformdata_native_default_cpu1
+[ 10%] Built target cfeconfig_platformdata_native_default_cpu2
+[ 31%] Built target cfeconfig_platformdata_tool
+[ 42%] Built target cfe_ts_crc
+[ 68%] Built target cmd_send
+[ 89%] Built target tlm_recv
+[100%] Built target elf2cfetbl
+Install the project...
+-- Install configuration: "release"
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/host/cfe_ts_crc
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/host/cmd_send
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/host/tlm_recv
+-- Up-to-date: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/.
+-- Up-to-date: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2
+-- Up-to-date: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/hs_emt.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/hs_amt.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/sc_rts002.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/sc_rts003.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/cs_eepromtbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/to_lab_sub_bad.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/ds_filter_tbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/hs_xct.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/lc_def_adt.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/sbn_conf_tbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/sample_app_tbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/md_dw03.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/sc_ats1.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/to_lab_sub_alt.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/sc_append_test.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/to_lab_sub.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/hk_cpy_tbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/sc_rts001.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/cf_def_config.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/cs_tablestbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/md_dw02.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/cs_apptbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/cs_memorytbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/sch_lab_table.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/ds_file_tbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/lc_def_adt-test.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/hs_mat.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/sc_ats2_test.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/lc_def_wdt.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/sc_rts004.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/sbn_remap_tbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/md_dw04.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/fm_monitor.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/cfe_test_tbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/sample_app_alt1.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu2/cf/md_dw01.tbl
+-- Up-to-date: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1
+-- Up-to-date: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/hs_emt.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/hs_amt.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/sc_rts002.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/sc_rts003.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/cs_eepromtbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/eval_cycle_09_tbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/to_lab_sub_bad.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/ds_filter_tbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/hs_xct.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/lc_def_adt.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/eval_temp_tbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/sbn_conf_tbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/sample_app_tbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/md_dw03.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/sc_ats1.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/to_lab_sub_alt.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/sc_append_test.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/to_lab_sub.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/hk_cpy_tbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/sc_rts001.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/cf_def_config.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/cs_tablestbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/md_dw02.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/cs_apptbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/cs_memorytbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/sch_lab_table.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/eval_mag_tbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/ds_file_tbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/lc_def_adt-test.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/hs_mat.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/sc_ats2_test.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/lc_def_wdt.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/sc_rts004.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/eval_mpu_tbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/sbn_remap_tbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/md_dw04.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/fm_monitor.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/cfe_test_tbl.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/sample_app_alt1.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/./cpu1/cf/md_dw01.tbl
+-- Installing: /tmp/flight-evaluation-20261123-final/flight/mission/build-native/exe/host/elf2cfetbl
+Built target mission-install
+{"changed": ["project/generated/build-native.json"]}
+Build ready: mission/build-native/exe/cpu1
+Preparing the communication catalog for this build...

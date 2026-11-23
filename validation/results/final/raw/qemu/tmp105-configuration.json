@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "target": "qemu",
+  "model": "tmp105",
+  "started_utc": "2026-11-23T08:01:04.736729+00:00",
+  "at": 1795420864.7367425,
+  "purpose": "Complementary read after quantitative QEMU collection; configuration was not modified",
+  "operation": "READ_REGISTERS",
+  "transport": "linux_i2c_rdwr",
+  "implementation": "hardware/sensor_probe.py:READ_REGISTERS",
+  "implementation_file_sha256": "6598493ed6ab7b1b8ed855f012b79be0f30b8ddcacba652a85626b9aca49c105",
+  "bus": 1,
+  "address": 72,
+  "command_template": "python3 -c \"$READ_REGISTERS\" 1 72 '[[1, 1]]'",
+  "blocks": [
+    {
+      "register": 1,
+      "size": 1,
+      "hex": "00"
+    }
+  ],
+  "status": "read",
+  "configuration_byte": 0,
+  "resolution_bits": 9,
+  "power_on_configuration": true,
+  "ended_utc": "2026-11-23T08:01:05.705954+00:00"
+}

@@ -1,0 +1,18 @@
+{
+  "model": "Raspberry Pi 4 Model B Rev 1.5",
+  "arch": "aarch64",
+  "os": "Debian GNU/Linux 13 (trixie)",
+  "glibc": "2.41",
+  "i2c": [
+    "/dev/i2c-1",
+    "/dev/i2c-20",
+    "/dev/i2c-21"
+  ],
+  "raspios": true,
+  "authorized": true,
+  "service_installed": true,
+  "service": "inactive",
+  "ready": true,
+  "recorded_utc": "2026-11-23T07:27:34.015456+00:00",
+  "operation": "read-only hardware.board_probe report, without starting cFS"
+}

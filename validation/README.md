@@ -50,7 +50,7 @@ python3 -B -m validation target --workspace /tmp/flight-evaluation-final/flight 
 
 O comando `target` coleta de uma missão já em operação; não compila nem inicia cFS. Ao terminar, encerra apenas sua conexão de Ground Station. Pare a missão com o `start --no-ui stop --target native` da **cópia** antes do próximo alvo.
 
-Compile ARM uma vez com `validation build --target qemu`. Prepare imagem/disco/SSH uma vez, registrando os identificadores efetivos. `validation boots --target qemu --leave-running` mede cinco boots do guest previamente desligado, com o mesmo disco persistente e a mesma imagem. Registre separadamente o primeiro boot que provisiona disco, caso ainda não tenha ocorrido; ele não é intercambiável com os cinco boots de disco preparado.
+Antes de medir o build ARM, prepare a imagem `cfs-builder` definida no Dockerfile e registre seu comando, duração e identificador em `setup-builder/`. O compilador já deve estar disponível, assim como no build Native; o cache-check de imagem executado pelo produto continua dentro da medida de build. Compile ARM uma vez com `validation build --target qemu`. Prepare imagem/disco/SSH uma vez, registrando os identificadores efetivos. A imagem QEMU deve conter o fingerprint de modelos exigido por `project/qemu/generate.py --fingerprint`; sua preparação é um pré-requisito, registrado separadamente em `setup-qemu-image/`, e não uma das cinco medidas de boot. `validation boots --target qemu --leave-running` mede cinco boots do guest previamente desligado, com o mesmo disco persistente e a mesma imagem. Registre separadamente o primeiro boot que provisiona disco, caso ainda não tenha ocorrido; ele não é intercambiável com os cinco boots de disco preparado.
 
 Depois de parar cFS sem desligar o guest, `validation starts --target qemu --leave-running` mede dez starts; `validation target --target qemu` coleta comandos e sensores. Encerre o QEMU antes da placa. A placa reutiliza os artefatos ARM, sem nova compilação: dez `starts --target physical --leave-running` e depois `target --target physical`. Nenhuma fase desliga a placa física.
 
@@ -83,3 +83,26 @@ PYTHON
 `BUS=1`, `ADDRESS=104` e `BLOCKS_JSON='[[59,14],[107,1],[108,1],[27,1],[28,1],[117,1]]'` identificam o MPU6050 do protocolo. O harness usa os mesmos argumentos, escapados com `shlex.join`; não publica o host ou caminho da chave. Em Native, o dump lê o arquivo `hardware/.runtime/devices/i2c1-0x68.bin` da cópia isolada, que é a imagem de registradores consumida pelo transporte C nativo.
 
 Um dump ausente em Native, QEMU ou no MPU6050 físico reprova o caso; os sensores físicos não conectados podem registrar `unavailable` com erro de I/O. A recuperação Native é limitada a `min(timeout, max(5 s, 3 × período de aquisição + 2 s))`, com período/tabela usados preservados no JSON. O teste registra os pacotes transitórios até o retorno válido. Apenas o ensaio HAL síncrono verifica a primeira chamada C após o restabelecimento.
+
+
+## Gerar as tabelas a partir da campanha completa
+
+Depois de concluir todas as fases, execute o pós-processamento em um diretório novo:
+
+```sh
+python3 -B -m validation.summarize \
+  --campaign /tmp/flight-evaluation-final \
+  --output /tmp/flight-evaluation-tables
+```
+
+O comando verifica a quantidade de casos, a sequência dos comandos, eventos e contadores posteriores a cada envio, as tolerâncias dos sensores, as interrupções e os hashes dos artefatos ARM. Uma campanha incompleta ou inconsistente não gera uma saída final. Os 11 CSVs, `summary.json` e `examples.json` preservam a ligação com os arquivos de entrada por SHA-256. O resumo não altera pacotes, tempos ou valores originais.
+
+| Questão | Registros brutos | Tabelas geradas |
+| --- | --- | --- |
+| Q1 | `<alvo>/commands.json`, `<alvo>/downlink.jsonl` e catálogo | `q1_commands.csv`, `q1_attempts.csv` |
+| Q2 | `registers/registers.json`, `<alvo>/sensors.json`, dumps de registradores | `q2_samples.csv`, `q2_errors.csv`, `physical_readings.csv` |
+| Q3 | `registers/registers.json`, `native/dropout.json`, `physical/sensors.json` | `q3_interruptions.csv`, `q3_hal_samples.csv`, `q3_recovery.csv` |
+| Q4 | `qemu/artifacts.json`, `physical/artifacts.json` | `q4_artifacts.csv` |
+| Q5 | `build-*/metrics.json`, `cycles-native/metrics.json`, `starts-*/metrics.json`, `boots-qemu/metrics.json` e logs | `q5_timings.csv`, `q5_statistics.csv` |
+
+Na publicação, mantenha os dados brutos em `validation/results/final/raw/` e as tabelas em `validation/results/final/tables/`, com um índice e manifesto SHA-256. O pós-processamento pode ser repetido usando `raw/` como `--campaign`. A revisão do código executado fica em `raw/prepare.json`; a revisão que publica os resultados é posterior e deve ser identificada separadamente. Não inclua o workspace `flight/`, imagens/discos, chaves SSH ou banco de runtime.

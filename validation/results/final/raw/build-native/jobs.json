@@ -1,0 +1,16 @@
+[
+  {
+    "action": "build",
+    "target": "native",
+    "started_utc": "2026-11-23T06:41:50.633467+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "abac831b8ddd66c9ad4fe15fcdc51c7b19b69467429c22bcd2eead1c6de3034d",
+      "installed_sha256": "e3d1f3b83cd3d151559640a28dded8a5dc7b96dfa1d4e4c6ef3d876877e0ac18",
+      "built_at": 1795416181.5797963
+    },
+    "elapsed_s": 82.97433622099925,
+    "ended_utc": "2026-11-23T06:43:14.408027+00:00"
+  }
+]

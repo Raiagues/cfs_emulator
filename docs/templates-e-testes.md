@@ -38,7 +38,7 @@ python3 -B -m unittest interface.tests.test_nasa_source interface.tests.test_app
 Os testes JavaScript da interface usam módulos ES no Node:
 
 ```sh
-node --experimental-default-type=module --test interface/tests/*.mjs
+node --experimental-default-type=module --test --test-concurrency=1 interface/tests/*.mjs
 ```
 
 Os executores da avaliação final e seus dados são documentados separadamente para que seja possível localizar a evidência de cada critério sem depender da interface do Studio.

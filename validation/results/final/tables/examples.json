@@ -1,0 +1,77 @@
+{
+  "command": {
+    "target": "native",
+    "app": "sample_app",
+    "sent": {
+      "id": "SAMPLE_APP_NOOP_CC",
+      "app": "sample_app",
+      "mid": 6274,
+      "code": 0,
+      "hex": "1882c000000100a4",
+      "event_id": 29,
+      "sent_at": 1795416818.623546
+    },
+    "event": {
+      "app": "cfe_evs",
+      "mid": 2056,
+      "hex": "0808c02d00a9000f463e7f0f0000000053414d504c455f415050000000000000000000000000000003000200420000000100000053414d504c453a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "sequence": 45,
+      "event_id": 30,
+      "received_at": 1795416818.99724
+    },
+    "housekeeping": {
+      "app": "sample_app",
+      "mid": 2179,
+      "hex": "0883c005000b000f46438006000000000100",
+      "sequence": 5,
+      "event_id": 60,
+      "received_at": 1795416823.9990535
+    },
+    "counter_before": 0,
+    "counter_after": 1
+  },
+  "registers": {
+    "target": "qemu",
+    "model": "mpu6050",
+    "operation": "linux_i2c_rdwr",
+    "implementation": "hardware/sensor_probe.py:READ_REGISTERS",
+    "bus": 1,
+    "address": 104,
+    "blocks": [
+      {
+        "register": 59,
+        "size": 14,
+        "hex": "00d4fea83fdfef8b0029ffba0010"
+      },
+      {
+        "register": 107,
+        "size": 1,
+        "hex": "01"
+      },
+      {
+        "register": 108,
+        "size": 1,
+        "hex": "00"
+      },
+      {
+        "register": 27,
+        "size": 1,
+        "hex": "00"
+      },
+      {
+        "register": 28,
+        "size": 1,
+        "hex": "00"
+      },
+      {
+        "register": 117,
+        "size": 1,
+        "hex": "68"
+      }
+    ],
+    "status": "read",
+    "at": 1795420782.5134852,
+    "public_command": "python3 - \"$ALVO_SSH\" \"$BUS\" \"$ADDRESS\" \"$BLOCKS_JSON\" <<'PYTHON'\nimport shlex, subprocess, sys\nfrom hardware.sensor_probe import READ_REGISTERS\ncommand = shlex.join(['python3', '-c', READ_REGISTERS, *sys.argv[2:]])\nsubprocess.run(['ssh', sys.argv[1], command], check=True)\nPYTHON",
+    "command_note": "Replace placeholders locally; the acquisition used the recorded bus, address and blocks. No endpoint or key is exported."
+  }
+}

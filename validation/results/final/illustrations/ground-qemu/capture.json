@@ -1,0 +1,1383 @@
+{
+  "purpose": "Real Ground UI illustration after quantitative collection; not a quantitative measurement",
+  "target": "qemu",
+  "started_at": "2026-11-23T11:20:20.322Z",
+  "server_port": 8766,
+  "preferences": {
+    "theme": "dark"
+  },
+  "mutating_requests": [],
+  "blocked_requests": [],
+  "screenshots": [
+    {
+      "file": "ground-qemu-overview.png",
+      "sha256": "ff31297622f1067efa3b73951661cbcc6af8b7c0da02b97efb31223a14a308c8",
+      "captured_at": "2026-11-23T11:20:26.458Z",
+      "viewport": {
+        "width": 1920,
+        "height": 1280
+      },
+      "selected_packet": "EVAL_MPU_SAMPLE_TLM_MID",
+      "route": {
+        "mid": 2565,
+        "expected": [
+          "eval_mpu",
+          "to_lab"
+        ],
+        "actual": [
+          "eval_mpu",
+          "to_lab"
+        ],
+        "busCount": 1,
+        "groundCount": 1,
+        "publications": [
+          {
+            "app": "eval_mpu",
+            "path": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.c",
+            "line": 99,
+            "end_line": 99,
+            "symbol": "CFE_SB_TransmitMsg",
+            "kind": "packet",
+            "mid": 2565
+          }
+        ],
+        "subscriptions": [
+          {
+            "app": "to_lab",
+            "mid": 2565,
+            "pipe": "TO_LAB_Global.Tlm_pipe",
+            "source": {
+              "path": "mission/sample_defs/generated/appgen_telemetry.inc",
+              "line": 7,
+              "end_line": 7,
+              "symbol": "0x0A05"
+            },
+            "via": [],
+            "kind": "table",
+            "conditions": [
+              "defined(APPGEN_ENABLED)",
+              "!defined(CFS_CPU1_MODULE_SELECTION) || defined(CFS_MODULE_EVAL_MPU)"
+            ],
+            "table": {
+              "path": "mission/sample_defs/tables/to_lab_sub.c",
+              "line": 191,
+              "end_line": 191,
+              "symbol": "TO_LAB_Subs"
+            }
+          }
+        ]
+      },
+      "displayed_fields": [
+        {
+          "name": "Value.Value_accel_x",
+          "value": "-706",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Value.Value_accel_y",
+          "value": "7",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Value.Value_accel_z",
+          "value": "705",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Value.Value_temperature",
+          "value": "29516",
+          "name_elided": true,
+          "value_elided": false
+        },
+        {
+          "name": "Value.Value_gyro_x",
+          "value": "2167",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Value.Value_gyro_y",
+          "value": "-1679",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Value.Value_gyro_z",
+          "value": "557",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Status",
+          "value": "0",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "ReadCounter",
+          "value": "6109",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "ErrorCounter",
+          "value": "0",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Valid",
+          "value": "1",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Reserved",
+          "value": "[0,0,0]",
+          "name_elided": false,
+          "value_elided": false
+        }
+      ],
+      "preceding_packets": [
+        {
+          "mid": 2561,
+          "sequence": 6109,
+          "bytes": 36,
+          "name": "EVAL_TEMP_Sample_Tlm_t",
+          "app": "eval_temp",
+          "source": "cFS/apps/eval_temp/fsw/src/sensors/eval_temp_sample_sensor.h",
+          "values": {
+            "Value": 31500,
+            "Status": 0,
+            "ReadCounter": 6109,
+            "ErrorCounter": 0,
+            "Valid": 1,
+            "Reserved": [
+              0,
+              0,
+              0
+            ]
+          },
+          "errors": [],
+          "hex": "0a01d7dd001d000f75ed8307000000000c7b000000000000dd1700000000000001000000",
+          "received_at": 1795432825.2608633,
+          "count": 19,
+          "event_id": 214
+        },
+        {
+          "mid": 2563,
+          "sequence": 6109,
+          "bytes": 44,
+          "name": "EVAL_MAG_Sample_Tlm_t",
+          "app": "eval_mag",
+          "source": "cFS/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.h",
+          "values": {
+            "Value.X": 11454,
+            "Value.Y": 21454,
+            "Value.Z": -32755,
+            "Status": 0,
+            "ReadCounter": 6109,
+            "ErrorCounter": 0,
+            "Valid": 1,
+            "Reserved": [
+              0,
+              0,
+              0
+            ]
+          },
+          "errors": [],
+          "hex": "0a03d7dd0025000f75ed834400000000be2c0000ce5300000d80ffff00000000dd1700000000000001000000",
+          "received_at": 1795432825.2609031,
+          "count": 19,
+          "event_id": 215
+        },
+        {
+          "mid": 2565,
+          "sequence": 6109,
+          "bytes": 60,
+          "name": "EVAL_MPU_Sample_Tlm_t",
+          "app": "eval_mpu",
+          "source": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.h",
+          "values": {
+            "Value.Value_accel_x": -706,
+            "Value.Value_accel_y": 7,
+            "Value.Value_accel_z": 705,
+            "Value.Value_temperature": 29516,
+            "Value.Value_gyro_x": 2167,
+            "Value.Value_gyro_y": -1679,
+            "Value.Value_gyro_z": 557,
+            "Status": 0,
+            "ReadCounter": 6109,
+            "ErrorCounter": 0,
+            "Valid": 1,
+            "Reserved": [
+              0,
+              0,
+              0
+            ]
+          },
+          "errors": [],
+          "hex": "0a05d7dd0035000f75ed8362000000003efdffff07000000c10200004c7300007708000071f9ffff2d02000000000000dd1700000000000001000000",
+          "received_at": 1795432825.261171,
+          "count": 19,
+          "event_id": 216
+        }
+      ]
+    },
+    {
+      "file": "ground-qemu-eval_mag.png",
+      "sha256": "f6f19a3cb2b674b1dc2c04c72aeeee6ddc1e71ce080975bd465c9331eee9a401",
+      "captured_at": "2026-11-23T11:20:27.113Z",
+      "viewport": {
+        "width": 1920,
+        "height": 1280
+      },
+      "selected_packet": "EVAL_MAG_SAMPLE_TLM_MID",
+      "route": {
+        "mid": 2563,
+        "expected": [
+          "eval_mag",
+          "to_lab"
+        ],
+        "actual": [
+          "eval_mag",
+          "to_lab"
+        ],
+        "busCount": 1,
+        "groundCount": 1,
+        "publications": [
+          {
+            "app": "eval_mag",
+            "path": "cFS/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.c",
+            "line": 99,
+            "end_line": 99,
+            "symbol": "CFE_SB_TransmitMsg",
+            "kind": "packet",
+            "mid": 2563
+          }
+        ],
+        "subscriptions": [
+          {
+            "app": "to_lab",
+            "mid": 2563,
+            "pipe": "TO_LAB_Global.Tlm_pipe",
+            "source": {
+              "path": "mission/sample_defs/generated/appgen_telemetry.inc",
+              "line": 3,
+              "end_line": 3,
+              "symbol": "0x0A03"
+            },
+            "via": [],
+            "kind": "table",
+            "conditions": [
+              "defined(APPGEN_ENABLED)",
+              "!defined(CFS_CPU1_MODULE_SELECTION) || defined(CFS_MODULE_EVAL_MAG)"
+            ],
+            "table": {
+              "path": "mission/sample_defs/tables/to_lab_sub.c",
+              "line": 191,
+              "end_line": 191,
+              "symbol": "TO_LAB_Subs"
+            }
+          }
+        ]
+      },
+      "displayed_fields": [
+        {
+          "name": "Value.X",
+          "value": "11454",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Value.Y",
+          "value": "21454",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Value.Z",
+          "value": "-32755",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Status",
+          "value": "0",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "ReadCounter",
+          "value": "6109",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "ErrorCounter",
+          "value": "0",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Valid",
+          "value": "1",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Reserved",
+          "value": "[0,0,0]",
+          "name_elided": false,
+          "value_elided": false
+        }
+      ],
+      "preceding_packets": [
+        {
+          "mid": 2561,
+          "sequence": 6109,
+          "bytes": 36,
+          "name": "EVAL_TEMP_Sample_Tlm_t",
+          "app": "eval_temp",
+          "source": "cFS/apps/eval_temp/fsw/src/sensors/eval_temp_sample_sensor.h",
+          "values": {
+            "Value": 31500,
+            "Status": 0,
+            "ReadCounter": 6109,
+            "ErrorCounter": 0,
+            "Valid": 1,
+            "Reserved": [
+              0,
+              0,
+              0
+            ]
+          },
+          "errors": [],
+          "hex": "0a01d7dd001d000f75ed8307000000000c7b000000000000dd1700000000000001000000",
+          "received_at": 1795432825.2608633,
+          "count": 19,
+          "event_id": 214
+        },
+        {
+          "mid": 2563,
+          "sequence": 6109,
+          "bytes": 44,
+          "name": "EVAL_MAG_Sample_Tlm_t",
+          "app": "eval_mag",
+          "source": "cFS/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.h",
+          "values": {
+            "Value.X": 11454,
+            "Value.Y": 21454,
+            "Value.Z": -32755,
+            "Status": 0,
+            "ReadCounter": 6109,
+            "ErrorCounter": 0,
+            "Valid": 1,
+            "Reserved": [
+              0,
+              0,
+              0
+            ]
+          },
+          "errors": [],
+          "hex": "0a03d7dd0025000f75ed834400000000be2c0000ce5300000d80ffff00000000dd1700000000000001000000",
+          "received_at": 1795432825.2609031,
+          "count": 19,
+          "event_id": 215
+        },
+        {
+          "mid": 2565,
+          "sequence": 6109,
+          "bytes": 60,
+          "name": "EVAL_MPU_Sample_Tlm_t",
+          "app": "eval_mpu",
+          "source": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.h",
+          "values": {
+            "Value.Value_accel_x": -706,
+            "Value.Value_accel_y": 7,
+            "Value.Value_accel_z": 705,
+            "Value.Value_temperature": 29516,
+            "Value.Value_gyro_x": 2167,
+            "Value.Value_gyro_y": -1679,
+            "Value.Value_gyro_z": 557,
+            "Status": 0,
+            "ReadCounter": 6109,
+            "ErrorCounter": 0,
+            "Valid": 1,
+            "Reserved": [
+              0,
+              0,
+              0
+            ]
+          },
+          "errors": [],
+          "hex": "0a05d7dd0035000f75ed8362000000003efdffff07000000c10200004c7300007708000071f9ffff2d02000000000000dd1700000000000001000000",
+          "received_at": 1795432825.261171,
+          "count": 19,
+          "event_id": 216
+        }
+      ]
+    },
+    {
+      "file": "ground-qemu-eval_mag-telemetry.png",
+      "sha256": "37561fb52af2ecc66750fe62cb9e8bdd304d1d267c3b6c6abb89346ff293b7bf",
+      "captured_at": "2026-11-23T11:20:27.330Z",
+      "kind": "actual_dom_element",
+      "context_file": "ground-qemu-eval_mag.png",
+      "viewport": {
+        "width": 1920,
+        "height": 1280
+      },
+      "dom_bounds_css_px": {
+        "x": 1657,
+        "y": 490,
+        "width": 255,
+        "height": 314
+      },
+      "selected_packet": "EVAL_MAG_SAMPLE_TLM_MID",
+      "selected_mid": 2563,
+      "app": "eval_mag",
+      "displayed_fields": [
+        {
+          "name": "Value.X",
+          "value": "11454",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Value.Y",
+          "value": "21454",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Value.Z",
+          "value": "-32755",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Status",
+          "value": "0",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "ReadCounter",
+          "value": "6109",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "ErrorCounter",
+          "value": "0",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Valid",
+          "value": "1",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Reserved",
+          "value": "[0,0,0]",
+          "name_elided": false,
+          "value_elided": false
+        }
+      ],
+      "preceding_packets": [
+        {
+          "mid": 2563,
+          "sequence": 6109,
+          "bytes": 44,
+          "name": "EVAL_MAG_Sample_Tlm_t",
+          "app": "eval_mag",
+          "source": "cFS/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.h",
+          "values": {
+            "Value.X": 11454,
+            "Value.Y": 21454,
+            "Value.Z": -32755,
+            "Status": 0,
+            "ReadCounter": 6109,
+            "ErrorCounter": 0,
+            "Valid": 1,
+            "Reserved": [
+              0,
+              0,
+              0
+            ]
+          },
+          "errors": [],
+          "hex": "0a03d7dd0025000f75ed834400000000be2c0000ce5300000d80ffff00000000dd1700000000000001000000",
+          "received_at": 1795432825.2609031,
+          "count": 19,
+          "event_id": 215
+        }
+      ],
+      "caption_context": "Real Ground telemetry for eval_mag; EVAL_MAG_SAMPLE_TLM_MID, MID 0xA03; target qemu; post-collection illustration. Values are the decoded wire fields as rendered, without unit conversion. Names may be elided by the application; full names and values accompany this image in capture.json. The preceding API record is not asserted to be the exact screenshot paint frame."
+    },
+    {
+      "file": "ground-qemu-eval_mpu.png",
+      "sha256": "2dd54c337b54d119dc598e6544d6825596dca1f8b044ee35af2d9a86d3cbf59d",
+      "captured_at": "2026-11-23T11:20:27.958Z",
+      "viewport": {
+        "width": 1920,
+        "height": 1280
+      },
+      "selected_packet": "EVAL_MPU_SAMPLE_TLM_MID",
+      "route": {
+        "mid": 2565,
+        "expected": [
+          "eval_mpu",
+          "to_lab"
+        ],
+        "actual": [
+          "eval_mpu",
+          "to_lab"
+        ],
+        "busCount": 1,
+        "groundCount": 1,
+        "publications": [
+          {
+            "app": "eval_mpu",
+            "path": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.c",
+            "line": 99,
+            "end_line": 99,
+            "symbol": "CFE_SB_TransmitMsg",
+            "kind": "packet",
+            "mid": 2565
+          }
+        ],
+        "subscriptions": [
+          {
+            "app": "to_lab",
+            "mid": 2565,
+            "pipe": "TO_LAB_Global.Tlm_pipe",
+            "source": {
+              "path": "mission/sample_defs/generated/appgen_telemetry.inc",
+              "line": 7,
+              "end_line": 7,
+              "symbol": "0x0A05"
+            },
+            "via": [],
+            "kind": "table",
+            "conditions": [
+              "defined(APPGEN_ENABLED)",
+              "!defined(CFS_CPU1_MODULE_SELECTION) || defined(CFS_MODULE_EVAL_MPU)"
+            ],
+            "table": {
+              "path": "mission/sample_defs/tables/to_lab_sub.c",
+              "line": 191,
+              "end_line": 191,
+              "symbol": "TO_LAB_Subs"
+            }
+          }
+        ]
+      },
+      "displayed_fields": [
+        {
+          "name": "Value.Value_accel_x",
+          "value": "-706",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Value.Value_accel_y",
+          "value": "7",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Value.Value_accel_z",
+          "value": "705",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Value.Value_temperature",
+          "value": "29516",
+          "name_elided": true,
+          "value_elided": false
+        },
+        {
+          "name": "Value.Value_gyro_x",
+          "value": "2167",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Value.Value_gyro_y",
+          "value": "-1679",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Value.Value_gyro_z",
+          "value": "557",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Status",
+          "value": "0",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "ReadCounter",
+          "value": "6110",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "ErrorCounter",
+          "value": "0",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Valid",
+          "value": "1",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Reserved",
+          "value": "[0,0,0]",
+          "name_elided": false,
+          "value_elided": false
+        }
+      ],
+      "preceding_packets": [
+        {
+          "mid": 2561,
+          "sequence": 6110,
+          "bytes": 36,
+          "name": "EVAL_TEMP_Sample_Tlm_t",
+          "app": "eval_temp",
+          "source": "cFS/apps/eval_temp/fsw/src/sensors/eval_temp_sample_sensor.h",
+          "values": {
+            "Value": 31500,
+            "Status": 0,
+            "ReadCounter": 6110,
+            "ErrorCounter": 0,
+            "Valid": 1,
+            "Reserved": [
+              0,
+              0,
+              0
+            ]
+          },
+          "errors": [],
+          "hex": "0a01d7de001d000f75ef8350000000000c7b000000000000de1700000000000001000000",
+          "received_at": 1795432827.2765875,
+          "count": 20,
+          "event_id": 224
+        },
+        {
+          "mid": 2563,
+          "sequence": 6110,
+          "bytes": 44,
+          "name": "EVAL_MAG_Sample_Tlm_t",
+          "app": "eval_mag",
+          "source": "cFS/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.h",
+          "values": {
+            "Value.X": 11454,
+            "Value.Y": 21454,
+            "Value.Z": -32755,
+            "Status": 0,
+            "ReadCounter": 6110,
+            "ErrorCounter": 0,
+            "Valid": 1,
+            "Reserved": [
+              0,
+              0,
+              0
+            ]
+          },
+          "errors": [],
+          "hex": "0a03d7de0025000f75ef83d500000000be2c0000ce5300000d80ffff00000000de1700000000000001000000",
+          "received_at": 1795432827.2767422,
+          "count": 20,
+          "event_id": 226
+        },
+        {
+          "mid": 2565,
+          "sequence": 6110,
+          "bytes": 60,
+          "name": "EVAL_MPU_Sample_Tlm_t",
+          "app": "eval_mpu",
+          "source": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.h",
+          "values": {
+            "Value.Value_accel_x": -706,
+            "Value.Value_accel_y": 7,
+            "Value.Value_accel_z": 705,
+            "Value.Value_temperature": 29516,
+            "Value.Value_gyro_x": 2167,
+            "Value.Value_gyro_y": -1679,
+            "Value.Value_gyro_z": 557,
+            "Status": 0,
+            "ReadCounter": 6110,
+            "ErrorCounter": 0,
+            "Valid": 1,
+            "Reserved": [
+              0,
+              0,
+              0
+            ]
+          },
+          "errors": [],
+          "hex": "0a05d7de0035000f75ef840f000000003efdffff07000000c10200004c7300007708000071f9ffff2d02000000000000de1700000000000001000000",
+          "received_at": 1795432827.2768064,
+          "count": 20,
+          "event_id": 228
+        }
+      ]
+    },
+    {
+      "file": "ground-qemu-eval_mpu-telemetry.png",
+      "sha256": "c644945ed581a79cde2fad03f72926923b632ded4b33b6ec258731a4897f5f40",
+      "captured_at": "2026-11-23T11:20:28.183Z",
+      "kind": "actual_dom_element",
+      "context_file": "ground-qemu-eval_mpu.png",
+      "viewport": {
+        "width": 1920,
+        "height": 1280
+      },
+      "dom_bounds_css_px": {
+        "x": 1657,
+        "y": 522,
+        "width": 255,
+        "height": 410
+      },
+      "selected_packet": "EVAL_MPU_SAMPLE_TLM_MID",
+      "selected_mid": 2565,
+      "app": "eval_mpu",
+      "displayed_fields": [
+        {
+          "name": "Value.Value_accel_x",
+          "value": "-706",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Value.Value_accel_y",
+          "value": "7",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Value.Value_accel_z",
+          "value": "705",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Value.Value_temperature",
+          "value": "29516",
+          "name_elided": true,
+          "value_elided": false
+        },
+        {
+          "name": "Value.Value_gyro_x",
+          "value": "2167",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Value.Value_gyro_y",
+          "value": "-1679",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Value.Value_gyro_z",
+          "value": "557",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Status",
+          "value": "0",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "ReadCounter",
+          "value": "6110",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "ErrorCounter",
+          "value": "0",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Valid",
+          "value": "1",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Reserved",
+          "value": "[0,0,0]",
+          "name_elided": false,
+          "value_elided": false
+        }
+      ],
+      "preceding_packets": [
+        {
+          "mid": 2565,
+          "sequence": 6110,
+          "bytes": 60,
+          "name": "EVAL_MPU_Sample_Tlm_t",
+          "app": "eval_mpu",
+          "source": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.h",
+          "values": {
+            "Value.Value_accel_x": -706,
+            "Value.Value_accel_y": 7,
+            "Value.Value_accel_z": 705,
+            "Value.Value_temperature": 29516,
+            "Value.Value_gyro_x": 2167,
+            "Value.Value_gyro_y": -1679,
+            "Value.Value_gyro_z": 557,
+            "Status": 0,
+            "ReadCounter": 6110,
+            "ErrorCounter": 0,
+            "Valid": 1,
+            "Reserved": [
+              0,
+              0,
+              0
+            ]
+          },
+          "errors": [],
+          "hex": "0a05d7de0035000f75ef840f000000003efdffff07000000c10200004c7300007708000071f9ffff2d02000000000000de1700000000000001000000",
+          "received_at": 1795432827.2768064,
+          "count": 20,
+          "event_id": 228
+        }
+      ],
+      "caption_context": "Real Ground telemetry for eval_mpu; EVAL_MPU_SAMPLE_TLM_MID, MID 0xA05; target qemu; post-collection illustration. Values are the decoded wire fields as rendered, without unit conversion. Names may be elided by the application; full names and values accompany this image in capture.json. The preceding API record is not asserted to be the exact screenshot paint frame."
+    },
+    {
+      "file": "ground-qemu-eval_temp.png",
+      "sha256": "39630db3aba7f64478769024ab09c71b4b9b139fe868f7130631e35e037747be",
+      "captured_at": "2026-11-23T11:20:28.890Z",
+      "viewport": {
+        "width": 1920,
+        "height": 1280
+      },
+      "selected_packet": "EVAL_TEMP_SAMPLE_TLM_MID",
+      "route": {
+        "mid": 2561,
+        "expected": [
+          "eval_temp",
+          "to_lab"
+        ],
+        "actual": [
+          "eval_temp",
+          "to_lab"
+        ],
+        "busCount": 1,
+        "groundCount": 1,
+        "publications": [
+          {
+            "app": "eval_temp",
+            "path": "cFS/apps/eval_temp/fsw/src/sensors/eval_temp_sample_sensor.c",
+            "line": 103,
+            "end_line": 103,
+            "symbol": "CFE_SB_TransmitMsg",
+            "kind": "packet",
+            "mid": 2561
+          }
+        ],
+        "subscriptions": [
+          {
+            "app": "to_lab",
+            "mid": 2561,
+            "pipe": "TO_LAB_Global.Tlm_pipe",
+            "source": {
+              "path": "mission/sample_defs/generated/appgen_telemetry.inc",
+              "line": 11,
+              "end_line": 11,
+              "symbol": "0x0A01"
+            },
+            "via": [],
+            "kind": "table",
+            "conditions": [
+              "defined(APPGEN_ENABLED)",
+              "!defined(CFS_CPU1_MODULE_SELECTION) || defined(CFS_MODULE_EVAL_TEMP)"
+            ],
+            "table": {
+              "path": "mission/sample_defs/tables/to_lab_sub.c",
+              "line": 191,
+              "end_line": 191,
+              "symbol": "TO_LAB_Subs"
+            }
+          }
+        ]
+      },
+      "displayed_fields": [
+        {
+          "name": "Value",
+          "value": "31500",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Status",
+          "value": "0",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "ReadCounter",
+          "value": "6110",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "ErrorCounter",
+          "value": "0",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Valid",
+          "value": "1",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Reserved",
+          "value": "[0,0,0]",
+          "name_elided": false,
+          "value_elided": false
+        }
+      ],
+      "preceding_packets": [
+        {
+          "mid": 2561,
+          "sequence": 6110,
+          "bytes": 36,
+          "name": "EVAL_TEMP_Sample_Tlm_t",
+          "app": "eval_temp",
+          "source": "cFS/apps/eval_temp/fsw/src/sensors/eval_temp_sample_sensor.h",
+          "values": {
+            "Value": 31500,
+            "Status": 0,
+            "ReadCounter": 6110,
+            "ErrorCounter": 0,
+            "Valid": 1,
+            "Reserved": [
+              0,
+              0,
+              0
+            ]
+          },
+          "errors": [],
+          "hex": "0a01d7de001d000f75ef8350000000000c7b000000000000de1700000000000001000000",
+          "received_at": 1795432827.2765875,
+          "count": 20,
+          "event_id": 224
+        },
+        {
+          "mid": 2563,
+          "sequence": 6110,
+          "bytes": 44,
+          "name": "EVAL_MAG_Sample_Tlm_t",
+          "app": "eval_mag",
+          "source": "cFS/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.h",
+          "values": {
+            "Value.X": 11454,
+            "Value.Y": 21454,
+            "Value.Z": -32755,
+            "Status": 0,
+            "ReadCounter": 6110,
+            "ErrorCounter": 0,
+            "Valid": 1,
+            "Reserved": [
+              0,
+              0,
+              0
+            ]
+          },
+          "errors": [],
+          "hex": "0a03d7de0025000f75ef83d500000000be2c0000ce5300000d80ffff00000000de1700000000000001000000",
+          "received_at": 1795432827.2767422,
+          "count": 20,
+          "event_id": 226
+        },
+        {
+          "mid": 2565,
+          "sequence": 6110,
+          "bytes": 60,
+          "name": "EVAL_MPU_Sample_Tlm_t",
+          "app": "eval_mpu",
+          "source": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.h",
+          "values": {
+            "Value.Value_accel_x": -706,
+            "Value.Value_accel_y": 7,
+            "Value.Value_accel_z": 705,
+            "Value.Value_temperature": 29516,
+            "Value.Value_gyro_x": 2167,
+            "Value.Value_gyro_y": -1679,
+            "Value.Value_gyro_z": 557,
+            "Status": 0,
+            "ReadCounter": 6110,
+            "ErrorCounter": 0,
+            "Valid": 1,
+            "Reserved": [
+              0,
+              0,
+              0
+            ]
+          },
+          "errors": [],
+          "hex": "0a05d7de0035000f75ef840f000000003efdffff07000000c10200004c7300007708000071f9ffff2d02000000000000de1700000000000001000000",
+          "received_at": 1795432827.2768064,
+          "count": 20,
+          "event_id": 228
+        }
+      ]
+    },
+    {
+      "file": "ground-qemu-eval_temp-telemetry.png",
+      "sha256": "44957b670ca5af72d9029e0aed770aca90b0d7570d9270d40aa892ef743ed340",
+      "captured_at": "2026-11-23T11:20:29.097Z",
+      "kind": "actual_dom_element",
+      "context_file": "ground-qemu-eval_temp.png",
+      "viewport": {
+        "width": 1920,
+        "height": 1280
+      },
+      "dom_bounds_css_px": {
+        "x": 1657,
+        "y": 554,
+        "width": 255,
+        "height": 266
+      },
+      "selected_packet": "EVAL_TEMP_SAMPLE_TLM_MID",
+      "selected_mid": 2561,
+      "app": "eval_temp",
+      "displayed_fields": [
+        {
+          "name": "Value",
+          "value": "31500",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Status",
+          "value": "0",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "ReadCounter",
+          "value": "6110",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "ErrorCounter",
+          "value": "0",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Valid",
+          "value": "1",
+          "name_elided": false,
+          "value_elided": false
+        },
+        {
+          "name": "Reserved",
+          "value": "[0,0,0]",
+          "name_elided": false,
+          "value_elided": false
+        }
+      ],
+      "preceding_packets": [
+        {
+          "mid": 2561,
+          "sequence": 6110,
+          "bytes": 36,
+          "name": "EVAL_TEMP_Sample_Tlm_t",
+          "app": "eval_temp",
+          "source": "cFS/apps/eval_temp/fsw/src/sensors/eval_temp_sample_sensor.h",
+          "values": {
+            "Value": 31500,
+            "Status": 0,
+            "ReadCounter": 6110,
+            "ErrorCounter": 0,
+            "Valid": 1,
+            "Reserved": [
+              0,
+              0,
+              0
+            ]
+          },
+          "errors": [],
+          "hex": "0a01d7de001d000f75ef8350000000000c7b000000000000de1700000000000001000000",
+          "received_at": 1795432827.2765875,
+          "count": 20,
+          "event_id": 224
+        }
+      ],
+      "caption_context": "Real Ground telemetry for eval_temp; EVAL_TEMP_SAMPLE_TLM_MID, MID 0xA01; target qemu; post-collection illustration. Values are the decoded wire fields as rendered, without unit conversion. Names may be elided by the application; full names and values accompany this image in capture.json. The preceding API record is not asserted to be the exact screenshot paint frame."
+    }
+  ],
+  "page_errors": [],
+  "build_fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+  "catalog_packets": [
+    {
+      "id": "EVAL_TEMP_SAMPLE_TLM_MID",
+      "app": "eval_temp",
+      "name": "EVAL_TEMP_Sample_Tlm_t",
+      "mid": 2561,
+      "size": 36,
+      "fields": [
+        {
+          "name": "Value",
+          "type": "int32",
+          "format": "i",
+          "count": 1,
+          "offset": 16,
+          "size": 4
+        },
+        {
+          "name": "Status",
+          "type": "int32",
+          "format": "i",
+          "count": 1,
+          "offset": 20,
+          "size": 4
+        },
+        {
+          "name": "ReadCounter",
+          "type": "uint32",
+          "format": "I",
+          "count": 1,
+          "offset": 24,
+          "size": 4
+        },
+        {
+          "name": "ErrorCounter",
+          "type": "uint32",
+          "format": "I",
+          "count": 1,
+          "offset": 28,
+          "size": 4
+        },
+        {
+          "name": "Valid",
+          "type": "uint8",
+          "format": "B",
+          "count": 1,
+          "offset": 32,
+          "size": 1
+        },
+        {
+          "name": "Reserved",
+          "type": "uint8",
+          "format": "B",
+          "count": 3,
+          "offset": 33,
+          "size": 3
+        }
+      ],
+      "source": "cFS/apps/eval_temp/fsw/src/sensors/eval_temp_sample_sensor.h"
+    },
+    {
+      "id": "EVAL_MAG_SAMPLE_TLM_MID",
+      "app": "eval_mag",
+      "name": "EVAL_MAG_Sample_Tlm_t",
+      "mid": 2563,
+      "size": 44,
+      "fields": [
+        {
+          "name": "Value.X",
+          "type": "int32",
+          "format": "i",
+          "count": 1,
+          "offset": 16,
+          "size": 4
+        },
+        {
+          "name": "Value.Y",
+          "type": "int32",
+          "format": "i",
+          "count": 1,
+          "offset": 20,
+          "size": 4
+        },
+        {
+          "name": "Value.Z",
+          "type": "int32",
+          "format": "i",
+          "count": 1,
+          "offset": 24,
+          "size": 4
+        },
+        {
+          "name": "Status",
+          "type": "int32",
+          "format": "i",
+          "count": 1,
+          "offset": 28,
+          "size": 4
+        },
+        {
+          "name": "ReadCounter",
+          "type": "uint32",
+          "format": "I",
+          "count": 1,
+          "offset": 32,
+          "size": 4
+        },
+        {
+          "name": "ErrorCounter",
+          "type": "uint32",
+          "format": "I",
+          "count": 1,
+          "offset": 36,
+          "size": 4
+        },
+        {
+          "name": "Valid",
+          "type": "uint8",
+          "format": "B",
+          "count": 1,
+          "offset": 40,
+          "size": 1
+        },
+        {
+          "name": "Reserved",
+          "type": "uint8",
+          "format": "B",
+          "count": 3,
+          "offset": 41,
+          "size": 3
+        }
+      ],
+      "source": "cFS/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.h"
+    },
+    {
+      "id": "EVAL_MPU_SAMPLE_TLM_MID",
+      "app": "eval_mpu",
+      "name": "EVAL_MPU_Sample_Tlm_t",
+      "mid": 2565,
+      "size": 60,
+      "fields": [
+        {
+          "name": "Value.Value_accel_x",
+          "type": "int32",
+          "format": "i",
+          "count": 1,
+          "offset": 16,
+          "size": 4
+        },
+        {
+          "name": "Value.Value_accel_y",
+          "type": "int32",
+          "format": "i",
+          "count": 1,
+          "offset": 20,
+          "size": 4
+        },
+        {
+          "name": "Value.Value_accel_z",
+          "type": "int32",
+          "format": "i",
+          "count": 1,
+          "offset": 24,
+          "size": 4
+        },
+        {
+          "name": "Value.Value_temperature",
+          "type": "int32",
+          "format": "i",
+          "count": 1,
+          "offset": 28,
+          "size": 4
+        },
+        {
+          "name": "Value.Value_gyro_x",
+          "type": "int32",
+          "format": "i",
+          "count": 1,
+          "offset": 32,
+          "size": 4
+        },
+        {
+          "name": "Value.Value_gyro_y",
+          "type": "int32",
+          "format": "i",
+          "count": 1,
+          "offset": 36,
+          "size": 4
+        },
+        {
+          "name": "Value.Value_gyro_z",
+          "type": "int32",
+          "format": "i",
+          "count": 1,
+          "offset": 40,
+          "size": 4
+        },
+        {
+          "name": "Status",
+          "type": "int32",
+          "format": "i",
+          "count": 1,
+          "offset": 44,
+          "size": 4
+        },
+        {
+          "name": "ReadCounter",
+          "type": "uint32",
+          "format": "I",
+          "count": 1,
+          "offset": 48,
+          "size": 4
+        },
+        {
+          "name": "ErrorCounter",
+          "type": "uint32",
+          "format": "I",
+          "count": 1,
+          "offset": 52,
+          "size": 4
+        },
+        {
+          "name": "Valid",
+          "type": "uint8",
+          "format": "B",
+          "count": 1,
+          "offset": 56,
+          "size": 1
+        },
+        {
+          "name": "Reserved",
+          "type": "uint8",
+          "format": "B",
+          "count": 3,
+          "offset": 57,
+          "size": 3
+        }
+      ],
+      "source": "cFS/apps/eval_mpu/fsw/src/sensors/eval_mpu_sample_sensor.h"
+    }
+  ],
+  "passed": true,
+  "finished_at": "2026-11-23T11:20:29.384Z"
+}

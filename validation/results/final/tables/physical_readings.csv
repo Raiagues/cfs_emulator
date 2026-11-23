@@ -1,0 +1,12 @@
+model,channel,n,min,median,max,unit,valid_expected
+tmp105,temperature,0,,,,°C,0
+lsm303dlhc_mag,mag-x,0,,,,µT,0
+lsm303dlhc_mag,mag-y,0,,,,µT,0
+lsm303dlhc_mag,mag-z,0,,,,µT,0
+mpu6050,accel-x,5,1.043,1.049,1.05,g,1
+mpu6050,accel-y,5,0.015000000000000001,0.019000000000000003,0.022000000000000002,g,1
+mpu6050,accel-z,5,0.135,0.137,0.151,g,1
+mpu6050,temperature,5,25.989,26.036,26.13,°C,1
+mpu6050,gyro-x,5,-2.091,-1.778,-1.671,°/s,1
+mpu6050,gyro-y,5,0.5640000000000001,0.6180000000000001,0.7780000000000001,°/s,1
+mpu6050,gyro-z,5,-0.786,-0.519,-0.32,°/s,1

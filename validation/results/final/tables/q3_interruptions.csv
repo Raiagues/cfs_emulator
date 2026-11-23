@@ -1,0 +1,15 @@
+environment,target,model,repetition,episodes,expected_invalid,observed_invalid,recovery_observations,recovery_s,recovery_bound_s,first_causal_read_valid,passed
+register_hal,memory_bus,tmp105,1,1,5,5,1,,,1,1
+register_hal,memory_bus,tmp105,2,1,5,5,1,,,1,1
+register_hal,memory_bus,tmp105,3,1,5,5,1,,,1,1
+register_hal,memory_bus,lsm303dlhc_mag,1,1,5,5,1,,,1,1
+register_hal,memory_bus,lsm303dlhc_mag,2,1,5,5,1,,,1,1
+register_hal,memory_bus,lsm303dlhc_mag,3,1,5,5,1,,,1,1
+register_hal,memory_bus,mpu6050,1,1,5,5,1,,,1,1
+register_hal,memory_bus,mpu6050,2,1,5,5,1,,,1,1
+register_hal,memory_bus,mpu6050,3,1,5,5,1,,,1,1
+physical_absence,physical,tmp105,1,0,5,5,0,,,,1
+physical_absence,physical,lsm303dlhc_mag,1,0,5,5,0,,,,1
+flight_telemetry,native,tmp105,1,1,5,5,1,1.8849527835845947,8.0,,1
+flight_telemetry,native,lsm303dlhc_mag,1,1,5,5,1,1.8951635360717773,8.0,,1
+flight_telemetry,native,mpu6050,1,1,5,5,1,1.87872314453125,8.0,,1

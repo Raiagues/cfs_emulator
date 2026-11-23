@@ -1,0 +1,17 @@
+mission/apps/eval_mag/CMakeLists.txt
+mission/apps/eval_mag/fsw/src/eval_mag_components.c
+mission/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.c
+mission/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor.h
+mission/apps/eval_mag/fsw/src/sensors/eval_mag_sample_sensor_cfg.h
+mission/cpu1_cfe_es_startup.scr
+mission/libs/lsm303dlhc_mag_lib/CMakeLists.txt
+mission/libs/lsm303dlhc_mag_lib/fsw/public_inc/lsm303dlhc_mag_lib.h
+mission/libs/lsm303dlhc_mag_lib/fsw/src/lsm303dlhc_mag_lib.c
+mission/sample_defs/cfe_core_api_interface_cfg_values.h
+mission/sample_defs/default_osconfig.cmake
+mission/sample_defs/generated/appgen.cmake
+mission/sample_defs/generated/appgen_startup.scr
+mission/sample_defs/generated/appgen_telemetry.inc
+project/apps/eval_mag.json
+project/config.json
+project/generated/drivers.json

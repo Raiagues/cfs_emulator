@@ -1,0 +1,5 @@
+{"elapsed_s": 0.012111769996408839, "line": "Shutting down QEMU Linux. Waiting for services and the persistent disk to close..."}
+{"elapsed_s": 0.01217211900075199, "line": "$ bash stop.sh"}
+{"elapsed_s": 1.9687048560008407, "line": "$ docker wait flight-studio-e16a900c2b1b"}
+{"elapsed_s": 9.049650916000246, "line": "0"}
+{"elapsed_s": 9.052369769997313, "line": "QEMU stopped."}

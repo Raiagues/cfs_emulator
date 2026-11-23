@@ -1,0 +1,21 @@
+{
+  "started_utc": "2026-11-23T07:14:23.047275+00:00",
+  "commands": [
+    {
+      "name": "prepare-evaluation-image",
+      "argv": [
+        "/tmp/flight-evaluation-20261123-final/flight/start",
+        "--no-ui",
+        "emulator",
+        "image",
+        "--json"
+      ],
+      "started_utc": "2026-11-23T07:14:23.047486+00:00",
+      "stdout": "001-prepare-evaluation-image.stdout.log",
+      "stderr": "001-prepare-evaluation-image.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 1279.833868929003,
+      "ended_utc": "2026-11-23T07:35:42.881391+00:00"
+    }
+  ]
+}

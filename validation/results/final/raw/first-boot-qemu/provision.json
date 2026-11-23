@@ -1,0 +1,49 @@
+{
+  "status": "passed",
+  "started_utc": "2026-11-23T07:36:54.655092+00:00",
+  "guest_disk_existed_before": false,
+  "scope": "first disk provisioning and Linux/SSH boot; no cFS start; outside N=5",
+  "boot": {
+    "action": "boot",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:36:54.655219+00:00",
+    "phases": [],
+    "guest_ssh_ready_observed_s": 241.21605408399773,
+    "status": "succeeded",
+    "result": {
+      "linux_ready": true
+    },
+    "elapsed_s": 251.1717001959987,
+    "ended_utc": "2026-11-23T07:41:05.826929+00:00"
+  },
+  "guest": {
+    "kernel": "6.18.50+rpt-rpi-v8",
+    "machine": "aarch64",
+    "os": {
+      "ID": "debian",
+      "VERSION_ID": "13",
+      "PRETTY_NAME": "Debian GNU/Linux 13 (trixie)",
+      "VERSION_CODENAME": "trixie"
+    }
+  },
+  "shutdown": {
+    "action": "shutdown",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:41:06.875384+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 9.018940786998428,
+    "ended_utc": "2026-11-23T07:41:15.894344+00:00"
+  },
+  "prepared_disk": {
+    "path": "board/raspios.qcow2",
+    "bytes": 2812149760,
+    "sha256": "304b3360f83386201d74e24ffe1bca39f803ddd1a51d48bef431c7f45d372a9f",
+    "observed_utc": "2026-11-23T07:41:51.218269+00:00",
+    "guest_running_during_hash": false
+  },
+  "ended_utc": "2026-11-23T07:41:51.218300+00:00"
+}

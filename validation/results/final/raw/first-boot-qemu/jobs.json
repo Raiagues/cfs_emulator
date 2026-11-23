@@ -1,0 +1,27 @@
+[
+  {
+    "action": "boot",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:36:54.655219+00:00",
+    "phases": [],
+    "guest_ssh_ready_observed_s": 241.21605408399773,
+    "status": "succeeded",
+    "result": {
+      "linux_ready": true
+    },
+    "elapsed_s": 251.1717001959987,
+    "ended_utc": "2026-11-23T07:41:05.826929+00:00"
+  },
+  {
+    "action": "shutdown",
+    "target": "qemu",
+    "started_utc": "2026-11-23T07:41:06.875384+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 9.018940786998428,
+    "ended_utc": "2026-11-23T07:41:15.894344+00:00"
+  }
+]

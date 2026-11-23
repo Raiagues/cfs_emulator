@@ -1,0 +1,52 @@
+{
+  "at_utc": "2026-11-23T06:48:55.830734+00:00",
+  "operation": "hardware.sensor_probe.READ_REGISTERS",
+  "sensors": [
+    {
+      "model": "tmp105",
+      "bus": 1,
+      "address": 72,
+      "blocks": [
+        [
+          0,
+          2
+        ]
+      ],
+      "exit_code": 1,
+      "available": false,
+      "error_type": "I2C read unavailable"
+    },
+    {
+      "model": "lsm303dlhc_mag",
+      "bus": 1,
+      "address": 30,
+      "blocks": [
+        [
+          10,
+          3
+        ]
+      ],
+      "exit_code": 1,
+      "available": false,
+      "error_type": "I2C read unavailable"
+    },
+    {
+      "model": "mpu6050",
+      "bus": 1,
+      "address": 104,
+      "blocks": [
+        [
+          117,
+          1
+        ]
+      ],
+      "exit_code": 0,
+      "read": [
+        "68"
+      ]
+    }
+  ],
+  "stationary_reported_by_operator": true,
+  "mounting": "no ch\u00e3o",
+  "orientation_controlled": false
+}

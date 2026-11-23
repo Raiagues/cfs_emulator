@@ -1,0 +1,340 @@
+[
+  {
+    "action": "run",
+    "target": "physical",
+    "started_utc": "2026-11-23T11:22:02.313427+00:00",
+    "phases": [
+      {
+        "phase": "payload_transfer",
+        "start_s": 3.472990235997713,
+        "end_s": 5.73344094499771,
+        "elapsed_s": 2.26045115001034
+      }
+    ],
+    "operational_observed_s": 9.87270087300567,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "296e3d31931eefde52e11f7bc2c8c2ab550ebc72137c31c57fd78efd7b5538ed",
+      "built_at": 1795417273.7588363,
+      "deployed_at": 1795432924.909388
+    },
+    "elapsed_s": 10.031376912011183,
+    "ended_utc": "2026-11-23T11:22:12.344815+00:00"
+  },
+  {
+    "action": "stop",
+    "target": "physical",
+    "started_utc": "2026-11-23T11:22:17.682358+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 2.506781937001506,
+    "ended_utc": "2026-11-23T11:22:20.189168+00:00"
+  },
+  {
+    "action": "run",
+    "target": "physical",
+    "started_utc": "2026-11-23T11:22:20.189867+00:00",
+    "phases": [
+      {
+        "phase": "payload_transfer",
+        "start_s": 2.9305655089992797,
+        "end_s": 5.355000235998887,
+        "elapsed_s": 2.4244352120003896
+      }
+    ],
+    "operational_observed_s": 9.161598495004,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "296e3d31931eefde52e11f7bc2c8c2ab550ebc72137c31c57fd78efd7b5538ed",
+      "built_at": 1795417273.7588363,
+      "deployed_at": 1795432942.5621657
+    },
+    "elapsed_s": 9.33360867499141,
+    "ended_utc": "2026-11-23T11:22:29.523486+00:00"
+  },
+  {
+    "action": "stop",
+    "target": "physical",
+    "started_utc": "2026-11-23T11:22:35.031100+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 2.407791019999422,
+    "ended_utc": "2026-11-23T11:22:37.438921+00:00"
+  },
+  {
+    "action": "run",
+    "target": "physical",
+    "started_utc": "2026-11-23T11:22:37.439676+00:00",
+    "phases": [
+      {
+        "phase": "payload_transfer",
+        "start_s": 2.9451479660056066,
+        "end_s": 5.28390751099505,
+        "elapsed_s": 2.3387598489935044
+      }
+    ],
+    "operational_observed_s": 9.463804850005545,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "296e3d31931eefde52e11f7bc2c8c2ab550ebc72137c31c57fd78efd7b5538ed",
+      "built_at": 1795417273.7588363,
+      "deployed_at": 1795432959.7673018
+    },
+    "elapsed_s": 9.622654114995385,
+    "ended_utc": "2026-11-23T11:22:47.062341+00:00"
+  },
+  {
+    "action": "stop",
+    "target": "physical",
+    "started_utc": "2026-11-23T11:22:52.415407+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 2.4310057800030336,
+    "ended_utc": "2026-11-23T11:22:54.846440+00:00"
+  },
+  {
+    "action": "run",
+    "target": "physical",
+    "started_utc": "2026-11-23T11:22:54.847267+00:00",
+    "phases": [
+      {
+        "phase": "payload_transfer",
+        "start_s": 2.80708562899963,
+        "end_s": 5.155509775999235,
+        "elapsed_s": 2.348424444004195
+      }
+    ],
+    "operational_observed_s": 9.325593393994495,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "296e3d31931eefde52e11f7bc2c8c2ab550ebc72137c31c57fd78efd7b5538ed",
+      "built_at": 1795417273.7588363,
+      "deployed_at": 1795432977.0382657
+    },
+    "elapsed_s": 9.484573056994122,
+    "ended_utc": "2026-11-23T11:23:04.331851+00:00"
+  },
+  {
+    "action": "stop",
+    "target": "physical",
+    "started_utc": "2026-11-23T11:23:09.710206+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 2.48286627199559,
+    "ended_utc": "2026-11-23T11:23:12.193099+00:00"
+  },
+  {
+    "action": "run",
+    "target": "physical",
+    "started_utc": "2026-11-23T11:23:12.194056+00:00",
+    "phases": [
+      {
+        "phase": "payload_transfer",
+        "start_s": 2.865803111999412,
+        "end_s": 5.268148793009459,
+        "elapsed_s": 2.4023460690077627
+      }
+    ],
+    "operational_observed_s": 9.213164941000286,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "296e3d31931eefde52e11f7bc2c8c2ab550ebc72137c31c57fd78efd7b5538ed",
+      "built_at": 1795417273.7588363,
+      "deployed_at": 1795432994.4860284
+    },
+    "elapsed_s": 9.37193966700579,
+    "ended_utc": "2026-11-23T11:23:21.566008+00:00"
+  },
+  {
+    "action": "stop",
+    "target": "physical",
+    "started_utc": "2026-11-23T11:23:27.052479+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 2.4276800410007127,
+    "ended_utc": "2026-11-23T11:23:29.480184+00:00"
+  },
+  {
+    "action": "run",
+    "target": "physical",
+    "started_utc": "2026-11-23T11:23:29.481129+00:00",
+    "phases": [
+      {
+        "phase": "payload_transfer",
+        "start_s": 2.861059055008809,
+        "end_s": 5.390077506002854,
+        "elapsed_s": 2.5290187929931562
+      }
+    ],
+    "operational_observed_s": 9.42040848301258,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "296e3d31931eefde52e11f7bc2c8c2ab550ebc72137c31c57fd78efd7b5538ed",
+      "built_at": 1795417273.7588363,
+      "deployed_at": 1795433011.733935
+    },
+    "elapsed_s": 9.579208176000975,
+    "ended_utc": "2026-11-23T11:23:39.060349+00:00"
+  },
+  {
+    "action": "stop",
+    "target": "physical",
+    "started_utc": "2026-11-23T11:23:44.477167+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 2.5094099850102793,
+    "ended_utc": "2026-11-23T11:23:46.986591+00:00"
+  },
+  {
+    "action": "run",
+    "target": "physical",
+    "started_utc": "2026-11-23T11:23:46.987637+00:00",
+    "phases": [
+      {
+        "phase": "payload_transfer",
+        "start_s": 2.8950254619994666,
+        "end_s": 5.290391991002252,
+        "elapsed_s": 2.395366840995848
+      }
+    ],
+    "operational_observed_s": 9.406408905997523,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "296e3d31931eefde52e11f7bc2c8c2ab550ebc72137c31c57fd78efd7b5538ed",
+      "built_at": 1795417273.7588363,
+      "deployed_at": 1795433029.3481467
+    },
+    "elapsed_s": 9.565241579999565,
+    "ended_utc": "2026-11-23T11:23:56.552891+00:00"
+  },
+  {
+    "action": "stop",
+    "target": "physical",
+    "started_utc": "2026-11-23T11:24:01.928492+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 2.8755823520041304,
+    "ended_utc": "2026-11-23T11:24:04.804103+00:00"
+  },
+  {
+    "action": "run",
+    "target": "physical",
+    "started_utc": "2026-11-23T11:24:04.805237+00:00",
+    "phases": [
+      {
+        "phase": "payload_transfer",
+        "start_s": 2.897176220008987,
+        "end_s": 5.253798207006184,
+        "elapsed_s": 2.356622311999672
+      }
+    ],
+    "operational_observed_s": 9.410794180002995,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "296e3d31931eefde52e11f7bc2c8c2ab550ebc72137c31c57fd78efd7b5538ed",
+      "built_at": 1795417273.7588363,
+      "deployed_at": 1795433047.0957677
+    },
+    "elapsed_s": 9.56985655700555,
+    "ended_utc": "2026-11-23T11:24:14.375105+00:00"
+  },
+  {
+    "action": "stop",
+    "target": "physical",
+    "started_utc": "2026-11-23T11:24:19.707871+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 2.6022957440000027,
+    "ended_utc": "2026-11-23T11:24:22.310196+00:00"
+  },
+  {
+    "action": "run",
+    "target": "physical",
+    "started_utc": "2026-11-23T11:24:22.311461+00:00",
+    "phases": [
+      {
+        "phase": "payload_transfer",
+        "start_s": 2.893795934985974,
+        "end_s": 5.295322041987674,
+        "elapsed_s": 2.401526448011282
+      }
+    ],
+    "operational_observed_s": 9.316363013989758,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "296e3d31931eefde52e11f7bc2c8c2ab550ebc72137c31c57fd78efd7b5538ed",
+      "built_at": 1795417273.7588363,
+      "deployed_at": 1795433064.6381924
+    },
+    "elapsed_s": 9.474995893993764,
+    "ended_utc": "2026-11-23T11:24:31.786468+00:00"
+  },
+  {
+    "action": "stop",
+    "target": "physical",
+    "started_utc": "2026-11-23T11:24:37.225566+00:00",
+    "phases": [],
+    "status": "succeeded",
+    "result": {
+      "stopped": true
+    },
+    "elapsed_s": 2.490220378007507,
+    "ended_utc": "2026-11-23T11:24:39.715812+00:00"
+  },
+  {
+    "action": "run",
+    "target": "physical",
+    "started_utc": "2026-11-23T11:24:39.717058+00:00",
+    "phases": [
+      {
+        "phase": "payload_transfer",
+        "start_s": 2.820879523991607,
+        "end_s": 5.5033659460023046,
+        "elapsed_s": 2.682486781006446
+      }
+    ],
+    "operational_observed_s": 9.789629774997593,
+    "status": "succeeded",
+    "result": {
+      "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+      "installed_sha256": "296e3d31931eefde52e11f7bc2c8c2ab550ebc72137c31c57fd78efd7b5538ed",
+      "built_at": 1795417273.7588363,
+      "deployed_at": 1795433081.93244
+    },
+    "elapsed_s": 10.093800289003411,
+    "ended_utc": "2026-11-23T11:24:49.810869+00:00"
+  }
+]

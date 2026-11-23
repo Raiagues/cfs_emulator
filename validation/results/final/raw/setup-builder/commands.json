@@ -1,0 +1,26 @@
+{
+  "started_utc": "2026-11-23T06:58:56.669386+00:00",
+  "commands": [
+    {
+      "name": "prepare-cfs-builder",
+      "argv": [
+        "docker",
+        "build",
+        "--platform",
+        "linux/amd64",
+        "--network=host",
+        "--target",
+        "cfs-builder",
+        "-t",
+        "flight-studio-builder:bookworm",
+        "."
+      ],
+      "started_utc": "2026-11-23T06:58:57.471473+00:00",
+      "stdout": "001-prepare-cfs-builder.stdout.log",
+      "stderr": "001-prepare-cfs-builder.stderr.log",
+      "exit_code": 0,
+      "elapsed_s": 15.117011805996299,
+      "ended_utc": "2026-11-23T06:59:12.588526+00:00"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+{"elapsed_s": 0.8022949849982979, "line": "Stopping cFS on the board..."}
+{"elapsed_s": 0.8023985019972315, "line": "$ ssh -T -o ConnectTimeout=8 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o BatchMode=yes -o StrictHostKeyChecking=accept-new -p 22 -l emilly -i [private-endpoint] -o IdentitiesOnly=yes [private-endpoint] 'sudo -n systemctl stop cfs-studio.service'"}
+{"elapsed_s": 2.651387418998638, "line": "Board cFS stopped."}

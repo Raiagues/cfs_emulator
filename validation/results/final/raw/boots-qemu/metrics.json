@@ -1,0 +1,573 @@
+{
+  "kind": "guest_boots",
+  "target": "qemu",
+  "planned_n": 5,
+  "started_utc": "2026-11-23T07:41:51.236973+00:00",
+  "runs": [
+    {
+      "repetition": 1,
+      "started_utc": "2026-11-23T07:41:51.237004+00:00",
+      "guest_boot_to_ssh": {
+        "action": "boot",
+        "target": "qemu",
+        "started_utc": "2026-11-23T07:41:51.237011+00:00",
+        "phases": [],
+        "guest_ssh_ready_observed_s": 77.31597586299904,
+        "status": "succeeded",
+        "result": {
+          "linux_ready": true
+        },
+        "elapsed_s": 80.84013958200376,
+        "ended_utc": "2026-11-23T07:43:12.077159+00:00"
+      },
+      "run_to_operational": {
+        "action": "run",
+        "target": "qemu",
+        "started_utc": "2026-11-23T07:43:12.077377+00:00",
+        "phases": [
+          {
+            "phase": "payload_transfer",
+            "start_s": 9.190417046003859,
+            "end_s": 22.545932360000734,
+            "elapsed_s": 13.355515479001042
+          }
+        ],
+        "operational_observed_s": 28.72504216300149,
+        "status": "succeeded",
+        "result": {
+          "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+          "installed_sha256": "296e3d31931eefde52e11f7bc2c8c2ab550ebc72137c31c57fd78efd7b5538ed",
+          "built_at": 1795417273.7588363,
+          "deployed_at": 1795419797.4771736
+        },
+        "elapsed_s": 29.028351526001643,
+        "ended_utc": "2026-11-23T07:43:41.105737+00:00"
+      },
+      "ground_to_first_hk": {
+        "elapsed_s": 5.025651415002358,
+        "enable": {
+          "id": "TO_LAB_OUTPUT_ENABLE_CC",
+          "app": "to_lab",
+          "mid": 6272,
+          "code": 6,
+          "values": {
+            "dest_IP": "10.0.2.2"
+          },
+          "sent_at": 1795419823.307832,
+          "bytes": 24,
+          "status": "sent",
+          "hex": "1880c000001106af31302e302e322e320000000000000000",
+          "event_id": 1
+        },
+        "first_packet": {
+          "mid": 2056,
+          "sequence": 12,
+          "bytes": 176,
+          "name": "CFE_EVS_LongEventTlm_t",
+          "app": "cfe_evs",
+          "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+          "values": {
+            "PacketID.AppName": "TO_LAB",
+            "PacketID.EventID": 3,
+            "PacketID.EventType": 2,
+            "PacketID.SpacecraftID": 66,
+            "PacketID.ProcessorID": 1,
+            "Message": "TO telemetry output enabled for IP 10.0.2.2",
+            "Padding": [
+              0,
+              0
+            ]
+          },
+          "errors": [],
+          "hex": "0808c00c00a9000f462c9a8d00000000544f5f4c4142000000000000000000000000000000000000030002004200000001000000544f2074656c656d65747279206f757470757420656e61626c656420666f722049502031302e302e322e32000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "received_at": 1795419823.8278964,
+          "count": 1,
+          "event_id": 2
+        },
+        "first_hk": {
+          "mid": 2179,
+          "sequence": 1,
+          "bytes": 18,
+          "name": "SAMPLE_APP_HkTlm_t",
+          "app": "sample_app",
+          "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+          "values": {
+            "CommandCounter": 0,
+            "CommandErrorCounter": 0
+          },
+          "errors": [],
+          "hex": "0883c001000b000f462ee908000000000000",
+          "received_at": 1795419826.0952194,
+          "count": 1,
+          "event_id": 17
+        }
+      },
+      "total_to_first_hk_s": 114.89465301200107
+    },
+    {
+      "repetition": 2,
+      "started_utc": "2026-11-23T07:43:58.560309+00:00",
+      "guest_boot_to_ssh": {
+        "action": "boot",
+        "target": "qemu",
+        "started_utc": "2026-11-23T07:43:58.560346+00:00",
+        "phases": [],
+        "guest_ssh_ready_observed_s": 74.57194854999398,
+        "status": "succeeded",
+        "result": {
+          "linux_ready": true
+        },
+        "elapsed_s": 78.17771344699577,
+        "ended_utc": "2026-11-23T07:45:16.738069+00:00"
+      },
+      "run_to_operational": {
+        "action": "run",
+        "target": "qemu",
+        "started_utc": "2026-11-23T07:45:16.738510+00:00",
+        "phases": [
+          {
+            "phase": "payload_transfer",
+            "start_s": 4.590915687003871,
+            "end_s": 17.43656426200323,
+            "elapsed_s": 12.845648762995552
+          }
+        ],
+        "operational_observed_s": 23.469214894998004,
+        "status": "succeeded",
+        "result": {
+          "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+          "installed_sha256": "296e3d31931eefde52e11f7bc2c8c2ab550ebc72137c31c57fd78efd7b5538ed",
+          "built_at": 1795417273.7588363,
+          "deployed_at": 1795419918.7007322
+        },
+        "elapsed_s": 23.761363848003384,
+        "ended_utc": "2026-11-23T07:45:40.499886+00:00"
+      },
+      "ground_to_first_hk": {
+        "elapsed_s": 5.213399633001245,
+        "enable": {
+          "id": "TO_LAB_OUTPUT_ENABLE_CC",
+          "app": "to_lab",
+          "mid": 6272,
+          "code": 6,
+          "values": {
+            "dest_IP": "10.0.2.2"
+          },
+          "sent_at": 1795419942.334938,
+          "bytes": 24,
+          "status": "sent",
+          "hex": "1880c000001106af31302e302e322e320000000000000000",
+          "event_id": 1
+        },
+        "first_packet": {
+          "mid": 2056,
+          "sequence": 12,
+          "bytes": 176,
+          "name": "CFE_EVS_LongEventTlm_t",
+          "app": "cfe_evs",
+          "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+          "values": {
+            "PacketID.AppName": "TO_LAB",
+            "PacketID.EventID": 3,
+            "PacketID.EventType": 2,
+            "PacketID.SpacecraftID": 66,
+            "PacketID.ProcessorID": 1,
+            "Message": "TO telemetry output enabled for IP 10.0.2.2",
+            "Padding": [
+              0,
+              0
+            ]
+          },
+          "errors": [],
+          "hex": "0808c00c00a9000f462b9e0d00000000544f5f4c4142000000000000000000000000000000000000030002004200000001000000544f2074656c656d65747279206f757470757420656e61626c656420666f722049502031302e302e322e32000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "received_at": 1795419942.4009914,
+          "count": 1,
+          "event_id": 2
+        },
+        "first_hk": {
+          "mid": 2179,
+          "sequence": 1,
+          "bytes": 18,
+          "name": "SAMPLE_APP_HkTlm_t",
+          "app": "sample_app",
+          "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+          "values": {
+            "CommandCounter": 0,
+            "CommandErrorCounter": 0
+          },
+          "errors": [],
+          "hex": "0883c001000b000f462ee907000000000000",
+          "received_at": 1795419945.6919322,
+          "count": 1,
+          "event_id": 17
+        }
+      },
+      "total_to_first_hk_s": 107.1533157169979
+    },
+    {
+      "repetition": 3,
+      "started_utc": "2026-11-23T07:45:57.903755+00:00",
+      "guest_boot_to_ssh": {
+        "action": "boot",
+        "target": "qemu",
+        "started_utc": "2026-11-23T07:45:57.903772+00:00",
+        "phases": [],
+        "guest_ssh_ready_observed_s": 68.65405472100247,
+        "status": "succeeded",
+        "result": {
+          "linux_ready": true
+        },
+        "elapsed_s": 72.05146108600457,
+        "ended_utc": "2026-11-23T07:47:09.955242+00:00"
+      },
+      "run_to_operational": {
+        "action": "run",
+        "target": "qemu",
+        "started_utc": "2026-11-23T07:47:09.955603+00:00",
+        "phases": [
+          {
+            "phase": "payload_transfer",
+            "start_s": 4.645158466002613,
+            "end_s": 17.399041930002568,
+            "elapsed_s": 12.753883599994879
+          }
+        ],
+        "operational_observed_s": 23.467604006997135,
+        "status": "succeeded",
+        "result": {
+          "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+          "installed_sha256": "296e3d31931eefde52e11f7bc2c8c2ab550ebc72137c31c57fd78efd7b5538ed",
+          "built_at": 1795417273.7588363,
+          "deployed_at": 1795420031.9480722
+        },
+        "elapsed_s": 23.650139801997284,
+        "ended_utc": "2026-11-23T07:47:33.605752+00:00"
+      },
+      "ground_to_first_hk": {
+        "elapsed_s": 5.500539695000043,
+        "enable": {
+          "id": "TO_LAB_OUTPUT_ENABLE_CC",
+          "app": "to_lab",
+          "mid": 6272,
+          "code": 6,
+          "values": {
+            "dest_IP": "10.0.2.2"
+          },
+          "sent_at": 1795420055.4736824,
+          "bytes": 24,
+          "status": "sent",
+          "hex": "1880c000001106af31302e302e322e320000000000000000",
+          "event_id": 1
+        },
+        "first_packet": {
+          "mid": 2056,
+          "sequence": 12,
+          "bytes": 176,
+          "name": "CFE_EVS_LongEventTlm_t",
+          "app": "cfe_evs",
+          "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+          "values": {
+            "PacketID.AppName": "TO_LAB",
+            "PacketID.EventID": 3,
+            "PacketID.EventType": 2,
+            "PacketID.SpacecraftID": 66,
+            "PacketID.ProcessorID": 1,
+            "Message": "TO telemetry output enabled for IP 10.0.2.2",
+            "Padding": [
+              0,
+              0
+            ]
+          },
+          "errors": [],
+          "hex": "0808c00c00a9000f462b9dbb00000000544f5f4c4142000000000000000000000000000000000000030002004200000001000000544f2074656c656d65747279206f757470757420656e61626c656420666f722049502031302e302e322e32000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "received_at": 1795420055.78354,
+          "count": 1,
+          "event_id": 2
+        },
+        "first_hk": {
+          "mid": 2179,
+          "sequence": 1,
+          "bytes": 18,
+          "name": "SAMPLE_APP_HkTlm_t",
+          "app": "sample_app",
+          "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+          "values": {
+            "CommandCounter": 0,
+            "CommandErrorCounter": 0
+          },
+          "errors": [],
+          "hex": "0883c001000b000f462ee907000000000000",
+          "received_at": 1795420059.0765877,
+          "count": 1,
+          "event_id": 17
+        }
+      },
+      "total_to_first_hk_s": 101.20290330500575
+    },
+    {
+      "repetition": 4,
+      "started_utc": "2026-11-23T07:47:51.489711+00:00",
+      "guest_boot_to_ssh": {
+        "action": "boot",
+        "target": "qemu",
+        "started_utc": "2026-11-23T07:47:51.489732+00:00",
+        "phases": [],
+        "guest_ssh_ready_observed_s": 69.23408563299745,
+        "status": "succeeded",
+        "result": {
+          "linux_ready": true
+        },
+        "elapsed_s": 72.39334146900364,
+        "ended_utc": "2026-11-23T07:49:03.883082+00:00"
+      },
+      "run_to_operational": {
+        "action": "run",
+        "target": "qemu",
+        "started_utc": "2026-11-23T07:49:03.883512+00:00",
+        "phases": [
+          {
+            "phase": "payload_transfer",
+            "start_s": 4.417690009002399,
+            "end_s": 17.29745637800079,
+            "elapsed_s": 12.879766493002535
+          }
+        ],
+        "operational_observed_s": 23.010445159001392,
+        "status": "succeeded",
+        "result": {
+          "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+          "installed_sha256": "296e3d31931eefde52e11f7bc2c8c2ab550ebc72137c31c57fd78efd7b5538ed",
+          "built_at": 1795417273.7588363,
+          "deployed_at": 1795420145.7962148
+        },
+        "elapsed_s": 23.18034998499934,
+        "ended_utc": "2026-11-23T07:49:27.063872+00:00"
+      },
+      "ground_to_first_hk": {
+        "elapsed_s": 5.6804351749960915,
+        "enable": {
+          "id": "TO_LAB_OUTPUT_ENABLE_CC",
+          "app": "to_lab",
+          "mid": 6272,
+          "code": 6,
+          "values": {
+            "dest_IP": "10.0.2.2"
+          },
+          "sent_at": 1795420169.0627675,
+          "bytes": 24,
+          "status": "sent",
+          "hex": "1880c000001106af31302e302e322e320000000000000000",
+          "event_id": 1
+        },
+        "first_packet": {
+          "mid": 2056,
+          "sequence": 12,
+          "bytes": 176,
+          "name": "CFE_EVS_LongEventTlm_t",
+          "app": "cfe_evs",
+          "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+          "values": {
+            "PacketID.AppName": "TO_LAB",
+            "PacketID.EventID": 3,
+            "PacketID.EventType": 2,
+            "PacketID.SpacecraftID": 66,
+            "PacketID.ProcessorID": 1,
+            "Message": "TO telemetry output enabled for IP 10.0.2.2",
+            "Padding": [
+              0,
+              0
+            ]
+          },
+          "errors": [],
+          "hex": "0808c00c00a9000f462b9b3900000000544f5f4c4142000000000000000000000000000000000000030002004200000001000000544f2074656c656d65747279206f757470757420656e61626c656420666f722049502031302e302e322e32000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "received_at": 1795420169.4426274,
+          "count": 1,
+          "event_id": 2
+        },
+        "first_hk": {
+          "mid": 2179,
+          "sequence": 1,
+          "bytes": 18,
+          "name": "SAMPLE_APP_HkTlm_t",
+          "app": "sample_app",
+          "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+          "values": {
+            "CommandCounter": 0,
+            "CommandErrorCounter": 0
+          },
+          "errors": [],
+          "hex": "0883c001000b000f462ee673000000000000",
+          "received_at": 1795420172.7356617,
+          "count": 1,
+          "event_id": 17
+        }
+      },
+      "total_to_first_hk_s": 101.25503329599451
+    },
+    {
+      "repetition": 5,
+      "started_utc": "2026-11-23T07:49:44.520004+00:00",
+      "guest_boot_to_ssh": {
+        "action": "boot",
+        "target": "qemu",
+        "started_utc": "2026-11-23T07:49:44.520022+00:00",
+        "phases": [],
+        "guest_ssh_ready_observed_s": 69.26709725899855,
+        "status": "succeeded",
+        "result": {
+          "linux_ready": true
+        },
+        "elapsed_s": 73.09585083700222,
+        "ended_utc": "2026-11-23T07:50:57.615881+00:00"
+      },
+      "run_to_operational": {
+        "action": "run",
+        "target": "qemu",
+        "started_utc": "2026-11-23T07:50:57.616332+00:00",
+        "phases": [
+          {
+            "phase": "payload_transfer",
+            "start_s": 4.391996869002469,
+            "end_s": 17.32467083499796,
+            "elapsed_s": 12.932674155999848
+          }
+        ],
+        "operational_observed_s": 22.954713357998116,
+        "status": "succeeded",
+        "result": {
+          "fingerprint": "28c867ab6b73c3de4093fddae2adcdc6f26d73ab60ea0cb7b31497e620a13ded",
+          "installed_sha256": "296e3d31931eefde52e11f7bc2c8c2ab550ebc72137c31c57fd78efd7b5538ed",
+          "built_at": 1795417273.7588363,
+          "deployed_at": 1795420259.4070983
+        },
+        "elapsed_s": 23.126247581996722,
+        "ended_utc": "2026-11-23T07:51:20.742589+00:00"
+      },
+      "ground_to_first_hk": {
+        "elapsed_s": 5.676786971998808,
+        "enable": {
+          "id": "TO_LAB_OUTPUT_ENABLE_CC",
+          "app": "to_lab",
+          "mid": 6272,
+          "code": 6,
+          "values": {
+            "dest_IP": "10.0.2.2"
+          },
+          "sent_at": 1795420282.5247197,
+          "bytes": 24,
+          "status": "sent",
+          "hex": "1880c000001106af31302e302e322e320000000000000000",
+          "event_id": 1
+        },
+        "first_packet": {
+          "mid": 2056,
+          "sequence": 11,
+          "bytes": 176,
+          "name": "CFE_EVS_LongEventTlm_t",
+          "app": "cfe_evs",
+          "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+          "values": {
+            "PacketID.AppName": "TO_LAB",
+            "PacketID.EventID": 3,
+            "PacketID.EventType": 2,
+            "PacketID.SpacecraftID": 66,
+            "PacketID.ProcessorID": 1,
+            "Message": "TO telemetry output enabled for IP 10.0.2.2",
+            "Padding": [
+              0,
+              0
+            ]
+          },
+          "errors": [],
+          "hex": "0808c00b00a9000f462b24ca00000000544f5f4c4142000000000000000000000000000000000000030002004200000001000000544f2074656c656d65747279206f757470757420656e61626c656420666f722049502031302e302e322e32000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "received_at": 1795420282.6538734,
+          "count": 1,
+          "event_id": 2
+        },
+        "first_hk": {
+          "mid": 2179,
+          "sequence": 1,
+          "bytes": 18,
+          "name": "SAMPLE_APP_HkTlm_t",
+          "app": "sample_app",
+          "source": "cFS/apps/sample_app/config/default_sample_app_msgstruct.h",
+          "values": {
+            "CommandCounter": 0,
+            "CommandErrorCounter": 0
+          },
+          "errors": [],
+          "hex": "0883c001000b000f462ee3ea000000000000",
+          "received_at": 1795420286.3978348,
+          "count": 1,
+          "event_id": 21
+        }
+      },
+      "total_to_first_hk_s": 101.89985096599412
+    }
+  ],
+  "status": "passed",
+  "guest_condition": "same prepared image and persistent disk; guest off before each repetition",
+  "summary": {
+    "run_total_s": {
+      "n": 5,
+      "min": 23.126247581996722,
+      "median": 23.650139801997284,
+      "max": 29.028351526001643,
+      "q1": 23.18034998499934,
+      "q3": 23.761363848003384,
+      "iqr": 0.5810138630040456,
+      "quartile_method": "inclusive"
+    },
+    "operational_observed_s": {
+      "n": 5,
+      "min": 22.954713357998116,
+      "median": 23.467604006997135,
+      "max": 28.72504216300149,
+      "q1": 23.010445159001392,
+      "q3": 23.469214894998004,
+      "iqr": 0.4587697359966114,
+      "quartile_method": "inclusive"
+    },
+    "ground_to_first_hk_s": {
+      "n": 5,
+      "min": 5.025651415002358,
+      "median": 5.500539695000043,
+      "max": 5.6804351749960915,
+      "q1": 5.213399633001245,
+      "q3": 5.676786971998808,
+      "iqr": 0.46338733899756335,
+      "quartile_method": "inclusive"
+    },
+    "total_to_first_hk_s": {
+      "n": 5,
+      "min": 101.20290330500575,
+      "median": 101.89985096599412,
+      "max": 114.89465301200107,
+      "q1": 101.25503329599451,
+      "q3": 107.1533157169979,
+      "iqr": 5.898282421003387,
+      "quartile_method": "inclusive"
+    },
+    "guest_boot_total_s": {
+      "n": 5,
+      "min": 72.05146108600457,
+      "median": 73.09585083700222,
+      "max": 80.84013958200376,
+      "q1": 72.39334146900364,
+      "q3": 78.17771344699577,
+      "iqr": 5.784371977992123,
+      "quartile_method": "inclusive"
+    },
+    "guest_ssh_ready_observed_s": {
+      "n": 5,
+      "min": 68.65405472100247,
+      "median": 69.26709725899855,
+      "max": 77.31597586299904,
+      "q1": 69.23408563299745,
+      "q3": 74.57194854999398,
+      "iqr": 5.337862916996528,
+      "quartile_method": "inclusive"
+    }
+  },
+  "ended_utc": "2026-11-23T07:51:26.421193+00:00"
+}

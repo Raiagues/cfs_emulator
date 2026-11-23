@@ -1,0 +1,129 @@
+{
+  "kind": "development_cycles",
+  "target": "native",
+  "planned_n": 10,
+  "started_utc": "2026-11-23T06:43:27.083238+00:00",
+  "status": "passed",
+  "cycles": [
+    {
+      "repetition": 1,
+      "app": "eval_cycle_01",
+      "create_s": 1.2678482449991861,
+      "build_s": 76.39527245900535,
+      "delete_s": 2.619813190001878
+    },
+    {
+      "repetition": 2,
+      "app": "eval_cycle_02",
+      "create_s": 1.5688210970038199,
+      "build_s": 32.6893462750013,
+      "delete_s": 2.6223163489994477
+    },
+    {
+      "repetition": 3,
+      "app": "eval_cycle_03",
+      "create_s": 1.568098238996754,
+      "build_s": 32.194947618001606,
+      "delete_s": 2.621029413996439
+    },
+    {
+      "repetition": 4,
+      "app": "eval_cycle_04",
+      "create_s": 1.719976100997883,
+      "build_s": 32.33986415399704,
+      "delete_s": 2.622156025005097
+    },
+    {
+      "repetition": 5,
+      "app": "eval_cycle_05",
+      "create_s": 1.519597241000156,
+      "build_s": 31.691020606995153,
+      "delete_s": 2.620313822000753
+    },
+    {
+      "repetition": 6,
+      "app": "eval_cycle_06",
+      "create_s": 1.5197326320048887,
+      "build_s": 32.04079746599746,
+      "delete_s": 2.6220329709976795
+    },
+    {
+      "repetition": 7,
+      "app": "eval_cycle_07",
+      "create_s": 1.6200721069981228,
+      "build_s": 32.190449173998786,
+      "delete_s": 2.622894849999284
+    },
+    {
+      "repetition": 8,
+      "app": "eval_cycle_08",
+      "create_s": 1.5685623160024988,
+      "build_s": 32.095433470996795,
+      "delete_s": 2.624253738002153
+    },
+    {
+      "repetition": 9,
+      "app": "eval_cycle_09",
+      "create_s": 1.520232495997334,
+      "build_s": 31.98946334500215,
+      "delete_s": 2.622159146994818
+    },
+    {
+      "repetition": 10,
+      "app": "eval_cycle_10",
+      "create_s": 1.6682720290045836,
+      "build_s": 32.138136932000634,
+      "delete_s": 2.6729891750001116
+    }
+  ],
+  "restoration_build": {
+    "name": "restore-base-mission",
+    "argv": [
+      "/tmp/flight-evaluation-20261123-final/flight/start",
+      "--no-ui",
+      "build",
+      "--target",
+      "native",
+      "--json"
+    ],
+    "started_utc": "2026-11-23T06:50:23.611246+00:00",
+    "stdout": "031-restore-base-mission.stdout.log",
+    "stderr": "031-restore-base-mission.stderr.log",
+    "exit_code": 0,
+    "elapsed_s": 75.89532709199557,
+    "ended_utc": "2026-11-23T06:51:39.506613+00:00"
+  },
+  "summary": {
+    "create_s": {
+      "n": 10,
+      "min": 1.2678482449991861,
+      "median": 1.5683302774996264,
+      "max": 1.719976100997883,
+      "q1": 1.519857598003,
+      "q3": 1.607259354499547,
+      "iqr": 0.08740175649654702,
+      "quartile_method": "inclusive"
+    },
+    "build_s": {
+      "n": 10,
+      "min": 31.691020606995153,
+      "median": 32.16429305299971,
+      "max": 76.39527245900535,
+      "q1": 32.05445646724729,
+      "q3": 32.30363501999818,
+      "iqr": 0.24917855275089096,
+      "quartile_method": "inclusive"
+    },
+    "delete_s": {
+      "n": 10,
+      "min": 2.619813190001878,
+      "median": 2.6221575859999575,
+      "max": 2.6729891750001116,
+      "q1": 2.621280303246749,
+      "q3": 2.622750224749325,
+      "iqr": 0.001469921502575744,
+      "quartile_method": "inclusive"
+    }
+  },
+  "ended_utc": "2026-11-23T06:51:40.307645+00:00"
+}

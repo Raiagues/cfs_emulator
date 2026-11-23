@@ -1,0 +1,1362 @@
+{
+  "schema": 1,
+  "status": "final",
+  "publishable": true,
+  "complete": true,
+  "generated_utc": "2026-11-23T11:28:48.176241+00:00",
+  "analysis_sha256": "f2147d607a8074eaef97414e8a139a2cf58b6193f4a43af31a8cbf3cf384a23b",
+  "provenance": {
+    "platform_commit": "64add2472dbf6869563612cf6b2c427b181dba5d",
+    "nasa_commit": "a4d305dc06fb7d468f5b45214d9f730b97d4bd77",
+    "protocol": "final-technical-v1",
+    "source_method": "official installer network clone",
+    "nasa_originals_unchanged": true
+  },
+  "quartile_method": "inclusive",
+  "issues": [],
+  "inputs": [
+    {
+      "path": "prepare.json",
+      "sha256": "2d83bfc075f7cc9f940c9189d63ef9d70f0fa25d4fae6fc49ecfb48049aaa6b7",
+      "bytes": 1056
+    },
+    {
+      "path": "registers/registers.json",
+      "sha256": "56a12deb905a013adb0eed1f8a803851dc54b069ce7e31b7f3e89188ed8a4104",
+      "bytes": 577860
+    },
+    {
+      "path": "build-native/metrics.json",
+      "sha256": "8d134d6d7e19f0f4fe875f2d774a0f8fb21f417ba1e19ec669e5c514dcda9725",
+      "bytes": 687
+    },
+    {
+      "path": "build-qemu/metrics.json",
+      "sha256": "9a81b8a51518093b0bae44103d43d019758b8e15e5e5745156444a94c7e40431",
+      "bytes": 684
+    },
+    {
+      "path": "cycles-native/metrics.json",
+      "sha256": "70d82d269afe5c7cce7fa8fae19d824f0ccf879280ee73d10d2e856c5e226c1e",
+      "bytes": 3318
+    },
+    {
+      "path": "boots-qemu/metrics.json",
+      "sha256": "478653efd4b9ad48b5fdf6010bdc7a53d3d7095e4cb762fcf68a6666e0e0135f",
+      "bytes": 19760
+    },
+    {
+      "path": "native/target.json",
+      "sha256": "28894be36e91b6fd661500deaabceb9133c24d9ce4c46a21f4845a15fdf137e9",
+      "bytes": 9139
+    },
+    {
+      "path": "native/commands.json",
+      "sha256": "e594389073dbc87120cae77c2f770dac40ad22e7256a250e521a273056ecf361",
+      "bytes": 125214
+    },
+    {
+      "path": "native/sensors.json",
+      "sha256": "2d7ffa29606ea72a74cf0e8869c738cc269cee932c20424224a5c788c1f046f4",
+      "bytes": 49264
+    },
+    {
+      "path": "native/artifacts.json",
+      "sha256": "ac4ce50eeae832c6d451161c9651b2ac854c711c0fa41c9a0c55a80b2c6db980",
+      "bytes": 6627
+    },
+    {
+      "path": "qemu/target.json",
+      "sha256": "f5a58240919de31f3995d23735d4a7cedbdcfd7e767c64020e0e102031b6182b",
+      "bytes": 14576
+    },
+    {
+      "path": "qemu/commands.json",
+      "sha256": "6736bb19e9de50fa0f0ab2fa1d0cfa8a6de6603667b9f4058d44effad5761d24",
+      "bytes": 125201
+    },
+    {
+      "path": "qemu/sensors.json",
+      "sha256": "45499810e2e7e3a320a23903d0891fc1c9147c5c0a377e3123b026f8640f0776",
+      "bytes": 48376
+    },
+    {
+      "path": "qemu/artifacts.json",
+      "sha256": "9662443546804cd465606a439fd7ed07a83e30a7d89c8097141e4075698be61e",
+      "bytes": 11719
+    },
+    {
+      "path": "physical/target.json",
+      "sha256": "eaeefb7af80e7b57a0a8fad7dadef939ecbdfca101dd2a27aa8cda6bbdc494b8",
+      "bytes": 13823
+    },
+    {
+      "path": "physical/commands.json",
+      "sha256": "4f72973b76119ca9d25f6fe5c3bb83e507e1f403f640be1eb54f7dc9ebb382ad",
+      "bytes": 125693
+    },
+    {
+      "path": "physical/sensors.json",
+      "sha256": "f94e7fe8cb0cf58df9f30c1e645e255ada17a27d92ea7a8991981c6c8d15bb89",
+      "bytes": 15690
+    },
+    {
+      "path": "physical/artifacts.json",
+      "sha256": "9662443546804cd465606a439fd7ed07a83e30a7d89c8097141e4075698be61e",
+      "bytes": 11719
+    },
+    {
+      "path": "starts-native/metrics.json",
+      "sha256": "5ba28d703ebac1df1c79ce03b4aaadb0af5a06c3b2a2fb06ae612d5d092035f3",
+      "bytes": 31568
+    },
+    {
+      "path": "starts-qemu/metrics.json",
+      "sha256": "2aec52134c6701eec4d8f9441e96b555353ac7b9cc2e14d83a4bc469ac0b1dc7",
+      "bytes": 32711
+    },
+    {
+      "path": "starts-physical/metrics.json",
+      "sha256": "1f272abda38f08a0a6b1f3e24fba3414d5bba3512fa6082313afe7a3c0e5e93a",
+      "bytes": 32812
+    },
+    {
+      "path": "native/dropout.json",
+      "sha256": "36bcccf873d4a70cc58bdfb340f2b319131c37a6a7b719fc58e3dace64a7bc22",
+      "bytes": 18618
+    }
+  ],
+  "tables": {
+    "q1_commands.csv": {
+      "rows": 24,
+      "columns": [
+        "target",
+        "app",
+        "command",
+        "sent",
+        "confirmed",
+        "failures"
+      ],
+      "sha256": "1b8c2bf10cd7206b33e3f84663c58ac57a7e37bfd9cd462af706fb32f6a5e19a"
+    },
+    "q1_attempts.csv": {
+      "rows": 108,
+      "columns": [
+        "target",
+        "app",
+        "repetition",
+        "step",
+        "command",
+        "mid",
+        "function_code",
+        "send_id",
+        "event_id",
+        "event_sequence",
+        "hk_event_id",
+        "baseline_sequence",
+        "hk_sequence",
+        "baseline_counter",
+        "command_counter",
+        "error_counter",
+        "confirmed"
+      ],
+      "sha256": "7b6471893639b009beb499ef5169abedf2cadb700bcd3043ae517994d5848cbd"
+    },
+    "q2_errors.csv": {
+      "rows": 33,
+      "columns": [
+        "environment",
+        "target",
+        "model",
+        "channel",
+        "n",
+        "max_abs_error_scaled",
+        "max_tolerance_scaled",
+        "max_abs_error",
+        "max_tolerance",
+        "unit"
+      ],
+      "sha256": "0cf8581d23258d4b06b8d17a470dc35a30d298b40cabbc192b9f17ccc4754f79"
+    },
+    "q2_samples.csv": {
+      "rows": 1650,
+      "columns": [
+        "environment",
+        "target",
+        "model",
+        "scenario",
+        "repetition",
+        "level",
+        "sample_index",
+        "channel",
+        "input_scaled",
+        "read_scaled",
+        "abs_error_scaled",
+        "tolerance_scaled",
+        "input",
+        "read",
+        "abs_error",
+        "tolerance",
+        "unit",
+        "valid"
+      ],
+      "sha256": "d41f9c118738aa176ae5756d39ac9a894e420218102ecaa16da05c2fd13d3ef3"
+    },
+    "physical_readings.csv": {
+      "rows": 11,
+      "columns": [
+        "model",
+        "channel",
+        "n",
+        "min",
+        "median",
+        "max",
+        "unit",
+        "valid_expected"
+      ],
+      "sha256": "d93255d5be16b1a91eeb338d75cd29b19da1d5e556fc852fa41e84af6f331f13"
+    },
+    "q3_interruptions.csv": {
+      "rows": 14,
+      "columns": [
+        "environment",
+        "target",
+        "model",
+        "repetition",
+        "episodes",
+        "expected_invalid",
+        "observed_invalid",
+        "recovery_observations",
+        "recovery_s",
+        "recovery_bound_s",
+        "first_causal_read_valid",
+        "passed"
+      ],
+      "sha256": "13154990c7dbd0fcd14dfe3109f10b55acfb9981c314e84969cd4f0b23c29ed0"
+    },
+    "q3_hal_samples.csv": {
+      "rows": 135,
+      "columns": [
+        "model",
+        "repetition",
+        "sample_index",
+        "disconnected",
+        "status",
+        "valid",
+        "first_recovery"
+      ],
+      "sha256": "28496148995b57fd9f04dbeb0f16042f90e4354919b54a5b73e4987351bafe72"
+    },
+    "q3_recovery.csv": {
+      "rows": 3,
+      "columns": [
+        "target",
+        "model",
+        "sample_index",
+        "sequence",
+        "received_after_restore_s",
+        "valid",
+        "status"
+      ],
+      "sha256": "c83959bd6c175b0de7e73d70a63d24ed2410ac9e5e1a139acf8a9eecbc1a90f1"
+    },
+    "q4_artifacts.csv": {
+      "rows": 63,
+      "columns": [
+        "path",
+        "category",
+        "qemu_sha256",
+        "physical_sha256",
+        "identical"
+      ],
+      "sha256": "2e07b8605a2ba7e285ec694cc3e43eff6c07502debac84b2b0058ca9cb5cc572"
+    },
+    "q5_timings.csv": {
+      "rows": 207,
+      "columns": [
+        "kind",
+        "target",
+        "repetition",
+        "stage",
+        "seconds"
+      ],
+      "sha256": "6ddf00a94b9e72c43d40114703536f4b35d9ba9322d3e345c3de8fe7bfe7d8c8"
+    },
+    "q5_statistics.csv": {
+      "rows": 26,
+      "columns": [
+        "kind",
+        "target",
+        "stage",
+        "n",
+        "min",
+        "q1",
+        "median",
+        "q3",
+        "iqr",
+        "max"
+      ],
+      "sha256": "88696c6b494dce40cef9bc6a21d57a16f1bae484dedd5be81ab168e574fd99ab"
+    }
+  },
+  "q1": {
+    "confirmed": 108,
+    "expected_final": 108,
+    "by_target_app_command": [
+      {
+        "target": "native",
+        "app": "sample_app",
+        "command": "NOOP_CC",
+        "sent": 6,
+        "confirmed": 6,
+        "failures": 0
+      },
+      {
+        "target": "native",
+        "app": "sample_app",
+        "command": "RESET_COUNTERS_CC",
+        "sent": 3,
+        "confirmed": 3,
+        "failures": 0
+      },
+      {
+        "target": "native",
+        "app": "eval_temp",
+        "command": "NOOP_CC",
+        "sent": 6,
+        "confirmed": 6,
+        "failures": 0
+      },
+      {
+        "target": "native",
+        "app": "eval_temp",
+        "command": "RESET_COUNTERS_CC",
+        "sent": 3,
+        "confirmed": 3,
+        "failures": 0
+      },
+      {
+        "target": "native",
+        "app": "eval_mag",
+        "command": "NOOP_CC",
+        "sent": 6,
+        "confirmed": 6,
+        "failures": 0
+      },
+      {
+        "target": "native",
+        "app": "eval_mag",
+        "command": "RESET_COUNTERS_CC",
+        "sent": 3,
+        "confirmed": 3,
+        "failures": 0
+      },
+      {
+        "target": "native",
+        "app": "eval_mpu",
+        "command": "NOOP_CC",
+        "sent": 6,
+        "confirmed": 6,
+        "failures": 0
+      },
+      {
+        "target": "native",
+        "app": "eval_mpu",
+        "command": "RESET_COUNTERS_CC",
+        "sent": 3,
+        "confirmed": 3,
+        "failures": 0
+      },
+      {
+        "target": "qemu",
+        "app": "sample_app",
+        "command": "NOOP_CC",
+        "sent": 6,
+        "confirmed": 6,
+        "failures": 0
+      },
+      {
+        "target": "qemu",
+        "app": "sample_app",
+        "command": "RESET_COUNTERS_CC",
+        "sent": 3,
+        "confirmed": 3,
+        "failures": 0
+      },
+      {
+        "target": "qemu",
+        "app": "eval_temp",
+        "command": "NOOP_CC",
+        "sent": 6,
+        "confirmed": 6,
+        "failures": 0
+      },
+      {
+        "target": "qemu",
+        "app": "eval_temp",
+        "command": "RESET_COUNTERS_CC",
+        "sent": 3,
+        "confirmed": 3,
+        "failures": 0
+      },
+      {
+        "target": "qemu",
+        "app": "eval_mag",
+        "command": "NOOP_CC",
+        "sent": 6,
+        "confirmed": 6,
+        "failures": 0
+      },
+      {
+        "target": "qemu",
+        "app": "eval_mag",
+        "command": "RESET_COUNTERS_CC",
+        "sent": 3,
+        "confirmed": 3,
+        "failures": 0
+      },
+      {
+        "target": "qemu",
+        "app": "eval_mpu",
+        "command": "NOOP_CC",
+        "sent": 6,
+        "confirmed": 6,
+        "failures": 0
+      },
+      {
+        "target": "qemu",
+        "app": "eval_mpu",
+        "command": "RESET_COUNTERS_CC",
+        "sent": 3,
+        "confirmed": 3,
+        "failures": 0
+      },
+      {
+        "target": "physical",
+        "app": "sample_app",
+        "command": "NOOP_CC",
+        "sent": 6,
+        "confirmed": 6,
+        "failures": 0
+      },
+      {
+        "target": "physical",
+        "app": "sample_app",
+        "command": "RESET_COUNTERS_CC",
+        "sent": 3,
+        "confirmed": 3,
+        "failures": 0
+      },
+      {
+        "target": "physical",
+        "app": "eval_temp",
+        "command": "NOOP_CC",
+        "sent": 6,
+        "confirmed": 6,
+        "failures": 0
+      },
+      {
+        "target": "physical",
+        "app": "eval_temp",
+        "command": "RESET_COUNTERS_CC",
+        "sent": 3,
+        "confirmed": 3,
+        "failures": 0
+      },
+      {
+        "target": "physical",
+        "app": "eval_mag",
+        "command": "NOOP_CC",
+        "sent": 6,
+        "confirmed": 6,
+        "failures": 0
+      },
+      {
+        "target": "physical",
+        "app": "eval_mag",
+        "command": "RESET_COUNTERS_CC",
+        "sent": 3,
+        "confirmed": 3,
+        "failures": 0
+      },
+      {
+        "target": "physical",
+        "app": "eval_mpu",
+        "command": "NOOP_CC",
+        "sent": 6,
+        "confirmed": 6,
+        "failures": 0
+      },
+      {
+        "target": "physical",
+        "app": "eval_mpu",
+        "command": "RESET_COUNTERS_CC",
+        "sent": 3,
+        "confirmed": 3,
+        "failures": 0
+      }
+    ]
+  },
+  "q2": {
+    "errors": [
+      {
+        "environment": "flight_telemetry",
+        "target": "native",
+        "model": "lsm303dlhc_mag",
+        "channel": "mag-x",
+        "n": 15,
+        "max_abs_error_scaled": 45,
+        "max_tolerance_scaled": 46.45454545454545,
+        "max_abs_error": 0.045000000000000005,
+        "max_tolerance": 0.04645454545454546,
+        "unit": "µT"
+      },
+      {
+        "environment": "flight_telemetry",
+        "target": "native",
+        "model": "lsm303dlhc_mag",
+        "channel": "mag-y",
+        "n": 15,
+        "max_abs_error_scaled": 39,
+        "max_tolerance_scaled": 46.45454545454545,
+        "max_abs_error": 0.03900000000000001,
+        "max_tolerance": 0.04645454545454546,
+        "unit": "µT"
+      },
+      {
+        "environment": "flight_telemetry",
+        "target": "native",
+        "model": "lsm303dlhc_mag",
+        "channel": "mag-z",
+        "n": 15,
+        "max_abs_error_scaled": 35,
+        "max_tolerance_scaled": 52.02040816326531,
+        "max_abs_error": 0.035,
+        "max_tolerance": 0.05202040816326531,
+        "unit": "µT"
+      },
+      {
+        "environment": "flight_telemetry",
+        "target": "native",
+        "model": "mpu6050",
+        "channel": "accel-x",
+        "n": 15,
+        "max_abs_error_scaled": 1,
+        "max_tolerance_scaled": 1.030517578125,
+        "max_abs_error": 0.001,
+        "max_tolerance": 0.001030517578125,
+        "unit": "g"
+      },
+      {
+        "environment": "flight_telemetry",
+        "target": "native",
+        "model": "mpu6050",
+        "channel": "accel-y",
+        "n": 15,
+        "max_abs_error_scaled": 1,
+        "max_tolerance_scaled": 1.030517578125,
+        "max_abs_error": 0.001,
+        "max_tolerance": 0.001030517578125,
+        "unit": "g"
+      },
+      {
+        "environment": "flight_telemetry",
+        "target": "native",
+        "model": "mpu6050",
+        "channel": "accel-z",
+        "n": 15,
+        "max_abs_error_scaled": 1,
+        "max_tolerance_scaled": 1.030517578125,
+        "max_abs_error": 0.001,
+        "max_tolerance": 0.001030517578125,
+        "unit": "g"
+      },
+      {
+        "environment": "flight_telemetry",
+        "target": "native",
+        "model": "mpu6050",
+        "channel": "gyro-x",
+        "n": 15,
+        "max_abs_error_scaled": 4,
+        "max_tolerance_scaled": 4.816793893129772,
+        "max_abs_error": 0.004,
+        "max_tolerance": 0.004816793893129771,
+        "unit": "°/s"
+      },
+      {
+        "environment": "flight_telemetry",
+        "target": "native",
+        "model": "mpu6050",
+        "channel": "gyro-y",
+        "n": 15,
+        "max_abs_error_scaled": 4,
+        "max_tolerance_scaled": 4.816793893129772,
+        "max_abs_error": 0.004,
+        "max_tolerance": 0.004816793893129772,
+        "unit": "°/s"
+      },
+      {
+        "environment": "flight_telemetry",
+        "target": "native",
+        "model": "mpu6050",
+        "channel": "gyro-z",
+        "n": 15,
+        "max_abs_error_scaled": 2,
+        "max_tolerance_scaled": 4.816793893129772,
+        "max_abs_error": 0.002,
+        "max_tolerance": 0.004816793893129771,
+        "unit": "°/s"
+      },
+      {
+        "environment": "flight_telemetry",
+        "target": "native",
+        "model": "mpu6050",
+        "channel": "temperature",
+        "n": 15,
+        "max_abs_error_scaled": 1,
+        "max_tolerance_scaled": 2.4705882352941178,
+        "max_abs_error": 0.001,
+        "max_tolerance": 0.0024705882352941176,
+        "unit": "°C"
+      },
+      {
+        "environment": "flight_telemetry",
+        "target": "native",
+        "model": "tmp105",
+        "channel": "temperature",
+        "n": 15,
+        "max_abs_error_scaled": 31,
+        "max_tolerance_scaled": 32.25,
+        "max_abs_error": 0.031,
+        "max_tolerance": 0.03225,
+        "unit": "°C"
+      },
+      {
+        "environment": "flight_telemetry",
+        "target": "qemu",
+        "model": "lsm303dlhc_mag",
+        "channel": "mag-x",
+        "n": 15,
+        "max_abs_error_scaled": 88,
+        "max_tolerance_scaled": 91.9090909090909,
+        "max_abs_error": 0.08800000000000001,
+        "max_tolerance": 0.09190909090909091,
+        "unit": "µT"
+      },
+      {
+        "environment": "flight_telemetry",
+        "target": "qemu",
+        "model": "lsm303dlhc_mag",
+        "channel": "mag-y",
+        "n": 15,
+        "max_abs_error_scaled": 52,
+        "max_tolerance_scaled": 91.9090909090909,
+        "max_abs_error": 0.052000000000000005,
+        "max_tolerance": 0.09190909090909091,
+        "unit": "µT"
+      },
+      {
+        "environment": "flight_telemetry",
+        "target": "qemu",
+        "model": "lsm303dlhc_mag",
+        "channel": "mag-z",
+        "n": 15,
+        "max_abs_error_scaled": 93,
+        "max_tolerance_scaled": 103.04081632653062,
+        "max_abs_error": 0.093,
+        "max_tolerance": 0.10304081632653062,
+        "unit": "µT"
+      },
+      {
+        "environment": "flight_telemetry",
+        "target": "qemu",
+        "model": "mpu6050",
+        "channel": "accel-x",
+        "n": 15,
+        "max_abs_error_scaled": 1,
+        "max_tolerance_scaled": 1.06103515625,
+        "max_abs_error": 0.001,
+        "max_tolerance": 0.00106103515625,
+        "unit": "g"
+      },
+      {
+        "environment": "flight_telemetry",
+        "target": "qemu",
+        "model": "mpu6050",
+        "channel": "accel-y",
+        "n": 15,
+        "max_abs_error_scaled": 1,
+        "max_tolerance_scaled": 1.06103515625,
+        "max_abs_error": 0.001,
+        "max_tolerance": 0.00106103515625,
+        "unit": "g"
+      },
+      {
+        "environment": "flight_telemetry",
+        "target": "qemu",
+        "model": "mpu6050",
+        "channel": "accel-z",
+        "n": 15,
+        "max_abs_error_scaled": 1,
+        "max_tolerance_scaled": 1.06103515625,
+        "max_abs_error": 0.001,
+        "max_tolerance": 0.00106103515625,
+        "unit": "g"
+      },
+      {
+        "environment": "flight_telemetry",
+        "target": "qemu",
+        "model": "mpu6050",
+        "channel": "gyro-x",
+        "n": 15,
+        "max_abs_error_scaled": 7,
+        "max_tolerance_scaled": 8.633587786259543,
+        "max_abs_error": 0.007,
+        "max_tolerance": 0.008633587786259543,
+        "unit": "°/s"
+      },
+      {
+        "environment": "flight_telemetry",
+        "target": "qemu",
+        "model": "mpu6050",
+        "channel": "gyro-y",
+        "n": 15,
+        "max_abs_error_scaled": 7,
+        "max_tolerance_scaled": 8.633587786259543,
+        "max_abs_error": 0.007000000000000001,
+        "max_tolerance": 0.008633587786259543,
+        "unit": "°/s"
+      },
+      {
+        "environment": "flight_telemetry",
+        "target": "qemu",
+        "model": "mpu6050",
+        "channel": "gyro-z",
+        "n": 15,
+        "max_abs_error_scaled": 7,
+        "max_tolerance_scaled": 8.633587786259543,
+        "max_abs_error": 0.007,
+        "max_tolerance": 0.008633587786259543,
+        "unit": "°/s"
+      },
+      {
+        "environment": "flight_telemetry",
+        "target": "qemu",
+        "model": "mpu6050",
+        "channel": "temperature",
+        "n": 15,
+        "max_abs_error_scaled": 3,
+        "max_tolerance_scaled": 3.9411764705882355,
+        "max_abs_error": 0.003,
+        "max_tolerance": 0.003941176470588235,
+        "unit": "°C"
+      },
+      {
+        "environment": "flight_telemetry",
+        "target": "qemu",
+        "model": "tmp105",
+        "channel": "temperature",
+        "n": 15,
+        "max_abs_error_scaled": 259,
+        "max_tolerance_scaled": 501,
+        "max_abs_error": 0.259,
+        "max_tolerance": 0.501,
+        "unit": "°C"
+      },
+      {
+        "environment": "register_hal",
+        "target": "memory_bus",
+        "model": "lsm303dlhc_mag",
+        "channel": "mag-x",
+        "n": 120,
+        "max_abs_error_scaled": 45,
+        "max_tolerance_scaled": 46.45454545454545,
+        "max_abs_error": 0.045,
+        "max_tolerance": 0.04645454545454546,
+        "unit": "µT"
+      },
+      {
+        "environment": "register_hal",
+        "target": "memory_bus",
+        "model": "lsm303dlhc_mag",
+        "channel": "mag-y",
+        "n": 120,
+        "max_abs_error_scaled": 39,
+        "max_tolerance_scaled": 46.45454545454545,
+        "max_abs_error": 0.039,
+        "max_tolerance": 0.04645454545454546,
+        "unit": "µT"
+      },
+      {
+        "environment": "register_hal",
+        "target": "memory_bus",
+        "model": "lsm303dlhc_mag",
+        "channel": "mag-z",
+        "n": 120,
+        "max_abs_error_scaled": 35,
+        "max_tolerance_scaled": 52.02040816326531,
+        "max_abs_error": 0.035,
+        "max_tolerance": 0.05202040816326531,
+        "unit": "µT"
+      },
+      {
+        "environment": "register_hal",
+        "target": "memory_bus",
+        "model": "mpu6050",
+        "channel": "accel-x",
+        "n": 120,
+        "max_abs_error_scaled": 1,
+        "max_tolerance_scaled": 1.030517578125,
+        "max_abs_error": 0.001,
+        "max_tolerance": 0.001030517578125,
+        "unit": "g"
+      },
+      {
+        "environment": "register_hal",
+        "target": "memory_bus",
+        "model": "mpu6050",
+        "channel": "accel-y",
+        "n": 120,
+        "max_abs_error_scaled": 1,
+        "max_tolerance_scaled": 1.030517578125,
+        "max_abs_error": 0.001,
+        "max_tolerance": 0.001030517578125,
+        "unit": "g"
+      },
+      {
+        "environment": "register_hal",
+        "target": "memory_bus",
+        "model": "mpu6050",
+        "channel": "accel-z",
+        "n": 120,
+        "max_abs_error_scaled": 1,
+        "max_tolerance_scaled": 1.030517578125,
+        "max_abs_error": 0.001,
+        "max_tolerance": 0.001030517578125,
+        "unit": "g"
+      },
+      {
+        "environment": "register_hal",
+        "target": "memory_bus",
+        "model": "mpu6050",
+        "channel": "gyro-x",
+        "n": 120,
+        "max_abs_error_scaled": 4,
+        "max_tolerance_scaled": 4.816793893129772,
+        "max_abs_error": 0.003999999999999999,
+        "max_tolerance": 0.004816793893129771,
+        "unit": "°/s"
+      },
+      {
+        "environment": "register_hal",
+        "target": "memory_bus",
+        "model": "mpu6050",
+        "channel": "gyro-y",
+        "n": 120,
+        "max_abs_error_scaled": 4,
+        "max_tolerance_scaled": 4.816793893129772,
+        "max_abs_error": 0.004,
+        "max_tolerance": 0.004816793893129771,
+        "unit": "°/s"
+      },
+      {
+        "environment": "register_hal",
+        "target": "memory_bus",
+        "model": "mpu6050",
+        "channel": "gyro-z",
+        "n": 120,
+        "max_abs_error_scaled": 2,
+        "max_tolerance_scaled": 4.816793893129772,
+        "max_abs_error": 0.002,
+        "max_tolerance": 0.004816793893129771,
+        "unit": "°/s"
+      },
+      {
+        "environment": "register_hal",
+        "target": "memory_bus",
+        "model": "mpu6050",
+        "channel": "temperature",
+        "n": 120,
+        "max_abs_error_scaled": 1,
+        "max_tolerance_scaled": 2.4705882352941178,
+        "max_abs_error": 0.001,
+        "max_tolerance": 0.0024705882352941176,
+        "unit": "°C"
+      },
+      {
+        "environment": "register_hal",
+        "target": "memory_bus",
+        "model": "tmp105",
+        "channel": "temperature",
+        "n": 120,
+        "max_abs_error_scaled": 31,
+        "max_tolerance_scaled": 32.25,
+        "max_abs_error": 0.031,
+        "max_tolerance": 0.03225,
+        "unit": "°C"
+      }
+    ],
+    "physical_descriptive": [
+      {
+        "model": "tmp105",
+        "channel": "temperature",
+        "unit": "°C",
+        "valid_expected": 0,
+        "n": 0
+      },
+      {
+        "model": "lsm303dlhc_mag",
+        "channel": "mag-x",
+        "unit": "µT",
+        "valid_expected": 0,
+        "n": 0
+      },
+      {
+        "model": "lsm303dlhc_mag",
+        "channel": "mag-y",
+        "unit": "µT",
+        "valid_expected": 0,
+        "n": 0
+      },
+      {
+        "model": "lsm303dlhc_mag",
+        "channel": "mag-z",
+        "unit": "µT",
+        "valid_expected": 0,
+        "n": 0
+      },
+      {
+        "model": "mpu6050",
+        "channel": "accel-x",
+        "unit": "g",
+        "valid_expected": 1,
+        "n": 5,
+        "min": 1.043,
+        "median": 1.049,
+        "max": 1.05,
+        "q1": 1.048,
+        "q3": 1.05,
+        "iqr": 0.0020000000000000018
+      },
+      {
+        "model": "mpu6050",
+        "channel": "accel-y",
+        "unit": "g",
+        "valid_expected": 1,
+        "n": 5,
+        "min": 0.015000000000000001,
+        "median": 0.019000000000000003,
+        "max": 0.022000000000000002,
+        "q1": 0.016,
+        "q3": 0.020000000000000004,
+        "iqr": 0.0040000000000000036
+      },
+      {
+        "model": "mpu6050",
+        "channel": "accel-z",
+        "unit": "g",
+        "valid_expected": 1,
+        "n": 5,
+        "min": 0.135,
+        "median": 0.137,
+        "max": 0.151,
+        "q1": 0.137,
+        "q3": 0.138,
+        "iqr": 0.0010000000000000009
+      },
+      {
+        "model": "mpu6050",
+        "channel": "temperature",
+        "unit": "°C",
+        "valid_expected": 1,
+        "n": 5,
+        "min": 25.989,
+        "median": 26.036,
+        "max": 26.13,
+        "q1": 26.036,
+        "q3": 26.083,
+        "iqr": 0.046999999999997044
+      },
+      {
+        "model": "mpu6050",
+        "channel": "gyro-x",
+        "unit": "°/s",
+        "valid_expected": 1,
+        "n": 5,
+        "min": -2.091,
+        "median": -1.778,
+        "max": -1.671,
+        "q1": -1.923,
+        "q3": -1.763,
+        "iqr": 0.16000000000000014
+      },
+      {
+        "model": "mpu6050",
+        "channel": "gyro-y",
+        "unit": "°/s",
+        "valid_expected": 1,
+        "n": 5,
+        "min": 0.5640000000000001,
+        "median": 0.6180000000000001,
+        "max": 0.7780000000000001,
+        "q1": 0.6180000000000001,
+        "q3": 0.7170000000000001,
+        "iqr": 0.09899999999999998
+      },
+      {
+        "model": "mpu6050",
+        "channel": "gyro-z",
+        "unit": "°/s",
+        "valid_expected": 1,
+        "n": 5,
+        "min": -0.786,
+        "median": -0.519,
+        "max": -0.32,
+        "q1": -0.557,
+        "q3": -0.366,
+        "iqr": 0.19100000000000006
+      }
+    ]
+  },
+  "q3": {
+    "register_hal": {
+      "episodes": 9,
+      "invalid_readings": 45
+    },
+    "flight_telemetry": {
+      "episodes": 3,
+      "invalid_readings": 15
+    },
+    "physical_absence": {
+      "episodes": 0,
+      "invalid_readings": 10
+    }
+  },
+  "q4": {
+    "arm_files": 63,
+    "categories": {
+      "loadable_module": 24,
+      "table": 37,
+      "startup": 1,
+      "executable": 1
+    },
+    "identical": true
+  },
+  "q5": {
+    "statistics": [
+      {
+        "kind": "cfs_starts",
+        "target": "native",
+        "stage": "ground_to_first_hk_s",
+        "n": 10,
+        "min": 5.637636037004995,
+        "median": 5.753901524501998,
+        "max": 5.83645733200683,
+        "q1": 5.683458035255171,
+        "q3": 5.809170560500206,
+        "iqr": 0.12571252524503507
+      },
+      {
+        "kind": "cfs_starts",
+        "target": "native",
+        "stage": "operational_observed_s",
+        "n": 10,
+        "min": 2.526546954002697,
+        "median": 2.639724448501511,
+        "max": 2.817046855998342,
+        "q1": 2.583563157750177,
+        "q3": 2.7205617297495337,
+        "iqr": 0.1369985719993565
+      },
+      {
+        "kind": "cfs_starts",
+        "target": "native",
+        "stage": "run_total_s",
+        "n": 10,
+        "min": 2.7548340820067097,
+        "median": 2.8554151094976987,
+        "max": 3.0434655209974153,
+        "q1": 2.811626137501662,
+        "q3": 2.947916358749353,
+        "iqr": 0.13629022124769108
+      },
+      {
+        "kind": "cfs_starts",
+        "target": "native",
+        "stage": "total_to_first_hk_s",
+        "n": 10,
+        "min": 8.445438488997752,
+        "median": 8.61035673400329,
+        "max": 8.867487559000438,
+        "q1": 8.587753893500121,
+        "q3": 8.632792369251547,
+        "iqr": 0.04503847575142572
+      },
+      {
+        "kind": "cfs_starts",
+        "target": "physical",
+        "stage": "ground_to_first_hk_s",
+        "n": 10,
+        "min": 5.063981105005951,
+        "median": 5.363705999996455,
+        "max": 5.502582615998108,
+        "q1": 5.336604207754135,
+        "q3": 5.427810988501733,
+        "iqr": 0.0912067807475978
+      },
+      {
+        "kind": "cfs_starts",
+        "target": "physical",
+        "stage": "operational_observed_s",
+        "n": 10,
+        "min": 9.161598495004,
+        "median": 9.408601543000259,
+        "max": 9.87270087300567,
+        "q1": 9.318670608990942,
+        "q3": 9.452955758257303,
+        "iqr": 0.13428514926636126
+      },
+      {
+        "kind": "cfs_starts",
+        "target": "physical",
+        "stage": "payload_transfer",
+        "n": 10,
+        "min": 2.26045115001034,
+        "median": 2.398446644503565,
+        "max": 2.682486781006446,
+        "q1": 2.350473911003064,
+        "q3": 2.418912926252233,
+        "iqr": 0.06843901524916873
+      },
+      {
+        "kind": "cfs_starts",
+        "target": "physical",
+        "stage": "run_total_s",
+        "n": 10,
+        "min": 9.33360867499141,
+        "median": 9.567549068502558,
+        "max": 10.093800289003411,
+        "q1": 9.477390184743854,
+        "q3": 9.611792630246782,
+        "iqr": 0.13440244550292846
+      },
+      {
+        "kind": "cfs_starts",
+        "target": "physical",
+        "stage": "total_to_first_hk_s",
+        "n": 10,
+        "min": 14.836790785993799,
+        "median": 14.922899105004035,
+        "max": 15.364876407998963,
+        "q1": 14.864524485747097,
+        "q3": 14.988983831244695,
+        "iqr": 0.1244593454975984
+      },
+      {
+        "kind": "cfs_starts",
+        "target": "qemu",
+        "stage": "ground_to_first_hk_s",
+        "n": 10,
+        "min": 4.058232549999957,
+        "median": 5.053236287501932,
+        "max": 5.604862634005258,
+        "q1": 4.892684039996311,
+        "q3": 5.241805325251335,
+        "iqr": 0.3491212852550234
+      },
+      {
+        "kind": "cfs_starts",
+        "target": "qemu",
+        "stage": "operational_observed_s",
+        "n": 10,
+        "min": 23.488500325998757,
+        "median": 24.436234404500283,
+        "max": 25.508509335995768,
+        "q1": 24.181238608003696,
+        "q3": 24.841022458003863,
+        "iqr": 0.6597838500001671
+      },
+      {
+        "kind": "cfs_starts",
+        "target": "qemu",
+        "stage": "payload_transfer",
+        "n": 10,
+        "min": 13.732827123996685,
+        "median": 14.342111906498758,
+        "max": 14.663674935000017,
+        "q1": 14.170593390748763,
+        "q3": 14.490616253748158,
+        "iqr": 0.3200228629993944
+      },
+      {
+        "kind": "cfs_starts",
+        "target": "qemu",
+        "stage": "run_total_s",
+        "n": 10,
+        "min": 23.69196523100254,
+        "median": 24.73400888800097,
+        "max": 25.86726161799743,
+        "q1": 24.488039749754535,
+        "q3": 25.055007048504194,
+        "iqr": 0.5669672987496597
+      },
+      {
+        "kind": "cfs_starts",
+        "target": "qemu",
+        "stage": "total_to_first_hk_s",
+        "n": 10,
+        "min": 29.297128111000347,
+        "median": 29.806413077003526,
+        "max": 30.346450910001295,
+        "q1": 29.68732512675342,
+        "q3": 29.988629309000316,
+        "iqr": 0.3013041822468949
+      },
+      {
+        "kind": "development_cycles",
+        "target": "native",
+        "stage": "build_s",
+        "n": 10,
+        "min": 31.691020606995153,
+        "median": 32.16429305299971,
+        "max": 76.39527245900535,
+        "q1": 32.05445646724729,
+        "q3": 32.30363501999818,
+        "iqr": 0.24917855275089096
+      },
+      {
+        "kind": "development_cycles",
+        "target": "native",
+        "stage": "create_s",
+        "n": 10,
+        "min": 1.2678482449991861,
+        "median": 1.5683302774996264,
+        "max": 1.719976100997883,
+        "q1": 1.519857598003,
+        "q3": 1.607259354499547,
+        "iqr": 0.08740175649654702
+      },
+      {
+        "kind": "development_cycles",
+        "target": "native",
+        "stage": "delete_s",
+        "n": 10,
+        "min": 2.619813190001878,
+        "median": 2.6221575859999575,
+        "max": 2.6729891750001116,
+        "q1": 2.621280303246749,
+        "q3": 2.622750224749325,
+        "iqr": 0.001469921502575744
+      },
+      {
+        "kind": "full_build",
+        "target": "native",
+        "stage": "elapsed_s",
+        "n": 1,
+        "min": 82.97433622099925,
+        "median": 82.97433622099925,
+        "max": 82.97433622099925
+      },
+      {
+        "kind": "full_build",
+        "target": "qemu",
+        "stage": "elapsed_s",
+        "n": 1,
+        "min": 122.08249576199887,
+        "median": 122.08249576199887,
+        "max": 122.08249576199887
+      },
+      {
+        "kind": "guest_boots",
+        "target": "qemu",
+        "stage": "ground_to_first_hk_s",
+        "n": 5,
+        "min": 5.025651415002358,
+        "median": 5.500539695000043,
+        "max": 5.6804351749960915,
+        "q1": 5.213399633001245,
+        "q3": 5.676786971998808,
+        "iqr": 0.46338733899756335
+      },
+      {
+        "kind": "guest_boots",
+        "target": "qemu",
+        "stage": "guest_boot_total_s",
+        "n": 5,
+        "min": 72.05146108600457,
+        "median": 73.09585083700222,
+        "max": 80.84013958200376,
+        "q1": 72.39334146900364,
+        "q3": 78.17771344699577,
+        "iqr": 5.784371977992123
+      },
+      {
+        "kind": "guest_boots",
+        "target": "qemu",
+        "stage": "guest_ssh_ready_observed_s",
+        "n": 5,
+        "min": 68.65405472100247,
+        "median": 69.26709725899855,
+        "max": 77.31597586299904,
+        "q1": 69.23408563299745,
+        "q3": 74.57194854999398,
+        "iqr": 5.337862916996528
+      },
+      {
+        "kind": "guest_boots",
+        "target": "qemu",
+        "stage": "operational_observed_s",
+        "n": 5,
+        "min": 22.954713357998116,
+        "median": 23.467604006997135,
+        "max": 28.72504216300149,
+        "q1": 23.010445159001392,
+        "q3": 23.469214894998004,
+        "iqr": 0.4587697359966114
+      },
+      {
+        "kind": "guest_boots",
+        "target": "qemu",
+        "stage": "payload_transfer",
+        "n": 5,
+        "min": 12.753883599994879,
+        "median": 12.879766493002535,
+        "max": 13.355515479001042,
+        "q1": 12.845648762995552,
+        "q3": 12.932674155999848,
+        "iqr": 0.08702539300429635
+      },
+      {
+        "kind": "guest_boots",
+        "target": "qemu",
+        "stage": "run_total_s",
+        "n": 5,
+        "min": 23.126247581996722,
+        "median": 23.650139801997284,
+        "max": 29.028351526001643,
+        "q1": 23.18034998499934,
+        "q3": 23.761363848003384,
+        "iqr": 0.5810138630040456
+      },
+      {
+        "kind": "guest_boots",
+        "target": "qemu",
+        "stage": "total_to_first_hk_s",
+        "n": 5,
+        "min": 101.20290330500575,
+        "median": 101.89985096599412,
+        "max": 114.89465301200107,
+        "q1": 101.25503329599451,
+        "q3": 107.1533157169979,
+        "iqr": 5.898282421003387
+      }
+    ]
+  },
+  "notes": [
+    "Physical readings are descriptive; no synthetic reference or accuracy claim.",
+    "Register samples use indices, not measured time.",
+    "UDP recovery is an observed bounded transition, not the first causal C call.",
+    "Full builds have N=1; restoration build is outside development-cycle statistics.",
+    "Durations and first-observation markers retain the frozen harness stage names."
+  ]
+}

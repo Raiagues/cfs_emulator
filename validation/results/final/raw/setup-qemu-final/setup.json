@@ -1,0 +1,15 @@
+{
+  "status": "passed",
+  "started_utc": "2026-11-23T07:36:44.050567+00:00",
+  "guest_disk_existed_before": false,
+  "image": {
+    "tag": "flight-studio-evaluation:4ecbaffff931",
+    "id": "sha256:eeaa61e6142c9750d49d06bbd3456f78f499c43b56da1f805c91b552cbb1d77a",
+    "architecture": "amd64",
+    "register_models": "4ecbaffff931f6682f245f6e1a44bc931d4f1dae945b047da70c7f9b080d74a4",
+    "expected_register_models": "4ecbaffff931f6682f245f6e1a44bc931d4f1dae945b047da70c7f9b080d74a4"
+  },
+  "public_key_sha256": "03cc4f0a9864b397254b3910a67c5abe4139caa180a74ce520597e7276a9f220",
+  "qemu_version": "QEMU emulator version 11.1.2\nCopyright (c) 2003-2026 Fabrice Bellard and the QEMU Project developers",
+  "ended_utc": "2026-11-23T07:36:54.585358+00:00"
+}
