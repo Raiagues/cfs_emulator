@@ -235,6 +235,10 @@ class Laboratory:
         try:
             if record['cancel'].is_set():
                 return
+            if record['action'] in {'first-boot', 'run'}:
+                self.hardware.journey.begin_boot(record['target'], record['id'], record['started'])
+                record['journey_attempt'] = True
+                self.changes.publish('journey')
             directory = self.hardware.runtime / 'jobs'
             directory.mkdir(mode=0o700, exist_ok=True)
             log_path = directory / f'{record["action"]}-{record["id"]}.log'
@@ -268,6 +272,8 @@ class Laboratory:
                 if record['cancel'].is_set():
                     record['status'] = 'cancelled'
                 record['ended'] = time.time()
+                if record.get('journey_attempt'):
+                    self.hardware.journey.finish_boot(record['target'], record['id'], record['status'])
                 self.changes.publish('jobs', 'hardware', 'journey')
                 self.lock.notify_all()
             if owns_operation:

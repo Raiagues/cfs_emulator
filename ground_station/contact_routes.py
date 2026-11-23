@@ -195,6 +195,14 @@ def first_contact_routes(root, catalog):
                         route[key] = publication[key]
                 if route not in producers[mid]:
                     producers[mid].append(route)
+    # Preserve every resolved bus relationship for the scalable Ground view.
+    # Apps with no resolved relationship stay visible without invented edges.
+    result['applications'] = {
+        name: {'subscriptions': [route for rows in receivers.values() for route in rows if route['app'] == name],
+               'publications': [dict(route, mid=mid) for mid, rows in producers.items()
+                                for route in rows if route['app'] == name]}
+        for name in active
+    }
     for name in ('ci_lab', 'to_lab'):
         if name not in source:
             continue

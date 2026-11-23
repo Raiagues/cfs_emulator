@@ -3,7 +3,7 @@ import copy
 import socket
 import threading
 import time
-from collections import deque
+from collections import Counter, deque
 from pathlib import Path
 
 from .catalog import build_catalog, apply_overrides
@@ -35,6 +35,7 @@ class GroundStation:
         self._history = deque(maxlen=256)
         self._events = deque(maxlen=256)
         self._commands = deque(maxlen=100)
+        self._command_counts = Counter()
         self.plans = TestPlans(self.root)
         self.receipts = PassedTests(self.root)
         self.trips = RoundTrips()
@@ -93,6 +94,7 @@ class GroundStation:
                 self._history.clear()
                 self._events.clear()
                 self._commands.clear()
+                self._command_counts.clear()
                 self.trips = RoundTrips()
                 self._communication.clear()
                 self._traffic_seconds.clear()
@@ -247,6 +249,7 @@ class GroundStation:
                      'hex': packet.hex()}
             event['event_id'] = self._record_communication(event['app'], 'command', size, event['sent_at'])
             self._commands.append(event)
+            self._command_counts[command_id] += 1
             cutoff = self.journey.snapshot(self._target[0])['reset_at']
             if cutoff != self._journey_cutoff:
                 self._start_observations(self._active_catalog, self.first_contact.destination)
@@ -365,6 +368,10 @@ class GroundStation:
                                   'received': self._received, 'malformed': self._malformed,
                                   'last_received': self._last_received,
                                   'communication': {'since': self._session_started, 'recent': recent,
+                                                    'totals': {'commands_sent': sum(self._command_counts.values()),
+                                                               'telemetry_received': self._received,
+                                                               'malformed': self._malformed},
+                                                    'commands': dict(self._command_counts),
                                                     'apps': list(self._communication.values())},
                                   'events': list(self._events), 'packets': list(self._latest.values()), 'history': list(self._history),
                                   'commands': list(self._commands), 'runs': list(self.trips.runs)})

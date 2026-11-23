@@ -139,7 +139,8 @@ class Handler(BaseHTTPRequestHandler):
                 '/api/tree': lambda: app.workspace.tree(query.get('path', '')),
                 '/api/files/search': lambda: app.workspace.search_files(query.get('root', 'cFS'), query.get('q', '')),
                 '/api/file': lambda: app.workspace.read_file(query['path']),
-                '/api/command/lesson': lambda: app.workspace.command_lesson(query.get('target'), query.get('app')),
+                '/api/command/lesson': lambda: app.workspace.command_lesson(query.get('target'), query.get('app'), view=query.get('view')),
+                '/api/source/activity': lambda: app.workspace.source_activity(query.get('target'), query.get('app'), query.get('command')),
                 '/api/hardware': lambda: app.monitor.snapshot(),
                 '/api/first-boot': lambda: first_boot.snapshot(app, query.get('target') or selected_target(app.hardware.root), journal=app.boot_journal_snapshot),
                 '/api/infrastructure': lambda: infrastructure.snapshot(app.hardware),
@@ -219,6 +220,10 @@ class Handler(BaseHTTPRequestHandler):
             path = urlparse(self.path).path
             if path == '/api/journey/reset':
                 result = app.ground.reset_journey(body.get('target') or selected_target(app.hardware.root))
+            elif path == '/api/source/activity':
+                if set(body) != {'target', 'app', 'command', 'step', 'fingerprint'}:
+                    raise ValueError('Invalid source review request')
+                result = app.workspace.source_activity(body['target'], body['app'], body['command'], body)
             elif path == '/api/file':
                 if body.get('command_lesson'):
                     result = app.workspace.save_command_line(body.get('target'), body.get('app'), body['path'],

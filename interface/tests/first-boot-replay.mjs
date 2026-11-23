@@ -71,3 +71,14 @@ test('each startup card requires its own observation; a batched record can be in
   assert.equal(platform.find(([id])=>id==='osal')[4],true);
   assert.equal(platform.find(([id])=>id==='psp')[4],false);
 });
+
+test('a build preparing the catalog is active while the previous deployment is stopped',()=>{
+  const data={target:'native',starting:true,stopped:true,flight:{},job:{id:'new',phase:'build',status:'running',build_activity:'Indexing catalog'},
+    apps:[],services:[],es_states:[],trace:[{ms:0,phase:'build'}]};
+  const building=bootStages(data).preparation[0];
+  assert.equal(building.state,'active');
+  assert.equal(building.caption,'Indexing catalog');
+  assert.equal(building.percent,null);
+  data.starting=false;data.job.status='failed';
+  assert.equal(bootStages(data).preparation[0].caption,'Failed');
+});

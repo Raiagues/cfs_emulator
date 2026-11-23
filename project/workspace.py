@@ -167,11 +167,17 @@ class Workspace:
                     return {'files': results, 'limited': True}
         return {'files': results, 'limited': False}
 
-    def command_lesson(self, target, app=None):
+    def source_activity(self, target, app, command, review=None):
+        from project.source_activity import SourceActivity
+        with self.lock:
+            activity = SourceActivity(self, target, app, command)
+            return activity.snapshot() if review is None else activity.review(review.get('step'), review.get('fingerprint'))
+
+    def command_lesson(self, target, app=None, view=None):
         from project.command_lesson import CommandLesson, MissingApp
         with self.lock:
             try:
-                return CommandLesson(self, target, app).snapshot()
+                return CommandLesson(self, target, app).snapshot(view=view)
             except MissingApp:
                 return {"needs_app": True, "target": target}
 

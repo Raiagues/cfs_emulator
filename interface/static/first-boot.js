@@ -51,8 +51,8 @@ export function bootStages(data, {phase,es}=bootLayers(data)) {
   const steps=stagesFor(data.target);
   const stepIndex=steps.findIndex(([id])=>id===phase);
   const job=data.job, last=es.at(-1);
-  const fault=data.unverified?'Unverified':data.stopped?'Stopped':
-    job.status==='failed'?'Failed':job.status==='cancelled'?'Cancelled':'';
+  const fault=job.status==='failed'?'Failed':job.status==='cancelled'?'Cancelled':
+    data.unverified?'Unverified':data.stopped&&!data.starting?'Stopped':'';
   const preparation=steps.slice(0,-1).map(([key,label],index)=>{
     const reached=stepIndex>index && data.trace.some(event=>event.phase===key);
     const active=stepIndex===index && job.phase===key && Boolean(job.id);
@@ -146,7 +146,7 @@ export function bootFrame(snapshot,milliseconds,lastIndex=snapshot.trace.length-
       if(event.fact.app) flight.initialized[event.fact.app]=event.fact;
     }
   }
-  return {...snapshot,job,flight,lines,running:false,stopped:false,unverified:false};
+  return {...snapshot,job,flight,lines,running:false,starting:false,stopped:false,unverified:false};
 }
 function clock(milliseconds) {
   const seconds=Math.floor(Math.max(0,milliseconds)/1000);
@@ -154,7 +154,7 @@ function clock(milliseconds) {
 }
 export function mountFirstBoot(container,{api,target}) {
   let disposed=false,starting=false,data=null,pick='',pickKey='',lastCue='',consoleOpen=false,err='';
-  let readError='';
+  let readError='',pollVersion=0,polling=false,pollAgain=false;
   let live=null, pausedAt=null, pausedIndex=null, replayStart=null, replayTimer=null;
   function publishRunning(running) {
     const body = container.ownerDocument.body;
@@ -178,11 +178,12 @@ export function mountFirstBoot(container,{api,target}) {
     data=pausedAt!=null||replayStart!=null ? bootFrame(live,ms,pausedIndex??live.trace.length-1) : live;
     if(disposed || !data)return;
     const {layers,phase,auto,es}=bootLayers(data);
-    const {preparation,startup}=bootStages(data,{phase,es});
+    const {preparation,startup,runStatus}=bootStages(data,{phase,es});
     const job=data.job,running=data.running,failed=['failed','cancelled'].includes(job.status);
-    const runState = es.includes('OPERATIONAL') ? 'done' : phase === 'run' ? (failed ? 'failed' : 'active') : 'waiting';
+    const interrupted=failed||data.stopped||data.unverified;
+    const runState = es.includes('OPERATIONAL') && !data.starting && !interrupted ? 'done' : phase === 'run' ? (interrupted ? 'failed' : 'active') : 'waiting';
     const phases = [...preparation, {key:'run', label:stagesFor(target).at(-1)[1], layer:'cfe', state:runState,
-      caption:runState === 'done' ? 'OPERATIONAL' : runState === 'active' ? stageProgress('run', job, es).label : ''}];
+      caption:runState === 'done' ? 'OPERATIONAL' : runState === 'active' ? (es.includes('OPERATIONAL')?'Confirming startup':stageProgress('run', job, es).label) : runStatus}];
     const fault = phases.find(card => card.state === 'failed');
     if (fault) fault.cause = job.error || data.lines.at(-1);
     const mainApps = new Set(['ci_lab','to_lab','sch_lab','sample_app', ...(data.authored_apps || [])]);
@@ -244,28 +245,32 @@ export function mountFirstBoot(container,{api,target}) {
   };
   async function start(){
     if(starting)return;
-    starting=true;err='';draw();
+    starting=true;err='';++pollVersion;pausedAt=null;pausedIndex=null;replayStart=null;pick='';pickKey='';draw();
     try{
       const job=await api('job',{action:'first-boot',options:{target}});
       sessionStorage.setItem('flight.boot.'+target,job.id);
-      live=await api('first-boot?target='+encodeURIComponent(target));
+      await poll();
     }catch(error){err=error.message;}
     finally{starting=false;draw();}
   }
   async function poll(){
+    if(polling){pollAgain=true;return;}
+    polling=true;
+    const version=++pollVersion;
     try{
       const next=await api('first-boot?target='+encodeURIComponent(target));
-      if(disposed)return;
+      if(disposed||version!==pollVersion)return;
+      if(live?.job.id!==next.job.id){pausedAt=null;pausedIndex=null;replayStart=null;pick='';pickKey='';}
       live=next;readError='';
       publishRunning(next.running);
-      window.dispatchEvent(new CustomEvent('flight:boot-state',{detail:{failed:['failed','cancelled'].includes(next.job.status)}}));
+      window.dispatchEvent(new CustomEvent('flight:boot-state',{detail:{target,id:next.job.id,failed:['failed','cancelled'].includes(next.job.status)}}));
       draw();
       if(next.running && pausedAt==null && sessionStorage.getItem('flight.boot.'+target)===next.job.id){
         sessionStorage.removeItem('flight.boot.'+target);
         navigate(stepUrl('event', location, target));
       }
     }catch(error){
-      if(disposed)return;
+      if(disposed||version!==pollVersion)return;
       publishRunning(false);
       readError=error.message;
       if(data)draw();
@@ -274,8 +279,10 @@ export function mountFirstBoot(container,{api,target}) {
         status.textContent=readError;
         status.setAttribute('aria-busy','false');
       }
+    }finally{
+      polling=false;
+      if(pollAgain&&!disposed){pollAgain=false;void poll();}
     }
-
   }
   const click=async event=>{
     const button=event.target.closest('button');

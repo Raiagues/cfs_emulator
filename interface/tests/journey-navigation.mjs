@@ -40,3 +40,10 @@ test('Board has its own view and target selection stays explicit', () => {
   assert.equal(stepUrl('target', from), '/#target');
   assert.equal(stepUrl('event', from, 'qemu'), '/studio?target=qemu#event');
 });
+
+test('the connector turns green when its next step is reachable and red only on failure',async()=>{
+  const {journeyLine}=await import('../static/journey.js');
+  assert.deepEqual(journeyLine(state.steps.boot,state.steps.event),{complete:true,failed:false});
+  assert.deepEqual(journeyLine(state.steps.event,state.steps.app),{complete:false,failed:false});
+  assert.deepEqual(journeyLine(state.steps.target,{done:false,reachable:true},true),{complete:false,failed:true});
+});

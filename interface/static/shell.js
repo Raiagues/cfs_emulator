@@ -3,7 +3,7 @@ function terminalAppearance(reducedMotion) {
  const style=getComputedStyle(document.documentElement);
  const token=name=>style.getPropertyValue('--fs-'+name).trim();
  const theme={
-  background:token('surface'), foreground:token('text'), cursor:token('accent'),
+  background:token('terminal-bg'), foreground:token('terminal-output'), cursor:token('accent'),
   cursorAccent:token('on-accent'), selectionBackground:token('console-selection'),
   black:token('bg'), brightBlack:token('muted'), white:token('text'), brightWhite:token('text'),
  };
@@ -40,7 +40,7 @@ export function mountShells({api,onError,onExit}) {
   if(!shells.has(job.id)){
    const element=document.createElement('div');element.className='shell-screen';host.append(element);
    const term=new window.Terminal({
-    ...terminalAppearance(reducedMotion),fontWeight:'400',fontWeightBold:'600',lineHeight:1.35,
+    ...terminalAppearance(reducedMotion),fontWeight:'400',fontWeightBold:'600',lineHeight:1.7,
     minimumContrastRatio:4.5,screenReaderMode:true,scrollback:5000,allowProposedApi:false
    });
    const fitAddon=new window.FitAddon.FitAddon();term.loadAddon(fitAddon);term.open(element);

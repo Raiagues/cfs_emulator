@@ -137,6 +137,8 @@ def observe(hardware, job, line):
         previous = hardware.state.read("operational-" + job["target"] + ".json", {})
         at = previous["time"] if previous.get("run_id") == run else time.time()
         reference = {"run": run, "line": line}
+        if job.get("started"):
+            reference["started"] = job["started"]
         hardware.journey.observe(job["target"], "boot", reference, at)
         if job["target"] == "physical":
             hardware.journey.observe("physical", "board", reference, at)

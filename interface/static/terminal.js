@@ -1,6 +1,7 @@
 import {jobLog} from './updates.js';
 import {icon} from './ui.js';
 import {mountShells} from './shell.js';
+import {terminalOutputHTML, terminalOutputText} from './terminal-output.js';
 
 const actionLabels = {run:'Run cFS',build:'Build cFS',stop:'Stop cFS',connect:'Prepare board service',probe:'Check connection',simulate:'Synthetic data','simulate-preview':'Signal test',values:'Sensor values'};
 export function actionLabel(action,target){
@@ -112,8 +113,9 @@ export function mountTerminal({state,esc,layout,api,onStream,onCloseJob,onError}
   const key=job?.id||'empty',changed=output.dataset.job!==key;
   if(changed)remember();
   const position=positions.get(key),bottom=changed?position?.bottom!==false:output.scrollTop+output.clientHeight>=output.scrollHeight-30;
-  const text=job?((logs.get(job.id)?.lines || job.lines || []).join('\n').replace(/\x1b\[[0-?]*[ -/]*[@-~]/g,'')||'Waiting for process output…'):'No open terminal';
-  if(output.textContent!==text)output.textContent=text;
+  const raw=job?((logs.get(job.id)?.lines || job.lines || []).join('\n')||'Waiting for process output…'):'No open terminal';
+  const text=terminalOutputText(raw);
+  if(output.textContent!==text)output.innerHTML=terminalOutputHTML(raw);
   output.classList.toggle('terminal-empty',!job);
   output.dataset.job=key;
   if(bottom)output.scrollTop=output.scrollHeight;
@@ -121,7 +123,7 @@ export function mountTerminal({state,esc,layout,api,onStream,onCloseJob,onError}
   if(changed)output.scrollLeft=position?.left||0;
   document.querySelector('#terminal-title').textContent=job?label(job)+' · '+(job.target==='local'?'Local shell':job.target==='native'?'Native':job.target==='qemu'?'Emulator':'Board'):'';
   document.querySelector('#job-status').textContent=document.body.classList.contains('backend-offline')?'Server disconnected':job?status(job):'';
-  document.querySelector('#job-status').dataset.status=job?.status||'';
+  document.querySelector('#job-status').dataset.status=document.body.classList.contains('backend-offline')?'disconnected':job?.status||'';
  }
  async function select(event){
   const button=event.target.closest('button');if(!button)return;

@@ -8,7 +8,7 @@ const labels = {
 };
 const tick = '<svg class="fs-tick fs-draw" viewBox="0 0 16 16" aria-hidden="true"><path pathLength="1" d="m3 8 3 3 7-7"/></svg>';
 const bar = globalThis.document?.getElementById('flight-guide');
-let observations, requestId = 0, bootFailure = false;
+let observations, requestId = 0, bootState = null;
 
 function context() {
   return document.body.dataset.flightTarget || null;
@@ -20,6 +20,10 @@ export function journeyNavigation(page, snapshot) {
   const next = snapshot.steps[open]?.done && open !== 'target' && open !== snapshot.current && !snapshot.optional_board
     ? snapshot.next_route : null;
   return {current:snapshot.current, completed, next};
+}
+
+export function journeyLine(previous, status, failed=false) {
+  return {complete:Boolean(previous.done && status.reachable && !failed),failed};
 }
 
 function render(snapshot) {
@@ -46,13 +50,16 @@ function render(snapshot) {
     stop.querySelector('.flight-number').classList.toggle('fs-ping2', current === id);
     if (current === id) stop.setAttribute('aria-current', 'step');
     else stop.removeAttribute('aria-current');
-    const failed = id === 'boot' && bootFailure;
+    const attempt=snapshot.boot_attempt;
+    const liveFailure=bootState?.target===snapshot.target&&(!attempt||bootState.id===attempt.id)&&bootState.failed;
+    const failed = id === 'boot' && !status.done && (['failed','cancelled'].includes(attempt?.status)||liveFailure);
     stop.classList.toggle('failed', failed);
     if (failed) stop.setAttribute('aria-label', label + ', failed');
     if (index) {
       const line = stop.previousElementSibling;
-      line.classList.toggle('complete', status.done && snapshot.steps[Object.keys(labels)[index-1]].done && !failed);
-      line.classList.toggle('failed', failed);
+      const state=journeyLine(snapshot.steps[Object.keys(labels)[index-1]],status,Boolean(failed));
+      line.classList.toggle('complete', state.complete);
+      line.classList.toggle('failed', state.failed);
     }
   }
   const forward = bar.querySelector('.flight-next');
@@ -119,7 +126,7 @@ if (bar) {
     } catch (error) {button.disabled = false;failure(error);}
   };
   const refresh = () => refreshJourney().catch(failure);
-  window.addEventListener('flight:boot-state', event => {bootFailure=event.detail.failed;if(observations)render(observations);});
+  window.addEventListener('flight:boot-state', event => {bootState=event.detail;if(observations)render(observations);});
   window.addEventListener('flight:updated', refresh);
   window.addEventListener('flight:navigate', () => {if (observations) render(observations);});
   new MutationObserver(refresh).observe(document.body, {attributes:true, attributeFilter:['data-flight-target']});

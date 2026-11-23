@@ -72,7 +72,7 @@ async function renderTree() {
  await loadTree(path,fragment);
  if(request!==treeRequest)return;
  root.replaceChildren(fragment);root.dataset.root=path;
- $('#explorer-title').textContent=state.view==='simulation'?'SYNTHETIC DATA':'FLIGHT SOFTWARE';
+ $('#explorer-title').textContent=state.view==='simulation'?'SYNTHETIC DATA':'Files';
  root.setAttribute('aria-label',state.view==='simulation'?'Simulation files':'Flight software files');
  for(const path of saved.expanded){
   if(request!==treeRequest)return;
@@ -94,7 +94,7 @@ async function loadTree(path, parent) {
       details._load=async()=>{if(!details._pending)details._pending=loadTree(entry.path,children);await details._pending;};
       details.addEventListener('toggle',guarded(async()=>{if(details.open)await details._load();}));
     } else {
-      const b=document.createElement('button'); b.className='file file-row'; b.innerHTML='<span class="file-type '+(entry.name.endsWith('.h')?'header':entry.name.endsWith('.json')?'json':'')+'">'+fileType(entry.path)+'</span><span>'+esc(entry.name)+'</span>'+gitBadge(entry); b.dataset.file=entry.path; b.title=entry.path;
+      const b=document.createElement('button'); b.className='file file-row'; b.innerHTML='<span class="file-type '+(entry.name.endsWith('.h')?'header':entry.name.endsWith('.json')?'json':'')+'">'+icon('file')+'</span><span>'+esc(entry.name)+'</span>'+gitBadge(entry); b.dataset.file=entry.path; b.title=entry.path;
       parent.append(b);
     }
   }
@@ -124,7 +124,8 @@ async function openFile(path, line, reveal=true, inspection=null) {
   const selectedApp=state.workspace?.apps.find(a=>path.startsWith(a.path+'/'));if(selectedApp&&!inspection)state.groundApp=selectedApp.name; const file=state.files.get(path);
   $('#code').value=file.content; $('#code').disabled=false;$('#code').readOnly=!file.editable;
   $('#source-location').hidden=false;
-  $('#source-location span').textContent=inspection ? inspection.symbol+' · '+path.split('/').at(-1)+':'+line : path;
+  $('#source-location span').innerHTML=icon('file')+'<strong>'+esc(path.split('/').at(-1))+'</strong><span>'+esc(path.slice(0,path.lastIndexOf('/')+1))+'</span>';
+  $('#source-location span').title=path;
   $('#source-location small').hidden=file.editable;
   if(reveal||(state.view==='code' && !state.activity))document.body.classList.remove('no-editor');
  renderTabs(); lineNumbers(); markFiles(); renderView();renderToolbar();
@@ -150,7 +151,38 @@ async function revealFile(path){
  markFiles();
  document.querySelector('.file.selected')?.scrollIntoView({block:'nearest'});
 }
-function markFiles(){document.querySelectorAll('.file').forEach(b=>b.classList.toggle('selected',b.dataset.file===state.path));}
+function markFiles(){document.querySelectorAll('.file').forEach(b=>{
+ b.classList.toggle('selected',b.dataset.file===state.path);
+ const f=state.files.get(b.dataset.file),done=state.sourceActivity?.target===state.target && state.sourceActivity?.files?.[b.dataset.file] && (!f||f.content===f.saved);
+ let badge=b.querySelector('.file-reviewed');
+ if(done&&!badge){badge=document.createElement('small');badge.className='file-reviewed';badge.innerHTML=icon('check');badge.title='Reviewed in this activity · current source';badge.setAttribute('aria-label','Reviewed in this activity');b.append(badge);}
+ if(!done)badge?.remove();
+});}
+let sourceActivityRequest=0,sourceActivityKey='',sourceActivityAt=0;
+async function refreshSourceActivity(ctx,force=false){
+ if(!ctx)return;
+ const key=JSON.stringify([state.target,ctx.app.name,ctx.selected.id]);
+ if(!force&&key===sourceActivityKey&&Date.now()-sourceActivityAt<5000)return;
+ sourceActivityKey=key;sourceActivityAt=Date.now();const request=++sourceActivityRequest;
+ if(state.sourceActivity?.target!==state.target||state.sourceActivity?.app!==ctx.app.name||state.sourceActivity?.command!==ctx.selected.id)state.sourceActivity=null;
+ try{
+  const activity=await api('source/activity?'+new URLSearchParams({target:state.target,app:ctx.app.name,command:ctx.selected.id}));
+  if(request!==sourceActivityRequest)return;
+  state.sourceActivity=activity;state.sourceActivityError='';
+ }catch(error){if(request!==sourceActivityRequest)return;state.sourceActivity=null;state.sourceActivityError=error.message;}
+ if(state.view==='code'&&!state.activity){renderEditorActivity();markFiles();}
+}
+function renderEditorActivity(){
+ const browsing=state.view==='code'&&!state.activity,ctx=browsing&&commandContext(state);
+ $('#source-guide').hidden=true;$('#source-guide').replaceChildren();
+ $('#source-tools').hidden=true;$('#source-tools').replaceChildren();
+ const navigation=browsing?renderCommandTrail(state,esc):'',trail=$('#command-trail');
+ trail.hidden=!navigation;trail.innerHTML=navigation;
+ const testContent=navigation?renderCommandTest(state,esc):'',surface=$('#source-test-surface');
+ surface.hidden=!testContent;surface.innerHTML=testContent;
+ if(ctx&&navigation)void refreshSourceActivity(ctx);
+}
+
 function syncScroll(){
  const code=$('#code'),layer=$('#highlight-layer'),marker=$('#source-line');
  layer.scrollTop=code.scrollTop;layer.scrollLeft=code.scrollLeft;
@@ -597,21 +629,7 @@ function renderView(){
  $('#visual-heading').hidden=isWorkbench()||state.view==='ground';
  $('#visual-title').innerHTML=isWorkbench()?'':icon({architecture:'layers',code:'code',ground:'antenna',communication:'link'}[state.view])+({architecture:'Architecture',code:'Code',ground:'Ground station',communication:'Communication'}[state.view]);
  syncNavigation();
- const guide=$('#source-guide');
- const browsing=(state.view==='code' && !state.activity);
- const ctx=browsing && commandContext(state);
- guide.hidden=!(ctx && state.commandTask?.app===ctx.app.name && state.commandTask.id===ctx.selected.id);
- if(!guide.hidden)guide.innerHTML=renderSourceGuide(state,esc);
- const tools = $('#source-tools');
- tools.hidden = !browsing;
- tools.innerHTML = browsing ? renderSourceTools(state,esc) : '';
- const trail = $('#command-trail');
- const navigation = guide.hidden ? '' : renderCommandTrail(state,esc);
- const testSurface=$('#source-test-surface');
- const testContent=guide.hidden?'':renderCommandTest(state,esc);
- testSurface.hidden=!testContent;testSurface.innerHTML=testContent;
- trail.hidden = !navigation;
- trail.innerHTML = navigation;
+ renderEditorActivity();
  if($('#board-stage')&&isWorkbench()&&(state.workspace.project.board||state.target==='native')){
   const native=state.target==='native';
   const options={hostOS:state.hardware?.native?.os,board:native?'native':state.workspace.project.board,headerPins:state.workspace.catalog.header_pins,context:state.view,devices:native?[]:state.workspace.project.devices,pinAssignments:diagramWiring(),selected:state.inspected==='board'?'board':state.selectedDevice,onInspect:id=>{if(state.view!=='simulation'){state.inspected=id;renderView();}},onSelect:id=>guarded(async()=>{if(state.view==='simulation')await selectSimulationDevice(id);else{state.selectedDevice=id;state.inspected=id;renderView();}})()};
@@ -1030,7 +1048,7 @@ function openGroundRoute(app,command=null,prepare=false){
                       groundMode:'trip',groundPane:'route',groundPacket:null,inspectedSend:null});
  return selectView('ground',undefined,undefined,null,prepare?'send':'ground');
 }
-attachTagPicker($('#code'), () => state.path || '');
+
 let guideTimer;
 $('#code').addEventListener('input', () => {
  if (!state.path) return;
@@ -1040,8 +1058,7 @@ $('#code').addEventListener('input', () => {
  renderTabs();
  clearTimeout(guideTimer);
  guideTimer = setTimeout(() => {
-   const guide = $('#source-guide');
-   if (!guide.hidden) guide.innerHTML = renderSourceGuide(state,esc);
+   renderEditorActivity();markFiles();
  }, 180);
 });
 function positionSourceTags(){
@@ -1064,8 +1081,7 @@ function inspectCursorCommand() {
  if(!state.commandTask || !syncCommandToFile(state,line))return;
  state.activeLine=line;state.jumpLine=true;
  syncScroll();
- $('#source-guide').innerHTML=renderSourceGuide(state,esc);
- $('#command-trail').innerHTML=renderCommandTrail(state,esc);
+ renderEditorActivity();
 }
 $('#code').addEventListener('click',inspectCursorCommand);
 $('#code').addEventListener('keyup',e=>{if(['ArrowUp','ArrowDown','Home','End','PageUp','PageDown'].includes(e.key))inspectCursorCommand();});
@@ -1218,8 +1234,8 @@ window.addEventListener('beforeunload',e=>{if([...state.files.values()].some(f=>
 document.addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey){if(e.key==='s'){e.preventDefault();guarded(save)();}if(e.key==='f'&&document.activeElement===$('#code')){e.preventDefault();openFind();}}});
 function openFind(){$('#find-bar').classList.remove('hidden');$('#find-query').focus();}
 function findNext(){const query=$('#find-query').value;if(!query)return;const editor=$('#code');let at=editor.value.indexOf(query,editor.selectionEnd);if(at<0)at=editor.value.indexOf(query);if(at>=0){editor.focus();editor.setSelectionRange(at,at+query.length);editor.scrollTop=Math.max(0,(editor.value.slice(0,at).split('\n').length-4)*24);syncScroll();}}
-$('#find-toggle').onclick=openFind;$('#find-close').onclick=()=>$('#find-bar').classList.add('hidden');$('#find-next').onclick=findNext;$('#find-query').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();findNext();}if(e.key==='Escape')$('#find-bar').classList.add('hidden');};
-$('#editor-expand').onclick=guarded(()=>selectView(state.view==='code'?'architecture':'code',state.path));
+$('#find-close').onclick=()=>$('#find-bar').classList.add('hidden');$('#find-next').onclick=findNext;$('#find-query').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();findNext();}if(e.key==='Escape')$('#find-bar').classList.add('hidden');};
+
 paintIcons();
 document.addEventListener('keydown',event=>{
  if(event.target.matches('.stack-pick')&&['Enter',' '].includes(event.key)){
@@ -1312,7 +1328,7 @@ document.addEventListener('click',guarded(async e=>{
  else if ('commandTest' in d) {
   const ctx=commandContext(state);if(!ctx)return;
   const app=ctx.app.name,id=ctx.selected.id;
-  await saveAll();await refresh();await openGroundRoute(app,id,true);
+  await saveAll();await refresh();await openGroundRoute(app,id,false);
  }
  else if ('codeCommand' in d) newCodeCommand(d.codeCommand);
  else if('editHandler' in d){
@@ -1328,12 +1344,25 @@ document.addEventListener('click',guarded(async e=>{
   editor.focus({preventScroll:true});
  }
  else if(d.selectSourceCommand){await chooseSourceCommand(d.selectSourceCommand);}
+ else if('reviewSource' in d){
+  const ctx=commandContext(state),activity=state.sourceActivity;
+  if(!ctx||!activity||state.sourceReviewBusy||ctx.step>=6)return;
+  if(ctx.refs[ctx.step].some(ref=>{const file=state.files.get(ref.path);return file&&file.content!==file.saved;}))throw Error('Save the source before reviewing this step.');
+  state.sourceReviewBusy=true;renderEditorActivity();
+  try{
+   const reviewed=await api('source/activity',{target:state.target,app:ctx.app.name,command:ctx.selected.id,step:ctx.step,fingerprint:activity.steps[ctx.step].fingerprint});
+   const current=commandContext(state);if(current?.app.name!==ctx.app.name||current?.selected.id!==ctx.selected.id||state.target!==reviewed.target)return;
+   state.sourceActivity=reviewed;
+   const next=ctx.refs.findIndex((refs,i)=>i>ctx.step&&(refs.length||i===6));
+   const command=ctx.selected.id+'/'+(ctx.selected.route?.mid?.value??ctx.selected.packet?.mid??'');
+   const index=next<0?ctx.step:next;state.sourceStep={app:ctx.app.name,command,index};state.sourceCommand=command;
+   const ref=ctx.refs[index]?.[0];if(ref)await openFile(ref.path,ref.line);
+   state.sourceStep={app:ctx.app.name,command,index};
+  }finally{state.sourceReviewBusy=false;renderEditorActivity();markFiles();}
+ }
  else if('guideStep' in d || 'stepMove' in d){
   const ctx=commandContext(state);if(!ctx)return;
   const index=Number(d.guideStep??d.stepMove),command=ctx.selected.id+'/'+(ctx.selected.route?.mid?.value??ctx.selected.packet?.mid??'');
-  if(state.commandTask?.id===ctx.selected.id && index!==ctx.step && !state.commandTask.reviewed.includes(ctx.step)){
-   state.commandTask.reviewed.push(ctx.step);
-  }
   state.sourceCommand=command;
   state.sourceStep={app:ctx.app.name,command,index};
   const ref=(index===5 || index===4 && !ctx.refs[4].length) && ctx.selected.handler?.edit_source || ctx.refs[index]?.[0];

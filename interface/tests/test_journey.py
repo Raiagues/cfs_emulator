@@ -53,6 +53,56 @@ class JourneyTest(unittest.TestCase):
         self.assertEqual(reset["current"], "target")
         self.assertEqual(Store(self.root).snapshot("qemu")["current"], "boot")
 
+    def test_new_attempt_requires_fresh_runtime_evidence_and_success(self):
+        events = [Observation(step, "native", i, {"source": step})
+                  for i, step in enumerate(("target", "boot", "event", "app", "command", "send"), 1)]
+        events += [Observation("boot-start", "native", 10, {"job": "new"}),
+                   Observation("event", "native", 11, {"sent_at": 3}),
+                   Observation("boot", "native", 12, {"started": 2}),
+                   Observation("boot-finish", "native", 13, {"job": "old", "status": "succeeded"})]
+        pending = derive("native", events)
+        self.assertEqual(pending["current"], "boot")
+        self.assertIsNone(pending["steps"]["boot"]["ref"])
+        self.assertIsNone(pending["steps"]["event"]["ref"])
+        events.append(Observation("boot", "native", 14, {"started": 10, "run": "new"}))
+        self.assertFalse(derive("native", events)["steps"]["boot"]["done"])
+        events.append(Observation("boot-finish", "native", 15, {"job": "new", "status": "failed"}))
+        self.assertEqual(derive("native", events)["current"], "boot")
+        events[-1] = Observation("boot-finish", "native", 15, {"job": "new", "status": "succeeded"})
+        self.assertEqual(derive("native", events)["current"], "event")
+        events.append(Observation("event", "native", 17, {"sent_at": 16}))
+        completed = derive("native", events)
+        self.assertEqual(completed["current"], "send")
+        self.assertTrue(completed["steps"]["app"]["done"])
+        self.assertTrue(completed["steps"]["command"]["done"])
+        self.assertFalse(completed["steps"]["send"]["done"])
+
+    def test_attempt_persists_without_deleting_previous_history(self):
+        self.store.observe("native", "target", {"checked": True}, 1)
+        self.store.observe("native", "boot", {"run": "old"}, 2)
+        self.store.begin_boot("native", "new", 3)
+        self.store.finish_boot("native", "new", "cancelled")
+        reopened = Store(self.root).snapshot("native")
+        self.assertEqual(reopened["current"], "boot")
+        self.assertEqual(reopened["boot_attempt"]["status"], "cancelled")
+        self.assertEqual(len(self.store.events("native")), 4)
+        self.assertEqual(self.store.references("native", "boot"), [])
+
+    def test_remote_tutorial_unlock_survives_run_until_explicit_reset(self):
+        for at, step in enumerate(("target", "boot", "event", "app", "command"), 1):
+            self.store.observe("native", step, {"evidence": step}, at)
+        self.assertTrue(self.store.snapshot("qemu")["remote_unlocked"])
+        self.store.begin_boot("native", "new-run", 10)
+        pending = self.store.snapshot("native")
+        self.assertTrue(pending["remote_unlocked"])
+        self.assertFalse(pending["steps"]["event"]["done"])
+        self.assertEqual(pending["current"], "boot")
+        self.assertEqual(self.store.references("native", "command"), [{"evidence": "command"}])
+        self.store.finish_boot("native", "new-run", "failed")
+        self.assertTrue(Store(self.root).snapshot("physical")["remote_unlocked"])
+        self.store.reset("native")
+        self.assertFalse(self.store.snapshot("physical")["remote_unlocked"])
+
     def test_independent_observers_can_write_concurrently(self):
         def write(value):
             Store(self.root).observe("native", "boot", {"pid": value}, 2)

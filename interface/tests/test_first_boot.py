@@ -43,6 +43,57 @@ class BootTest(unittest.TestCase):
             manager.stop_before_first_boot('native', None, Mock(), threading.Event())
         manager.assert_can_start.assert_not_called()
 
+    def test_restart_build_does_not_inherit_the_previous_stop_or_receipt(self):
+        h = self.hardware
+        for target in ("native", "qemu", "physical"):
+            with self.subTest(target=target):
+                h.state.write("operational-" + target + ".json", {
+                    "time": 11, "started": 10, "run_id": "old", "apps": [{"name": "old", "task": "OLD"}],
+                    "flight": {"states": ["OPERATIONAL"], "initialized": {}},
+                    "boot_trace": [{"ms": 1, "fact": {"state": "OPERATIONAL"}}]})
+                h.state.write("deployed.json", {target: {"deployed_at": 10, "stopped_at": 25}})
+                job = dict(self.job, target=target, id="new", started=20, status="running",
+                           build_activity="Indexing catalog", boot_apps=[], lines=[])
+                h.journey.begin_boot(target, "new", 20)
+                studio = SimpleNamespace(hardware=h, jobs_snapshot=lambda **kwargs: [job])
+                with patch.object(h, "profiles", return_value=[]):
+                    state = snapshot(studio, target)
+                    self.assertTrue(state["starting"])
+                    self.assertFalse(state["running"])
+                    self.assertFalse(state["stopped"])
+                    self.assertEqual(state["flight"], {})
+                    job["status"] = "failed"
+                    self.assertFalse(snapshot(studio, target)["stopped"])
+                    # A server restart cannot replace this attempt with an older receipt.
+                    studio.jobs_snapshot = lambda **kwargs: []
+                    reopened = snapshot(studio, target)
+                    self.assertEqual((reopened["flight"], reopened["trace"], reopened["apps"]), ({}, [], []))
+                    self.assertFalse(reopened["running"])
+
+    def test_operational_log_waits_for_the_current_operation_to_finish(self):
+        h = self.hardware
+        h.journey.observe("native", "target", {"checked": True}, 1)
+        h.journey.begin_boot("native", "new", 20)
+        job = dict(self.job, id="new", phase="run", started=20, status="running", boot_apps=[], lines=[])
+        studio = SimpleNamespace(hardware=h, jobs_snapshot=lambda **kwargs: [job])
+        with patch("hardware.boot_trace.time.time", return_value=30):
+            observe(h, job, "CFE_ES_Main entering OPERATIONAL state")
+        h.state.write("deployed.json", {"native": {"deployed_at": 25, "pid": 42}})
+        with patch.object(h, "profiles", return_value=[]), patch.object(h, "_local_flight_state", return_value={"pids": [42]}):
+            state = snapshot(studio, "native")
+            self.assertTrue(state["starting"])
+            self.assertFalse(state["running"])
+            self.assertFalse(h.journey.snapshot("native")["steps"]["boot"]["done"])
+            job.update(status="succeeded", operation_complete=True)
+            h.journey.finish_boot("native", "new", "succeeded")
+            self.assertTrue(snapshot(studio, "native")["running"])
+            self.assertTrue(h.journey.snapshot("native")["steps"]["boot"]["done"])
+            job["status"] = "failed"
+            h.journey.finish_boot("native", "new", "failed")
+            self.assertFalse(snapshot(studio, "native")["running"])
+            studio.jobs_snapshot = lambda **kwargs: []
+            self.assertEqual(snapshot(studio, "native")["flight"], {})
+
     def test_make_progress_and_es_states(self):
         self.assertEqual(parse_boot_line("CFE_ES_Main entering OPERATIONAL state"), {"state": "OPERATIONAL"})
         self.assertIsNone(parse_boot_line("sample_app: waiting for CFE_ES_Main entering OPERATIONAL state"))

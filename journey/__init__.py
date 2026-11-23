@@ -10,6 +10,7 @@ import time
 
 STEPS = ("target", "boot", "event", "app", "command", "send", "sensor", "test", "board")
 TARGETS = ("native", "qemu", "physical")
+RUNTIME_STEPS = frozenset(("boot", "event", "send", "sensor", "test", "board"))
 SHIPPED_APPS = frozenset(("hal_temp", "hal_mag", "hal_mpu"))
 
 
@@ -43,17 +44,35 @@ def derive(target, events):
     """Fold in commit order. A delayed observation cannot predate the last reset."""
     facts = {}
     cutoff = 0
+    attempt = None
+    contact_completed = False
     for event in events:
         if event.target != target:
             continue
         if event.step == "reset":
             cutoff = max(cutoff, event.at)
             facts.clear()
-        elif event.at > cutoff and (event.ref.get("sent_at") or event.at) > cutoff and event.step not in facts:
-            facts[event.step] = event
+            attempt = None
+            contact_completed = False
+        elif event.step == "boot-start" and event.at > cutoff:
+            if attempt and event.at < attempt["started"]:
+                continue
+            attempt = {"id": event.ref["job"], "started": event.at, "status": "running"}
+            for step in RUNTIME_STEPS:
+                facts.pop(step, None)
+        elif event.step == "boot-finish":
+            if attempt and event.ref.get("job") == attempt["id"]:
+                attempt["status"] = event.ref["status"]
+        else:
+            boundary = max(cutoff, attempt["started"] if attempt and event.step in RUNTIME_STEPS else 0)
+            if (event.at > boundary and (event.ref.get("sent_at") or event.at) > boundary
+                    and event.ref.get("started", boundary) >= boundary and event.step not in facts):
+                facts[event.step] = event
+        if all(step in facts for step in ("target", "boot", "event")) and (not attempt or attempt["status"] == "succeeded"):
+            contact_completed = True
     current, reachable, steps = None, True, {}
     for step in STEPS:
-        done = reachable and step in facts
+        done = reachable and step in facts and (step != "boot" or not attempt or attempt["status"] == "succeeded")
         fact = facts.get(step)
         steps[step] = {"done": done, "observed_at": fact.at if fact else None, "reachable": reachable,
                        "ref": fact.ref if fact else None,
@@ -61,7 +80,7 @@ def derive(target, events):
         if reachable and not done:
             current = step
         reachable = done
-    return {"target": target, "steps": steps, "current": current, "reset_at": cutoff,
+    return {"target": target, "steps": steps, "current": current, "reset_at": cutoff, "boot_attempt": attempt, "contact_completed": contact_completed,
             "next_route": route(current, target) if current else None}
 
 
@@ -71,7 +90,7 @@ class Store:
         self.path = runtime_dir(root) / "journey.sqlite3"
 
     def observe(self, target, step, ref, at=None):
-        if target not in TARGETS or step not in (*STEPS, "reset"):
+        if target not in TARGETS or step not in (*STEPS, "reset", "boot-start", "boot-finish"):
             raise ValueError("Unknown journey target or step")
         if not isinstance(ref, dict) or not ref:
             raise ValueError("An observation needs a reference")
@@ -104,10 +123,19 @@ class Store:
     def snapshot(self, target):
         state = derive(target, self.events(target))
         native = state if target == "native" else derive("native", self.events("native"))
-        state["remote_unlocked"] = native["steps"]["event"]["done"]
+        state["remote_unlocked"] = native["contact_completed"]
         state["optional_board"] = (state["current"] == "board" and target != "physical"
                                    and not self.references("physical", "target"))
         return state
+
+    def begin_boot(self, target, job, started):
+        """A new execution keeps source work but requires fresh runtime evidence."""
+        self.observe(target, "boot-start", {"job": job}, started)
+
+    def finish_boot(self, target, job, status):
+        if status not in {"succeeded", "failed", "cancelled"}:
+            raise ValueError("Invalid boot outcome")
+        self.observe(target, "boot-finish", {"job": job, "status": status})
 
     def reset(self, target):
         if target is not None:
@@ -121,6 +149,10 @@ class Store:
             if event.step == "reset":
                 latest.clear()
                 cutoff = max(cutoff, event.at)
-            elif event.step == step and event.at > cutoff:
+            elif event.step == "boot-start" and step in RUNTIME_STEPS and event.at > cutoff:
+                latest.clear()
+                cutoff = event.at
+            elif (event.step == step and event.at > cutoff and (event.ref.get("sent_at") or event.at) > cutoff
+                  and event.ref.get("started", cutoff) >= cutoff):
                 latest[json.dumps(event.ref, sort_keys=True)] = event.ref
         return list(latest.values())

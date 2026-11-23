@@ -48,6 +48,9 @@ void {symbol}_Send(void)
             self.assertEqual({p['app'] for p in routes['returns'][str(0x0877)]['publishers']}, {'alpha', 'observer'})
             self.assertEqual(routes['returns'][str(0x0880)]['publishers'][0]['app'], 'cfe_time')
             self.assertNotIn('inactive', str(routes))
+            self.assertEqual(set(routes['applications']), {'alpha', 'observer', 'cfe_time'})
+            self.assertEqual(routes['applications']['cfe_time']['subscriptions'][0]['mid'], 0x1880)
+            self.assertEqual(routes['applications']['cfe_time']['publications'][0]['mid'], 0x0880)
             catalog['transport']['subscriptions'] = []
             self.assertEqual(first_contact_routes(root, catalog)['returns'], {})
 
@@ -118,6 +121,7 @@ void LateAssignment(void) {
             routes = first_contact_routes(Path(directory), catalog)
             self.assertEqual(routes['commands']['MISSING_NOOP_CC'], [])
             self.assertEqual(routes['returns'][str(0x0881)]['publishers'], [])
+            self.assertEqual(routes['applications']['unavailable'], {'subscriptions': [], 'publications': []})
             self.assertNotIn('ingress', routes)
             self.assertNotIn('egress', routes)
 

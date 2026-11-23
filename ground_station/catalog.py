@@ -19,7 +19,7 @@ from ground_station.discovery import command_mappings, telemetry_mappings, raw_t
 from ground_station.tables import table_packets
 from ground_station.subscriptions import subscription_metadata
 
-CATALOG_VERSION = 16
+CATALOG_VERSION = 17
 
 TYPES = {'uint8': 'B', 'uint16': 'H', 'uint32': 'I', 'uint64': 'Q',
          'int8': 'b', 'int16': 'h', 'int32': 'i', 'int64': 'q',

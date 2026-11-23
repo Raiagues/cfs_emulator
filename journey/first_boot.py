@@ -18,7 +18,10 @@ def snapshot(studio, target, *, journal=None):
     jobs = [j for j in studio.jobs_snapshot(boot_trace=True)
             if j["target"] == target and j["action"] in {"first-boot", "run"}
             and (target != "physical" or hardware.same_board(j.get("connection"), connection))]
+    attempt = hardware.journey.snapshot(target).get("boot_attempt") or {}
+    jobs = [job for job in jobs if not attempt or job["id"] == attempt["id"]]
     job = jobs[-1] if jobs else {}
+    starting = job.get("status") == "running" and not job.get("operation_complete")
     config_data = load_config(hardware.root)
     examples = shipped_apps(hardware.root)
     profile = next((p for p in hardware.profiles() if target in p["targets"]
@@ -27,11 +30,19 @@ def snapshot(studio, target, *, journal=None):
     # A stopped or superseded deployment is still journey history, never a live completion.
     deployed = hardware.state.read("deployed.json", {}).get(target, {})
     stopped_at = deployed.get("stopped_at") or 0
-    stopped = stopped_at > (job.get("started") or receipt.get("time") or 0)
-    matching_receipt = bool(receipt.get("time") and receipt["time"] >= deployed.get("deployed_at", 0)
+    completed_attempt = not attempt or attempt.get("status") == "succeeded"
+    matching_receipt = bool(completed_attempt and receipt.get("time")
+                        and receipt["time"] >= max(deployed.get("deployed_at", 0), attempt.get("started", 0))
+                        and (receipt.get("started") or receipt["time"]) >= attempt.get("started", 0)
                         and boot_observed(hardware, target))
+    # Stopping the previous deployment is preparation for this job. Its stop
+    # timestamp cannot report that a process we have not started has stopped.
+    current_deployment = not job or deployed.get("deployed_at", 0) >= job.get("started", 0)
+    stopped = bool(not starting and current_deployment and (job or matching_receipt)
+                   and stopped_at > (job.get("started") or receipt.get("time") or 0))
     flight = job.get("flight", {}) if job else receipt.get("flight", {}) if matching_receipt else {}
-    live = "OPERATIONAL" in flight.get("states", []) and not stopped
+    live = ("OPERATIONAL" in flight.get("states", []) and not stopped and not starting and completed_attempt
+            and job.get("status") not in {"failed", "cancelled"})
     unknown = False
     if live:
         if target == "native":
@@ -47,7 +58,7 @@ def snapshot(studio, target, *, journal=None):
                        service_active and not (instance and current.get("instance")))
             live = bool(instance and service_active and current.get("instance") == instance)
         stopped = not live and not unknown
-    apps = job.get("boot_apps") if job else receipt.get("apps")
+    apps = job.get("boot_apps") if job else receipt.get("apps") if matching_receipt else None
     if apps is None:
         # Before the first checkout there is no mission script to evaluate.
         has_source = (hardware.root / "cFS/sample_defs/targets.cmake").is_file()
@@ -84,8 +95,8 @@ def snapshot(studio, target, *, journal=None):
             "os": platform.system() if target == "native" else profile.get("os_label", "Linux"),
             "apps": apps, "example_apps": sorted(examples), "authored_apps": [app["name"] for app in config_data.get("apps", []) if app["name"] not in examples],
             "services": [name for name in SERVICES if (hardware.root / "cFS/cfe/modules" / name.lower()).is_dir()], "es_states": STATES, "flight": flight, "stopped": stopped,
-            "running": live, "unverified": bool(unknown),
-            "job": {k: job[k] for k in ("id", "status", "action", "phase", "guest_stage", "build_percent", "build_activity", "error", "started") if k in job},
+            "running": live, "starting": starting, "unverified": bool(unknown),
+            "job": {k: job[k] for k in ("id", "status", "action", "phase", "guest_stage", "build_percent", "build_activity", "error", "started", "operation_complete") if k in job},
             "trace": trace,
             "lines": lines}
 

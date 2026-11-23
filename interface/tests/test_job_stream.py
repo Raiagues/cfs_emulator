@@ -78,6 +78,25 @@ class JobStreamTest(unittest.TestCase):
                 frames = list(app.job_updates(ident))
                 self.assertEqual(frames[-1]['status'], 'succeeded')
 
+    def test_boot_failure_after_operational_does_not_complete_the_journey(self):
+        with TemporaryDirectory() as temp:
+            app = Laboratory(Path(temp))
+            self.addCleanup(app.close)
+            app.hardware.journey.observe('native', 'target', {'checked': True})
+            def failing(record, options, emit):
+                record['phase'] = 'run'
+                emit('CFE_ES_Main entering OPERATIONAL state')
+                raise ValueError('Process exited before startup was confirmed')
+            with patch.object(app, '_execute_job', side_effect=failing):
+                ident = app.job('first-boot', {'target': 'native'})['id']
+                final = list(app.job_updates(ident))[-1]
+            self.assertEqual(final['status'], 'failed')
+            journey = app.hardware.journey.snapshot('native')
+            self.assertEqual(journey['current'], 'boot')
+            self.assertEqual(journey['boot_attempt'],
+                             {'id': ident, 'started': app.jobs[ident]['started'], 'status': 'failed'})
+            self.assertFalse(journey['steps']['boot']['done'])
+
     def test_monitor_recovers_after_a_transient_database_lock(self):
         import sqlite3
         from types import SimpleNamespace

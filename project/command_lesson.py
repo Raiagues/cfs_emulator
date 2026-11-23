@@ -203,16 +203,23 @@ typedef struct
             }
         return {}
 
-    def snapshot(self):
-        key = ('code', 'struct', 'struct', 'dispatch', 'events', 'handler', 'handler')[self.stage]
+    def snapshot(self, view=None):
+        if view is None:
+            view = self.stage
+        elif isinstance(view, str) and view.isdecimal():
+            view = int(view)
+        if type(view) is not int or not 0 <= view <= self.stage:
+            raise ValueError('Choose the current step or a completed step.')
+        reviewing = view < self.stage
+        key = ('code', 'struct', 'struct', 'dispatch', 'events', 'handler', 'handler')[view]
         path = self.paths[key]
         source = self.source[key]
         proposed = source
-        if self.stage < 5:
+        if not reviewing and self.stage < 5:
             proposed = self.changes()[path]
         delta = SequenceMatcher(None, source.splitlines(), proposed.splitlines(), autojunk=False)
         ranges = [[i + 1, j] for op, _, _, i, j in delta.get_opcodes() if op != 'equal' and j > i]
-        if self.stage == 5:
+        if not reviewing and self.stage == 5:
             at = next(i for i, line in enumerate(source.splitlines(), 1) if STUB in line)
             ranges = [[at, at]]
         revision = self.workspace.mission._revision()
@@ -222,6 +229,9 @@ typedef struct
         return {
             'app': self.app,
             'stage': self.stage,
+            'view': view,
+            'reviewing': reviewing,
+            'completed': [index < self.stage for index in range(len(STOPS))],
             'steps': STOPS,
             'symbol': self.symbol,
             'code': self.code,

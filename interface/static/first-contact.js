@@ -2,14 +2,14 @@ import {api} from './api.js';
 import {paint} from './dom.js';
 import {navigate, stepUrl} from './router.js';
 import {onUpdate} from './updates.js';
-import {renderContact,renderPacketPreview,fieldValues,userFields,layoutContactRoute} from './contact-view.js';
+import {renderContact,renderPacketPreview,fieldValues,userFields,layoutContactRoute,contactRouteModel} from './contact-view.js';
 
 export function mountFirstContact(root,{state,startJob,guided=true}){
   const target=state.target;
-  let catalog=null,station={},selected='',error='',busy=false,closed=false,refreshBusy=false,refreshAgain=false;
+  let catalog=null,station={},selected=guided?'':state.groundSelection||'',error='',busy=false,closed=false,refreshBusy=false,refreshAgain=false;
   let attempted=false,wasRunning=null,sent=null,replay=null,frame=0,clock=0,paused=false,timer,stepTimer;
-  let lastDeployment=null,lastSession=null;
-  const defaulted=new Set(),drafts=new Map(),receipts=new Map(),commandGroups=new Set(['to_lab','sample_app']),telemetryGroups=new Set(['to_lab','sample_app']),packetGroups=new Set();
+  let lastDeployment=null,lastSession=null,revealedSelection='';
+  const defaulted=new Set(),drafts=new Map(),receipts=new Map(),commandGroups=new Set(['to_lab','sample_app',state.groundApp].filter(Boolean)),telemetryGroups=new Set(['to_lab','sample_app',state.groundApp].filter(Boolean)),packetGroups=new Set();
   const nextUrl=stepUrl('app',location,target);
   let dialog;
   function command(){return catalog?.commands.find(c=>c.id===(replay?.command||selected));}
@@ -24,19 +24,20 @@ export function mountFirstContact(root,{state,startJob,guided=true}){
   function cancelMotion(){cancelAnimationFrame(frame);clearTimeout(stepTimer);frame=0;replay=null;paused=false;}
   function acceptStation(next){
     const session=next.connected&&next.target===target?next.communication?.since:null;
-    if(lastSession!==null&&session!==lastSession){selected='';drafts.clear();defaulted.clear();receipts.clear();sent=null;clearTimeout(timer);cancelMotion();}
+    if(lastSession!==null&&session!==lastSession){selected=guided?'':state.groundSelection||selected;drafts.clear();defaulted.clear();receipts.clear();sent=null;clearTimeout(timer);cancelMotion();}
     lastSession=session;station=next.target===target?next:{};
     if(!selected)selected=station.first_flight?.enable_command||catalog?.commands.find(c=>c.app==='to_lab'&&c.id.endsWith('_OUTPUT_ENABLE_CC'))?.id||catalog?.commands[0]?.id||'';
+    if(!guided){state.groundSelection=selected;const app=catalog?.commands.find(c=>c.id===selected)?.app;if(app){state.groundApp=app;if(revealedSelection!==selected){commandGroups.add(app);telemetryGroups.add(app);revealedSelection=selected;}}}
   }
   function finish(complete){
-    if(!complete)selected=station.first_flight?.noop_command||selected;
+    if(!complete&&guided)selected=station.first_flight?.noop_command||selected;
     draw();
     if(complete&&guided)stepTimer=setTimeout(()=>{if(!closed)navigate(nextUrl);},1000);
   }
   function tick(now){
     frame=0;if(closed||!replay)return;
     if(!paused)replay.elapsed+=Math.min(120,now-clock);clock=now;
-    const t=Math.min(1,replay.elapsed/replay.duration),down=t>=.58,svg=root.querySelector('.contact-svg'),dot=svg?.querySelector('.contact-dot'),path=svg?.querySelector(down?'[data-down]':'[data-up]');
+    const t=Math.min(1,replay.elapsed/replay.duration),down=t>=.58,svg=root.querySelector('.contact-svg'),dot=svg?.querySelector('.contact-dot'),path=[...(svg?.querySelectorAll(down?'[data-down]':'[data-up]')||[])].find(p=>(down?p.dataset.producer:p.dataset.recipient)===(down?replay.producer:replay.app));
     if(dot){dot.style.display=path?'':'none';if(path){const p=path.getPointAtLength(path.getTotalLength()*(down?(t-.58)/.42:t/.58));dot.setAttribute('cx',p.x);dot.setAttribute('cy',p.y);dot.classList.toggle('down',down);}}
     const label=t<.2?'Ground → '+replay.ingress:t<.4?replay.ingress+' → Software Bus':t<.58?'Software Bus → '+replay.app:t<.8?replay.producer+' → Software Bus → '+replay.egress:replay.egress+' → Ground';
     const caption=root.querySelector('[data-caption]');if(caption)caption.textContent='Confirmed response · '+label;
@@ -57,19 +58,20 @@ export function mountFirstContact(root,{state,startJob,guided=true}){
     const r=receipts.get(sent.eventId);if(!r)return;
     const id=sent.command,mid=r.event_mid??r.mid,complete=id===f.noop_command&&!!r.increase;
     sent=null;clearTimeout(timer);cancelMotion();
-    const routes=catalog?.first_contact_routes,sub=routes?.commands?.[id]?.[0],returned=routes?.returns?.[mid];
-    if(!sub||!routes.ingress||!routes.egress||!returned?.publishers?.length){finish(complete);return;}
-    replay={command:id,mid,elapsed:0,duration:matchMedia('(prefers-reduced-motion: reduce)').matches?1:3000,app:sub.app,ingress:routes.ingress.app,egress:routes.egress.app,producer:returned.app,complete};
+    const route=contactRouteModel(catalog,catalog.commands.find(c=>c.id===id),mid);
+    if(!route.recipients.length||!route.ingress||!route.egress||!route.producers.length){finish(complete);return;}
+    replay={command:id,mid,elapsed:0,duration:matchMedia('(prefers-reduced-motion: reduce)').matches?1:3000,app:route.recipients[0],ingress:route.ingress,egress:route.egress,producer:route.producers[0],complete};
     clock=performance.now();frame=requestAnimationFrame(tick);
   }
   function draw(){
     if(closed)return;
     const c=command(),f=station.first_flight||{},linked=station.connected&&station.target===target;
+    const missingCommand=catalog&&selected&&!c?selected:'';
     const baseline=guided&&c?.id===f.noop_command&&!f.baseline_apps?.includes('sample_app');
     const needsEnable=guided&&c?.id===f.noop_command&&!f.downlink_receipt;
-    paint(root,renderContact({catalog,station,command:c,values:values(c),target,guided,nextUrl,commandGroups,telemetryGroups,packetGroups,receipts,replay,
+    paint(root,renderContact({catalog,station,command:c,missingCommand,values:values(c),target,guided,nextUrl,commandGroups,telemetryGroups,packetGroups,receipts,replay,
       disabled:busy||!!replay||!!sent||!c||linked&&(baseline||needsEnable),sendLabel:!linked?(busy?'Connecting…':wasRunning===false?'Run cFS':'Connect'):sent?'Sent':'Send',
-      error:error||((baseline||needsEnable)&&linked?'Complete Telemetry on and wait for sample_app housekeeping.':'')}));
+      error:error||(missingCommand?missingCommand+' is not available in this build. Build the app or choose an available command.':'')||((baseline||needsEnable)&&linked?'Complete Telemetry on and wait for sample_app housekeeping.':'')}));
     layoutContactRoute(root);
     if(replay){cancelAnimationFrame(frame);tick(performance.now());}
   }
@@ -80,7 +82,7 @@ export function mountFirstContact(root,{state,startJob,guided=true}){
       const current=await api('ground');if(closed)return;
       const deployment=state.jobs.filter(j=>j.target===target&&['run','first-boot','stop','shutdown'].includes(j.action)&&!['failed','cancelled'].includes(j.status)).at(-1);
       const changed=deployment&&lastDeployment!==deployment.id;
-      if(changed){lastDeployment=deployment.id;attempted=false;error='';if(!current.connected||current.target!==target){selected='';sent=null;cancelMotion();}}
+      if(changed){lastDeployment=deployment.id;attempted=false;error='';if(!current.connected||current.target!==target){selected=guided?'':state.groundSelection||selected;sent=null;cancelMotion();}}
       wasRunning=flightRunning();if(deployment&&['stop','shutdown'].includes(deployment.action))wasRunning=false;
       const launching=deployment&&['run','first-boot'].includes(deployment.action)&&deployment.status==='running'&&!deployment.operation_complete;
       if(!catalog||changed||current.connected&&current.target===target&&current.build_fingerprint!==catalog.build_fingerprint){
@@ -115,7 +117,7 @@ export function mountFirstContact(root,{state,startJob,guided=true}){
   const toggle=(set,key)=>set.has(key)?set.delete(key):set.add(key);
   function click(e){
     const b=e.target.closest('button');if(!b)return;
-    if(b.dataset.pick&&!sent&&!replay){selected=b.dataset.pick;error='';draw();}
+    if(b.dataset.pick&&!sent&&!replay){selected=b.dataset.pick;state.groundSelection=selected;state.groundApp=command()?.app||'';error='';draw();}
     for(const [attribute,set] of [['commandGroup',commandGroups],['telemetryGroup',telemetryGroups],['packet',packetGroups]])if(b.dataset[attribute]){toggle(set,b.dataset[attribute]);draw();}
     if(b.hasAttribute('data-stage')&&!sent&&!replay){const f=station.first_flight||{};selected=b.dataset.stage==='0'?f.enable_command:f.noop_command;draw();}
     if(b.hasAttribute('data-play')&&replay){paused=!paused;clock=performance.now();cancelAnimationFrame(frame);tick(clock);}

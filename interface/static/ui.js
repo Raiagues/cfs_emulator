@@ -1,4 +1,5 @@
 const icons = {
+  'file':'M6 3h8l4 4v14H6zM14 3v4h4',
   'inbox':'M4 13h4l1.5 2.5h5L16 13h4M4 13l2.5-7h11L20 13v5H4z',
   'app-window':'M4 5h16v14H4zM8 9h8M8 13h5',
   'download':'M12 4v11M7 10l5 5 5-5M5 20h14',

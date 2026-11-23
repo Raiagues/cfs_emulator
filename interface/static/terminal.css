@@ -1,11 +1,11 @@
 .terminal.console{height:180px;min-height:100px;max-height:none;flex:none;display:flex;flex-direction:column;overflow:visible;resize:none}
 .no-terminal .terminal{display:none}
-.console-heading{display:flex;align-items:center;justify-content:initial;flex:none;gap:12px;height:34px;min-height:34px;min-width:0;padding:0 12px}
+.console-heading{display:flex;align-items:center;justify-content:initial;flex:none;gap:8px;height:32px;min-height:32px;min-width:0;padding:0 12px}
 .console-heading .icon{width:13px;height:13px}
 #terminal-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #job-status{margin-left:auto;white-space:nowrap}
 .terminal-body{display:flex;flex:1;min-width:0;min-height:0;overflow:hidden}
-.terminal-body #logs{flex:1;min-width:0;min-height:0;height:auto;margin:0;padding:12px 18px;white-space:pre;overflow:auto}
+.terminal-body #logs{flex:1;min-width:0;min-height:0;height:auto;margin:0;padding:12px 14px;white-space:pre;overflow:auto}
 #terminal-sessions{flex:0 0 195px;min-width:0;overflow:auto;padding:7px 5px}
 .terminal-session-row{display:flex;align-items:center;min-width:0;margin-bottom:2px}
 .terminal-session{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:8px 7px;white-space:nowrap}
@@ -27,7 +27,66 @@
 }
 
 #logs[hidden],#shell-terminal[hidden],.shell-screen[hidden] {display:none!important}
-#shell-terminal {flex:1;min-width:0;min-height:0;position:relative;padding:8px 10px;overflow:hidden}
+#shell-terminal {flex:1;min-width:0;min-height:0;position:relative;padding:12px 14px;overflow:hidden}
 .shell-screen {height:100%;width:100%;min-width:0}
 .shell-screen .xterm {height:100%}
 .terminal-open-menu small {margin-left:auto}
+
+/* Library reference: a quiet frame around real output and interactive shells. */
+:root {
+ --fs-terminal-bg:var(--c0b0e12);
+ --fs-terminal-heading:var(--c14181d);
+ --fs-terminal-border:var(--c22272e);
+ --fs-terminal-output:#a9b4c0;
+ --fs-terminal-command:var(--ce2c296);
+ --fs-terminal-success:var(--c9fe3c9);
+}
+:root[data-theme="light"] {--fs-terminal-output:#445061}
+@scope (:root[data-page="studio"]) {
+.terminal.console {margin:0 12px 10px;border:1px solid var(--fs-terminal-border);border-radius:6px;background:var(--fs-terminal-bg)}
+.terminal .console-heading {border-bottom:1px solid var(--c1f242a);border-radius:5px 5px 0 0;background:var(--fs-terminal-heading);font:var(--fs-caption)/1.4 var(--fs-mono);letter-spacing:0}
+.terminal .console-heading .terminal-window-marks {display:flex;flex:none;align-items:center;gap:8px;margin-right:6px}
+.terminal-window-marks i {display:block;width:9px;height:9px;border-radius:50%;background:var(--c3a424c)}
+.terminal-heading-label {flex:none;color:var(--fs-muted);font:var(--fs-caption)/1.4 var(--fs-mono);text-transform:none;letter-spacing:0}
+#terminal-title {font:var(--fs-caption)/1.4 var(--fs-mono);color:var(--fs-muted)}
+#terminal-title:not(:empty)::before {content:'·';margin-right:8px}
+#job-status {display:inline-flex;align-items:center;gap:7px;color:var(--fs-muted);font:var(--fs-caption)/1.4 var(--fs-mono)}
+#job-status[data-status=running] {color:var(--fs-accent)}
+#job-status[data-status=running]::before {content:'';width:7px;height:7px;border-radius:50%;background:currentColor;animation:terminal-busy 1.4s ease-in-out infinite}
+#job-status[data-status=succeeded] {color:var(--fs-terminal-success)}
+#job-status:is([data-status=failed],[data-status=disconnected]) {color:var(--fs-danger)}
+.terminal-body {border-radius:0 0 5px 5px}
+.terminal-body #logs,.terminal-body #logs.terminal-empty {background:var(--fs-terminal-bg);color:var(--fs-terminal-output);font:var(--fs-label)/1.7 var(--fs-mono);tab-size:4}
+.terminal-body #logs.terminal-empty {color:var(--fs-muted)}
+#logs .terminal-line-command {color:var(--fs-terminal-command)}
+#logs .terminal-line-success {color:var(--fs-terminal-success)}
+#logs .terminal-line-dim {color:var(--fs-muted)}
+#logs .terminal-line-event {color:var(--cc9d0d8)}
+#logs .terminal-line-error {color:var(--fs-danger)}
+#logs .terminal-line-warning {color:var(--fs-accent)}
+#terminal-sessions {background:var(--fs-terminal-heading);border-color:var(--c1f242a)}
+.terminal-session {font:var(--fs-caption)/1.45 var(--fs-mono)}
+.terminal .session-dot.running {background:var(--fs-accent)}
+.terminal .session-dot.succeeded {background:var(--fs-terminal-success)}
+.terminal-open-menu {background:var(--fs-terminal-heading);border-color:var(--fs-terminal-border)}
+.terminal .terminal-open-menu button {font:var(--fs-caption)/1.45 var(--fs-mono)}
+.terminal-open-menu button:hover {background:var(--fs-raised)}
+#shell-terminal,#shell-terminal .xterm .xterm-viewport {background:var(--fs-terminal-bg)}
+#shell-terminal .xterm .xterm-viewport,.terminal :is(#logs,#terminal-sessions,.terminal-open-menu) {scrollbar-width:thin;scrollbar-color:var(--fs-scrollbar-thumb) transparent}
+.terminal :is(#logs,#terminal-sessions,.terminal-open-menu):hover {scrollbar-color:var(--fs-scrollbar-hover) transparent}
+.terminal :is(#logs,#terminal-sessions,.terminal-open-menu)::-webkit-scrollbar-thumb {background:var(--fs-scrollbar-thumb)}
+.terminal :is(#logs,#terminal-sessions,.terminal-open-menu)::-webkit-scrollbar-thumb:hover {background:var(--fs-scrollbar-hover)}
+@keyframes terminal-busy {50%{opacity:.4}}
+@media(prefers-reduced-motion:reduce){#job-status[data-status=running]::before{animation:none}}
+@media(max-width:760px){
+ .terminal.console{margin:0 8px 8px}
+ .terminal-window-marks{gap:5px;margin-right:2px}.terminal-window-marks i{width:6px;height:6px}
+ .terminal-heading-label{display:none}
+ #terminal-title:not(:empty)::before{content:none}
+ #job-status{font-size:var(--fs-small)}
+ .terminal .console-heading{padding:0 9px;gap:6px}
+ .terminal-body #logs{padding:10px 12px}
+ #shell-terminal{padding:10px 12px}
+}
+
+}

@@ -1,5 +1,6 @@
 // The source index supplies navigation even before a compiled packet catalog exists.
 import {icon} from './ui.js';
+import {renderActivityProgress} from './activity-progress.js';
 
 const tags = [
   ['brief','Description'],
@@ -64,6 +65,21 @@ function sourcesFor(item) {
   ].map(refs=>refs.filter(ref=>ref?.path));
 }
 
+// Shared by indexed-source activities and the guided command lesson.
+export function sourceCommandTestEvidence(state, app, command, mid) {
+  const build=state.workspace?.builds?.[state.target];
+  // An unsaved flight source or dependency has not been part of this build.
+  const clean=[...(state.files||[])].every(([path,file])=>! /^(cFS|mission)\//.test(path)||file.content===file.saved);
+  const currentSession=Number.isInteger(mid) && clean && build?.current && build.fingerprint && state.ground?.build_fingerprint===build.fingerprint && state.ground.target===state.target;
+  const run=currentSession && state.ground.runs?.filter(r=>r.command===command && r.sent?.app===app && r.sent.mid===mid).at(-1);
+  const sent=currentSession && state.ground.commands?.filter(c=>c.id===command&&c.app===app&&c.mid===mid&&!c.automatic).at(-1);
+  const receipt=currentSession && sent && [state.ground.first_flight?.receipt,state.ground.authored_reply?.receipt].find(r=>
+    r?.command===command && r.app===app && Number.isInteger(r.send_id) && r.send_id===sent.event_id &&
+    Number.isInteger(r.reply) && r.reply>r.send_id && Number.isInteger(r.increase) && r.increase>r.send_id &&
+    Number.isInteger(r.baseline) && Number.isInteger(r.count) && r.count===r.baseline+1);
+  return {test:run?.status==='passed'||!!receipt,run,receipt,sent};
+}
+
 export function commandContext(state) {
   const apps=state.workspace?.apps || [];
   let app=apps.find(a=>state.path?.startsWith(a.path+'/'));
@@ -82,11 +98,8 @@ export function commandContext(state) {
   const inferred=refs.findIndex(group=>group.some(ref=>ref.path===state.path));
   const explicit=state.sourceStep?.command===selectKey(selected) && state.sourceStep?.app===app.name;
   const step=explicit?state.sourceStep.index:Math.max(0,inferred);
-  const build=state.workspace.builds?.[state.target];
-  const currentSession=build?.current && build.fingerprint && state.ground?.build_fingerprint===build.fingerprint && state.ground.target===state.target;
-  const mid=selected.route?.mid?.value??selected.packet?.mid;
-  const run=currentSession && state.ground.runs?.filter(r=>r.command===selected.id && r.sent?.app===app.name && r.sent.mid===mid).at(-1);
-  return {app,items,selected,refs,step,test:run?.status==='passed',run};
+  const evidence=sourceCommandTestEvidence(state,app.name,selected.id,selected.packet?.mid??selected.route?.mid?.value);
+  return {app,items,selected,refs,step,...evidence};
 }
 
 // Resolve a cursor jump within the C ranges returned by the backend. A header
@@ -229,18 +242,21 @@ export function renderSourceGuide(state,esc) {
 
 export function renderCommandTrail(state,esc) {
   const ctx=commandContext(state);if(!ctx)return '';
-  const {app,selected,items,refs,step,test}=ctx;
-  const activity=state.commandTask;
-  if(!app.managed || activity?.app!==app.name || activity.id!==selected.id)return '';
-  const reviewed=activity.reviewed || [];
-  const complete=i=>i===6?Boolean(test):reviewed.includes(i) && refs[i].length>0 && (i!==5 || !selected.handler?.placeholder);
-  const count=stepNames.filter((_,i)=>complete(i)).length;
-  return '<div class="task-command-name">'+icon('send')+'<strong>New command</strong><code>'+esc(selected.id)+'</code>'+
-    '<button data-dismiss-command aria-label="Close activity">'+icon('close')+'</button><small class="task-count">'+count+'/7</small></div>'+
-    '<nav aria-label="Command implementation">'+stepNames.map((name,i)=>{
-      const available=complete(i),current=i===step;
-      return '<button type="button" data-guide-step="'+i+'" data-state="'+(available?'resolved':'pending')+'" '+(current?'aria-current="step" ':'')+'title="'+esc(name+' · '+(i===6?(test?'Test passed':'Ground Station'):available?guideRef(refs[i][0]):'Pending'))+'"><span class="trail-circle">'+(current?icon('edit'):available?'<svg viewBox="0 0 16 16" class="fs-tick"><path pathLength="1" d="m3 8 3 3 7-7"/></svg>':i===6?icon('play'):i+1)+'</span><span>'+name+'</span></button>';
-    }).join('')+'</nav>';
+  const {app,selected,refs,step,test}=ctx;
+  const activity=state.sourceActivity;
+  const belongs=activity?.target===state.target && activity.app===app.name && activity.command===selected.id;
+  const active=state.commandTask?.app===app.name && state.commandTask.id===selected.id;
+  if(!active && !refs.flat().some(ref=>ref.path===state.path))return '';
+  const steps=stepNames.map((label,i)=>{
+    const evidence=belongs?activity.steps[i]:null;
+    const clean=refs[i].every(ref=>{const file=state.files.get(ref.path);return !file||file.content===file.saved;});
+    return {label,done:i===6?!!test:!!evidence?.done&&clean,
+      disabled:i!==6&&!refs[i].length,title:stepTitles[i]};
+  });
+  const ready=belongs && activity.steps[step]?.available && refs[step].every(ref=>{const file=state.files.get(ref.path);return !file||file.content===file.saved;});
+  const next=step===6?'<button type="button" class="activity-next" data-command-test>Open Ground Station</button>':
+    '<button type="button" class="activity-next" data-review-source '+(!ready||state.sourceReviewBusy?'disabled':'')+' title="Review this source step and continue">'+(state.sourceReviewBusy?'Saving…':'Next step')+'</button>';
+  return renderActivityProgress({steps,selected:step,attribute:'data-guide-step',next});
 }
 
 export function renderSourceTools(state,esc) {
@@ -299,13 +315,19 @@ export function renderInspectorDialog(state,tab,esc) {
 export function renderCommandTest(state,esc) {
   const ctx=commandContext(state);
   if(!ctx || ctx.step!==6)return '';
-  const {run,selected,app}=ctx;
+  const {run,selected,app,receipt,sent}=ctx;
   const received=run?.steps?.filter(step=>step.observation) || [];
   const item=(symbol,title,value)=>'<div class="source-test-node">'+icon(symbol)+'<strong>'+esc(title)+'</strong><small>'+esc(value)+'</small></div>';
   let trace=item('antenna','Ground Station',run?.sent?'Sent':'No test recorded');
   if(run?.sent){
     trace+='<span class="test-trace-arrow" aria-hidden="true">→</span>'+item('send',app.name,selected.id);
     for(const step of received)trace+='<span class="test-trace-arrow" aria-hidden="true">→</span>'+item('link',step.observation.name,'seq '+step.observation.sequence);
+  }
+  if(receipt){
+    trace=item('antenna','Ground Station','Sent · '+sent.event_id)+
+      '<span class="test-trace-arrow" aria-hidden="true">→</span>'+item('send',app.name,selected.id)+
+      '<span class="test-trace-arrow" aria-hidden="true">→</span>'+item('link','Flight event',receipt.message||'Event '+receipt.reply)+
+      '<span class="test-trace-arrow" aria-hidden="true">→</span>'+item('link','Housekeeping','CommandCounter '+receipt.baseline+' → '+receipt.count);
   }
   return '<header><strong>Ground test</strong><code>'+esc(selected.id)+'</code></header><div class="source-test-trace">'+trace+'</div>';
 }
