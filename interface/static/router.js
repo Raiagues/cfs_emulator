@@ -32,6 +32,17 @@ export function stepUrl(step, page = location, target = null) {
   return '/studio' + query + '#' + step;
 }
 
+// The bare entry URL resumes server evidence. Explicit setup links stay in setup.
+export function landingRoute(page, snapshot, {welcomeSeen=false, sourcesReady=true}={}) {
+  if(page.pathname!=='/'||page.hash||new URLSearchParams(page.search).has('target'))return null;
+  if(snapshot?.target&&snapshot.current!=='target'&&sourcesReady) {
+    if(snapshot.current&&snapshot.steps?.[snapshot.current]?.reachable)return snapshot.next_route||snapshot.steps[snapshot.current].route;
+    if(snapshot.current===null)return stepUrl('ground',page,snapshot.target);
+  }
+  if(!welcomeSeen&&!snapshot?.steps?.target?.done)return stepUrl('welcome',page);
+  return null;
+}
+
 export function navigate(url, replace = false) {
   if (replace) location.replace(url);
   else location.assign(url);
@@ -101,8 +112,5 @@ export function registerBrand(root = document) {
 }
 
 if (typeof document !== 'undefined') {
-  if (location.pathname === '/' && !location.hash && !location.search && !localStorage.getItem('fs-welcome')) {
-    navigate(stepUrl('welcome'), true);
-  }
   registerBrand();
 }

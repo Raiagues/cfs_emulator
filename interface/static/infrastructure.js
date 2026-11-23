@@ -1,7 +1,7 @@
 import {onUpdate} from './updates.js';
 import {targetDrawing} from './target-drawing.js';
 import {api, checkFrames, readJourney} from './api.js';
-import {navigate, pageStep, redirectForStep, stepUrl} from './router.js';
+import {navigate, pageStep, redirectForStep, stepUrl, landingRoute} from './router.js';
 import {icon} from './ui.js';
 import {mountShells} from './shell.js';
 import {nextRepair} from './setup-plan.js';
@@ -615,6 +615,11 @@ form.addEventListener('submit', async event => {
 });
 (async () => {
   settings = await api('infrastructure');
+  if(!location.hash&&!new URLSearchParams(location.search).has('target')) {
+    const snapshot=await readJourney(settings.target);
+    const destination=landingRoute(location,snapshot,{welcomeSeen:!!localStorage.getItem('fs-welcome'),sourcesReady:settings.sources_ready});
+    if(destination){navigate(destination,true);return;}
+  }
   if (boardVisit) {
     const state = await readJourney(null, true);
     const redirect = redirectForStep('board', state);

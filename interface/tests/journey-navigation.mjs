@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {journeyNavigation} from '../static/journey.js';
-import {redirectForStep, stepUrl} from '../static/router.js';
+import {redirectForStep, stepUrl, landingRoute} from '../static/router.js';
 
 const page = path => new URL(path, 'http://studio.test');
 const state = {
@@ -46,4 +46,23 @@ test('the connector turns green when its next step is reachable and red only on 
   assert.deepEqual(journeyLine(state.steps.boot,state.steps.event),{complete:true,failed:false});
   assert.deepEqual(journeyLine(state.steps.event,state.steps.app),{complete:false,failed:false});
   assert.deepEqual(journeyLine(state.steps.target,{done:false,reachable:true},true),{complete:false,failed:true});
+});
+
+
+test('the entry URL resumes server progress even when browser welcome storage was cleared',()=>{
+ for(const welcomeSeen of [true,false])assert.equal(landingRoute(page('/'),state,{welcomeSeen}),state.next_route);
+ assert.equal(landingRoute(page('/'),{...state,current:null},{welcomeSeen:true}),'/studio?target=native#ground');
+});
+
+test('explicit target and board links keep setup available instead of resuming',()=>{
+ for(const path of ['/#target','/?target=native','/?target=qemu#target','/?target=physical#board','/welcome','/studio#ground'])
+  assert.equal(landingRoute(page(path),state,{welcomeSeen:false}),null);
+});
+
+test('a fresh or reset journey stays in setup, and missing NASA sources cannot redirect into a loop',()=>{
+ const fresh={target:null,current:'target',steps:{target:{done:false,reachable:true}}};
+ assert.equal(landingRoute(page('/'),fresh,{welcomeSeen:false}),'/welcome');
+ assert.equal(landingRoute(page('/'),fresh,{welcomeSeen:true}),null);
+ assert.equal(landingRoute(page('/'),state,{welcomeSeen:true,sourcesReady:false}),null);
+ assert.equal(landingRoute(page('/'),state,{welcomeSeen:false,sourcesReady:false}),null);
 });

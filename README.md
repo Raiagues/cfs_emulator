@@ -21,18 +21,22 @@ Em um computador Linux com navegador, instale Python 3 e Git pelo terminal. A pr
 No terminal, em uma pasta onde você possa criar o projeto, execute
 
 ```sh
-git clone -b first-flight-flow https://github.com/Raiagues/cfs_emulator.git
+git clone -b master https://github.com/Raiagues/cfs_emulator.git
 cd cfs_emulator
 ./start
 ```
 
-Abra **http://127.0.0.1:8765**. Em **Welcome**, o anel indica qual parte do satélite explorar. Para ir direto à bancada, use **Skip**, selecione **Native** e aguarde as verificações. Clique no **+** de cada item ausente para instalar o compilador ou baixar as fontes oficiais. Quando tudo estiver pronto, use **Continue · first boot** e **Start first boot**. O console mostra o cFS chegando a `OPERATIONAL`.
+Abra **http://127.0.0.1:8765**. Em **Welcome**, o anel indica qual parte do satélite explorar. Para ir direto à bancada, use **Skip**, selecione **Native** e aguarde as verificações. Clique no **+** de cada item ausente para instalar o compilador ou baixar as fontes oficiais. Quando tudo estiver pronto, use **Continue · first boot**; a preparação começa automaticamente. O console mostra o cFS chegando a `OPERATIONAL`.
 
 Se a porta estiver ocupada, execute na raiz do repositório e abra **http://127.0.0.1:8766**.
 
 ```sh
 ./start --ui --port 8766
 ```
+
+## Código, templates e avaliação
+
+[Mapa dos scripts e templates](docs/templates-e-testes.md) · [Protocolo e resultados da avaliação técnica](validation/README.md) · [Origem do clone NASA](docs/cfs-wrapper.md)
 
 ## O primeiro voo
 

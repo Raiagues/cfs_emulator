@@ -8,7 +8,7 @@ export function mountFirstContact(root,{state,startJob,guided=true}){
   const target=state.target;
   let catalog=null,station={},selected=guided?'':state.groundSelection||'',error='',busy=false,closed=false,refreshBusy=false,refreshAgain=false;
   let attempted=false,wasRunning=null,sent=null,replay=null,frame=0,clock=0,paused=false,timer,stepTimer;
-  let lastDeployment=null,lastSession=null,revealedSelection='';
+  let lastDeployment=null,lastSession=null,revealedSelection='',routePacket=null;
   const defaulted=new Set(),drafts=new Map(),receipts=new Map(),commandGroups=new Set(['to_lab','sample_app',state.groundApp].filter(Boolean)),telemetryGroups=new Set(['to_lab','sample_app',state.groundApp].filter(Boolean)),packetGroups=new Set();
   const nextUrl=stepUrl('app',location,target);
   let dialog;
@@ -26,11 +26,13 @@ export function mountFirstContact(root,{state,startJob,guided=true}){
     const session=next.connected&&next.target===target?next.communication?.since:null;
     if(lastSession!==null&&session!==lastSession){selected=guided?'':state.groundSelection||selected;drafts.clear();defaulted.clear();receipts.clear();sent=null;clearTimeout(timer);cancelMotion();}
     lastSession=session;station=next.target===target?next:{};
+    if(routePacket&&!catalog?.packets?.some(packet=>packet.id===routePacket))routePacket=null;
     if(!selected)selected=station.first_flight?.enable_command||catalog?.commands.find(c=>c.app==='to_lab'&&c.id.endsWith('_OUTPUT_ENABLE_CC'))?.id||catalog?.commands[0]?.id||'';
     if(!guided){state.groundSelection=selected;const app=catalog?.commands.find(c=>c.id===selected)?.app;if(app){state.groundApp=app;if(revealedSelection!==selected){commandGroups.add(app);telemetryGroups.add(app);revealedSelection=selected;}}}
   }
   function finish(complete){
     if(!complete&&guided)selected=station.first_flight?.noop_command||selected;
+    routePacket=null;
     draw();
     if(complete&&guided)stepTimer=setTimeout(()=>{if(!closed)navigate(nextUrl);},1000);
   }
@@ -56,6 +58,7 @@ export function mountFirstContact(root,{state,startJob,guided=true}){
     if(authored?.reply&&authored?.increase)receipts.set(authored.send_id,authored);
     if(!sent||sent.session!==station.communication?.since)return;
     const r=receipts.get(sent.eventId);if(!r)return;
+    routePacket=null;
     const id=sent.command,mid=r.event_mid??r.mid,complete=id===f.noop_command&&!!r.increase;
     sent=null;clearTimeout(timer);cancelMotion();
     const route=contactRouteModel(catalog,catalog.commands.find(c=>c.id===id),mid);
@@ -69,7 +72,7 @@ export function mountFirstContact(root,{state,startJob,guided=true}){
     const missingCommand=catalog&&selected&&!c?selected:'';
     const baseline=guided&&c?.id===f.noop_command&&!f.baseline_apps?.includes('sample_app');
     const needsEnable=guided&&c?.id===f.noop_command&&!f.downlink_receipt;
-    paint(root,renderContact({catalog,station,command:c,missingCommand,values:values(c),target,guided,nextUrl,commandGroups,telemetryGroups,packetGroups,receipts,replay,
+    paint(root,renderContact({catalog,station,command:c,missingCommand,values:values(c),target,guided,nextUrl,routePacket:!replay&&catalog?.packets?.find(packet=>packet.id===routePacket),commandGroups,telemetryGroups,packetGroups,receipts,replay,
       disabled:busy||!!replay||!!sent||!c||linked&&(baseline||needsEnable),sendLabel:!linked?(busy?'Connecting…':wasRunning===false?'Run cFS':'Connect'):sent?'Sent':'Send',
       error:error||(missingCommand?missingCommand+' is not available in this build. Build the app or choose an available command.':'')||((baseline||needsEnable)&&linked?'Complete Telemetry on and wait for sample_app housekeeping.':'')}));
     layoutContactRoute(root);
@@ -102,7 +105,7 @@ export function mountFirstContact(root,{state,startJob,guided=true}){
     const c=command(),f=station.first_flight||{};if(!c)return;
     let args;try{args=fieldValues(c,values(c));}catch(e){error=e.message;draw();return;}
     const watched=c.id===f.enable_command&&!f.downlink_receipt||c.id===f.noop_command&&!f.answer;
-    busy=true;error='';if(watched)sent={command:c.id,eventId:null,session:station.communication?.since};draw();
+    routePacket=null;busy=true;error='';if(watched)sent={command:c.id,eventId:null,session:station.communication?.since};draw();
     try{const result=await api('ground/send',{target,command_id:c.id,values:args});if(sent?.command===c.id)sent.eventId=result.event_id;}
     catch(e){sent=null;error=e.message;}
     finally{busy=false;clearTimeout(timer);if(sent)timer=setTimeout(()=>{if(sent?.command===c.id){sent=null;error='No matching response yet. Check flight output or send again.';draw();}},30000);await refresh();}
@@ -117,9 +120,9 @@ export function mountFirstContact(root,{state,startJob,guided=true}){
   const toggle=(set,key)=>set.has(key)?set.delete(key):set.add(key);
   function click(e){
     const b=e.target.closest('button');if(!b)return;
-    if(b.dataset.pick&&!sent&&!replay){selected=b.dataset.pick;state.groundSelection=selected;state.groundApp=command()?.app||'';error='';draw();}
-    for(const [attribute,set] of [['commandGroup',commandGroups],['telemetryGroup',telemetryGroups],['packet',packetGroups]])if(b.dataset[attribute]){toggle(set,b.dataset[attribute]);draw();}
-    if(b.hasAttribute('data-stage')&&!sent&&!replay){const f=station.first_flight||{};selected=b.dataset.stage==='0'?f.enable_command:f.noop_command;draw();}
+    if(b.dataset.pick&&!sent&&!replay){selected=b.dataset.pick;routePacket=null;state.groundSelection=selected;state.groundApp=command()?.app||'';error='';draw();}
+    for(const [attribute,set] of [['commandGroup',commandGroups],['telemetryGroup',telemetryGroups],['packet',packetGroups]])if(b.dataset[attribute]){toggle(set,b.dataset[attribute]);if(attribute==='packet'&&!sent&&!replay)routePacket=b.dataset.packet;draw();}
+    if(b.hasAttribute('data-stage')&&!sent&&!replay){routePacket=null;const f=station.first_flight||{};selected=b.dataset.stage==='0'?f.enable_command:f.noop_command;draw();}
     if(b.hasAttribute('data-play')&&replay){paused=!paused;clock=performance.now();cancelAnimationFrame(frame);tick(clock);}
     if(b.hasAttribute('data-step')&&replay){replay.elapsed=Math.min(replay.duration,(Math.floor(replay.elapsed/(replay.duration/7))+1)*replay.duration/7);clock=performance.now();cancelAnimationFrame(frame);tick(clock);}
     if(b.hasAttribute('data-bytes'))void preview();

@@ -95,12 +95,13 @@ class EmulatorIdentityTest(unittest.TestCase):
     def test_existing_qemu_is_enrolled_before_flight_state_check_on_retry(self):
         studio = Mock(hardware=Mock(spec=HardwareManager))
         studio.hardware._qemu_running.return_value = True
-        studio.hardware.assert_can_start.side_effect = RuntimeError("stop at guard")
+        studio.hardware.stop_before_first_boot.side_effect = RuntimeError("stop at guard")
         cancel, emit = Mock(), Mock()
         with patch.object(first_boot.infrastructure, "target_verified", return_value=True):
             with self.assertRaisesRegex(RuntimeError, "stop at guard"):
                 first_boot.execute(studio, {"target": "qemu", "cancel": cancel}, {}, emit)
         studio.hardware.verify_running_emulator.assert_called_once_with(emit, cancel)
+        studio.hardware.stop_before_first_boot.assert_called_once_with("qemu", None, emit, cancel)
         studio.hardware.execute.assert_not_called()
 
     def test_board_uses_its_own_host_policy(self):
