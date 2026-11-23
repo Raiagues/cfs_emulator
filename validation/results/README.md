@@ -9,6 +9,7 @@ These results come from backend procedures without a browser. There are three ex
 | [Final campaign](final/README.md) | The primary Q1–Q5 evidence: commands, sensor readings, interruptions, installed-file comparisons, and timings. `raw/` holds observations and logs; `tables/` holds summaries derived from them. |
 | [Compilation supplement](q5-compilation/README.md) | Ten additional incremental build cycles for the profile shared by QEMU and the physical board. `cycles/` contains the operations and logs; `analysis/` contains the source audit and derived tables. It supplements the final campaign without replacing its records. |
 | [Interface illustrations](final/illustrations/ground-qemu/) | Captures taken after the measured campaign. They illustrate the interface and do not add observations to the quantitative results. |
+| [Native NOOP illustration](illustrations/q1-native/README.md) | A later real interface capture of one NOOP, its application event, and the counter change from 1 to 2. It is separate from the 108 measured Q1 transmissions. |
 
 ## Five questions
 

@@ -1,0 +1,275 @@
+{
+  "purpose": "Real live UI illustration captured after quantitative collection; one new NOOP; original Q1 evidence unchanged",
+  "target": "native",
+  "started_at": "2026-11-23T13:50:14.921Z",
+  "allowed_command": "SAMPLE_APP_NOOP_CC",
+  "mutating_requests": [
+    {
+      "method": "POST",
+      "path": "/api/ground/send",
+      "body": {
+        "target": "native",
+        "command_id": "SAMPLE_APP_NOOP_CC",
+        "values": {}
+      },
+      "at": "2026-11-23T13:50:29.901Z"
+    }
+  ],
+  "blocked_requests": [],
+  "page_errors": [],
+  "screenshots": [
+    {
+      "file": "sample_app-hk-before.png",
+      "sha256": "b31f65a426f498c4700328a2fecc87cf52ee3c1e7db6b794ee1367abc30c1e20",
+      "at": "2026-11-23T13:50:29.390Z",
+      "bounds": {
+        "x": 1437,
+        "y": 234,
+        "width": 255,
+        "height": 138
+      },
+      "viewport": {
+        "width": 1700,
+        "height": 1000
+      },
+      "device_scale_factor": 2,
+      "kind": "actual_dom_element",
+      "text": "⌄\nsample_app\n1\n⌄\nHK_TLM_MID\n0x0883\n↓ 771\nCommandCounter\nuint8\n1\nCommandErrorCounter\nuint8\n0\n18 bytes · 10:50:27 AM"
+    },
+    {
+      "file": "sample_app-noop-command.png",
+      "sha256": "2631c3a86d5670f5920faf05188b88de9f166e3dc5c179eccdecc2948ee1ce12",
+      "at": "2026-11-23T13:50:29.838Z",
+      "bounds": {
+        "x": 350,
+        "y": 104,
+        "width": 1056,
+        "height": 100
+      },
+      "viewport": {
+        "width": 1700,
+        "height": 1000
+      },
+      "device_scale_factor": 2,
+      "kind": "actual_dom_element",
+      "text": "sample_app\nFC 0\nNOOP\nanswers, changes nothing\nPARAMETERS\nSAMPLE_APP_NoopCmd_t\nNone. The packet is only the header.\nSend\nSee the 8 bytes"
+    },
+    {
+      "file": "sample_app-noop-receipt.png",
+      "sha256": "084c5842e3dedf37c7122e3175687115210c2b18806a9f0a40d18c1ab9006e1a",
+      "at": "2026-11-23T13:50:33.361Z",
+      "bounds": {
+        "x": 350,
+        "y": 600,
+        "width": 1056,
+        "height": 382
+      },
+      "viewport": {
+        "width": 1700,
+        "height": 1000
+      },
+      "device_scale_factor": 2,
+      "kind": "actual_dom_element",
+      "text": "SENT\nGround\nci_lab\napp\nto_lab\nGround\nCAME BACK\nsample_app NOOP\n✓\n✓\n✓\n✓\n✓\nINFOSAMPLE: NOOP command v7.0.2-rc1-oss\nHKCommandCounter 1 → 2\n10:50:29 AM"
+    },
+    {
+      "file": "sample_app-hk-after.png",
+      "sha256": "df68fc635858edb9bf69181d6d3ecc53c22b39a1ba0956793b1a37d9e9f895a3",
+      "at": "2026-11-23T13:50:33.467Z",
+      "bounds": {
+        "x": 1437,
+        "y": 234,
+        "width": 255,
+        "height": 138
+      },
+      "viewport": {
+        "width": 1700,
+        "height": 1000
+      },
+      "device_scale_factor": 2,
+      "kind": "actual_dom_element",
+      "text": "⌄\nsample_app\n1\n⌄\nHK_TLM_MID\n0x0883\n↓ 772\nCommandCounter\nuint8\n2\nCommandErrorCounter\nuint8\n0\n18 bytes · 10:50:32 AM"
+    },
+    {
+      "file": "context-after.png",
+      "sha256": "ac7fe7a9dd99517bf3d32938d940bd5ab67dcb88d9d0131123a2a62ac93d096a",
+      "kind": "full_actual_viewport",
+      "at": "2026-11-23T13:50:33.733Z"
+    },
+    {
+      "file": "sample_app-noop-row-compact.png",
+      "sha256": "a90d431542b824d92a7e5297f2d664d3d9ee921e28ab685604197289f714f442",
+      "at": "2026-11-23T13:52:05.066Z",
+      "kind": "actual_dom_element",
+      "bounds": {
+        "x": 292,
+        "y": 666,
+        "width": 572,
+        "height": 53
+      },
+      "viewport": {
+        "width": 1100,
+        "height": 1000
+      },
+      "device_scale_factor": 2,
+      "text": "sample_app NOOP\nINFOSAMPLE: NOOP command v7.0.2-rc1-oss\nHKCommandCounter 1 → 2",
+      "phase": "Read-only recapture of same single NOOP receipt; no new command"
+    },
+    {
+      "file": "sample_app-noop-reply-compact.png",
+      "sha256": "4d460b62080f20587f67ea3e08e34dfa4280e93ee90de3de75bc9ea98c50ecfa",
+      "at": "2026-11-23T13:52:05.145Z",
+      "kind": "actual_dom_element",
+      "bounds": {
+        "x": 537.828125,
+        "y": 676,
+        "width": 316.171875,
+        "height": 32
+      },
+      "viewport": {
+        "width": 1100,
+        "height": 1000
+      },
+      "device_scale_factor": 2,
+      "text": "INFOSAMPLE: NOOP command v7.0.2-rc1-oss\nHKCommandCounter 1 → 2",
+      "phase": "Read-only recapture of same single NOOP receipt; no new command"
+    }
+  ],
+  "catalog_hk": {
+    "id": "SAMPLE_APP_HK_TLM_MID",
+    "mid": 2179,
+    "fields": [
+      {
+        "name": "CommandCounter",
+        "type": "uint8",
+        "format": "B",
+        "count": 1,
+        "offset": 16,
+        "size": 1
+      },
+      {
+        "name": "CommandErrorCounter",
+        "type": "uint8",
+        "format": "B",
+        "count": 1,
+        "offset": 17,
+        "size": 1
+      }
+    ]
+  },
+  "build_fingerprint": "79a2d1db5d97bd1b7377fbadaba37e8ab77ee7951f48f601017c472a9a09acfc",
+  "baseline": {
+    "mid": 2179,
+    "sequence": 1321,
+    "app": "sample_app",
+    "name": "SAMPLE_APP_HkTlm_t",
+    "values": {
+      "CommandCounter": 1,
+      "CommandErrorCounter": 0
+    },
+    "hex": "0883c529000b000f6205e66d000000000100",
+    "received_at": 1795441827.5309029,
+    "event_id": 12930
+  },
+  "send_started_at": 1795441829.841,
+  "after": {
+    "mid": 2179,
+    "sequence": 1322,
+    "app": "sample_app",
+    "name": "SAMPLE_APP_HkTlm_t",
+    "values": {
+      "CommandCounter": 2,
+      "CommandErrorCounter": 0
+    },
+    "hex": "0883c52a000b000f620b4cdb000000000200",
+    "received_at": 1795441832.926054,
+    "event_id": 12947
+  },
+  "receipt": {
+    "app": "sample_app",
+    "send_id": 12939,
+    "sent_at": 1795441829.912101,
+    "baseline": 1,
+    "command": "SAMPLE_APP_NOOP_CC",
+    "reply": 12941,
+    "increase": 12947,
+    "message": "SAMPLE: NOOP command v7.0.2-rc1-oss",
+    "event_mid": 2056,
+    "count": 2
+  },
+  "command": {
+    "id": "SAMPLE_APP_NOOP_CC",
+    "app": "sample_app",
+    "mid": 6274,
+    "code": 0,
+    "values": {},
+    "sent_at": 1795441829.912101,
+    "bytes": 8,
+    "status": "sent",
+    "hex": "1882c000000100a4",
+    "event_id": 12939
+  },
+  "event": {
+    "mid": 2056,
+    "sequence": 32,
+    "bytes": 172,
+    "name": "CFE_EVS_LongEventTlm_t",
+    "app": "cfe_evs",
+    "source": "cFS/cfe/modules/evs/config/default_cfe_evs_msgstruct.h",
+    "values": {
+      "PacketID.AppName": "SAMPLE_APP",
+      "PacketID.EventID": 3,
+      "PacketID.EventType": 2,
+      "PacketID.SpacecraftID": 66,
+      "PacketID.ProcessorID": 1,
+      "Message": "SAMPLE: NOOP command v7.0.2-rc1-oss",
+      "Padding": [
+        0,
+        0
+      ]
+    },
+    "errors": [],
+    "hex": "0808c02000a5000f62087fb90000000053414d504c455f4150500000000000000000000003000200420000000100000053414d504c453a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "received_at": 1795441830.1246943,
+    "count": 1,
+    "event_id": 12941
+  },
+  "history_confirmations": [
+    {
+      "mid": 2056,
+      "sequence": 32,
+      "app": "cfe_evs",
+      "name": "CFE_EVS_LongEventTlm_t",
+      "values": {
+        "PacketID.AppName": "SAMPLE_APP",
+        "PacketID.EventID": 3,
+        "PacketID.EventType": 2,
+        "PacketID.SpacecraftID": 66,
+        "PacketID.ProcessorID": 1,
+        "Message": "SAMPLE: NOOP command v7.0.2-rc1-oss",
+        "Padding": [
+          0,
+          0
+        ]
+      },
+      "hex": "0808c02000a5000f62087fb90000000053414d504c455f4150500000000000000000000003000200420000000100000053414d504c453a204e4f4f5020636f6d6d616e642076372e302e322d7263312d6f73730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "received_at": 1795441830.1246943,
+      "event_id": 12941
+    },
+    {
+      "mid": 2179,
+      "sequence": 1322,
+      "app": "sample_app",
+      "name": "SAMPLE_APP_HkTlm_t",
+      "values": {
+        "CommandCounter": 2,
+        "CommandErrorCounter": 0
+      },
+      "hex": "0883c52a000b000f620b4cdb000000000200",
+      "received_at": 1795441832.926054,
+      "event_id": 12947
+    }
+  ],
+  "finished_at": "2026-11-23T13:50:33.733Z",
+  "passed": true
+}
