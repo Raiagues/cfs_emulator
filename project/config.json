@@ -1,8 +1,17 @@
 {
   "schema_version": 1,
-  "board": null,
-  "os": null,
+  "board": "raspi4b",
+  "os": "raspios",
   "devices": [],
-  "apps": [],
-  "buses": []
+  "apps": [
+    {
+      "name": "orbit_demo",
+      "sensors": {},
+      "telemetry_bindings": {},
+      "command_bindings": {}
+    }
+  ],
+  "buses": [
+    "i2c-bus.1"
+  ]
 }
