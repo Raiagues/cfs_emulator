@@ -414,6 +414,9 @@ class HardwareManager:
         started = time.time()
         from sensors.registers import prepare
         env = dict(os.environ, FLIGHT_STUDIO_NATIVE_DEVICES=str(prepare(self.root)))
+        from hardware.native_ipc import NativeIPC
+        ipc = NativeIPC(self.root)
+        prepared = ipc.prepare(payload, state["fingerprint"])
         with log.open("wb") as output:
             process = subprocess.Popen(argv, cwd=payload, env=env, stdin=subprocess.DEVNULL, stdout=output,
                                        stderr=subprocess.STDOUT, start_new_session=True)
@@ -422,6 +425,7 @@ class HardwareManager:
             self.state.write("native.json", {"pid": process.pid, "instance": instance, "started_at": started})
             emit("@cfs-instance " + instance)
             wait_native(process, log, emit, boot_timeout(), cancel)
+            ipc.capture(prepared, process.pid, started, complete=True)
             return self._deploy_record("native", state, pid=process.pid, instance=instance, deployed_at=started)
         except BaseException:
             if process.poll() is None:
@@ -431,6 +435,12 @@ class HardwareManager:
                 except subprocess.TimeoutExpired:
                     process.kill()
                     process.wait()
+            # A failed startup can still create segments. Inspect after the
+            # process has stopped so its last allocations are accounted for.
+            try:
+                ipc.capture(prepared, process.pid, started)
+            except (OSError, ValueError, RuntimeError) as error:
+                emit("Native PSP memory identity was not retained: " + str(error))
             raise
 
     def _stop_native(self, emit):
@@ -1101,6 +1111,9 @@ class HardwareManager:
         # An edit saved while compiling is not in these binaries.
         if self.fingerprint() != source:
             raise HardwareError("Sources changed during the build; build again.")
+        if target == "native":
+            from hardware.native_ipc import NativeIPC
+            NativeIPC(self.root).prepare(root / self.build_directory(target) / "exe/cpu1", source)
         state = {"fingerprint": source, "built_at": time.time(), "sensorless": sensorless, "target": target,
                  "build_dir": self.build_directory(target), "installed_sha256": self._installed_digest(root, target)}
         self.state.write(self.build_state_file(target, sensorless), state)
