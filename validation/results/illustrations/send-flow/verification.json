@@ -1,0 +1,111 @@
+{
+  "checked_at": "2026-11-23T15:26:47.039Z",
+  "target": "native",
+  "app": "orbit_demo",
+  "jobs": [
+    {
+      "id": "c0e803fa4532",
+      "action": "stop",
+      "target": "native",
+      "status": "succeeded",
+      "operation_complete": true,
+      "started": 1795447550.8211088,
+      "finished": null,
+      "error": null
+    },
+    {
+      "id": "330cc1cf725f",
+      "action": "build",
+      "target": "native",
+      "status": "succeeded",
+      "operation_complete": true,
+      "started": 1795447556.0718572,
+      "finished": null,
+      "error": null
+    },
+    {
+      "id": "f1be4bd1598d",
+      "action": "run",
+      "target": "native",
+      "status": "succeeded",
+      "operation_complete": true,
+      "started": 1795447575.6489758,
+      "finished": null,
+      "error": null
+    }
+  ],
+  "sends": [
+    {
+      "command": {
+        "id": "ORBIT_DEMO_SET_RATE_CC",
+        "app": "orbit_demo",
+        "mid": 6656,
+        "code": 4,
+        "values": {
+          "Rate_Hz": "17"
+        },
+        "sent_at": 1795447590.2370667,
+        "bytes": 10,
+        "status": "sent",
+        "hex": "1a00c000000304331100",
+        "event_id": 15
+      },
+      "receipt": {
+        "app": "orbit_demo",
+        "send_id": 15,
+        "sent_at": 1795447590.2370667,
+        "baseline": 0,
+        "command": "ORBIT_DEMO_SET_RATE_CC",
+        "reply": 17,
+        "increase": 25,
+        "message": "Rate set to 17 Hz",
+        "event_mid": 2056,
+        "count": 1
+      }
+    },
+    {
+      "command": {
+        "id": "ORBIT_DEMO_SET_RATE_CC",
+        "app": "orbit_demo",
+        "mid": 6656,
+        "code": 4,
+        "values": {
+          "Rate_Hz": "23"
+        },
+        "sent_at": 1795447596.9976885,
+        "bytes": 10,
+        "status": "sent",
+        "hex": "1a00c000000304351700",
+        "event_id": 39
+      },
+      "receipt": {
+        "app": "orbit_demo",
+        "send_id": 39,
+        "sent_at": 1795447596.9976885,
+        "baseline": 1,
+        "command": "ORBIT_DEMO_SET_RATE_CC",
+        "reply": 40,
+        "increase": 42,
+        "message": "Rate set to 23 Hz",
+        "event_mid": 2056,
+        "count": 2
+      }
+    }
+  ],
+  "nodes": [
+    "ground",
+    "ci_lab",
+    "orbit_demo",
+    "to_lab",
+    "hs",
+    "cfe_evs"
+  ],
+  "sidebar_widths": [
+    272,
+    272
+  ],
+  "errors": [],
+  "source_commit": "677fdd5e3806dbccacebfe08268ecb2ea114f724",
+  "build_jobs": 1,
+  "build_fingerprint": "99810172fd7a5eac214bdb73ae9af297dec3546b52e9de805b96b788fd0e95ef"
+}

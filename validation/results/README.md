@@ -6,6 +6,7 @@ The quantitative results come from backend procedures without a browser. Later i
 
 | Package | What it contains |
 | --- | --- |
+| [Authored command workflow](illustrations/send-flow/README.md) | Real Native build/run, two SET_RATE replies, MID-filtered route, and retained history after reload; an interface regression outside the quantitative campaign. |
 | [Command sequence captures](illustrations/q1-sequence/README.md) | Four real HK panels (0 → 1 → 0 → 1), the corresponding literal cFS log, and capture metadata; a later illustration outside the quantitative sample. |
 | [Sensor encoding guide](SENSOR-ENCODING.md) | Fixed inputs, sensor addresses and registers, scaled units, the full received packet, and a read-only decoding example. |
 | [Final campaign](final/README.md) | The primary Q1–Q5 evidence: commands, sensor readings, interruptions, installed-file comparisons, and timings. `raw/` holds observations and logs; `tables/` holds summaries derived from them. |
