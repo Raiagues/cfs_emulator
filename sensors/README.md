@@ -29,7 +29,6 @@ flowchart TB
     to -->|"UDP telemetry"| gs
 ```
 
-![Synthetic data view while values are being sent to QEMU. The Widgets panel sets the TMP105 temperature to start at 23.5 °C and follow the Python sample() function, the board view shows the live value 27.216 °C, and the terminal lists each QMP qom-set command with the result OK.](../docs/images/synthetic-data-tmp105.png)
 
 ## In Flight Studio
 

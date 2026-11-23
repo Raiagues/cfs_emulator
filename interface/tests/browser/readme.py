@@ -27,7 +27,7 @@ def cli(*args, expected=None):
 def serve(argv, file, expected):
     with subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) as server:
         try:
-            # Both the Studio and the unbuffered Python preview print their address after listen().
+            # The Studio prints its address after listen().
             first = server.stdout.readline()
             if not first or server.poll() is not None:
                 raise RuntimeError(first)
@@ -77,8 +77,6 @@ def standalone():
 
 def main():
     serve(["./start", "--ui", "--port", "8766"], "http://127.0.0.1:8766/welcome", b"welcome-scenes")
-    serve([sys.executable, "-u", "-m", "http.server", "--bind", "127.0.0.1", "--directory",
-           "docs/design-pack/design/preview", "8000"], "http://127.0.0.1:8000/Welcome.html", b"<html")
     cli("source", "install", expected="NASA cFS ready")
     cli("target", "native", expected="native")
     cli("setup", "--target", "native")

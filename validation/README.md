@@ -1,26 +1,26 @@
-# Avaliação técnica final
+# Final technical evaluation
 
-Este protocolo executa o backend sem navegador. Cada resultado deve vir de uma execução nova, com o commit da plataforma congelado, checkout oficial NASA identificado e uma missão independente. Os testes unitários verificam o harness; seus dados temporários não são resultados do estudo.
+This protocol exercises the backend without a browser. Each result must come from a new run with a frozen platform commit, an identified official NASA checkout, and an independent mission. Unit tests verify the harness; their temporary data are not study results.
 
-O harness só altera missões com `.evaluation.json`, criadas por `prepare`. Não copie a missão ou os artefatos de uma execução anterior. Todos os builds usam um job. Cada diretório de saída deve ser novo; uma falha preserva a evidência parcial e retorna erro, sem completar contagens artificialmente.
+The harness only modifies missions with an `.evaluation.json` marker created by `prepare`. Do not copy a mission or artifacts from a previous run. All builds use one job. Each output directory must be new; a failure preserves partial evidence and returns an error without artificially completing the counts.
 
-## Questões e critérios
+## Questions and criteria
 
-| Questão | Procedimento final | Critério |
+| Question | Final procedure | Criterion |
 | --- | --- | --- |
-| Q1 | Três repetições NOOP → RESET_COUNTERS → NOOP para `sample_app`, `eval_temp`, `eval_mag`, `eval_mpu`, em cada alvo. | Cada comando recebe EVS da app e housekeeping posterior com sequência distinta. NOOP incrementa CommandCounter; RESET zera contadores; NOOP seguinte produz 1. A emissão UDP isolada não confirma execução. São 36 comandos por alvo. |
-| Q2 | Três constantes/patamares por sensor, cinco pacotes distintos por patamar em Native/QEMU. HAL C com constantes e degraus em registradores em memória, três repetições de 15 leituras por cenário e sensor. | Diferença dentro da quantização do modelo e arredondamento da saída; entrada, registradores raw, telemetria e unidades preservados. |
-| Q3 | HAL C: cinco leituras válidas, cinco interrupções, cinco recuperadas; três repetições por sensor. Native cFS: indisponibilizar apenas o arquivo de registradores do sensor da missão isolada, coletar cinco inválidas e restaurá-lo. | Status não zero e leitura não válida durante ausência; primeira leitura do HAL após restabelecimento válida. No Native, registrar todos os pacotes recebidos após restauração até a primeira amostra válida, limitada pelo timeout explícito. Na placa, sensor presente válido e sensores ausentes inválidos. |
-| Q4 | Um build ARM usado em QEMU e placa; hash por arquivo local e instalado. | Identidade por arquivo e mesmo fingerprint, com qualquer diferença declarada. O executável Native não é comparado ao ARM como binário idêntico. |
-| Q5 | Dez ciclos criar app/compilar incrementalmente/excluir no Native; dez inícios cFS por alvo; cinco boots completos do guest QEMU. Builds completos Native e ARM: N=1 cada. | Medidas descritivas: N, mediana, IQR inclusivo, mínimo e máximo. Sem inferência de ganho estatístico ou generalização. |
+| Q1 | Three repetitions of NOOP → RESET_COUNTERS → NOOP for `sample_app`, `eval_temp`, `eval_mag`, and `eval_mpu` on each target. | Each command receives an application EVS event and subsequent housekeeping with a distinct sequence number. NOOP increments CommandCounter; RESET clears the counters; the following NOOP produces 1. UDP transmission alone does not confirm execution. There are 36 commands per target. |
+| Q2 | Three constant input levels per sensor, with five distinct packets per level on Native/QEMU. The C HAL uses constants and steps in memory-backed registers, with three repetitions of 15 readings per scenario and sensor. | Differences remain within model quantization and output rounding limits; inputs, raw registers, telemetry, and units are preserved. |
+| Q3 | C HAL: five valid readings, five readings during interruption, and five recovered readings; three repetitions per sensor. Native cFS: make only the isolated mission's sensor register file unavailable, collect five invalid readings, and restore it. | Nonzero status and an invalid reading during absence; the first HAL reading after restoration is valid. On Native, record every packet received after restoration until the first valid sample, subject to the explicit timeout. On the board, the connected sensor reports valid readings and absent sensors report invalid readings. |
+| Q4 | One ARM build used on QEMU and the board; hashes for each local and installed file. | Identical files and the same fingerprint, with any difference declared. The Native executable is not claimed to be binary-identical to ARM. |
+| Q5 | Ten Native create app/incremental build/delete cycles; ten cFS starts per target; five complete QEMU guest boots. Full Native and ARM builds: N=1 each. | Descriptive measurements: N, median, inclusive IQR, minimum, and maximum. No inference of statistical improvement or generalization. |
 
-A aquisição física usa o MPU6050 informado pela operadora como parado no chão. A orientação não é controlada. As medidas são descritivas, sem calibração ou comparação de exatidão com o QEMU. TMP105 e magnetômetro ausentes devem continuar respondendo aos comandos enquanto sinalizam leitura inválida.
+Physical acquisition uses the MPU6050, which the operator reported as stationary on the floor. Its orientation is uncontrolled. Measurements are descriptive, without calibration or an accuracy comparison with QEMU. The absent TMP105 and magnetometer must continue responding to commands while reporting invalid readings.
 
-Não há órbita, eclipse nem interpretação dinâmica espacial. `protocol.py` fixa os níveis antes da coleta: TMP105 aproximadamente −3 a 32 °C, campo magnético em dezenas de µT, aceleração próxima de 1 g em diferentes vetores e pequenas velocidades angulares. Esses níveis sintéticos não pretendem reproduzir a orientação da bancada física.
+There is no orbit, eclipse, or spacecraft dynamics interpretation. `protocol.py` fixes the levels before collection: TMP105 temperatures approximately −3 to 32 °C, magnetic fields in tens of µT, acceleration near 1 g with different vectors, and small angular velocities. These synthetic levels do not attempt to reproduce the physical setup's orientation.
 
-## Preparação e registradores
+## Preparation and registers
 
-Execute na revisão final commitada. `prepare` usa `git archive HEAD` e o instalador público NASA, depois os comandos públicos de perfil, barramento, sensor, app e HAL. Os diretórios `cFS/` e `mission/` da cópia não são publicados.
+Run from the final committed revision. `prepare` uses `git archive HEAD` and the public NASA installer, followed by the public profile, bus, sensor, app, and HAL commands. The copy's `cFS/` and `mission/` directories are not published.
 
 ```sh
 python3 -B -m validation prepare --directory /tmp/flight-evaluation-final
@@ -29,13 +29,13 @@ python3 -B -m validation registers \
   --output /tmp/flight-evaluation-final/registers
 ```
 
-Opcionalmente, `prepare --source-copy /caminho/cFS` faz uma cópia independente de um checkout oficial limpo já disponível. Nesse caso, o relatório declara que não houve novo download de rede. Não use essa opção para alegar validação da instalação pela rede.
+Optionally, `prepare --source-copy /path/to/cFS` creates an independent copy of an existing clean official checkout. In that case, the report states that there was no new network download. Do not use this option to claim validation of installation over the network.
 
-O ensaio de registradores compila o HAL C da plataforma e o adaptador de barramento em memória. São 27 execuções e 405 leituras, incluindo 45 leituras durante nove episódios de interrupção programada. Os 256 bytes raw de cada amostra, o status e a leitura efetiva são gravados; um erro não é apresentado como valor válido. O compilador, fontes e modelos têm versão ou hash registrado. O índice de amostra não é um tempo real medido.
+The register experiment compiles the platform's C HAL and memory-backed bus adapter. It comprises 27 runs and 405 readings, including 45 readings during nine scheduled interruptions. Each sample's 256 raw bytes, status, and effective reading are recorded; errors are not presented as valid values. Compiler, source, and model versions or hashes are recorded. The sample index is not a measured time.
 
-## Execução coordenada dos alvos
+## Coordinated target execution
 
-Antes de iniciar, configure no runtime privado da cópia o acesso SSH autorizado e a imagem QEMU disponível. Nunca publique chaves, tokens ou o dicionário de conexão. Pare a missão de uso normal antes da avaliação. Um operador deve coordenar estes comandos sequencialmente; o harness não remove contêineres nem processos estranhos.
+Before starting, configure authorized SSH access and the available QEMU image in the copy's private runtime. Never publish keys, tokens, or the connection dictionary. Stop the normal-use mission before evaluation. An operator must coordinate these commands sequentially; the harness does not remove unrelated containers or processes.
 
 ```sh
 python3 -B -m validation build --workspace /tmp/flight-evaluation-final/flight \
@@ -48,31 +48,31 @@ python3 -B -m validation target --workspace /tmp/flight-evaluation-final/flight 
   --output /tmp/flight-evaluation-final/native --target native
 ```
 
-O comando `target` coleta de uma missão já em operação; não compila nem inicia cFS. Ao terminar, encerra apenas sua conexão de Ground Station. Pare a missão com o `start --no-ui stop --target native` da **cópia** antes do próximo alvo.
+The `target` command collects from an already running mission; it does not build or start cFS. On completion, it closes only its own Ground Station connection. Stop the mission with `start --no-ui stop --target native` from the **copy** before proceeding to the next target.
 
-Antes de medir o build ARM, prepare a imagem `cfs-builder` definida no Dockerfile e registre seu comando, duração e identificador em `setup-builder/`. O compilador já deve estar disponível, assim como no build Native; o cache-check de imagem executado pelo produto continua dentro da medida de build. Compile ARM uma vez com `validation build --target qemu`. Prepare imagem/disco/SSH uma vez, registrando os identificadores efetivos. A imagem QEMU deve conter o fingerprint de modelos exigido por `project/qemu/generate.py --fingerprint`; sua preparação é um pré-requisito, registrado separadamente em `setup-qemu-image/`, e não uma das cinco medidas de boot. `validation boots --target qemu --leave-running` mede cinco boots do guest previamente desligado, com o mesmo disco persistente e a mesma imagem. Registre separadamente o primeiro boot que provisiona disco, caso ainda não tenha ocorrido; ele não é intercambiável com os cinco boots de disco preparado.
+Before measuring the ARM build, prepare the `cfs-builder` image defined by the Dockerfile and record its command, duration, and identifier in `setup-builder/`. The compiler must already be available, as with the Native build; the product's image cache check remains part of the build measurement. Compile ARM once with `validation build --target qemu`. Prepare the image, disk, and SSH access once, recording their actual identifiers. The QEMU image must contain the model fingerprint required by `project/qemu/generate.py --fingerprint`; its preparation is a prerequisite recorded separately in `setup-qemu-image/`, not one of the five boot measurements. `validation boots --target qemu --leave-running` measures five boots of a previously shut-down guest, using the same persistent disk and image. Record the initial disk-provisioning boot separately if it has not yet occurred; it is not interchangeable with the five boots using a prepared disk.
 
-Depois de parar cFS sem desligar o guest, `validation starts --target qemu --leave-running` mede dez starts; `validation target --target qemu` coleta comandos e sensores. Encerre o QEMU antes da placa. A placa reutiliza os artefatos ARM, sem nova compilação: dez `starts --target physical --leave-running` e depois `target --target physical`. Nenhuma fase desliga a placa física.
+After stopping cFS without shutting down the guest, `validation starts --target qemu --leave-running` measures ten starts; `validation target --target qemu` collects commands and sensor data. Shut down QEMU before testing the board. The board reuses the ARM artifacts without recompilation: ten starts with `starts --target physical --leave-running`, followed by `target --target physical`. No phase powers off the physical board.
 
-Cada `run` inclui a transferência/implantação feita pelo produto. O relatório fornece `payload_transfer` separadamente, a primeira linha OPERATIONAL observada (métrica própria), o tempo total de `run` (inclui outras etapas), a conexão/ENABLE_OUTPUT até o primeiro HK e o total até HK. O boot QEMU termina após SSH verificado e a parada do serviço preexistente no guest. Os instantes de log são tempos de observação no host, não timestamps de execução internos do QEMU.
+Each `run` includes the product's transfer and deployment. The report provides `payload_transfer` separately, the first observed OPERATIONAL line as a distinct metric, total `run` time including other steps, the interval from Ground connection/ENABLE_OUTPUT to the first HK, and total time to HK. QEMU boot ends after SSH verification and stopping any preexisting guest service. Log times are observations made on the host, not internal QEMU execution timestamps.
 
-Os dez ciclos incrementais requerem build Native prévio. Depois da décima exclusão, há um build de restauração da missão base, marcado à parte e excluído das dez medidas. Se uma execução exceder recursos/tempo viável, registre a falha e ajuste o protocolo explicitamente antes de repetir; não reduza N silenciosamente.
+The ten incremental cycles require a prior Native build. After the tenth deletion, a restoration build of the baseline mission is marked separately and excluded from the ten measurements. If a run exceeds feasible resources or time, record the failure and explicitly revise the protocol before repeating; do not silently reduce N.
 
-## Evidências e publicação
+## Evidence and publication
 
-Preserve `prepare.json`, `nasa-before.json`, `sources.json`, `commands.json`, logs de build/início, `catalog.json`, `downlink.jsonl`, registros dos sensores/registradores, `artifacts.json` e `metrics.json`. Os pacotes contêm bytes originais, MID, sequência CCSDS, recepção, campos decodificados e erros. Conexões privadas não são serializadas; revise os logs antes de publicar, sem alterar valores, bytes ou tempos medidos.
+Preserve `prepare.json`, `nasa-before.json`, `sources.json`, `commands.json`, build/start logs, `catalog.json`, `downlink.jsonl`, sensor/register records, `artifacts.json`, and `metrics.json`. Packets contain original bytes, MID, CCSDS sequence, reception time, decoded fields, and errors. Private connections are not serialized; review logs before publication without changing measured values, bytes, or durations.
 
-Somente a campanha concluída deve ir a `validation/results/final/`; tentativas diagnósticas ficam fora dessa pasta. Gere manifesto SHA-256 dos arquivos publicados e registre o commit do harness. O código da NASA, imagens Docker/discos, builds e runtime privado permanecem fora do Git. Uma alteração de código após congelar a revisão exige identificar a nova revisão e repetir a evidência final afetada.
+Only the completed campaign belongs in `validation/results/final/`; diagnostic attempts remain outside that directory. Generate a SHA-256 manifest of published files and record the harness commit. NASA source, Docker images/disks, builds, and private runtime remain outside Git. A code change after freezing the revision requires identifying the new revision and repeating the affected final evidence.
 
-Cada build registra um manifesto das entradas antes da medição. Ao fim dos ciclos incrementais, outro manifesto registra a missão restaurada; o manifesto inicial de prepare não substitui esses registros posteriores.
+Each build records an input manifest before measurement. At the end of the incremental cycles, another manifest records the restored mission; the initial preparation manifest does not replace these later records.
 
-## Comando de leitura dos registradores
+## Register read command
 
-Os dumps remotos usam o mesmo helper público `hardware/sensor_probe.py:READ_REGISTERS`: transações Linux `I2C_RDWR` com repeated START, ponteiro do registrador e leitura do bloco. Cada registro de evidência grava `bus`, `address`, os pares registrador/tamanho e os bytes recebidos. A forma equivalente no terminal, com um alias SSH previamente autorizado, é:
+Remote dumps use the same public helper, `hardware/sensor_probe.py:READ_REGISTERS`: Linux `I2C_RDWR` transactions with a repeated START, register pointer, and block read. Each evidence record stores `bus`, `address`, register/length pairs, and received bytes. The equivalent terminal command, using a previously authorized SSH alias, is:
 
 ```sh
-# Exemplo de argumentos do MPU6050: burst 0x3b/14 bytes, controles e WHO_AM_I.
-python3 - "$ALVO_SSH" "$BUS" "$ADDRESS" "$BLOCKS_JSON" <<'PYTHON'
+# Example MPU6050 arguments: a 0x3b/14-byte burst, control registers, and WHO_AM_I.
+python3 - "$SSH_TARGET" "$BUS" "$ADDRESS" "$BLOCKS_JSON" <<'PYTHON'
 import shlex, subprocess, sys
 from hardware.sensor_probe import READ_REGISTERS
 command = shlex.join(['python3', '-c', READ_REGISTERS, *sys.argv[2:]])
@@ -80,14 +80,13 @@ subprocess.run(['ssh', sys.argv[1], command], check=True)
 PYTHON
 ```
 
-`BUS=1`, `ADDRESS=104` e `BLOCKS_JSON='[[59,14],[107,1],[108,1],[27,1],[28,1],[117,1]]'` identificam o MPU6050 do protocolo. O harness usa os mesmos argumentos, escapados com `shlex.join`; não publica o host ou caminho da chave. Em Native, o dump lê o arquivo `hardware/.runtime/devices/i2c1-0x68.bin` da cópia isolada, que é a imagem de registradores consumida pelo transporte C nativo.
+`BUS=1`, `ADDRESS=104`, and `BLOCKS_JSON='[[59,14],[107,1],[108,1],[27,1],[28,1],[117,1]]'` identify the protocol's MPU6050. The harness uses the same arguments, quoted with `shlex.join`; it does not publish the host or key path. On Native, the dump reads `hardware/.runtime/devices/i2c1-0x68.bin` in the isolated copy, the register image consumed by the native C transport.
 
-Um dump ausente em Native, QEMU ou no MPU6050 físico reprova o caso; os sensores físicos não conectados podem registrar `unavailable` com erro de I/O. A recuperação Native é limitada a `min(timeout, max(5 s, 3 × período de aquisição + 2 s))`, com período/tabela usados preservados no JSON. O teste registra os pacotes transitórios até o retorno válido. Apenas o ensaio HAL síncrono verifica a primeira chamada C após o restabelecimento.
+A missing dump on Native, QEMU, or the physical MPU6050 fails the case; disconnected physical sensors may record `unavailable` with an I/O error. Native recovery is bounded by `min(timeout, max(5 s, 3 × acquisition period + 2 s))`, with the period and table used preserved in JSON. The test records transient packets until a valid reading returns. Only the synchronous HAL experiment verifies the first C call after restoration.
 
+## Generate tables from the complete campaign
 
-## Gerar as tabelas a partir da campanha completa
-
-Depois de concluir todas as fases, execute o pós-processamento em um diretório novo:
+After completing every phase, run postprocessing into a new directory:
 
 ```sh
 python3 -B -m validation.summarize \
@@ -95,14 +94,14 @@ python3 -B -m validation.summarize \
   --output /tmp/flight-evaluation-tables
 ```
 
-O comando verifica a quantidade de casos, a sequência dos comandos, eventos e contadores posteriores a cada envio, as tolerâncias dos sensores, as interrupções e os hashes dos artefatos ARM. Uma campanha incompleta ou inconsistente não gera uma saída final. Os 11 CSVs, `summary.json` e `examples.json` preservam a ligação com os arquivos de entrada por SHA-256. O resumo não altera pacotes, tempos ou valores originais.
+The command verifies case counts, command order, subsequent events and counters for each transmission, sensor tolerances, interruptions, and ARM artifact hashes. An incomplete or inconsistent campaign does not produce a final output. The 11 CSVs, `summary.json`, and `examples.json` retain links to input files through SHA-256. The summary does not change original packets, durations, or values.
 
-| Questão | Registros brutos | Tabelas geradas |
+| Question | Raw records | Generated tables |
 | --- | --- | --- |
-| Q1 | `<alvo>/commands.json`, `<alvo>/downlink.jsonl` e catálogo | `q1_commands.csv`, `q1_attempts.csv` |
-| Q2 | `registers/registers.json`, `<alvo>/sensors.json`, dumps de registradores | `q2_samples.csv`, `q2_errors.csv`, `physical_readings.csv` |
+| Q1 | `<target>/commands.json`, `<target>/downlink.jsonl`, and catalog | `q1_commands.csv`, `q1_attempts.csv` |
+| Q2 | `registers/registers.json`, `<target>/sensors.json`, register dumps | `q2_samples.csv`, `q2_errors.csv`, `physical_readings.csv` |
 | Q3 | `registers/registers.json`, `native/dropout.json`, `physical/sensors.json` | `q3_interruptions.csv`, `q3_hal_samples.csv`, `q3_recovery.csv` |
 | Q4 | `qemu/artifacts.json`, `physical/artifacts.json` | `q4_artifacts.csv` |
-| Q5 | `build-*/metrics.json`, `cycles-native/metrics.json`, `starts-*/metrics.json`, `boots-qemu/metrics.json` e logs | `q5_timings.csv`, `q5_statistics.csv` |
+| Q5 | `build-*/metrics.json`, `cycles-native/metrics.json`, `starts-*/metrics.json`, `boots-qemu/metrics.json`, and logs | `q5_timings.csv`, `q5_statistics.csv` |
 
-Na publicação, mantenha os dados brutos em `validation/results/final/raw/` e as tabelas em `validation/results/final/tables/`, com um índice e manifesto SHA-256. O pós-processamento pode ser repetido usando `raw/` como `--campaign`. A revisão do código executado fica em `raw/prepare.json`; a revisão que publica os resultados é posterior e deve ser identificada separadamente. Não inclua o workspace `flight/`, imagens/discos, chaves SSH ou banco de runtime.
+For publication, keep raw data in `validation/results/final/raw/` and tables in `validation/results/final/tables/`, with an index and SHA-256 manifest. Postprocessing can be repeated with `raw/` as `--campaign`. The executed code revision is recorded in `raw/prepare.json`; the later results-publication revision must be identified separately. Do not include the `flight/` workspace, images/disks, SSH keys, or runtime database.

@@ -23,7 +23,7 @@ try:
 except ImportError:
     from qmp import connect, set_property
 
-REBOOT = "Run ./stop.sh, then ./boot.sh to apply the project hardware."
+REBOOT = "Run ./start --no-ui emulator stop, then ./start --no-ui emulator start to apply the project hardware."
 
 
 def qemu_models(config):

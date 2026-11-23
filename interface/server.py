@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Local Flight Studio. Start with: python3 interface/server.py."""
 import argparse
+import errno
 import ipaddress
 import json
 import secrets
+import signal
 import sys
 import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -332,21 +334,43 @@ class Handler(BaseHTTPRequestHandler):
             self.reply({'error': str(error)}, 500)
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port', type=int, default=http_port())
-    args = parser.parse_args()
-    server = ThreadingHTTPServer((loopback(), args.port), Handler)
-    server.daemon_threads = True
-    server.studio = Studio()
-    print(f'Flight Studio: http://{loopback()}:{server.server_port}/?t={server.studio.launch_key}', flush=True)
+    args = parser.parse_args(argv)
+    if not 1 <= args.port <= 65535:
+        parser.error('--port must be between 1 and 65535')
+    host = loopback()
     try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        pass
+        server = ThreadingHTTPServer((host, args.port), Handler)
+    except OSError as error:
+        if error.errno == errno.EADDRINUSE:
+            from interface.lifecycle import running_url
+            url = running_url(ROOT, host, args.port)
+            if url:
+                print(f'Flight Studio is already running for this workspace.\nOpen {url}', flush=True)
+                return 0
+            parser.exit(1, f'Port {args.port} is already in use by another service or an unavailable Studio instance. '
+                           'Close it or choose ./start --port PORT.\n')
+        parser.exit(1, f'Cannot start Flight Studio: {error}\n')
+    server.daemon_threads = True
+    previous_interrupt = signal.signal(signal.SIGINT, signal.default_int_handler)
+    try:
+        server.studio = Studio()
+        print(f'Flight Studio: http://{host}:{server.server_port}/?t={server.studio.launch_key}', flush=True)
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            # A repeated stop must not interrupt cancellation and resource cleanup.
+            signal.signal(signal.SIGINT, signal.SIG_IGN)
+            server.studio.close()
     finally:
-        server.studio.close()
         server.server_close()
+        signal.signal(signal.SIGINT, previous_interrupt)
+    return 0
+
 
 if __name__ == '__main__':
-    main()
+    raise SystemExit(main())

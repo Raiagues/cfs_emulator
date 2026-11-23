@@ -2,5 +2,5 @@
 set -e
 cd "$(dirname "$0")"
 
-# Ask Linux to flush the persistent disk and power off normally.
-exec python3 -m hardware.emulator_ssh ssh systemctl poweroff --no-block
+# Close this workspace's Studio server. Target operations use ./start --no-ui.
+exec python3 -m interface.lifecycle "$@"

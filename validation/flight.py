@@ -397,7 +397,7 @@ def run(root, output, target, repetitions=3, samples=5, timeout=60):
     report = {'schema': 1, 'target': target, 'started_utc': utc(), 'status': 'running',
               'command_repetitions': repetitions, 'sensor_samples_per_level': samples,
               'stationary_reported_by_operator': target == 'physical',
-              'mounting': 'no chão' if target == 'physical' else None, 'orientation_controlled': False}
+              'mounting': 'on the floor' if target == 'physical' else None, 'orientation_controlled': False}
     try:
         report['contact'] = flight.connect()
         report['commands'] = len(flight.commands(repetitions))

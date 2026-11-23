@@ -585,7 +585,8 @@ class HardwareManager:
             raise HardwareError("Cannot read QEMU's state. Check Docker access and retry Shut down.")
         emit("Shutting down QEMU Linux. Waiting for services and the persistent disk to close...")
         try:
-            self._stream(["bash", "stop.sh"], emit, cancel, timeout=30)
+            self._stream([sys.executable, "-m", "hardware.emulator_ssh", "ssh",
+                          "systemctl", "poweroff", "--no-block"], emit, cancel, timeout=30)
         except HardwareError as error:
             if cancel and cancel.is_set():
                 raise

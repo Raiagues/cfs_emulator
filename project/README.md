@@ -1,25 +1,16 @@
-# Projeto e missão
+# Project and mission
 
-A NASA fornece o framework, as apps padrão e os exemplos em um checkout independente, `cFS/`. A configuração distribuída começa sem apps próprias nem sensores vinculados. As adições feitas pela pessoa ficam fisicamente em `cFS/apps/` e `cFS/libs/`, sobre o clone oficial. Os scripts, templates e as escolhas do projeto ficam fora desse clone, em `project/`. Para baixar o upstream e abrir o primeiro workspace, siga o [guia inicial](../README.md).
+NASA supplies the framework, standard apps and examples in an independent official checkout, `cFS/`. A new workspace starts without user apps or linked sensors. Requested additions are created inside `cFS/apps/` and `cFS/libs/`. Platform scripts, templates and project choices remain outside that checkout, under `project/`. Follow the [getting-started guide](../README.md) to download the upstream sources.
 
-Ao preparar uma missão nova, o Studio cria os aliases `mission/apps → ../cFS/apps` e `mission/libs → ../cFS/libs`. As definições ficam separadas, em `mission/sample_defs/`, inicializadas a partir dos arquivos oficiais de `cFS/sample_defs/`. O build recebe essas definições em `MISSION_DEFS`, resolve os módulos usando `CFS_APP_PATH` e grava seus resultados em `mission/build-native/` ou `mission/build-flight/`. Missões existentes preservam seus fontes e suas definições locais.
+Source installation is an explicit setup action. Creating a Docker image does not clone cFS; Native does not need Docker. The same local NASA checkout supports all three targets. The platform preserves the official framework sources and adds requested modules through generators.
 
-O Git do Studio ignora o checkout `cFS/`, a árvore local `mission/`, os manifestos de apps em `project/apps/` e os artefatos em `project/generated/`. Esses arquivos pertencem ao workspace local; as regras de ignore não os apagam. Os fontes completos em `interface/tests/fixtures/bancada/` são dados de testes isolados, não módulos instalados na configuração inicial.
+New missions use aliases `mission/apps → ../cFS/apps` and `mission/libs → ../cFS/libs`. Separate definitions in `mission/sample_defs/` start from NASA's `cFS/sample_defs/`. Builds use `MISSION_DEFS` and `CFS_APP_PATH`, with outputs in `mission/build-native/` or `mission/build-flight/`. Existing missions keep their local sources and definitions.
 
-```mermaid
-flowchart LR
-    A["App baseada em sample_app"] --> C["CMake e startup da CPU1"]
-    L["Biblioteca baseada em sample_lib"] --> C
-    A --> SCH["Agendamento SCH_LAB"]
-    A --> TO["Inscrições TO_LAB"]
-    C --> B["Build cFS"]
-    SCH --> B
-    TO --> B
-```
+Git ignores the local `cFS/` and `mission/` trees, app manifests in `project/apps/` and artifacts in `project/generated/`. These rules do not delete workspace files. The complete sources under `interface/tests/fixtures/bancada/` are isolated test fixtures, not modules installed in a new mission.
 
-## Aplicações e bibliotecas
+## Apps and libraries
 
-Na arquitetura 2D, **New** cria ou inclui um módulo no grupo selecionado. Para uma app própria, o rascunho mostra ponto de entrada, prioridade, pilha, frequência de wakeup e frequência de housekeeping. Salvar aplica as definições ao build e ao startup. Os quatro comandos padrão da cópia de `sample_app` continuam disponíveis. [Navegação e ações no workspace](../interface/README.md#editar-a-missão)
+In the 2D architecture, **New** creates or includes a module in the selected group. An app draft shows its entry point, priority, stack size and wakeup/housekeeping rates. Saving applies the build and startup definitions. The four original commands from `sample_app` remain available. See [workspace operations](../interface/README.md#editing-the-mission).
 
 ```sh
 ./start --no-ui app new attitude_app --priority 60 --stack-size 32768 --wakeup-hz 2 --hk-hz 0.25 --preview
@@ -29,22 +20,20 @@ Na arquitetura 2D, **New** cria ou inclui um módulo no grupo selecionado. Para 
 ./start --no-ui library new payload_lib
 ```
 
-| Operação | Efeito |
+| Operation | Effect |
 | --- | --- |
-| **Edit → Rename module** | Renomeia um módulo próprio e atualiza arquivos, símbolos, referências, CMake e startup. Os identificadores dos módulos oficiais permanecem os da NASA. |
-| `app disable` / `app enable` | Controla a inicialização da app incluída no build. |
-| `app remove` / `library remove` | Retira o módulo da missão e preserva os fontes para uma inclusão futura. |
-| `app add` / `library add` | Inclui um módulo existente e suas dependências. |
-| `app delete` / `library delete` | Exclui os fontes de um módulo próprio após as verificações do backend. |
-| `app list` / `library list` | Mostra a seleção de apps ou as bibliotecas disponíveis. |
+| **Edit → Rename module** | Renames a user module and updates files, symbols, references, CMake and startup. NASA module identifiers retain their official names. |
+| `app disable` / `app enable` | Controls startup of an app included in the build. |
+| `app remove` / `library remove` | Excludes the module from the mission and preserves its sources. |
+| `app add` / `library add` | Includes an existing module and its dependencies. |
+| `app delete` / `library delete` | Deletes a user module's sources after backend checks. |
+| `app list` / `library list` | Shows selected apps or available libraries. |
 
-Essas operações de CLI recebem o prefixo `./start --no-ui`. Por exemplo, `./start --no-ui app remove attitude_app` retira a app da missão e `./start --no-ui app add attitude_app` volta a incluí-la. A CLI e o navegador usam a mesma implementação. Uma falha de gravação restaura os arquivos da transação.
+Prefix CLI operations with `./start --no-ui`. The CLI and browser share the implementation; a failed write restores the transaction's files. Apps retain editable handlers, payloads and periodic logic. Managed integration regions preserve manual code during later synchronization. Libraries copied from `sample_lib` provide `fsw/src/` and `fsw/public_inc/`. See [templates and edit points](appgen/README.md).
 
-As apps de missão mantêm handlers, payloads e lógica periódica editáveis. O gerador usa marcadores nos trechos de integração do `sample_app` para preservar a implementação manual nas sincronizações seguintes. A biblioteca gerada a partir de `sample_lib` oferece as pastas `fsw/src/` e `fsw/public_inc/`. [Templates e pontos de edição](appgen/README.md)
+## Linking sensors and telemetry
 
-## Vincular um sensor e enviar telemetria
-
-O perfil Raspberry Pi disponibiliza o barramento I²C. O exemplo abaixo utiliza `attitude_app`, criada acima, e um TMP105 no endereço 0x49. Em uma placa física, escolha o endereço de sete bits do seu dispositivo.
+The Raspberry Pi profile exposes I²C. This example uses the `attitude_app` created above and a TMP105 at `0x49`. For a physical board, use the actual device's seven-bit address.
 
 ```sh
 ./start --no-ui profile --board raspi4b --os raspios
@@ -56,49 +45,70 @@ O perfil Raspberry Pi disponibiliza o barramento I²C. O exemplo abaixo utiliza 
 ./start --no-ui project locate attitude_app
 ```
 
-Em **Hardware**, selecione **Add bus**, escolha o conector da placa e use **Add sensor** para definir modelo e endereço. Ao clicar no sensor, **Link HAL** permite escolher uma app de missão ou criar uma a partir de `sample_app`. O código C do leitor fica acessível no vínculo. Na CLI, `link-hal science temperature --device payload_temp --new-app` cria a app e o leitor na mesma operação. Para usar uma app existente, omita `--new-app`.
+In **Hardware**, select **Add bus**, then **Add sensor** to choose the model and address. **Link HAL** connects the device to an existing app or creates one from `sample_app`. The equivalent CLI action is `./start --no-ui project link-hal science temperature --device payload_temp --new-app`; omit `--new-app` to use an existing app.
 
-`add-device` cria uma instância com ID, barramento e endereço. `add-sensor` vincula um leitor daquela app à instância. `add-command` cria a estrutura da mensagem e um handler para implementar. `add-telemetry --sensor` prepara o pacote com dados, status e validade do leitor. `locate` informa o caminho e a linha de cada ponto editável. A remoção de um leitor e a remoção do dispositivo físico são operações distintas.
+`add-device` creates an instance with an ID, bus and address. `add-sensor` links an app reader to that instance. `add-command` creates a packet structure and editable handler. `add-telemetry --sensor` prepares the reader's data, status and validity packet. `locate` reports source paths and edit lines. Removing a reader and removing a hardware instance are separate operations.
 
-A biblioteca do chip usa `hal_sensor`. O leitor associa o dispositivo ao transporte informado pela placa. Leitores vinculados e dependências CMake determinam quais bibliotecas entram no build e em que ordem o cFE as carrega. Para um chip novo, registre uma definição em **Hardware** ou use `./start --no-ui project register-model <arquivo>`. [Modelos, barramentos e HAL](drivers/README.md)
+Chip libraries use `hal_sensor`; the reader binds a device to its board transport. Reader links and CMake dependencies determine the libraries and cFE load order. Register a new chip through **Hardware** or `./start --no-ui project register-model <file>`. See [models, buses and HAL](drivers/README.md).
 
-Para solicitar uma amostra também por comando, preencha **Read command** ao vincular o HAL ou use a opção equivalente no terminal.
+A reader can also expose a command-triggered sample:
 
 ```sh
 ./start --no-ui project link-hal hal_payload temp --device payload_temp --new-app --read-command read_now
 ```
 
-O comando gerado recebe apenas o cabeçalho, chama o mesmo leitor da aquisição periódica e publica a telemetria com valor, status e validade. O código do comando é alocado entre os códigos livres da aplicação. O contador de comandos registra o resultado do leitor. Para retirar esse vínculo e manter a aplicação, remova seus componentes na ordem de dependência.
+The generated header-only command invokes the periodic reader and publishes its value, status and validity. Its function code is allocated from the app's free codes, and its command counters reflect the reader result. To remove this link while preserving the app, remove components in dependency order:
 
 ```sh
 ./start --no-ui project remove-command hal_payload read_now
 ./start --no-ui project remove-sensor hal_payload temp
 ```
 
-As bibliotecas de missão criadas com `library new` incluem pontos `@studio.edit library.init` e `@studio.edit library.function` no código copiado de `sample_lib` quando essas funções estão presentes. O vínculo com um sensor I²C materializa e inclui automaticamente a biblioteca de transporte `linux_i2c_lib`, reutilizada pelos leitores do barramento.
+Libraries created with `library new` include `@studio.edit library.init` and `@studio.edit library.function` locations where those functions exist in the copied `sample_lib`. Linking I²C materializes the shared `linux_i2c_lib` transport.
 
-## Mapa dos arquivos
+## Templates and script index
 
-| Arquivo | Responsabilidade |
+The following paths locate the implementation used by platform actions. Templates and scripts live outside the official NASA checkout; generated user sources are written into that local checkout only when requested.
+
+| Action | Implementation and input |
 | --- | --- |
-| `project/config.json` | Placa e SO selecionados, dispositivos e vínculos com módulos de missão |
-| `project/apps/<app>.json` | MIDs, desempenho, agendamento, comandos, leitores e telemetria da app |
-| `project/boards/<placa>.json` | Perfil de build, sistemas, barramentos e catálogo da placa |
-| `project/drivers/models/<id>/model.json` | Identidade, registradores, conversões, canais e ABI do sensor |
-| `project/drivers/catalog.json` | HAL e transportes compartilhados |
-| `project/generated/drivers.json` | Assinaturas dos arquivos materializados para preservar edições locais |
-| `cFS/apps/`, `cFS/libs/` | Fontes oficiais e módulos adicionados pela pessoa no clone local |
-| `mission/apps`, `mission/libs` | Aliases para `../cFS/apps` e `../cFS/libs` em missões novas |
-| `mission/modules.cmake`, `mission/libraries.cmake` | Seleção própria de módulos da CPU1 e bibliotecas da missão |
-| `mission/cpu1_cfe_es_startup.scr` | Módulos ativos e receitas arquivadas de inicialização |
-| `mission/sample_defs/targets.cmake` | Listas de módulos por CPU |
-| `mission/sample_defs/toolchain-<arquitetura>.cmake` | Toolchain para o perfil ativo |
-| `mission/sample_defs/default_osconfig.cmake`, `cfe_core_api_interface_cfg_values.h` na mesma pasta | Limites do carregador, nomes de módulos e campos correspondentes no cFE |
-| `mission/sample_defs/generate_startup.cmake`, `cpu1/install_custom.cmake` sob `sample_defs/` | Instalação do startup e das tabelas da missão |
-| `mission/sample_defs/tables/`, `mission/sample_defs/generated/` | Tabelas de SCH_LAB/TO_LAB e fragmentos de integração gerados |
-| `mission/build-native/`, `mission/build-flight/` | Artefatos locais de compilação, fora do clone oficial |
+| Download official cFS | [nasa_source.py](nasa_source.py) and [install-cfs.sh](../scripts/install-cfs.sh) |
+| Prepare local source paths and mission definitions | [flight_sources.py](flight_sources.py) |
+| Create an app | [appgen/sample.py](appgen/sample.py) copies the installed `cFS/apps/sample_app`; [appgen/render.py](appgen/render.py) applies integration templates |
+| Create a library | [appgen/sample.py](appgen/sample.py) copies `cFS/libs/sample_lib` independently of app generation |
+| Add commands, readers and telemetry | [manage.py](manage.py), [appgen/appgen.py](appgen/appgen.py) and [HAL templates](appgen/templates/hal_sensor/) |
+| Materialize model and transport libraries | [driver guide](drivers/README.md), [model definitions](drivers/models/) and [transport sources](drivers/buses/) |
+| Include or remove mission modules | [mission_config.py](mission_config.py), preserving sources when removing from a mission |
+| Rename or delete user modules | [module_rename.py](module_rename.py), [module_delete.py](module_delete.py) and library operations in [mission_config.py](mission_config.py) |
+| Build and run targets | [build-cfs.sh](../scripts/build-cfs.sh) and [hardware/manager.py](../hardware/manager.py); builds default to one worker |
+| Derive command and telemetry definitions | [Ground Station catalog and C discovery](../ground_station/README.md#compiled-packet-catalog) |
+| Run regression checks | [test commands](../README.md#tests) and [interface/tests/](../interface/tests/) |
+| Reproduce measured technical validation | [validation/README.md](../validation/README.md), with procedures and raw observations |
 
-## Conferir e compilar
+App generation preserves references to the separate `sample_lib` dependency rather than treating it as another spelling of `sample_app`. Managed regions detect conflicting edits before writing; manual code outside them is preserved. Legacy schema-version-1 templates remain for compatibility with existing missions. Startup lists and mission-specific definitions stay outside the official framework sources.
+
+## File map
+
+| Path | Responsibility |
+| --- | --- |
+| `project/config.json` | Selected board/OS, devices and mission links |
+| `project/apps/<app>.json` | App MIDs, performance ID, scheduling, commands, readers and telemetry |
+| `project/boards/<board>.json` | Build profile, operating systems, buses and board catalog |
+| `project/drivers/models/<id>/model.json` | Sensor identity, registers, conversions, channels and ABI |
+| `project/drivers/catalog.json` | Shared HAL and transports |
+| `project/generated/drivers.json` | Materialized-file signatures used to preserve local edits |
+| `cFS/apps/`, `cFS/libs/` | Official sources and requested user modules in the local checkout |
+| `mission/apps`, `mission/libs` | Aliases into the checkout for new missions |
+| `mission/modules.cmake`, `mission/libraries.cmake` | CPU1 app and library selections |
+| `mission/cpu1_cfe_es_startup.scr` | Active modules and retained startup recipes |
+| `mission/sample_defs/targets.cmake` | Per-CPU module lists |
+| `mission/sample_defs/toolchain-<architecture>.cmake` | Active profile's toolchain |
+| `mission/sample_defs/default_osconfig.cmake`, `cfe_core_api_interface_cfg_values.h` | Loader limits, module names and cFE configuration |
+| `mission/sample_defs/generate_startup.cmake`, `cpu1/install_custom.cmake` | Startup and mission-table installation |
+| `mission/sample_defs/tables/`, `mission/sample_defs/generated/` | SCH_LAB/TO_LAB tables and integration fragments |
+| `mission/build-native/`, `mission/build-flight/` | Local build artifacts |
+
+## Checking and building
 
 ```sh
 ./start --no-ui project list
@@ -107,6 +117,4 @@ As bibliotecas de missão criadas com `library new` incluem pontos `@studio.edit
 ./start --no-ui build --target qemu
 ```
 
-`check` informa diferenças e retorna código 1 se houver alterações geradas pendentes. `sync` aplica essas alterações. Depois de modificar fontes ou membros da missão, compile e execute a nova versão no destino desejado. Para alterar dispositivos, endereços ou barramentos emulados, reinicie o QEMU para carregar a topologia. Os ajustes de sinal sintético podem ser aplicados na sessão de dados. [Execução por destino](../hardware/README.md)
-
-[Auditoria da origem NASA, caminhos locais e geradores](../docs/cfs-wrapper.md) (23/11/2026).
+`check` reports pending generated changes and returns exit code 1 when they exist. `sync` applies the plan. Rebuild and rerun after changing mission sources or membership. Restart QEMU after modifying emulated devices, addresses or buses so it loads the new topology. Synthetic signal settings can be applied through the data session. See [target execution](../hardware/README.md).

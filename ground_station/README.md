@@ -1,75 +1,71 @@
 # Ground Station
 
-A estação envia pacotes CCSDS por UDP ao CI_LAB e decodifica os pacotes de TO_LAB usando os offsets, os tipos e a ordem de bytes do catálogo compilado.
+Ground Station sends CCSDS packets to CI_LAB over UDP and decodes TO_LAB packets using the compiled catalog's field offsets, types and byte order.
 
-![Primeiro contato na Ground Station, com o destino do downlink selecionado](../docs/images/first-flight/ground-1440-dark-studio.webp)
+## Sending a command and confirming its response
 
-## Enviar um comando e confirmar a resposta
+1. Select a target, build the mission and run cFS. For Emulator, start QEMU before running cFS.
+2. Open **Ground station** and select **Connect**. The receiver opens and the first-contact flow selects `TO_LAB_OUTPUT_ENABLE_CC`. Check `dest_IP` and select **Send**. The first decoded packet confirms that telemetry is reaching the receiver.
+3. Select `sample_app` and `SAMPLE_APP_NOOP_CC`. Check the MID, function code and packet length before sending. **Sent** records the transmitted bytes.
+4. Find `SAMPLE: NOOP command` in the received events. The next `SAMPLE_APP` housekeeping packet reports its increased `CommandCounter`. Together, these observations demonstrate that the app processed NOOP.
 
-1. No workspace, selecione o destino, compile a missão e execute **Run cFS**. Para **Emulator**, inicie o emulador antes de executar o cFS.
-2. Abra **Ground station** e clique em **Connect**. No primeiro contato, a estação abre o receptor UDP e seleciona `TO_LAB_OUTPUT_ENABLE_CC`. Confira o endereço de retorno em `dest_IP` e clique em **Send**. O indicador **Telemetry on** acende com o primeiro pacote decodificado.
-3. Selecione `sample_app` e o comando `SAMPLE_APP_NOOP_CC`. Confira MID, código e tamanho do pacote e envie o comando. A seção **Sent** mostra os bytes transmitidos.
-4. Em **Telemetry events**, procure o evento `SAMPLE: NOOP command`. O housekeeping seguinte de `SAMPLE_APP` informa o novo `CommandCounter`. Esses dois registros permitem verificar que a app processou o NOOP.
-
-A transmissão UDP, a chegada de telemetria e o processamento pela app são observações distintas. **Sent** registra a transmissão local. O primeiro pacote recebido confirma o caminho de retorno. Um evento com a origem e a assinatura esperadas constitui evidência de processamento. Em **System overview**, os contadores por app mostram o tráfego da conexão atual.
+UDP transmission, received telemetry and app processing are separate observations. **Sent** records a local send. A received packet confirms the return path. An event with the expected source and content is evidence of processing. Per-app counters report locally sent commands and received telemetry for the current connection.
 
 ```mermaid
 sequenceDiagram
-    participant UI as Ground Station
+    participant GS as Ground Station
     participant CI as CI_LAB
     participant App as SAMPLE_APP
     participant TO as TO_LAB
-    UI-)CI: Comando CCSDS sobre UDP
-    CI-)App: Mensagem no Software Bus
-    App-)TO: Evento de NOOP e housekeeping
-    TO-)UI: Pacotes UDP para o receptor
+    GS-)CI: CCSDS command over UDP
+    CI-)App: Software Bus message
+    App-)TO: NOOP event and housekeeping
+    TO-)GS: UDP packets to the receiver
 ```
 
-A tabela compilada de TO_LAB define os pacotes encaminhados ao solo. Ao reconectar, envie **ENABLE_OUTPUT** para indicar o endereço do receptor.
+The compiled TO_LAB subscription table determines which packets reach the ground. Send **ENABLE_OUTPUT** after reconnecting to select the receiver address. **Start over** resets the target's server-side history, shared by all browser tabs.
 
-**Start over** reinicia o histórico do alvo no servidor. Cada aba consulta o mesmo histórico.
+## Round-trip checks
 
-## Montar um teste de ida e volta
+In **Ground Station → Round trip**, choose a command and select **New test**. Set a timeout and add the expected observations in order. The send form uses the compiled command fields.
 
-Em **Ground Station → Round trip**, selecione um comando da árvore e clique em **New test**. Escolha o tempo limite e acrescente as observações na ordem esperada. O formulário de envio usa os campos do comando compilado.
+For `SAMPLE_APP_NOOP_CC`:
 
-Por exemplo, para testar `SAMPLE_APP_NOOP_CC`:
+1. Add **Flight event**, set **EVS app name** to `SAMPLE_APP` and **Message contains** to `NOOP`. An exact numeric event ID can also be required.
+2. Add **Telemetry packet**, select `SAMPLE_APP_HK_TLM_MID`, then **Field increases** and `CommandCounter`. Wait for an initial housekeeping sample to establish the baseline.
+3. Save and select **Run test**. Open the run under **Sent** to inspect its event, MID, CCSDS sequence and decoded value. **Edit** changes, reorders or removes checks.
 
-1. Em **Flight event**, configure **EVS app name** como `SAMPLE_APP` e **Message contains** como `NOOP`. Também é possível exigir um ID numérico exato.
-2. Adicione **Telemetry packet**, escolha `SAMPLE_APP_HK_TLM_MID`, **Field increases** e `CommandCounter`. Aguarde uma amostra desse housekeeping para estabelecer o valor inicial.
-3. Salve e clique em **Run test**. No histórico **Sent**, abra a execução para ler o evento, o MID, a sequência CCSDS e o valor recebido. **Edit** permite alterar, reordenar ou excluir as etapas.
+Only packets decoded after the send in that session are eligible. Each check consumes a distinct observation. EVS and housekeeping usually lack a unique command correlation identifier; when other senders are active, use a correlation field published by the application itself.
 
-O teste compara somente pacotes decodificados depois do envio naquela sessão. Cada etapa consome uma observação distinta. A linha de envio registra o datagrama local. As linhas de retorno aparecem quando o receptor identifica os critérios escolhidos. Eventos EVS e housekeeping normalmente não carregam um identificador que os relacione de maneira exclusiva ao comando. Em uma missão com outros emissores, inclua no teste um campo de correlação que a própria aplicação publique.
+The round-trip diagram uses discovered publishers and subscriptions for the selected MID. Animation illustrates the supported route after a confirmed observation; its timing is not an internal Software Bus trace. **System overview** provides per-app command and telemetry records.
 
-**System overview** mostra apps e serviços da missão. Alterne entre **Commands** e **Telemetry** e selecione um componente para examinar seus registros. O contador de comandos mede envios locais. O de telemetria mede recebimentos na estação.
+Plans are stored in `ground_station/test-plans.json`. Before sending, Studio validates packet identifiers and fields against the selected build's catalog. Editing a plan does not require rebuilding cFS.
 
-Os testes são armazenados em `ground_station/test-plans.json`. O Studio confere os identificadores e campos contra o catálogo do alvo antes de transmitir. Mudar um teste dispensa recompilação da missão.
+## Compiled packet catalog
 
-## Como o catálogo acompanha a compilação
+The build compiler resolves MIDs, function codes, structure sizes, alignment and field offsets. Unsupported C types are displayed as bytes. The installed startup list determines which apps are eligible command recipients. ARM64 analysis uses the local `cfs-builder:local` container with networking disabled.
 
-O compilador do build resolve MIDs, códigos, tamanhos de estrutura e deslocamentos de campos, inclusive o alinhamento. A estação exibe como bytes os campos cujo tipo C o decodificador ainda não suporta. O startup instalado determina as apps elegíveis para receber comandos. A análise do build ARM64 usa o contêiner local `cfs-builder:local` com a rede desativada.
+Command-to-MID associations come from C dispatch comparisons, early returns or handler tables. Insufficiently supported routes remain unresolved with an explanation. [Catalog overrides](overrides.json) can explicitly supply a type, MID, function code, length and fields; validation checks packet consistency.
 
-A associação de um código de comando ao seu MID vem do despacho em C, por comparação, retorno antecipado ou tabela de handlers. Uma rota sem evidência suficiente fica pendente, acompanhada do motivo. O arquivo de overrides permite declarar explicitamente o tipo, MID, código, tamanho e campos de uma definição. O validador confere a consistência do pacote. [Overrides do catálogo](overrides.json)
-
-| Dados locais | Função |
+| Local data | Purpose |
 | --- | --- |
-| `hardware/.runtime/catalog-<perfil>-<fingerprint>.json` | Catálogo do build nativo ou de voo |
-| `ground_station/.runtime/definitions/<fingerprint>/` | Definições consumidas pelos módulos da NASA |
-| `ground_station/.runtime/subscriptions.json` | Inscrições confirmadas por conexão, compilação e execução do serviço |
-| `ground_station/.runtime/passed-tests.json` | Última execução aprovada por destino e comando, com o fingerprint da compilação e as observações recebidas |
+| `hardware/.runtime/catalog-<profile>-<fingerprint>.json` | Native or flight build catalog |
+| `ground_station/.runtime/definitions/<fingerprint>/` | Definitions consumed by NASA modules |
+| `ground_station/.runtime/subscriptions.json` | Subscriptions confirmed for the connection, build and service run |
+| `ground_station/.runtime/passed-tests.json` | Latest passing run per target and command, with build fingerprint and received observations |
 
-Editar um header altera o código da missão. Depois de compilar e executar a nova versão, **Connect** seleciona seu catálogo pelo fingerprint. A primeira abertura de um catálogo demanda consultas ao compilador.
+After editing a header, rebuild and run the updated mission. **Connect** selects the corresponding catalog fingerprint. First catalog preparation requires compiler queries.
 
-## Caminho de rede
+## Network paths
 
-As portas são lidas da configuração compilada de CI_LAB e TO_LAB. No perfil padrão do checkout usado neste projeto, os comandos usam UDP 1234 e a telemetria usa UDP 2234.
+Ports are read from the compiled CI_LAB and TO_LAB configuration. The default checkout profile uses UDP 1234 for commands and UDP 2234 for telemetry.
 
-| Destino | Caminho do comando | Caminho de retorno |
+| Target | Command path | Return path |
 | --- | --- | --- |
-| Native | Loopback do computador | Loopback do computador |
-| Emulator | Porta UDP publicada no loopback do computador, redirecionada à porta de CI_LAB no convidado | TO_LAB envia ao endereço do hospedeiro na rede do QEMU. Um receptor UDP no contêiner entrega os pacotes à estação |
-| Board | Endereço da placa observado pelo SSH | Endereço local observado pela placa na conexão SSH |
+| Native | Local loopback | Local loopback |
+| Emulator | Docker's published loopback UDP port forwards to the guest CI_LAB port | TO_LAB sends to the QEMU network's host address; a receiver inside the container forwards packets to Ground Station |
+| Board | Board address observed over SSH | Local address observed by the board on that SSH connection |
 
-Em **Emulator**, o encaminhamento de comandos é criado na inicialização do QEMU. A estação consulta a porta publicada pelo Docker e abre o receptor de telemetria no contêiner. Se a porta da missão compilada mudar, reinicie o emulador. O QMP recebe os estímulos dos sensores. Em **Board**, o Studio lê `SSH_CONNECTION` e verifica a rota UDP do host usando os endereços observados. Um NAT ou salto SSH que altere o endereço de retorno pode impedir essa verificação.
+QEMU command forwarding is configured at startup. Ground Station discovers the published Docker port and opens its telemetry receiver in the container. Restart the emulator after changing the compiled mission's port. QMP carries sensor stimuli separately. For Board, Studio reads `SSH_CONNECTION` and checks the host UDP route using the observed addresses; NAT or SSH jumps that change the return address may prevent verification.
 
-A descoberta, a codificação CCSDS e o estado da sessão ficam nos módulos abaixo. [Catálogo](catalog.py) · [Descoberta em C](discovery.py) · [Integração NASA](official.py) · [Sessão](station.py)
+Implementation: [catalog](catalog.py) · [C discovery](discovery.py) · [NASA integration](official.py) · [session](station.py).

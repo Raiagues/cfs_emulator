@@ -1,50 +1,50 @@
-# Interface do Flight Studio
+# Flight Studio interface
 
-A página inicial em `/` configura o destino e o checkout do cFS. **Open workspace** salva a configuração e abre `/studio` na arquitetura 3D da missão. Para preparar o projeto em um computador novo, siga o [guia de instalação](../README.md).
+The local page at `/` prepares the target and official cFS checkout. Continue to the first boot to build and start the mission, then use `/studio` for the workbench. Follow the [installation guide](../README.md) on a new computer.
 
-## Navegação
+`./start` starts or reuses the server for this workspace. `./stop.sh` stops only that web server and does not contact the emulator or board. Both accept `--port` to select a nondefault Studio port. Use `./start --no-ui stop --target native`, `qemu` or `physical` to stop a cFS mission.
 
-| Área | O que fazer |
+## Navigation
+
+| Area | Purpose |
 | --- | --- |
-| **Architecture** | Alternar entre a pilha 3D e o mapa 2D. Abrir apps, bibliotecas, serviços cFE, OSAL e PSP. |
-| **Hardware** | Examinar o computador no modo Native ou a placa nos modos Emulator e Board. Em **2D → Pinout**, consultar a numeração física do conector e os nomes GPIO. |
-| **Code** | Navegar na árvore, abrir declarações e editar os arquivos da missão. As marcas **A** e **M** indicam arquivos adicionados e modificados no Git. |
-| **Ground station** | Montar um comando do catálogo, enviar ao cFS e observar a telemetria e os eventos. [Operação da estação](../ground_station/README.md) |
-| **Ground station → System overview** | Escolher Commands ou Telemetry e abrir os registros da app durante a conexão atual. |
-| **Synthetic data** | Selecionar um dispositivo, configurar seus sinais no painel lateral, testar localmente e acompanhar a sessão. [Dados sintéticos](../sensors/README.md) |
-| **Terminal** | Acompanhar builds, jobs e shells locais no painel inferior. |
+| **Ground station** | Build commands from the compiled catalog, send them and inspect telemetry and events. See the [Ground Station guide](../ground_station/README.md). |
+| **Architecture** | Browse the default 2D mission map or switch to the 3D stack. Inspect apps, libraries, cFE services, OSAL and PSP. |
+| **Hardware** | Inspect the Native computer or selected board. **2D → Pinout** shows physical connector numbers and GPIO names. |
+| **Code** | Browse source files and edit user modules. Git marks added and modified files. |
+| **Synthetic data** | Configure device signals, preview them locally and follow an injection session. See the [signal guide](../sensors/README.md). |
+| **Terminal** | Follow builds, jobs and local shells in the lower panel. |
 
-![Arquitetura 3D da missão no Flight Studio](../docs/images/studio-mission.png)
+## Editing the mission
 
-## Editar a missão
+Select a module to inspect its dependencies, sources or commands. In 3D, drag to rotate and use the wheel to zoom; layer labels lead to their corresponding 2D groups. Group controls create, edit or remove modules. **Build cFS** is in the top toolbar, with a rebuild notice when a previous build is out of date.
 
-Na arquitetura 3D, arraste para girar e use a roda do mouse para aproximar. Selecione um módulo para destacar suas dependências e abrir o código ou seus comandos pela barra inferior. Ao selecionar um sensor, aparecem as conexões configuradas no hardware. Os nomes das camadas levam aos respectivos grupos no mapa 2D. Os controles **New**, **Edit** e a lixeira ficam no cabeçalho de cada grupo. A opção de bibliotecas mostra ou oculta esse grupo. **Build cFS** fica na barra superior. O aviso de recompilação aparece quando um build anterior ficou desatualizado.
+- **Your apps → New** shows the name, entry point, priority, stack size and wakeup/housekeeping rates before creating an app from NASA's `sample_app`.
+- **Libraries → New** creates a mission library from NASA's `sample_lib`.
+- **New** in the NASA apps group includes an available checkout module. Scheduling and communication dependencies constrain removal.
+- **Edit** offers the operations allowed for the selected module. Renaming a user module updates build, startup and source references.
+- **Remove** excludes a module from the build and CPU1 startup while preserving its sources. Remaining library consumers are checked before removal.
 
-- Em **Your apps → New**, escolha o nome e confira o ponto de entrada, a prioridade, a pilha e as frequências de wakeup e housekeeping antes de salvar. Em **Libraries → New**, a biblioteca de missão parte de `sample_lib`.
-- No grupo de apps NASA, **New** permite incluir um módulo disponível no checkout. Os módulos necessários ao agendamento ou à comunicação têm restrições de remoção.
-- **Edit** abre as operações permitidas para o módulo selecionado. A renomeação de um módulo próprio atualiza os nomes usados no build, no startup e nas referências da missão. Apps próprias também permitem alterar a configuração de execução.
-- **Remove** retira o módulo da compilação e do startup da CPU1. Os fontes continuam disponíveis para uma futura inclusão. As dependências que ainda utilizam uma biblioteca aparecem antes da remoção.
+Open an app to inspect initialization, MID and function-code dispatch, handlers, tables and telemetry. A library exposes its consumers and public API. Selecting a source location opens the corresponding line in the editor.
 
-Clique em um bloco para abrir seus detalhes em uma aba. A aba da arquitetura retorna ao mapa completo. Em uma app, a navegação percorre inicialização, despacho por MID e código de comando, handlers, tabelas e telemetria. Nas bibliotecas, **Used by** mostra os consumidores e **Public API** lista os símbolos. Um clique numa função ou chamada abre o editor na linha correspondente, com a árvore de arquivos ao lado.
+## Reading and editing code
 
-## Ler e editar código
+The official checkout is available under `cFS/`. User apps and libraries are created in its `apps/` and `libs/` directories; new missions expose these through aliases under `mission/`. NASA framework files remain available for reference. The [template guide](../project/appgen/README.md) identifies editable handlers and integration points.
 
-O checkout `cFS/` fica disponível para consulta. Os arquivos editáveis da missão ficam em `mission/`. O painel do editor apresenta **Tags**, **Packet** e **Dispatch**. As anotações `@brief`, `@unit`, `@range` e `@check` levam ao comentário correspondente. Para acrescentar um leitor ou implementar seu comando, consulte o [guia dos templates de app](../project/appgen/README.md).
+Activity completion marks belong to the platform's progress state. They are separate from the cFS source files. The code pipeline distinguishes completed steps from the currently selected step.
 
-![Árvore de fontes, editor e painel de navegação](../docs/images/studio-code.png)
-
-| Atalho | Ação |
+| Shortcut | Action |
 | --- | --- |
-| Ctrl+S | Salvar o arquivo ativo |
-| Ctrl+F | Buscar no editor |
-| Ctrl+P | Buscar arquivo |
-| Ctrl+B | Alternar o explorador |
-| Ctrl+` | Alternar o terminal |
+| Ctrl+S | Save the active file |
+| Ctrl+F | Search in the editor |
+| Ctrl+P | Find a file |
+| Ctrl+B | Toggle the explorer |
+| Ctrl+` | Toggle the terminal |
 
-Arraste os divisores para redimensionar os painéis. O terminal mantém o histórico de cada operação. Fechar uma aba de acompanhamento encerra a visualização de logs e permite continuar usando o serviço que os produz.
+Drag dividers to resize panels. The terminal keeps an operation's history. Closing a log-following view does not stop the service producing those logs.
 
-## Implementação
+## Implementation
 
-O servidor escuta no loopback e entrega o JavaScript e as fontes do próprio repositório. O navegador usa o token de `/api/session` ao gravar. Salvamentos usam hashes do arquivo, da missão ou do rascunho para detectar edições concorrentes. [API e regras de extensão](../docs/backend.md) · [Sistema visual](../docs/design.md)
+The server binds to loopback and serves JavaScript and fonts from this repository. Browser writes use the token from `/api/session`. File, mission and draft hashes detect concurrent edits. See [server.py](server.py) and the shared [laboratory service](../jobs/service.py).
 
-O índice de fontes analisa assinaturas, inscrições no Software Bus e comparações que associam um MID a um handler. A interface apresenta os casos que a análise consegue resolver e a API registra as rotas pendentes. [Índice de código](backend/source_index.py) · [Análise da arquitetura](backend/architecture_details.py)
+The source index analyzes function signatures, Software Bus subscriptions and comparisons connecting MIDs to handlers. It exposes resolved routes and records unresolved cases. See [source_index.py](../project/source_index.py) and [architecture_details.py](../project/architecture_details.py). The source-derived navigation inventory is available through `./scripts/nav-map` from the repository root.

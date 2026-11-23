@@ -1,24 +1,19 @@
 # Flight Studio
 
-## O que é
+Flight Studio is a local laboratory for learning and developing software with NASA's **core Flight System (cFS)**. It is not flight-qualified software. The guided workflow builds cFS, adds a command in C, sends it to an application and checks its response and sensor telemetry.
 
-Flight Studio é um laboratório local para aprender e desenvolver software com o **core Flight System (cFS) da NASA**. Nunca use o laboratório em voo.
-No primeiro percurso você compila o cFS, escreve um comando em C, envia esse comando à sua app e confere a resposta e a leitura de um sensor.
+## Getting started on Linux
 
-![Primeiro capítulo de Welcome, com o satélite e a próxima ação em destaque](docs/images/welcome.png)
+Install Python 3 and Git. Download and first-build times depend on your computer and connection.
 
-## Começar em 5 minutos (Native)
-
-Em um computador Linux com navegador, instale Python 3 e Git pelo terminal. A primeira compilação e os downloads dependem da máquina e da conexão.
-
-| Distribuição | Comando no computador |
+| Distribution | Command on your computer |
 | --- | --- |
-| Debian ou Ubuntu | `sudo apt-get update && sudo apt-get install -y python3 git` |
+| Debian or Ubuntu | `sudo apt-get update && sudo apt-get install -y python3 git` |
 | Fedora | `sudo dnf install -y python3 git` |
 | Arch Linux | `sudo pacman -Syu --needed --noconfirm python git` |
 | openSUSE | `sudo zypper --non-interactive install python3 git` |
 
-No terminal, em uma pasta onde você possa criar o projeto, execute
+Run these commands in a directory where you can create the project:
 
 ```sh
 git clone -b master https://github.com/Raiagues/cfs_emulator.git
@@ -26,111 +21,98 @@ cd cfs_emulator
 ./start
 ```
 
-Abra **http://127.0.0.1:8765**. Em **Welcome**, o anel indica qual parte do satélite explorar. Para ir direto à bancada, use **Skip**, selecione **Native** e aguarde as verificações. Clique no **+** de cada item ausente para instalar o compilador ou baixar as fontes oficiais. Quando tudo estiver pronto, use **Continue · first boot**; a preparação começa automaticamente. O console mostra o cFS chegando a `OPERATIONAL`.
+Open **http://127.0.0.1:8765**. Follow **Welcome**, or use **Skip** to open the workbench. Select **Native** and wait for the checks. Use the **+** beside a missing prerequisite to install the compiler or download the official NASA sources. When the checks pass, select **Continue · first boot**. Preparation starts automatically, and the console reports when cFS reaches `OPERATIONAL`. Builds default to **one worker**.
 
-Se a porta estiver ocupada, execute na raiz do repositório e abra **http://127.0.0.1:8766**.
+Running `./start` again reuses the Studio server for this workspace and port. Stop the web server with:
+
+```sh
+./stop.sh
+```
+
+This stops only the Studio server; it does not contact SSH or stop a running cFS mission. Repeating it is safe. To use a different port, start and stop the matching instance as follows:
 
 ```sh
 ./start --ui --port 8766
+./stop.sh --port 8766
 ```
 
-## Código, templates e avaliação
+The alternate URL is **http://127.0.0.1:8766**. If an unrelated process occupies the selected port, choose another port or stop that process yourself.
 
-[Mapa dos scripts e templates](docs/templates-e-testes.md) · [Protocolo e resultados da avaliação técnica](validation/README.md) · [Origem do clone NASA](docs/cfs-wrapper.md)
+## Sources, templates and validation
 
-## O primeiro voo
+[Templates and script index](project/README.md#templates-and-script-index) · [Technical validation protocol and results](validation/README.md) · [Official NASA checkout and local mission](project/README.md)
 
-| Passo | O que você faz | O que você vê | Onde isso existe no cFS |
+NASA cFS is downloaded during source setup, rather than distributed in this repository or embedded in an emulator image. The platform keeps its generators outside the checkout and creates requested apps and libraries inside the local `cFS/apps/` and `cFS/libs/` directories. A new workspace has no user apps or linked sensors.
+
+## First flight
+
+| Step | Action | Evidence | cFS component |
 | --- | --- | --- | --- |
-| 1 · Target | Escolhe o alvo e resolve os itens ausentes. | Verificações do compilador, Python e fontes no Native. | Ferramentas de compilação e checkout oficial. |
-| 2 · Boot | Inicia a compilação e acompanha a partida. | Marcos do log até `CFE_ES_Main entering OPERATIONAL state`. | Executive Services (ES), OSAL e pacote de suporte à plataforma (PSP). |
-| 3 · Event | Conecta a estação, informa o destino da telemetria e envia um NOOP, comando sem efeito sobre a missão. | Evento de `sample_app` e contador de comandos +1. | Entrada em `ci_lab`, distribuição pelo Software Bus, registro em EVS e saída em `to_lab`. |
-| 4 · App | Dá nome à sua app e confirma os arquivos. | A nova app aparece na missão. | Código C, alvo CMake e lista de inicialização do ES. |
-| 5 · Command | Segue sete paradas, escreve a linha do tratador e compila. | Código de função, mensagem, despacho e resultado do compilador. | Cabeçalhos e implementação da sua app. |
-| 6 · Send | Executa a nova versão, digita uma taxa e envia SET_RATE. | Sua app responde com a taxa escolhida e o contador sobe. | Tratador C, evento EVS e telemetria periódica da app. |
-| 7 · Sensor | Liga um TMP105 à app, recompila e inicia a leitura. | Uma amostra confirma o caminho até a telemetria. | Driver, registradores I²C e leitor agendado por `sch_lab`. |
-| 8 · Test | Executa um cenário. | Leituras, faixa e resultado de cada verificação. | Mesmo protocolo de registradores usado pelo driver C. |
-| 9 · Board, opcional | Verifica SSH, escolhe **Use this board**, compila e executa. | A própria Pi registra `OPERATIONAL`. | Mesma missão Linux, compilada para ARM64. |
+| 1 · Target | Select a target and install missing prerequisites. | Compiler, Python and source checks for Native. | Build tools and official checkout. |
+| 2 · Boot | Follow the automatic build and startup. | `CFE_ES_Main entering OPERATIONAL state`. | Executive Services, OSAL and PSP. |
+| 3 · Event | Connect Ground Station, enable telemetry and send NOOP. | A `sample_app` event and an increased command counter. | `ci_lab`, Software Bus, EVS and `to_lab`. |
+| 4 · App | Name your app and confirm its files. | The app appears in the mission. | C sources, CMake target and ES startup entry. |
+| 5 · Command | Follow the code steps, implement the handler and build. | Function code, packet definition, dispatch and compiler output. | App headers and implementation. |
+| 6 · Send | Run the new build and send SET_RATE. | The selected rate and increased command counter. | C handler, EVS event and housekeeping. |
+| 7 · Sensor | Link a TMP105, rebuild and start acquisition. | A sample reaches telemetry. | I²C driver and scheduled reader. |
+| 8 · Test | Run a scenario. | Readings and individual checks. | The register protocol used by the C driver. |
+| 9 · Board, optional | Check SSH, select the board, build and run. | The Pi reports `OPERATIONAL`. | The same Linux mission compiled for ARM64. |
+
+Completed steps remain accessible from the top bar. Progress records observations for the selected target. The introductory workflow starts on Native; the later tutorial stages introduce the emulator and physical board.
+
+## Targets and data flow
+
+| Target | Requirements | Run sequence | Scope |
+| --- | --- | --- | --- |
+| Native | Linux, C compiler, CMake, Make and NASA sources | Build cFS → Run cFS | Local register files; no physical pins. |
+| Emulator | Docker with Buildx, OpenSSH and space for the image and guest disk | Prepare image and key → Start emulator → Build cFS → Run cFS | ARM CPU and supported device models in QEMU. ARM emulation on x86 is slow. |
+| Board | Pi 4B, 64-bit Raspberry Pi OS, SSH and IPv4 | Configure SSH → Build cFS → Run cFS | Physical hardware and sensors on the configured buses. |
+
+All three targets use the same mission sources. On Linux, the current user needs access to Docker Engine. With Docker Desktop on macOS or Docker integration in WSL2, prepare Emulator from that environment's terminal. On Windows, keep the checkout in the WSL2 Linux filesystem.
 
 ```mermaid
 flowchart LR
-  W["Welcome · 12 capítulos"] --> T["1 Target"] --> B["2 Boot"] --> E["3 Event"] --> A["4 App"] --> C["5 Command"] --> S["6 Send"] --> SN["7 Sensor"] --> TS["8 Test"] --> BD["9 Board · opcional"]
-```
-
-Você pode rever uma etapa concluída pela barra superior. As marcas registram observações do alvo escolhido.
-
-## Três alvos
-
-```mermaid
-flowchart LR
-  subgraph PC[Seu computador]
-    UI[Flight Studio no navegador] --> SRV[./start]
-    SRV --> N[cFS nativo no Linux]
-    SRV --> D[Docker] --> Q[QEMU raspi4b com Raspberry Pi OS] --> CQ[cFS ARM64]
-    GS[Estação de solo UDP] <--> N
-    GS <--> CQ
-  end
-  SRV -- SSH --> PI[Raspberry Pi 4B real] --> CP[cFS ARM64]
-  GS <--> CP
-```
-
-O Linux local, a Pi emulada e a Pi física executam o mesmo código da missão.
-
-| Alvo | O que precisa | Como preparar | Como executar | Limites |
-| --- | --- | --- | --- | --- |
-| Native | Linux, compilador C, CMake, Make e fontes da NASA | Escolha Native e instale os itens indicados. | Build cFS → Run cFS. | Registradores em arquivos locais. Não há pinos físicos. |
-| Emulator | Docker com Buildx, OpenSSH e espaço para imagem e disco | Escolha Emulator, prepare imagem e chave. | Start emulator → Build cFS → Run cFS. | O QEMU simula a CPU e os dispositivos implementados. A emulação de ARM em x86 é lenta. |
-| Board | Pi 4B com Raspberry Pi OS de 64 bits, SSH e rede IPv4 | Informe host, usuário e identidade. Verifique a conexão e use a placa. | Build cFS no computador → Run cFS por SSH. | Requer a placa e os sensores ligados ao barramento indicado. |
-
-No Linux, use Docker Engine e um usuário com acesso ao daemon. No macOS com Docker Desktop ou no Linux do WSL2 com integração Docker, prepare o Emulator no terminal desse ambiente. A imagem corresponde à arquitetura da máquina. No Windows, mantenha o checkout no sistema de arquivos Linux do WSL2.
-
-## Como os dados circulam
-
-```mermaid
-flowchart LR
-  GS[Estação de solo] -- comando UDP --> CI[ci_lab] --> SB[Software Bus] --> A[App cFS]
-  A -- evento ou telemetria --> SB --> TO[to_lab] -- telemetria UDP --> GS
-  S[Sinal do cenário] --> F[Arquivo no Native] --> D[Registradores]
-  S --> Q[QMP no QEMU] --> D
-  P[Sensor na Pi] -- I²C --> DR[Driver C]
+  GS[Ground Station] -- UDP command --> CI[ci_lab] --> SB[Software Bus] --> A[cFS app]
+  A -- Event or telemetry --> SB --> TO[to_lab] -- UDP telemetry --> GS
+  S[Synthetic signal] --> F[Native register file] --> D[Register interface]
+  S --> Q[QMP in QEMU] --> D
+  P[Physical sensor] -- I²C --> DR[C driver]
   D --> DR --> A
 ```
 
-O Software Bus entrega mensagens dentro do cFS. QMP é o canal de controle do QEMU usado para escrever nos registradores emulados.
+The Software Bus delivers messages inside cFS. QMP controls QEMU's device properties. Native register files live in `hardware/.runtime/devices/`; an app's telemetry confirms that its C driver acquired a value.
 
-No Native, cada dispositivo tem um arquivo de registradores em `hardware/.runtime/devices/`. O simulador escreve pelo barramento e endereço configurados, e o próximo pacote da app confirma a leitura pelo driver C.
+## Command-line workflow
 
-## Usar só pelo terminal
+Run the following commands from the repository root. They use the same infrastructure as the interface. App names, addresses and rates are operator choices; these examples use `demo_app`, `127.0.0.1` and `17`.
 
-Execute os exemplos na raiz do repositório. Os comandos abaixo usam a mesma infraestrutura que os botões. Nome da app, endereço e taxa são escolhas do operador. Os exemplos usam `demo_app`, `127.0.0.1` e `17`.
+| Action | Command |
+| --- | --- |
+| Download official sources | `./start --no-ui source install` |
+| Select Native | `./start --no-ui target native` |
+| Install and check prerequisites | `./start --no-ui setup --target native`, then `./start --no-ui setup --target native --check` |
+| Build | `./start --no-ui build --target native` |
+| Run and inspect status | `./start --no-ui run --target native`, then `./start --no-ui status --target native` |
+| Connect Ground Station | `./start --no-ui ground connect` |
+| Enable telemetry | `./start --no-ui ground send to_lab ENABLE_OUTPUT --arg dest_IP=127.0.0.1` |
+| Send NOOP | `./start --no-ui ground send sample_app NOOP` |
+| Receive packets or check NOOP responses | `./start --no-ui ground listen --count 1` or `./start --no-ui ground test --all-noop` |
+| Stop cFS | `./start --no-ui stop --target native` |
+| Create an app and library | `./start --no-ui app new demo_app` and `./start --no-ui library new filters` |
+| Link an existing device | `./start --no-ui project link-hal demo_app temp --device temp` |
+| Apply a signal | `./start --no-ui simulate temp --target native --steps 8` |
+| Preview a model | `./start --no-ui simulate-preview --model tmp105` |
+| Inspect progress | `./start --no-ui journey --target native` |
+| Prepare the emulator | `./start --no-ui emulator image` and `./start --no-ui emulator key` |
+| Start or shut down QEMU | `./start --no-ui emulator start` and `./start --no-ui emulator stop` |
 
-| Ação na bancada | Exemplo na raiz | Última linha esperada |
-| --- | --- | --- |
-| Preparar as fontes | `./start --no-ui source install` | `NASA cFS ready · a4d305dc06fb7d468f5b45214d9f730b97d4bd77` |
-| Escolher o alvo | `./start --no-ui target native` | `native` |
-| Instalar e verificar | `./start --no-ui setup --target native`, depois `./start --no-ui setup --target native --check` | `Checks passed` |
-| Compilar | `./start --no-ui build --target native` | `build · native · succeeded` |
-| Executar e ver o estado | `./start --no-ui run --target native`, depois `./start --no-ui status --target native` | PID e hora do último OPERATIONAL |
-| Conectar a estação | `./start --no-ui ground connect` | `Connected · 127.0.0.1` |
-| Ligar a telemetria | `./start --no-ui ground send to_lab ENABLE_OUTPUT --arg dest_IP=127.0.0.1` | Identificador de ENABLE_OUTPUT |
-| Observar a resposta | `./start --no-ui ground send sample_app NOOP` | Evento de sample_app e `CommandCounter 0 → 1` no primeiro envio |
-| Ouvir pacotes ou testar NOOPs | `./start --no-ui ground listen --count 1` ou `./start --no-ui ground test --all-noop` | Pacote decodificado ou resposta do último serviço |
-| Parar a missão | `./start --no-ui stop --target native` | `stop · native · succeeded` |
-| Criar app e biblioteca | `./start --no-ui app new demo_app` e `./start --no-ui library new filters` | `app new · demo_app` e `library new · filters` |
-| Ligar o driver à app | `./start --no-ui project link-hal demo_app temp --device temp` | Configuração do leitor e dos arquivos gerados |
-| Aplicar um sinal | `./start --no-ui simulate temp --target native --steps 8` | Oitava amostra do TMP105 |
-| Testar o modelo ou o cenário | `./start --no-ui simulate-preview --model tmp105` ou `./start --no-ui simulate-preview --device temp --scenario orbit` | `simulate-preview · native · succeeded` |
-| Ver o progresso | `./start --no-ui journey --target native` | Estado de Board, última etapa |
-| Preparar o emulador | `./start --no-ui emulator image` e `./start --no-ui emulator key` | Referência da imagem e caminho da chave do checkout |
-| Iniciar ou desligar o emulador | `./start --no-ui emulator start` e `./start --no-ui emulator stop` | `boot · qemu · succeeded` e `shutdown · qemu · succeeded` |
-
-Para confirmar cada alteração de SET_RATE e escrever a linha do tratador, execute na raiz após criar a app e parar o cFS.
+After creating `demo_app` and stopping cFS, confirm the SET_RATE integration steps and implement its handler:
 
 ```sh
 (
   set -e
-  for etapa in Code Struct Prototype Dispatch Events; do
-    ./start --no-ui project command-step demo_app --target native --confirm "$etapa"
+  for step in Code Struct Prototype Dispatch Events; do
+    ./start --no-ui project command-step demo_app --target native --confirm "$step"
   done
   ./start --no-ui project command-step demo_app --target native --line 'DEMO_APP_Data.Rate_Hz = Rate_Hz;'
   ./start --no-ui build --target native
@@ -141,14 +123,14 @@ Para confirmar cada alteração de SET_RATE e escrever a linha do tratador, exec
 )
 ```
 
-A última linha inclui `Rate set to 17 Hz` e a variação do contador. O catálogo vem da missão compilada. Para deixar a bancada livre, execute na raiz
+The response includes `Rate set to 17 Hz` and the command-counter change. The packet catalog comes from the compiled mission. To release the receiver and stop cFS:
 
 ```sh
 ./start --no-ui ground stop
 ./start --no-ui stop --target native
 ```
 
-**Outras ações.** `app` e `library` oferecem `list`, `rename`, `remove` e `delete`. A ação `remove` retira o módulo da missão e `delete` apaga seu código próprio. `project` reúne barramentos, dispositivos, modelos, comandos e telemetria. `signals` guarda a seleção de sensores, formas de onda e órbita. `logs` abre o console do alvo. `first-boot` executa as fases guiadas. `journey --reset` reinicia o percurso do alvo. Na placa, `setup` aceita host, usuário, porta e identidade SSH, e `connect` verifica a conexão. Compilar, executar e parar aceitam `--target physical` ou `--target qemu`. Consulte as opções na raiz.
+`app` and `library` provide `list`, `rename`, `remove` and `delete`. Removing a module from a mission preserves its sources; deleting a user module removes its sources. `project` manages buses, devices, models, commands and telemetry. `signals` saves sensor selections and waveforms. `logs` follows a target's console, `first-boot` runs the guided stages, and `journey --reset` resets that target's progress. Target operations also accept `--target qemu` and `--target physical`.
 
 ```sh
 ./start --no-ui --help
@@ -158,11 +140,11 @@ A última linha inclui `Rate set to 17 Hz` e a variação do contador. O catálo
 ./start --no-ui setup --help
 ```
 
-**Configuração local.** As variáveis a seguir têm prefixo `FLIGHT_STUDIO_`. `RUNTIME`, `NATIVE_DEVICES` e `EMULATOR_KEYS` escolhem diretórios. `CONTAINER`, `BUILDER` e `PLATFORM` selecionam o contêiner, a imagem de compilação e sua arquitetura. `HTTP_PORT`, `LOOPBACK`, `GUEST_HOST`, `SSH_PORT`, `QMP_PORT`, `COMMAND_PORT`, `GUEST_SSH_PORT`, `GUEST_QMP_PORT` e `GUEST_COMMAND_PORT` configuram a rede. `BOOT_TIMEOUT` e `SENSOR_TIMEOUT` definem limites em segundos. [Valores padrão](project/defaults.py)
+Local environment variables use the `FLIGHT_STUDIO_` prefix. `RUNTIME`, `NATIVE_DEVICES` and `EMULATOR_KEYS` select directories. `CONTAINER`, `BUILDER` and `PLATFORM` select the container, builder image and architecture. `HTTP_PORT`, `LOOPBACK`, `GUEST_HOST`, `SSH_PORT`, `QMP_PORT`, `COMMAND_PORT`, `GUEST_SSH_PORT`, `GUEST_QMP_PORT` and `GUEST_COMMAND_PORT` configure networking. `BOOT_TIMEOUT` and `SENSOR_TIMEOUT` are limits in seconds. See [defaults.py](project/defaults.py).
 
-## Fazer o mesmo sem o Flight Studio
+## Running NASA cFS directly
 
-Abra outro terminal em uma pasta vazia. Use o bundle oficial da NASA na mesma revisão que a bancada. O Makefile e as definições da missão já vêm no checkout.
+In a separate empty directory, obtain the official bundle at the revision used by the workbench:
 
 ```sh
 git clone https://github.com/nasa/cFS.git
@@ -175,7 +157,7 @@ cd build-native_std/exe/cpu1/
 ./core-cpu1
 ```
 
-Deixe esse processo aberto até aparecer `CFE_ES_Main entering OPERATIONAL state`. A partir da raiz desse checkout da NASA, em um segundo terminal, compile o emissor oficial e envie um NOOP à sample_app.
+Wait for `CFE_ES_Main entering OPERATIONAL state`. In another terminal, starting from that NASA checkout's root, build the official sender and send NOOP:
 
 ```sh
 cd tools/cFS-GroundSystem/Subsystems/cmdUtil
@@ -183,75 +165,59 @@ make
 ./cmdUtil --host=127.0.0.1 --port=1234 --pktid=0x1882 --cmdcode=0
 ```
 
-O console da CPU mostra o evento `SAMPLE: NOOP command`. A estação gráfica oficial permite ligar a telemetria e acompanhar o contador. Use **Start Command System**, **Enable Tlm**, informe o endereço da estação e abra **Start Telemetry System**. Encerre a CPU com Ctrl+C ao terminar. [Guia do cFS-GroundSystem](https://github.com/nasa/cFS-GroundSystem/blob/main/Guide-GroundSystem.md)
+The CPU console reports `SAMPLE: NOOP command`. NASA's graphical Ground System can enable telemetry and display the counter; follow its [Ground System guide](https://github.com/nasa/cFS-GroundSystem/blob/main/Guide-GroundSystem.md). Stop the CPU with Ctrl+C.
 
-Para iniciar Raspberry Pi OS diretamente, use uma versão do QEMU com a máquina `raspi4b`. O script do repositório mostra as opções na ordem em que são usadas.
+For a direct Raspberry Pi OS boot, [scripts/emulator.sh](scripts/emulator.sh) shows the writable disk, public key, ARM64 kernel, initramfs, DTB, `raspi4b` machine, serial console, QMP and user-network forwarding used by the platform. The guest telemetry destination must be reachable from QEMU's network.
 
-| Linhas | O que reproduzir em seu ambiente |
+## Repository layout
+
+| Path | Responsibility |
 | --- | --- |
-| 6–25 | Crie uma cópia gravável do disco qcow2. Instale a chave pública da sua conta no guest. Separe kernel ARM64, initramfs e DTB da mesma imagem. |
-| 27–30 | Prepare a árvore de dispositivos (DTB) e os modelos I²C da missão. |
-| 31–39 | Inicie `qemu-system-aarch64` com `-M raspi4b`, o kernel, a DTB, o initramfs, o cartão SD virtual e o console serial. |
-| 40–42 | Abra QMP, associe `usb-net` a uma rede de usuário e encaminhe uma porta TCP local para o SSH 22 do guest. Encaminhe a porta UDP de comandos para `ci_lab`. |
+| `start`, `stop.sh`, `scripts/` | CLI, Studio lifecycle, setup, builds and emulator startup. |
+| `project/` | Platform configuration, templates and mission generators. |
+| `cFS/`, `mission/` | Ignored local NASA checkout, mission definitions and build outputs. |
+| `hardware/` | Checks and execution on Native, QEMU and physical Pi. |
+| `ground_station/` | Packet catalog, UDP transport, events and decoding. |
+| `sensors/` | Signals, scenarios and device injection. |
+| `jobs/`, `journey/` | Logged operations and observed tutorial progress. |
+| `interface/server.py`, `jobs/service.py` | HTTP routes, session protection and infrastructure adapters. |
+| `interface/static/` | Browser views, navigation and animation. |
+| `interface/tests/` | Automated unit and browser regression checks. |
+| `validation/` | Technical evaluation procedures, raw observations and published results. |
 
-No guest, o destino de telemetria deve alcançar a estação de solo. O laboratório usa o endereço do host visto pela rede de usuário. [Script completo](scripts/emulator.sh) · [Configurações de compilação da NASA](https://github.com/nasa/cFS/tree/a4d305dc06fb7d468f5b45214d9f730b97d4bd77)
+## Tests
 
-## Estrutura do repositório
+Run Python regression checks from the repository root. JavaScript unit checks use Node.js and do not launch a browser:
 
-| Caminho | Responsabilidade |
-| --- | --- |
-| `start`, `scripts/` | Entrada de terminal, setup, compilação e partida da máquina virtual. |
-| `project/`, `mission/` | Configuração do Studio, geradores, definições de compilação e produtos de cada alvo. |
-| `cFS/` | Checkout da NASA. Ao criar uma aplicação, um HAL ou uma biblioteca, o Studio grava os fontes em `cFS/apps/<nome>` ou `cFS/libs/<nome>`. Os módulos distribuídos pela NASA aparecem ao lado como referência. |
-| `hardware/` | Verificações e execução em Linux, QEMU e Pi física. |
-| `ground_station/` | Catálogo de comandos, transporte UDP, eventos e decodificação de pacotes. |
-| `sensors/` | Sinais, órbita, cenários e transporte para os dispositivos. |
-| `jobs/`, `journey/` | Tarefas com log e registro de evidências por alvo. |
-| `interface/server.py`, `interface/backend/` | Camada HTTP, proteção da sessão e adaptação das chamadas à infraestrutura. |
-| `interface/static/` | Parte gráfica, rotas, telas e animações. |
-| `docs/design-pack/` | Referência de navegação, desenho, auditoria e resultados. |
+```sh
+python3 -m unittest discover -s interface/tests -p 'test_*.py'
+node --experimental-default-type=module --test --test-concurrency=1 interface/tests/*.mjs
+```
 
-## Testes
-
-Na raiz, com Node.js e npm instalados, prepare o navegador. O Playwright controla Chromium e lê o estado real da página.
+For browser navigation checks, install the pinned development dependencies and Chromium first:
 
 ```sh
 npm ci
 npx playwright install chromium
-./scripts/test
-```
-
-Para executar os grupos separadamente, na raiz, use
-
-```sh
-./scripts/test --unit
-./scripts/test --browser
-./scripts/test --follow-highlight
 ./scripts/nav-map --check
+./scripts/nav-map --verify-routes
 ```
 
-Para explorar os protótipos na raiz, execute o servidor abaixo e abra **http://127.0.0.1:8000/Welcome.html**. Os sete arquivos HTML são navegáveis.
+`scripts/nav-map` prints an inventory derived from current sources and rendered controls. Use `--output PATH` to save it outside the source tree. Browser inventory checks require an installed NASA checkout and use an isolated temporary mission. The [validation guide](validation/README.md) separates regression checks from measured technical results and links the reproducible evidence.
 
-```sh
-python3 -m http.server --bind 127.0.0.1 --directory docs/design-pack/design/preview 8000
-```
+## Troubleshooting
 
-[Critérios de aceite](docs/design-pack/09_ACCEPTANCE_TESTS.md) · [Resultados e capturas](docs/design-pack/RESULTS.md)
+| Symptom | Action |
+| --- | --- |
+| Studio's port is occupied by another application | Choose another port with `./start --ui --port 8766`. An existing Studio for this workspace is reused. |
+| Docker reports permission denied | Log out and back in after adding your account to the Docker group. |
+| QEMU starts slowly | Follow the serial console. ARM software emulation and initial image preparation can take several minutes. |
+| Guest SSH identity changed after recreating its disk | Restart this checkout's emulator so Studio can verify its container's key. On a physical Pi, verify the fingerprint on that board. |
+| No telemetry after a command | Connect the receiver, use the displayed return address in ENABLE_OUTPUT and permit UDP telemetry. Repeat after restarting cFS. |
+| Build reports that cFS is running | Stop cFS on the selected target before replacing its binaries. `./stop.sh` only stops the web server. |
+| Image preparation runs out of disk space | Free space in Docker storage and the checkout, preserving disks that contain your work. |
+| cFS reports a queue or CI_LAB bind error | Inspect the first console error, check POSIX queue limits and stop any other CPU using the command port before retrying. |
 
-## Problemas comuns
+## License and credits
 
-| Sintoma | Causa provável | Como resolver |
-| --- | --- | --- |
-| A interface diz que a porta está em uso. | Outro processo escuta na mesma porta. | Inicie na porta 8766 conforme a seção inicial. |
-| O programa oficial pede PyQt5 ou pyzmq. | A interface gráfica da NASA usa essas bibliotecas. | Para o programa da NASA, instale as dependências do guia oficial. A estação do Studio usa UDP da biblioteca padrão do Python. |
-| Docker dá erro de permissão após a instalação. | A sessão de login ainda tem os grupos antigos. | Saia da conta Linux e entre novamente antes de verificar Emulator. |
-| O emulador demora para subir. | Em um PC x86, o QEMU traduz instruções ARM em software. | Acompanhe o console serial. A primeira preparação da imagem pode levar dezenas de minutos. Os tempos medidos neste ambiente estão nos resultados. |
-| A chave SSH mudou após recriar o disco. | O guest novo tem outra identidade. | Pare e inicie o emulador deste checkout. O Studio verifica a chave do próprio contêiner e atualiza `board/known_hosts`. Em uma Pi física, confirme a impressão digital na placa. |
-| Enviei um comando e a telemetria não chegou. | Destino incorreto, receptor desconectado ou firewall na porta UDP. | Conecte a estação, informe em ENABLE_OUTPUT o endereço exibido e permita a telemetria na porta UDP 2234. Repita ao reiniciar o cFS. |
-| A compilação diz que o cFS já está rodando. | O processo usa os binários que seriam substituídos. | Use **Stop cFS**, depois **Build cFS** e **Run cFS**. |
-| O disco enche ao preparar a imagem. | Docker, o disco da Pi e o cache de compilação precisam de espaço. | Libere espaço no volume do Docker e no checkout ou use Native. Preserve os discos que contêm seu trabalho. |
-| O console mostra erro de fila ou de bind de CI_LAB. | Limites POSIX de filas ou outra CPU usando a porta de comando. | Confira a primeira linha de erro no console. Pare a CPU que ocupa a porta ou corrija o limite de filas da sua conta. Depois use **Retry first boot**. |
-
-## Licença e créditos
-
-O Flight Studio e os componentes cFS da NASA usam Apache 2.0. A simulação usa QEMU e a imagem Linux do projeto Raspberry Pi OS. Cada componente conserva seus avisos e sua própria licença. [Licença do repositório](LICENSE) · [NASA cFS](https://github.com/nasa/cFS) · [QEMU](https://www.qemu.org/) · [Raspberry Pi OS](https://www.raspberrypi.com/software/)
+Flight Studio and NASA cFS use Apache 2.0. QEMU, Raspberry Pi OS and bundled dependencies retain their own notices and licenses. [Repository license](LICENSE) · [NASA cFS](https://github.com/nasa/cFS) · [QEMU](https://www.qemu.org/) · [Raspberry Pi OS](https://www.raspberrypi.com/software/)
