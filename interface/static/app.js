@@ -4,7 +4,7 @@ import {bindWorkspace, displayTarget, historyEntry, navigate, recordRoute, redir
 import {api, readJourney} from './api.js';
 import {commandLaunchStep} from './command-launch.js';
 import {openAppWizard} from './app-wizard.js';
-import {mountMissionLesson} from './mission-lesson.js';
+import {mountFirstContact} from './first-contact.js';
 import {mountGroundLesson} from './ground-lesson.js';
 import {mountCommandLesson} from './command-lesson.js';
 import {mountSignalLesson} from './signal-lesson.js';
@@ -27,7 +27,7 @@ import {layoutArchitecture} from './architecture.js';
 import {sensorAvailability,renderSimulationBoard,renderSimulationSettings,chartPageForDevice,changePattern,updateSignalValues,selectSeries} from './simulation.js';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const state = {showLibraries:localStorage.getItem('mission.showLibraries')!=='false',workspace:null, hardware:null, ground:null, catalog:null, catalogTarget:null, catalogLoading:false, groundBusy:false, groundError:'', groundApp:'', mapMode:'3d', view:workspaceRoute().view, files:new Map(), path:null, target:null, sensorless:false, jobs:[], selectedJob:null, selectedDevice:null, inspected:null, archApp:'', simulation:null,simulationDirty:false, groundTab:'commands', groundSelection:null, groundPacket:null, terminalStream:null, history:new Map()};
+const state = {showLibraries:localStorage.getItem('mission.showLibraries')!=='false',workspace:null, hardware:null, ground:null, catalog:null, catalogTarget:null, catalogLoading:false, groundBusy:false, groundError:'', groundApp:'', mapMode:'2d', view:workspaceRoute().view, files:new Map(), path:null, target:null, sensorless:false, jobs:[], selectedJob:null, selectedDevice:null, inspected:null, archApp:'', simulation:null,simulationDirty:false, groundTab:'commands', groundSelection:null, groundPacket:null, terminalStream:null, history:new Map()};
 let boardRenderer=null;
 const treeStates=new Map(), lastFiles=new Map();
 let treeRequest=0;
@@ -351,7 +351,7 @@ function renderToolbar(){
  const profile=profiles.find(profile=>profile.board===project.board&&profile.os===project.os),job=operation(),busy=!!job||state.profileBusy||!state.hardware;
  const targets=['native',...(profile?.targets||[])];
  boardSelector.update(boards,state.board||'',busy);osSelector.update(systems,state.os||'',busy||!state.board);
- for(const target of document.querySelectorAll('.target-switch button')){target.disabled=busy;target.setAttribute('aria-pressed',String(state.target===target.dataset.target));}
+ for(const target of document.querySelectorAll('.target-switch button')){const locked=target.dataset.target!=='native'&&!state.remoteUnlocked;target.disabled=busy||locked;target.title=locked?'Complete first contact on Native to unlock this target':'';target.setAttribute('aria-pressed',String(state.target===target.dataset.target));}
  const boot=$('.boot-action'),physical=state.target==='physical',native=state.target==='native';
  $('.profile-selectors').hidden=native;
  $('#native-host').hidden=!native;
@@ -544,7 +544,7 @@ function showFirstBoot(){
 function leaveBoot(){
  bootCleanup?.();bootCleanup=null;bootTarget=null;
 }
-const activities = {app: mountMissionLesson, command: mountCommandLesson,
+const activities = {event: mountFirstContact, command: mountCommandLesson,
  send: mountGroundLesson, sensor: mountSignalLesson, test: mountSignalLesson};
 let activity;
 function guidedView() {
@@ -889,8 +889,9 @@ async function loadGround(request){
 }
 async function groundConnection(connect){
  if(state.groundBusy)throw Error('Connection in progress');
- state.groundBusy=true;state.groundError='';renderView();
+ state.groundBusy=true;state.groundError='';
  try{
+  renderView();
   const snapshot=await api(connect?'ground/start':'ground/stop',connect?{target:state.target}:{});
   updateGround(connect?snapshot:{...snapshot,target:state.ground?.target});
  }catch(error){state.groundError=error.message;throw error;}
@@ -950,8 +951,9 @@ let workspaceReady=false, viewRequest=0;
 async function openFlightStep(step,entry={}){
  if(!workspaceReady)return;
  state.commandLaunch=null;
+ if(step==='event')terminal.show(false);
  if(step==='app'){
-  state.archApp='';state.archLibrary='';state.archOverview=true;state.mapMode=state.workspace.apps.some(app=>app.managed&&!app.example)?'3d':'2d';state.mapSection='mission';
+  state.archApp='';state.archLibrary='';state.archOverview=true;state.mapMode='2d';state.mapSection='mission';state.missionDraft=null;
  }
  if(step==='code'){state.commandTask=null;return selectView('code',entry.file,entry.line,entry.inspection||null);}
  if(step==='sensor'||step==='test'||step==='simulation')state.signalView=step==='test'?'test':entry.signalTab||'signals';
@@ -971,6 +973,8 @@ async function followLocation(){
  if(target && target!==state.target)adoptTarget(target);
  const route=workspaceRoute(), snapshot=await readJourney(state.target);
  if(request!==navigationRequest)return;
+ state.remoteUnlocked=snapshot.remote_unlocked;
+ if(target && target!=='native' && !state.remoteUnlocked){navigate(stepUrl('target'),true);return;}
  const redirect=redirectForStep(route.id,snapshot);
  if(redirect){navigate(redirect,true);return;}
  recordRoute(route.id,historyEntry(),true);
@@ -980,6 +984,7 @@ bindWorkspace(followLocation, error => feedback(error.message,true));
 async function selectView(view,sourceFile,sourceLine,inspection=null,route=view){
  const request=++viewRequest;
  ++fileOpenRequest;++treeRequest;
+ if(view==='ground' && route==='ground' && state.activity==='event' && !state.remoteUnlocked)route='event';
  if(view==='communication'){view='ground';route='ground';state.groundMode='system';}
  if(view!=='ground' && state.view==='ground' && state.ground?.first_flight?.answer)state.coachDismissed=true;
  if(view!==state.view && state.groundError){state.groundError='';feedback('');}
@@ -1458,6 +1463,8 @@ async function openWorkspace(){
   const resolved=target || workspaceTarget(null,state.hardware?.execution || {});
   const journey=await readJourney(resolved);
   if(request!==openingRequest)return;
+  state.remoteUnlocked=journey.remote_unlocked;
+  if(resolved && resolved!=='native' && !state.remoteUnlocked){navigate(stepUrl('target'),true);return;}
   const redirect=redirectForStep(route.id,journey);
   if(redirect){navigate(redirect,true);return;}
   if(!resolved && journey.steps[route.id]){navigate(stepUrl('target'),true);return;}

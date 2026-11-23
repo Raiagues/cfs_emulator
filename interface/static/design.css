@@ -646,7 +646,10 @@
 .flight-count output {font:400 var(--fs-caption) var(--fs-mono);color:var(--fs-muted)}
 .flight-stops {flex:1;min-width:0}
 .flight-line {height:2px;flex:1;min-width:4px;border-radius:var(--fs-radius-pill);background:var(--fs-line)}
-.flight-line.complete {background:color-mix(in srgb,var(--fs-success) 62%,var(--fs-line))}
+.flight-line.complete {background:var(--fs-success)}
+.flight-line.failed {background:var(--fs-danger,#fc6066)}
+.flight-stops [data-flight].failed .flight-number {border-color:var(--fs-danger,#fc6066);color:var(--fs-danger,#fc6066)}
+.flight-stops [data-flight].failed {color:var(--fs-danger,#fc6066)}
 .flight-stops [data-flight] {gap:6px;min-width:0;padding:3px 9px 3px 3px;border-radius:var(--fs-radius-pill);text-decoration:none;
   font-size:var(--fs-caption);font-weight:400;color:var(--fs-muted)}
 .flight-stops a:hover {background:var(--fs-raised);color:var(--fs-text)}
@@ -1060,7 +1063,7 @@ body.is-operating{--operation-height:28px}
 .topbar .toolbar-action.is-running .icon{border:2px solid color-mix(in srgb, var(--fs-line) 15%, transparent);border-top-color:var(--fs-accent);border-radius:var(--fs-radius-pill);animation:operation-spin .85s linear infinite}
 @media(prefers-reduced-motion:reduce){.operation-spinner,.topbar .toolbar-action.is-running .icon{animation:none}}
 #show-explorer {background:var(--fs-raised);border:1px solid var(--fs-line);border-radius:var(--fs-radius-control)}
-.rail-button.active {background:color-mix(in srgb, var(--fs-accent) 8%, transparent);color:var(--fs-accent);box-shadow:inset 2px 0 var(--fs-accent)}
+.rail-button.active {background:color-mix(in srgb, var(--fs-accent) 8%, transparent);color:var(--fs-accent);box-shadow:none}
 #file-query {font-size:var(--fs-label);background:var(--fs-panel);border:1px solid var(--fs-line);border-radius:var(--fs-radius-control);color:var(--fs-text)}
 #file-results {color:var(--fs-muted);font-size:var(--fs-caption);line-height:1.6}
 .file-result {text-align:left;border:0;background:none;color:var(--fs-muted);border-radius:var(--fs-radius-control)}

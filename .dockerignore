@@ -16,6 +16,7 @@
 !project/qemu/models/
 !project/qemu/models/*.json
 !project/model.py
+!project/flight_sources.py
 !project/sensor_models.py
 !project/drivers/
 !project/drivers/models/

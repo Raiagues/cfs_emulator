@@ -222,7 +222,9 @@ function renderChecks() {
 
 function controls() {
   for (const card of document.querySelectorAll('.target-option')) {
-    card.disabled = !settings || busy || boardVisit && card.dataset.target !== 'physical';
+    const locked = card.dataset.target !== 'native' && !settings?.remote_unlocked;
+    card.disabled = !settings || busy || locked || boardVisit && card.dataset.target !== 'physical';
+    card.title = locked ? 'Complete first contact on Native to unlock this target' : '';
     card.setAttribute('aria-pressed', String(card.dataset.target === target));
   }
   for (const field of form.querySelectorAll('#configuration :is(input,select,button)')) {
@@ -465,8 +467,8 @@ $('#targets').addEventListener('click', async event => {
   try {
     if (!boardVisit) {
       const choice = await api('hardware/target', {target:mode});
+      settings = await api('infrastructure');
       settings.target = choice.target;
-      settings.target_saved = true;
     }
     dirty = false;
     target = mode;
@@ -554,7 +556,15 @@ form.addEventListener('submit', async event => {
   event.preventDefault();
   if ($('#enter').disabled || $('#enter').hidden) return;
   if (!boardVisit) {
-    navigate(stepUrl('boot', location, target));
+    if (busy) return;
+    busy = true;
+    controls();
+    try {
+      const job = await api('job', {action:'first-boot', options:{target}});
+      sessionStorage.setItem('flight.boot.' + target, job.id);
+      navigate(stepUrl('boot', location, target));
+    } catch (error) { showError(error); }
+    finally { busy = false; controls(); }
     return;
   }
   const board=boardAction();
@@ -580,6 +590,10 @@ form.addEventListener('submit', async event => {
     if (redirect) {navigate(redirect, true); return;}
   }
   target = boardVisit ? 'physical' : settings.target;
+  if (target && target !== 'native' && !settings.remote_unlocked) {
+    await api('hardware/target', {target:'native'});
+    target = settings.target = 'native';
+  }
   if(boardVisit) {
     onUpdate(['hardware','jobs','journey'],()=>readBoard().catch(showError));
     await readBoard();

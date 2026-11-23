@@ -23,6 +23,17 @@ class RuntimeStateTest(unittest.TestCase):
             self.assertIsNone(reopened.selection())
             self.assertEqual(json.loads(old.read_text())['target'], 'qemu')
 
+    def test_reader_keeps_committed_state_during_an_inflight_write(self):
+        with TemporaryDirectory() as temp:
+            state = RuntimeState(Path(temp))
+            state.choose(Selection('native'))
+            with ThreadPoolExecutor(max_workers=1) as pool:
+                with state.writer() as writer:
+                    state.store(writer, 'target.json', {'target': 'physical'})
+                    observed = pool.submit(RuntimeState(temp).selection).result(timeout=2)
+                    self.assertEqual(observed, Selection('native'))
+            self.assertEqual(state.selection(), Selection('physical'))
+
     def test_concurrent_record_updates_keep_each_observation(self):
         with TemporaryDirectory() as temp:
             def record(index):

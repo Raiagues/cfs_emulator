@@ -53,6 +53,13 @@ class Laboratory:
                 raise ValueError('The server is shutting down.')
             destination = tuple(sorted(connection.items())) if connection else None
             key = (action, target, kind, destination, options.get('device'), options.get('model'), options.get('scenario'), journal_instance)
+            if action == 'first-boot':
+                key += (options.get('board'), options.get('os'), options.get('sensorless', False))
+                for prior in reversed(self.jobs.values()):
+                    if prior['action'] == 'first-boot' and prior['status'] == 'running' and not prior.get('operation_complete'):
+                        if prior['key'] == key:
+                            return {'id': prior['id'], 'existing': True}
+                        raise ValueError('Another first boot is in progress.')
             if journal_instance:
                 for prior in reversed(self.jobs.values()):
                     if prior['key'] == key and (prior['status'] == 'running' or time.time() - prior.get('ended', 0) < 30):

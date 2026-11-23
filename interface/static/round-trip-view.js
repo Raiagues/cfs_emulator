@@ -31,7 +31,7 @@ function outputOff(state) {
   if(stationState(state).first_flight?.telemetry)return false;
   const run=(state.jobs||[]).findLast(job=>job.target===state.target && ['run','first-boot','stop'].includes(job.action) && job.status!=='failed');
   if(!run || run.action==='stop')return false;
-  const stateLine=run.lines.findLast(line=>/Tlm output suppressed|Awaiting enable command|TO telemetry output enabled/i.test(line));
+  const stateLine=run.lines?.findLast(line=>/Tlm output suppressed|Awaiting enable command|TO telemetry output enabled/i.test(line));
   return Boolean(stateLine && !/TO telemetry output enabled/i.test(stateLine));
 }
 

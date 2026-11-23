@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="/simulation.css">
   <link rel="stylesheet" href="/editor-guide.css">
   <link rel="stylesheet" href="/ground-workbench.css">
+  <link rel="stylesheet" href="/first-contact.css">
   <script src="/theme.js" defer></script>
 </head>
 <body class="workspace-loading no-terminal no-tree no-editor">
@@ -55,10 +56,10 @@
   <main class="studio" id="studio">
     <nav class="activity-rail rail" aria-label="Project areas">
       <div>
+        <button class="rail-button" data-view="ground" title="Ground station" aria-label="Ground station"><span class="icon" data-icon="antenna"></span></button>
         <button class="rail-button" data-view="architecture" title="Architecture" aria-label="Architecture"><span class="icon" data-icon="workflow"></span></button>
         <button class="rail-button" data-view="bench" title="Hardware" aria-label="Hardware"><span class="icon" data-icon="circuit"></span></button>
         <button class="rail-button" data-view="code" title="Code" aria-label="Code"><span class="icon" data-icon="code"></span></button>
-        <button class="rail-button" data-view="ground" title="Ground station" aria-label="Ground station"><span class="icon" data-icon="antenna"></span></button>
         <button class="rail-button" data-view="simulation" title="Synthetic data" aria-label="Synthetic data"><span class="icon" data-icon="wave"></span></button>
         <button class="rail-button" id="toggle-terminal" title="Terminal · Ctrl+`" aria-label="Terminal" aria-controls="terminal-panel" aria-expanded="false"><span class="icon" data-icon="terminal"></span></button>
       </div>

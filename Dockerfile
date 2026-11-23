@@ -85,7 +85,7 @@ RUN cd /tmp/qemu && patch -p1 < /tmp/qemu-signed.patch && \
 
 # Reuse the base build when a student adds a register model.
 COPY project/qemu/ /tmp/studio/project/qemu/
-COPY project/model.py project/sensor_models.py /tmp/studio/project/
+COPY project/model.py project/flight_sources.py project/sensor_models.py /tmp/studio/project/
 COPY project/drivers/models/ /tmp/studio/project/drivers/models/
 RUN python3 /tmp/studio/project/qemu/generate.py /tmp/qemu/hw/sensor && \
     ninja -C /tmp/qemu/build -j4 qemu-system-aarch64 && \

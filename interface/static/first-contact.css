@@ -1,0 +1,92 @@
+html[data-page=studio] body {display:flex;flex-direction:column;height:100dvh;min-height:0}
+html[data-page=studio] body > .topbar,html[data-page=studio] #flight-guide {flex-shrink:0}
+html[data-page=studio] .studio#studio {flex:1 1 0;height:auto;min-height:0}
+body[data-activity=event] #view {height:100%;padding:0;min-height:0}
+body[data-activity=event] .activity-view {flex:1;overflow:hidden}
+.contact-layout {display:grid;grid-template-columns:clamp(186px,16vw,246px) minmax(0,1fr) clamp(205px,21vw,302px);width:100%;height:100%;min-height:0;color:var(--fs-text);font:13px var(--fs-sans);background:var(--fs-panel)}
+.contact-layout * {box-sizing:border-box}
+.contact-layout button {cursor:pointer}
+.contact-layout button:disabled {cursor:default;opacity:.6}
+.contact-layout :is(.contact-browser,.contact-telemetry) {min-width:0;background:var(--fs-surface);overflow:auto}
+.contact-browser {border-right:1px solid var(--fs-line)}
+.contact-telemetry {border-left:1px solid var(--fs-line)}
+.contact-layout header,.contact-command small,.contact-stages code,.contact-tree,.contact-size,.contact-metric,.contact-sources code {font-family:var(--fs-mono)}
+.contact-layout :is(.contact-browser,.contact-telemetry)>header,.contact-trip>header,.contact-history>header {display:flex;align-items:center;justify-content:space-between;gap:8px;padding:13px 15px;color:var(--fs-muted);font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase}
+.contact-layout :is(.contact-browser,.contact-telemetry)>header {border-bottom:1px solid var(--fs-line)}
+.contact-layout header small {font-size:10px;letter-spacing:0;text-transform:none}
+.contact-browser>header small {color:var(--fs-success)}
+.contact-tree {padding:8px 7px 2px}
+.contact-tree strong,.contact-tree button {width:100%;display:flex;align-items:center;gap:7px;padding:6px 8px;text-align:left;font:12px var(--fs-mono)}
+.contact-tree strong {font-weight:600}
+.contact-tree small {margin-left:auto;color:var(--fs-muted);font-size:10px}
+.contact-tree button {border:0;border-radius:4px;background:transparent;color:var(--fs-muted);padding-left:18px}
+.contact-tree button[aria-pressed=true] {color:var(--fs-accent);background:var(--fs-raised)}
+.contact-tree button svg,.contact-send svg {width:14px;height:14px}
+.contact-main {display:flex;min-width:0;min-height:0;flex-direction:column;align-items:stretch;gap:13px;padding:17px clamp(12px,1.5vw,23px) 30px;overflow:auto}
+.contact-main>* {flex-shrink:0}
+.contact-stages {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.contact-stages>div {display:flex;align-items:flex-start;gap:10px;min-width:0;padding:12px 13px;border:1px solid transparent;background:var(--fs-surface);border-radius:6px;color:var(--fs-muted)}
+.contact-stages>div[data-fact=current] {color:var(--fs-text);border-color:var(--fs-accent)}
+.contact-stages>div[data-fact=done] {background:color-mix(in srgb,var(--fs-success) 10%,var(--fs-surface));color:var(--fs-success)}
+.contact-stages i {display:grid;place-items:center;width:21px;height:21px;flex:none;border:1px solid var(--fs-line);border-radius:50%;font:11px var(--fs-mono)}
+.contact-stages div[data-fact=done] i {background:color-mix(in srgb,var(--fs-success) 24%,transparent)}
+.contact-stages span {font-weight:600;min-width:0}
+.contact-stages code {display:block;margin-top:3px;color:var(--fs-muted);font-size:10px;font-weight:400;overflow-wrap:anywhere}
+.contact-command,.contact-trip,.contact-history {background:var(--fs-surface);border:1px solid var(--fs-line);border-radius:6px}
+.contact-command {display:grid;grid-template-columns:minmax(130px,.8fr) minmax(130px,1.4fr) auto auto;align-items:center;gap:13px;padding:13px 17px}
+.contact-command small,.contact-command>div>span,.contact-command label small {display:block;color:var(--fs-muted);font-size:10px}
+.contact-command h2 {margin:4px 0;font:600 clamp(16px,1.5vw,22px) var(--fs-mono);line-height:1.18;overflow-wrap:anywhere}
+.contact-command>div>span {font:11px var(--fs-sans)}
+.contact-command label,.no-parameters {display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 10px;min-width:0;min-height:49px;border:1px solid var(--fs-line);border-radius:5px;background:var(--fs-panel)}
+.contact-command label strong {font:600 11px var(--fs-mono)}
+.contact-command label small {font:9px var(--fs-mono);margin-top:2px}
+.contact-command input {width:48%;min-width:86px;padding:7px;background:var(--fs-surface);color:var(--fs-text);border:1px solid var(--fs-line);border-radius:4px;font:12px var(--fs-mono)}
+.no-parameters {border-style:dashed;justify-content:flex-start;color:var(--fs-muted)}
+.contact-size {display:grid;place-content:center;min-width:56px;height:47px;text-align:center;color:var(--fs-muted);font-size:10px;border:1px solid var(--fs-line);border-radius:5px}
+.contact-command .contact-size span {color:transparent;font:22px/15px var(--fs-mono);letter-spacing:1px;background:linear-gradient(90deg,#71a1df 26%,#ad8bd8 26% 50%,#e9b5cb 50% 75%,#29bda0 75%);background-clip:text}
+.contact-layout .contact-send {display:flex;align-items:center;justify-content:center;gap:9px;min-width:94px;min-height:49px;padding:0 14px;border:1px solid var(--fs-accent);border-radius:6px;background:var(--fs-accent);color:var(--fs-on-accent,#20190e);font-weight:650}
+.contact-send:focus-visible {outline:3px solid var(--fs-accent);outline-offset:3px}
+.contact-note {margin:0;color:var(--fs-muted);font-size:12px}
+.contact-note[data-error=true] {color:var(--fs-danger,#f76368)}
+.contact-trip {padding:0 15px 8px}
+.contact-trip>header {padding:13px 0 5px}
+.contact-trip header>span {display:flex;align-items:center;gap:6px;letter-spacing:0;text-transform:none}
+.contact-trip header i {display:inline-block;width:16px;height:2px;background:var(--fs-accent)}
+.contact-trip header i+i {margin-left:7px;background:var(--fs-success)}
+.visual svg.contact-svg {display:block;width:100%;height:auto;min-height:204px;max-height:350px;font:12px var(--fs-mono);stroke:none;fill:none}
+.contact-svg text {stroke:none;fill:var(--fs-text)}
+.contact-svg .area-label,.contact-svg .passive,.contact-svg .port-label,.contact-svg .node-note,.contact-svg .producer {fill:var(--fs-muted);font-size:10px}
+.contact-svg .flight-area {stroke:var(--fs-line);stroke-dasharray:4 4;fill:transparent}
+.contact-svg .software-bus,.contact-svg .contact-node rect {fill:var(--fs-panel);stroke:var(--fs-line)}
+.contact-svg .contact-node svg {color:var(--fs-muted);stroke:currentColor;fill:none}
+.contact-svg .command-route,.contact-svg .return-route {fill:none;stroke-width:2}
+.contact-svg .command-route {stroke:color-mix(in srgb,var(--fs-accent) 55%,var(--fs-line))}
+.contact-svg .return-route {stroke:color-mix(in srgb,var(--fs-success) 50%,var(--fs-line))}
+.contact-svg .contact-dot {fill:var(--fs-accent);stroke:var(--fs-accent);stroke-width:6;stroke-opacity:.25}
+.contact-svg .contact-dot.down {fill:var(--fs-success);stroke:var(--fs-success)}
+.contact-playback {display:flex;align-items:center;gap:9px;min-height:39px;background:var(--fs-panel);border-radius:5px;padding:6px 10px}
+.play-bars {display:flex;gap:3px}.play-bars i {width:11px;height:3px;background:var(--fs-line);border-radius:2px}.play-bars i.on {background:var(--fs-accent)}
+.contact-playback [data-caption] {flex:1;font-size:11px}
+.contact-playback button,.contact-empty button,.contact-next {background:var(--fs-panel);color:var(--fs-accent);border:1px solid var(--fs-line);border-radius:4px;padding:4px 9px}
+.contact-playback button[hidden] {display:none}
+.contact-sources {padding:5px 1px 0;color:var(--fs-muted);font-size:10px}
+.contact-sources>summary {cursor:pointer;width:max-content}
+.contact-sources>span,.contact-sources>code {display:block;overflow-wrap:anywhere;margin:5px}
+.contact-history {padding:0 13px 12px}
+.contact-history>header {justify-content:flex-start;padding:11px 0}
+.contact-history>header span {margin-left:auto;margin-right:12px;text-transform:none;letter-spacing:0}
+.contact-history>div:not(.empty-history) {display:grid;grid-template-columns:minmax(110px,1fr) auto minmax(120px,1.5fr);gap:12px;align-items:center;border-top:1px solid var(--fs-line);padding:9px 0;font:11px var(--fs-mono)}
+.history-dots {color:var(--fs-success)}.contact-history .empty-history {height:17px;border:1px dashed var(--fs-line);border-radius:3px}
+.contact-empty,.contact-telemetry>p,.contact-telemetry>section {margin:13px}
+.contact-empty {display:grid;justify-items:start;gap:10px;border:1px dashed var(--fs-line);border-radius:5px;padding:19px 13px}
+.contact-empty>svg {width:20px;height:20px;color:var(--fs-muted)}
+.contact-empty strong {font-size:12px}.contact-empty button {font:inherit}
+.contact-telemetry h3 {display:flex;align-items:center;justify-content:space-between;gap:6px;font:600 12px var(--fs-mono);margin:13px 0 6px}
+.contact-telemetry h3 small {font-size:9px;color:var(--fs-muted)}
+.contact-metric {display:flex;align-items:center;justify-content:space-between;border:1px solid var(--fs-line);padding:10px;border-radius:4px;margin:5px 0}
+.contact-next {align-self:flex-end;text-decoration:none}
+body[data-view=architecture] .mission-map[data-mode="2d"] {container-type:inline-size;overflow:auto}
+body[data-view=architecture] #view,body[data-view=architecture] .architecture-surface,body[data-view=architecture] .architecture-scroll {flex:1;min-height:0}
+@media(max-width:1080px){.contact-layout{grid-template-columns:160px minmax(0,1fr) 183px}.contact-command{grid-template-columns:minmax(100px,.7fr) minmax(115px,1fr) auto;gap:7px;padding:10px}.contact-size{display:none}.contact-main{padding:12px}.contact-command label{flex-wrap:wrap}.contact-command input{flex:1}.contact-stages>div{padding:8px;gap:4px}}
+@media(max-width:790px){.contact-layout{height:100%;grid-template-columns:125px minmax(0,1fr);grid-template-rows:auto auto;overflow:auto}.contact-main{overflow:visible}.contact-telemetry{grid-column:2}.contact-stages code{display:none}.contact-history>header span{display:none}.contact-history>div:not(.empty-history){grid-template-columns:1fr 1fr}.history-dots{display:none}}
+@media(max-width:545px){.contact-layout{display:block}.contact-browser{display:none}.contact-command{grid-template-columns:1fr auto}.contact-command>div:first-child{grid-column:1/-1}.contact-stages span{font-size:11px}.contact-svg{min-height:145px!important}.contact-telemetry{border-top:1px solid var(--fs-line)}}

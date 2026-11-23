@@ -45,6 +45,62 @@ class JobStreamTest(unittest.TestCase):
                 self.assertEqual(frames[-1]['status'], 'succeeded')
                 self.assertEqual(next(app.job_updates(ident, 2))['lines'], [])
 
+
+    def test_first_boot_reconnect_reuses_one_operation(self):
+        with TemporaryDirectory() as temp:
+            app = Laboratory(Path(temp))
+            self.addCleanup(app.close)
+            entered, release = Event(), Event()
+
+            def boot(record, options, emit):
+                entered.set()
+                if not release.wait(5):
+                    raise RuntimeError('test boot did not receive release')
+                return {'booted': True}
+
+            options = {'target': 'physical', 'board': 'raspi4b', 'os': 'raspios'}
+            connection = {'host': 'pi.local', 'port': 22, 'user': 'pi'}
+            with patch.object(app.hardware, 'connection', return_value=connection), \
+                    patch.object(app, '_execute_job', side_effect=boot) as execute:
+                ident = app.job('first-boot', options)['id']
+                try:
+                    self.assertTrue(entered.wait(3))
+                    again = app.job('first-boot', dict(options, sensorless=False))
+                    self.assertEqual(again, {'id': ident, 'existing': True})
+                    for change in ({'sensorless': True}, {'board': 'another-board'}, {'os': 'another-os'}):
+                        with self.subTest(change=change), self.assertRaisesRegex(ValueError, 'first boot'):
+                            app.job('first-boot', dict(options, **change))
+                    with self.assertRaisesRegex(ValueError, 'first boot'):
+                        app.job('first-boot', {'target': 'qemu'})
+                    self.assertEqual(execute.call_count, 1)
+                finally:
+                    release.set()
+                frames = list(app.job_updates(ident))
+                self.assertEqual(frames[-1]['status'], 'succeeded')
+
+    def test_monitor_recovers_after_a_transient_database_lock(self):
+        import sqlite3
+        from types import SimpleNamespace
+        from unittest.mock import Mock
+        from jobs.monitor import Changes, HardwareMonitor
+        with TemporaryDirectory() as temp:
+            root = Path(temp)
+            expected = {'builds': {'native': {'fingerprint': 'ready'}}}
+            status = Mock(side_effect=[sqlite3.OperationalError('database is locked'), expected])
+            hardware = SimpleNamespace(status=status, journey=SimpleNamespace(path=root/'journey'),
+                                       state=SimpleNamespace(database=root/'runtime'))
+            monitor = HardwareMonitor(hardware, Changes(), ttl=300)
+            try:
+                with self.assertRaisesRegex(ValueError, 'database is locked'):
+                    monitor.snapshot()
+                self.assertTrue(monitor.thread.is_alive())
+                monitor.invalidate()
+                with monitor.condition:
+                    self.assertTrue(monitor.condition.wait_for(lambda: monitor.value == expected, timeout=3))
+                self.assertEqual(monitor.snapshot(), expected)
+            finally:
+                monitor.close()
+
     def test_status_probe_is_shared_until_invalidated(self):
         from types import SimpleNamespace
         from jobs.monitor import Changes, HardwareMonitor

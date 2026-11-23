@@ -103,6 +103,8 @@ class Store:
 
     def snapshot(self, target):
         state = derive(target, self.events(target))
+        native = state if target == "native" else derive("native", self.events("native"))
+        state["remote_unlocked"] = native["steps"]["event"]["done"]
         state["optional_board"] = (state["current"] == "board" and target != "physical"
                                    and not self.references("physical", "target"))
         return state

@@ -1,4 +1,5 @@
 """Share live hardware reads and change notifications between subscribers."""
+import sqlite3
 import threading
 import time
 
@@ -85,7 +86,7 @@ class HardwareMonitor:
             try:
                 value = self.hardware.status()
                 error = None
-            except (OSError, ValueError, RuntimeError) as exc:
+            except (OSError, ValueError, RuntimeError, sqlite3.OperationalError) as exc:
                 value, error = None, exc
             with self.condition:
                 changed = value != self.value or str(error) != str(self.error)
@@ -97,6 +98,11 @@ class HardwareMonitor:
             for topic, path in paths.items():
                 try:
                     stamp = path.stat().st_mtime_ns
+                    wal = path.with_name(path.name + '-wal')
+                    try:
+                        stamp = max(stamp, wal.stat().st_mtime_ns)
+                    except FileNotFoundError:
+                        pass
                 except FileNotFoundError:
                     stamp = None
                 if stamp != stamps.get(topic):

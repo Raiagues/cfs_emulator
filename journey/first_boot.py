@@ -102,8 +102,8 @@ def execute(studio, record, options, emit):
     resume_emulator = target == "qemu" and hardware._qemu_running() is True
     if resume_emulator:
         hardware.verify_running_emulator(emit, cancel)
-    hardware.assert_can_start(target, record.get("connection"))
     studio.ground.stop()
+    hardware.stop_before_first_boot(target, record.get("connection"), emit, cancel)
     phase("build")
     build = hardware.execute("build", emit, cancel=cancel, reuse_build=resume_emulator, **options)
     if cancel.is_set():

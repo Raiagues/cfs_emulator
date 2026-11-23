@@ -259,7 +259,17 @@ class Handler(BaseHTTPRequestHandler):
                     raise ValueError('Stop synthetic data before changing its session settings')
                 result = app.workspace.save_simulation(body.get('settings'), body.get('expected_hash'))
             elif path == '/api/hardware/target':
-                result = app.hardware.select_target(body.get('target'), board_visit=body.get('use_board') is True)
+                target = body.get('target')
+                if target in ('physical', 'qemu'):
+                    if not app.hardware.journey.snapshot('native')['remote_unlocked']:
+                        raise ValueError('Complete first contact on Native to unlock Emulator and Board.')
+                    config = app.workspace.model.load_config(app.hardware.root)
+                    profiles = [p for p in app.hardware.profiles() if target in p['targets']]
+                    if not any((p['board'], p['os']) == (config['board'], config['os']) for p in profiles):
+                        if not profiles:
+                            raise ValueError('No supported board and operating system for this target.')
+                        app.workspace.select_profile(profiles[0]['board'], profiles[0]['os'], hardware=app.hardware)
+                result = app.hardware.select_target(target, board_visit=body.get('use_board') is True)
             elif path == '/api/hardware/model':
                 from project.sensor_models import register
                 result = register(app.workspace.root, body)

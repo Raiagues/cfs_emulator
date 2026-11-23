@@ -16,6 +16,33 @@ class BootTest(unittest.TestCase):
         self.hardware = HardwareManager(Path(project.name))
         self.job = {"id": "run-1", "target": "native", "action": "first-boot", "phase": "build"}
 
+
+    def test_first_boot_stops_managed_instances_before_rechecking(self):
+        from unittest.mock import Mock
+        board = {'host': 'pi.local', 'port': 22, 'user': 'pi'}
+        checks = [('native', None, {'running': True}),
+                  ('qemu', None, {'running': True}),
+                  ('physical', board, {'running': False})]
+        manager = HardwareManager.__new__(HardwareManager)
+        manager._flight_checks = Mock(return_value=checks)
+        manager.execute = Mock()
+        manager.assert_can_start = Mock()
+        emit, cancel = Mock(), threading.Event()
+        manager.stop_before_first_boot('physical', board, emit, cancel)
+        self.assertEqual([call.kwargs['target'] for call in manager.execute.call_args_list], ['native', 'qemu'])
+        self.assertTrue(all(call.args == ('stop', emit) for call in manager.execute.call_args_list))
+        manager.assert_can_start.assert_called_once_with('physical', board)
+
+    def test_first_boot_does_not_hide_a_failed_stop(self):
+        from unittest.mock import Mock
+        manager = HardwareManager.__new__(HardwareManager)
+        manager._flight_checks = Mock(return_value=[('native', None, {'running': True})])
+        manager.execute = Mock(side_effect=ValueError('stop failed'))
+        manager.assert_can_start = Mock()
+        with self.assertRaisesRegex(ValueError, 'stop failed'):
+            manager.stop_before_first_boot('native', None, Mock(), threading.Event())
+        manager.assert_can_start.assert_not_called()
+
     def test_make_progress_and_es_states(self):
         self.assertEqual(parse_boot_line("CFE_ES_Main entering OPERATIONAL state"), {"state": "OPERATIONAL"})
         self.assertIsNone(parse_boot_line("sample_app: waiting for CFE_ES_Main entering OPERATIONAL state"))

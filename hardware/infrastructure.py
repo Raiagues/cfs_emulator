@@ -111,6 +111,7 @@ def snapshot(hardware, verify_source=False):
             observations[mode] = receipt.get("observations", {})
     target = selected_target(hardware.root)
     return {"source": source, "target_saved": target is not None, "check_plan": plans, "check_results": results,
+            "remote_unlocked": hardware.journey.snapshot("native")["remote_unlocked"],
             "check_groups": GROUPS, "check_repairs": actions, "check_observations": observations,
             "build_jobs": hardware.state.build_settings().jobs, "sources_ready": source["state"] in {"installed", "ready"}, "project": hardware.root.name, "target": target,
             "board": config["board"], "os": config["os"], "profiles": hardware.profiles(),

@@ -8,7 +8,7 @@ const labels = {
 };
 const tick = '<svg class="fs-tick fs-draw" viewBox="0 0 16 16" aria-hidden="true"><path pathLength="1" d="m3 8 3 3 7-7"/></svg>';
 const bar = globalThis.document?.getElementById('flight-guide');
-let observations, requestId = 0;
+let observations, requestId = 0, bootFailure = false;
 
 function context() {
   return document.body.dataset.flightTarget || null;
@@ -46,7 +46,14 @@ function render(snapshot) {
     stop.querySelector('.flight-number').classList.toggle('fs-ping2', current === id);
     if (current === id) stop.setAttribute('aria-current', 'step');
     else stop.removeAttribute('aria-current');
-    if (index) stop.previousElementSibling.classList.toggle('complete', status.done);
+    const failed = id === 'boot' && bootFailure;
+    stop.classList.toggle('failed', failed);
+    if (failed) stop.setAttribute('aria-label', label + ', failed');
+    if (index) {
+      const line = stop.previousElementSibling;
+      line.classList.toggle('complete', status.done && snapshot.steps[Object.keys(labels)[index-1]].done && !failed);
+      line.classList.toggle('failed', failed);
+    }
   }
   const forward = bar.querySelector('.flight-next');
   forward.hidden = !next;
@@ -89,6 +96,7 @@ if (bar) {
     } catch (error) {failure(error);}
   };
   const refresh = () => refreshJourney().catch(failure);
+  window.addEventListener('flight:boot-state', event => {bootFailure=event.detail.failed;if(observations)render(observations);});
   window.addEventListener('flight:updated', refresh);
   window.addEventListener('flight:navigate', () => {if (observations) render(observations);});
   new MutationObserver(refresh).observe(document.body, {attributes:true, attributeFilter:['data-flight-target']});

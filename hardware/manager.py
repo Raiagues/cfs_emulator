@@ -472,20 +472,16 @@ class HardwareManager:
             return {'service': 'unknown', 'pids': [], 'running': None,
                     'reachable': code == 0, 'error': output or 'SSH unavailable'}
 
-    def assert_can_start(self, target=None, connection=None):
-        """Raise unless cFS is confirmed stopped on every target this checkout may have started.
-
-        Callers hold execution.lock and call this before changing a deployment.
-        """
-        checks = [('this workspace on the local host', self._local_flight_state())]
+    def _flight_checks(self, target, connection):
+        checks = [('native', None, self._local_flight_state())]
         target = target or selected_target(self.root)
         deployed = self.state.read('deployed.json', {})
         running = self._qemu_running()
         qemu_active = deployed.get('qemu') and not deployed['qemu'].get('stopped_at')
         if running:
-            checks.append(('the emulator', self._flight_state('qemu')))
+            checks.append(('qemu', None, self._flight_state('qemu')))
         elif running is None and (target == 'qemu' or qemu_active):
-            checks.append(('the emulator', {'running': None}))
+            checks.append(('qemu', None, {'running': None}))
         previous = self.state.read('active.json', {})
         physical_active = deployed.get('physical') and not deployed['physical'].get('stopped_at')
         candidates = []
@@ -500,7 +496,19 @@ class HardwareManager:
             if candidate and not any(self.same_board(candidate, existing) for existing in connections):
                 connections.append(candidate)
         for candidate in connections:
-            checks.append(('the physical board', self._flight_state('physical', candidate)))
+            checks.append(('physical', candidate, self._flight_state('physical', candidate)))
+        return checks
+
+    def stop_before_first_boot(self, target, connection, emit, cancel):
+        for mode, destination, state in self._flight_checks(target, connection):
+            if state['running']:
+                emit(f'Stopping the previous cFS instance on {mode}.')
+                self.execute('stop', emit, target=mode, connection=destination, cancel=cancel)
+        self.assert_can_start(target, connection)
+
+    def assert_can_start(self, target=None, connection=None):
+        labels = {'native': 'this workspace on the local host', 'physical': 'the physical board', 'qemu': 'the emulator'}
+        checks = [(labels[mode], state) for mode, _, state in self._flight_checks(target, connection)]
         for label, state in checks:
             if state['running']:
                 raise HardwareError(f'cFS is already running on {label}. Stop that instance before Run cFS.')

@@ -30,7 +30,7 @@ def prepare(root, *, build=False, options=()):
         from tempfile import NamedTemporaryFile
         with NamedTemporaryFile(mode='w', dir=directory, prefix='emulator-image-', suffix='.log', delete=False) as log:
             print(f'Building QEMU can take tens of minutes on two cores. Build log: {log.name}', file=sys.stderr, flush=True)
-            command = ['docker', 'build', '--progress=plain', '--platform', platform, '--build-arg',
+            command = ['docker', 'build', '--network=host', '--progress=plain', '--platform', platform, '--build-arg',
                        'REGISTER_MODELS=' + models, '--tag', image, *options, '.']
             with subprocess.Popen(command, cwd=root, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                   text=True, errors='replace') as process:

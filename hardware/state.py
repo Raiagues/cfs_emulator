@@ -74,7 +74,7 @@ class RuntimeState:
         self.key(name)
         if not self.database.exists():
             return self.legacy(name, fallback)
-        with closing(sqlite3.connect(self.database)) as db:
+        with closing(sqlite3.connect(self.database, timeout=30)) as db:
             # A new database may be visible while its creator is acquiring its first transaction.
             if not db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='records'").fetchone():
                 return self.legacy(name, fallback)
@@ -85,7 +85,8 @@ class RuntimeState:
         self.directory.mkdir(parents=True, exist_ok=True)
         with self.database.with_suffix('.lock').open('a') as writer:
             fcntl.flock(writer, fcntl.LOCK_EX)
-            with closing(sqlite3.connect(self.database)) as db, db:
+            with closing(sqlite3.connect(self.database, timeout=30)) as db, db:
+                db.execute('PRAGMA journal_mode=WAL')
                 db.execute('BEGIN IMMEDIATE')
                 db.execute('CREATE TABLE IF NOT EXISTS records(name TEXT PRIMARY KEY, version INTEGER NOT NULL, value TEXT)')
                 yield db

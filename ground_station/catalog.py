@@ -19,7 +19,7 @@ from ground_station.discovery import command_mappings, telemetry_mappings, raw_t
 from ground_station.tables import table_packets
 from ground_station.subscriptions import subscription_metadata
 
-CATALOG_VERSION = 13
+CATALOG_VERSION = 14
 
 TYPES = {'uint8': 'B', 'uint16': 'H', 'uint32': 'I', 'uint64': 'Q',
          'int8': 'b', 'int16': 'h', 'int32': 'i', 'int64': 'q',
@@ -372,7 +372,7 @@ def _build_catalog(root, overrides_root=None, container=None, temp_root=None, bu
                     packet['variable_size'] = True
                     packet['min_size'] = values[packet.pop('_minimum_index')]
                     packet['max_size'] = packet['size']
-                packet.pop('mid_expr')
+                packet['mid_symbol'] = packet.pop('mid_expr')
                 packet.pop('code_expr', None)
                 packet.pop('repeat_expr', None)
                 packet.pop('size_expr', None)
@@ -401,6 +401,8 @@ def _build_catalog(root, overrides_root=None, container=None, temp_root=None, bu
                 result['errors'].append(f'{app}: communication table: {error}')
         except (ValueError, OSError, subprocess.TimeoutExpired) as error:
             result['errors'].append(f'{app}: {error}')
+    from ground_station.contact_routes import first_contact_routes
+    result['first_contact_routes'] = first_contact_routes(root, result)
     return result
 
 
