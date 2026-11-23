@@ -57,7 +57,9 @@ async function refresh(tree=false) {
   if(epoch!==workspaceRequest)return;
   if(request<appliedSnapshot){if(tree)await renderTree();return;}
   appliedSnapshot=request;
-  const changed=JSON.stringify(snapshot)!==JSON.stringify(state.workspace);state.workspace=snapshot;state.coreServices=snapshot.core_modules||[];
+  const changed=JSON.stringify(snapshot)!==JSON.stringify(state.workspace);
+  if(changed)invalidateSourceActivity();
+  state.workspace=snapshot;state.coreServices=snapshot.core_modules||[];
  $('#project-title').textContent=state.workspace.name||'cFS';
   backendState(true);
   if(!workspaceReady)return;
@@ -158,7 +160,11 @@ function markFiles(){document.querySelectorAll('.file').forEach(b=>{
  if(done&&!badge){badge=document.createElement('small');badge.className='file-reviewed';badge.innerHTML=icon('check');badge.title='Reviewed in this activity · current source';badge.setAttribute('aria-label','Reviewed in this activity');b.append(badge);}
  if(!done)badge?.remove();
 });}
-let sourceActivityRequest=0,sourceActivityKey='',sourceActivityAt=0;
+let sourceActivityRequest=0,sourceActivityKey='',sourceActivityAt=0,sourceActivityGeneration=0;
+function invalidateSourceActivity(){
+ sourceActivityRequest++;sourceActivityGeneration++;sourceActivityKey='';sourceActivityAt=0;
+ state.sourceActivity=null;state.sourceActivityError='';
+}
 async function refreshSourceActivity(ctx,force=false){
  if(!ctx)return;
  const key=JSON.stringify([state.target,ctx.app.name,ctx.selected.id]);
@@ -215,7 +221,12 @@ async function saveFile(path) {
  if(file.content===file.saved)return;
  const content=file.content;
  file.saving=api('file',{path,content,expected_hash:file.hash});
- try{const saved=await file.saving;Object.assign(file,{hash:saved.hash,saved:content,annotations:saved.annotations});renderTabs();}
+ try{
+  const saved=await file.saving;
+  invalidateSourceActivity();
+  Object.assign(file,{hash:saved.hash,saved:content,annotations:saved.annotations});
+  renderTabs();renderEditorActivity();markFiles();
+ }
  finally{delete file.saving;}
 }
 async function save(){if(state.path){await saveFile(state.path);feedback('File saved');await refresh();}}
@@ -1349,9 +1360,11 @@ document.addEventListener('click',guarded(async e=>{
   if(!ctx||!activity||state.sourceReviewBusy||ctx.step>=6)return;
   if(ctx.refs[ctx.step].some(ref=>{const file=state.files.get(ref.path);return file&&file.content!==file.saved;}))throw Error('Save the source before reviewing this step.');
   state.sourceReviewBusy=true;renderEditorActivity();
+  const generation=sourceActivityGeneration;
   try{
    const reviewed=await api('source/activity',{target:state.target,app:ctx.app.name,command:ctx.selected.id,step:ctx.step,fingerprint:activity.steps[ctx.step].fingerprint});
-   const current=commandContext(state);if(current?.app.name!==ctx.app.name||current?.selected.id!==ctx.selected.id||state.target!==reviewed.target)return;
+   const current=commandContext(state);
+   if(generation!==sourceActivityGeneration||current?.app.name!==ctx.app.name||current?.selected.id!==ctx.selected.id||state.target!==reviewed.target)return;
    state.sourceActivity=reviewed;
    const next=ctx.refs.findIndex((refs,i)=>i>ctx.step&&(refs.length||i===6));
    const command=ctx.selected.id+'/'+(ctx.selected.route?.mid?.value??ctx.selected.packet?.mid??'');
