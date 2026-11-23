@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {contactRouteModel,routeMarkup,renderContact} from '../static/contact-view.js';
+import {contactRouteModel,routeMarkup,renderContact,confirmedReplyMid} from '../static/contact-view.js';
 
 const fixture = () => {
  const apps=Array.from({length:40},(_,i)=>({name:'app_'+i}));
@@ -73,4 +73,46 @@ test('rendered totals use session counters rather than limited history arrays',(
  const html=renderContact({catalog,command,target:'native',values:{},guided:false,commandGroups:new Set(['app_9']),telemetryGroups:new Set(),packetGroups:new Set(),receipts:new Map(),
  station:{commands:[],packets:[],communication:{totals:{commands_sent:5000,telemetry_received:6000},commands:{[command.id]:750}}}});
  assert.match(html,/5,000 sent/);assert.match(html,/6,000 received/);assert.match(html,/↑ 750/);
+});
+
+
+test('the guided Event accepts only its displayed sample_app NOOP receipt',()=>{
+ const {catalog,command}=fixture();
+ const sample={...command,id:'SAMPLE_APP_NOOP_CC',app:'sample_app'};
+ catalog.commands.push(sample);catalog.apps.push({name:'sample_app'});
+ const receipt={command:command.id,send_id:20,reply:21,increase:22,baseline:0,count:1,message:'Other app NOOP'};
+ const v={catalog,command:sample,target:'native',values:{},guided:true,nextUrl:'/studio#app',
+  commandGroups:new Set(),telemetryGroups:new Set(),packetGroups:new Set(),receipts:new Map([[20,receipt]]),
+  station:{commands:[],packets:[],first_flight:{noop_command:sample.id,downlink_receipt:{send_id:1},answer:true,receipt}}};
+ const wrong=renderContact(v);
+ assert.equal((wrong.match(/data-fact="done"/g)||[]).length,1,'Only Telemetry on is complete');
+ assert.doesNotMatch(wrong,/class="contact-next"/);
+ v.station.first_flight.receipt={...receipt,command:sample.id};
+ const right=renderContact(v);
+ assert.equal((right.match(/data-fact="done"/g)||[]).length,3);
+ assert.match(right,/class="contact-next"/);
+});
+
+
+test('a confirmed reply stays in the selected route after playback, scoped to the latest send',()=>{
+ const {catalog,command,packet}=fixture();
+ const receipt={command:command.id,send_id:30,reply:31,increase:32,event_mid:packet.mid};
+ const receipts=new Map([[30,receipt]]),station={commands:[{...command,event_id:30}],packets:[]};
+ const v={catalog,command,station,target:'native',values:{},guided:false,commandGroups:new Set(),telemetryGroups:new Set(),packetGroups:new Set(),receipts};
+ assert.equal(confirmedReplyMid(station,command,receipts),packet.mid);
+ const afterPlayback=renderContact(v);
+ assert.match(afterPlayback,/data-down data-producer="app_2"/);
+ assert.match(afterPlayback,/data-route-node="app" data-app="app_1"/);
+ assert.doesNotMatch(afterPlayback,/data-app="app_39"|contact-playback/);
+ station.commands.push({...command,id:'OTHER_CC',event_id:35});
+ assert.equal(confirmedReplyMid(station,command,receipts),packet.mid,"Sending another command does not replace this command's receipt");
+ station.commands.push({...command,event_id:40});
+ assert.equal(confirmedReplyMid(station,command,receipts),null,'A later unanswered send cannot reuse an earlier confirmation');
+ assert.doesNotMatch(renderContact(v),/data-down /);
+ receipts.set(40,{...receipt,send_id:40,increase:null});
+ assert.equal(confirmedReplyMid(station,command,receipts),null,'An event without the counter is not confirmed');
+ receipts.set(40,{...receipt,send_id:40});
+ assert.equal(confirmedReplyMid(station,command,receipts),packet.mid);
+ const selectedPacket=renderContact({...v,routePacket:packet});
+ assert.doesNotMatch(selectedPacket.match(/<section class="contact-trip"[\s\S]*?<\/section>/)[0],/data-up |0x1888/);
 });

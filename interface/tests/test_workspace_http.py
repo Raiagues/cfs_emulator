@@ -151,6 +151,57 @@ class WorkspaceHTTPTest(unittest.TestCase):
         self.assertEqual(self.api("command/lesson?target=native&app=weather")["stage"], 6)
         self.assertFalse(self.api("journey?target=native")["steps"]["command"]["done"])
 
+    def test_guided_sources_extend_the_local_nasa_copy_and_preserve_sample_library(self):
+        from hashlib import sha256
+        from project.command_lesson import CommandLesson
+        upstream = {path.relative_to(self.root).as_posix(): sha256(path.read_bytes()).hexdigest()
+                    for group in ("cFS/apps/sample_app", "cFS/libs/sample_lib", "cFS/cfe", "cFS/osal", "cFS/psp")
+                    for path in (self.root / group).rglob("*") if path.is_file() and not path.is_symlink()}
+        self.api("hardware/target", {"target": "native"})
+        self.create("app", "weather", self.api("workspace")["mission"]["source"]["hash"])
+        actual = self.root / "cFS/apps/weather"
+        alias = self.root / "mission/apps/weather"
+        self.assertEqual(actual.resolve(), alias.resolve())
+        self.assertTrue((self.root / "mission/apps").is_symlink())
+        source = (actual / "fsw/src/weather.c").read_text()
+        self.assertIn("WEATHER_Main", source)
+        self.assertNotIn("SAMPLE_APP_Main", source)
+        cmake = (actual / "CMakeLists.txt").read_text()
+        self.assertIn("add_cfe_app_dependency(weather sample_lib)", cmake)
+        self.assertFalse((self.root / "cFS/libs/weather").exists())
+        commands = (actual / "fsw/src/weather_cmds.c").read_text()
+        self.assertIn('#include "sample_lib.h"', commands)
+        self.assertIn("SAMPLE_Function()", commands)
+        self.assertNotIn("WEATHER_Function()", commands)
+        # This audit checks the real installed upstream copy and script writes.
+        # Compiler behavior and rollback are exercised by the adjacent integration test.
+        with patch.object(CommandLesson, "compile") as compiler:
+            for stage in range(5):
+                lesson = self.api("command/lesson?target=native&app=weather")
+                self.assertEqual(lesson["stage"], stage)
+                self.assertTrue(all(path.startswith("cFS/apps/weather/") for path in lesson["files"]))
+                self.api("mutate", {"action": "command-step", "expected_hash": lesson["expected_hash"],
+                         "payload": {"target": "native", "app": "weather", "stage": stage,
+                                     "source_hash": lesson["source_hash"]}})
+            lesson = self.api("command/lesson?target=native&app=weather")
+            self.api("file", {"target": "native", "command_lesson": True, "app": "weather",
+                    "path": lesson["path"], "expected_hash": lesson["file_hash"],
+                    "content": lesson["content"].replace(lesson["stub"], lesson["ghost"])})
+            self.assertEqual(compiler.call_count, 3)
+        self.assertEqual(self.api("command/lesson?target=native&app=weather")["stage"], 6)
+        dispatch = (actual / "fsw/src/weather_dispatch.c").read_text()
+        self.assertIn("case WEATHER_SET_RATE_CC:", dispatch)
+        self.assertIn("WEATHER_SetRateCmd", dispatch)
+        self.assertIn("WEATHER_Data.CommandCounter++", dispatch)
+        handler = (actual / "fsw/src/commands/weather_set_rate_cmd.c").read_text()
+        self.assertIn("WEATHER_Data.Rate_Hz = Rate_Hz;", handler)
+        self.assertIn("WEATHER_SET_RATE_INF_EID", handler)
+        self.assertNotIn("CFE_STATUS_NOT_IMPLEMENTED", handler)
+        self.assertFalse((actual / "app.json").exists())
+        self.assertTrue((self.root / "project/apps/weather.json").is_file())
+        for relative, fingerprint in upstream.items():
+            self.assertEqual(sha256((self.root / relative).read_bytes()).hexdigest(), fingerprint, relative)
+
     def test_new_app_with_a_bench_sensor_name_belongs_to_the_user(self):
         self.api("hardware/target", {"target": "native"})
         self.create("app", "hal_temp", self.api("workspace")["mission"]["source"]["hash"])

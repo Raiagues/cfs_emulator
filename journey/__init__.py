@@ -46,6 +46,7 @@ def derive(target, events):
     cutoff = 0
     attempt = None
     contact_completed = False
+    completed_contact = None
     for event in events:
         if event.target != target:
             continue
@@ -54,6 +55,7 @@ def derive(target, events):
             facts.clear()
             attempt = None
             contact_completed = False
+            completed_contact = None
         elif event.step == "boot-start" and event.at > cutoff:
             if attempt and event.at < attempt["started"]:
                 continue
@@ -70,6 +72,14 @@ def derive(target, events):
                 facts[event.step] = event
         if all(step in facts for step in ("target", "boot", "event")) and (not attempt or attempt["status"] == "succeeded"):
             contact_completed = True
+            completed_contact = facts["event"]
+    # Event is a learned first-contact lesson as well as runtime evidence. A
+    # normal rebuild must not hide an already-created app or command on reload.
+    # Reuse its original observation only after the new boot has been verified;
+    # Ground still starts a fresh receiver and Send still needs a fresh reply.
+    boot_verified = "boot" in facts and (not attempt or attempt["status"] == "succeeded")
+    if completed_contact is not None and boot_verified and "event" not in facts:
+        facts["event"] = completed_contact
     current, reachable, steps = None, True, {}
     for step in STEPS:
         done = reachable and step in facts and (step != "boot" or not attempt or attempt["status"] == "succeeded")
@@ -129,7 +139,7 @@ class Store:
         return state
 
     def begin_boot(self, target, job, started):
-        """A new execution keeps source work but requires fresh runtime evidence."""
+        """Keep learned source work; require a verified boot and fresh flight replies."""
         self.observe(target, "boot-start", {"job": job}, started)
 
     def finish_boot(self, target, job, status):

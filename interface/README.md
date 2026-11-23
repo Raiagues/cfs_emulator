@@ -33,6 +33,8 @@ The official checkout is available under `cFS/`. User apps and libraries are cre
 
 Activity completion marks belong to the platform's progress state. They are separate from the cFS source files. The code pipeline distinguishes completed steps from the currently selected step.
 
+After implementing a command, the final activity step follows the selected target’s deployment state: stop an outdated running mission, build the sources, and run the installed build. **Open Ground Station** then opens the same Ground Station used for the first event, selecting the app and command from the compiled catalog. Enable telemetry if needed, enter the command fields, and send. Finishing a build or receiving a reply does not navigate to another page. The route replay starts only after the expected event and housekeeping counter confirm that send.
+
 | Shortcut | Action |
 | --- | --- |
 | Ctrl+S | Save the active file |

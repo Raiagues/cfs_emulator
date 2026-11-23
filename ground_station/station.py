@@ -139,11 +139,23 @@ class GroundStation:
                 self._start_observations(self._active_catalog, self.first_contact.destination)
             return state
 
+    def _remember_command_receipt(self, receipt):
+        """Keep confirmed evidence with its bounded, session-local send record."""
+        for command in reversed(self._commands):
+            if command['event_id'] == receipt['send_id']:
+                command['receipt'] = copy.deepcopy(receipt)
+                break
+
     def _observe_reply(self, packet, tracker, step):
-        previous = tracker.answer
+        previous, downlink = tracker.answer, tracker.downlink_receipt
         tracker.received(packet)
-        if not previous and tracker.answer and self._target and self._target[0]:
+        if downlink is None and tracker.downlink_receipt is not None:
+            self._remember_command_receipt(tracker.downlink_receipt)
+        if not previous and tracker.answer:
             ref = tracker.pending
+            self._remember_command_receipt(ref)
+            if not self._target or not self._target[0]:
+                return
             if step == 'event' and (ref['app'] != 'sample_app' or not tracker.downlink_receipt):
                 return
             self.journey.observe(self._target[0], step, dict(ref, session=self._session_started), tracker.answer)
@@ -274,7 +286,8 @@ class GroundStation:
             noop = command['id'].endswith('_NOOP_CC')
             enable = command['id'] == self.first_contact.enable
             authored = command['id'] in self.command_reply.authored
-            counter = (self.command_reply if authored else self.first_contact).counter
+            tracker = self.command_reply if authored else self.first_contact
+            counter = tracker.counter
             needs_counter = authored or noop and app == 'sample_app'
             if needs_counter:
                 self.wait_for(lambda: app in counter, timeout, app + ' housekeeping')
@@ -294,7 +307,7 @@ class GroundStation:
             packet = self.wait_for(reply, timeout, app + ' ' + name + ' event')
             result = {'sent': uplink, 'event': packet['values']['Message']}
             if needs_counter:
-                self.wait_for(lambda: counter.get(app) == before + 1, timeout, 'CommandCounter increase')
+                self.wait_for(lambda: counter.get(app) == tracker.next_count(app, before), timeout, 'CommandCounter increase')
                 result.update(before=before, after=counter[app])
             return result
 

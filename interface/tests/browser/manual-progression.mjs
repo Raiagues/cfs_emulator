@@ -109,7 +109,7 @@ test('a confirmed NOOP and its complete animation stay on Event until an explici
     const station = () => ({target:'native',connected:true,build_fingerprint:'fixture',
       communication:{since:1},packets:[],commands:[],first_flight:{enable_command:enable.id,noop_command:noop.id,
         return_host:'127.0.0.1',baseline_apps:['sample_app'],downlink_receipt:{send_id:'enable',mid:0x0808},
-        answer:complete,receipt:complete?{send_id:'noop',event_mid:0x0808,reply:true,increase:true,baseline:0,count:1}:null}});
+        answer:complete,receipt:complete?{command:noop.id,send_id:'noop',event_mid:0x0808,reply:true,increase:true,baseline:0,count:1}:null}});
     const {page, errors} = await fixture(instance, {view:'event', response:path => {
       if (path === '/api/ground') return station();
       if (path === '/api/ground/catalog') return catalog;
@@ -123,7 +123,9 @@ test('a confirmed NOOP and its complete animation stay on Event until an explici
     await page.locator(`[data-pick=${noop.id}]`).click();
     const before = page.url();
     assert(await page.locator('.flight-next').isHidden());
+    const uplink = page.waitForResponse(response => response.url().endsWith('/api/ground/send'));
     await page.locator('.contact-send').click();
+    await uplink;
     await page.evaluate(() => window.publishUpdates(['ground','journey']));
     await page.locator('.contact-next').waitFor();
     await page.waitForTimeout(4500);

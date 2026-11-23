@@ -61,3 +61,23 @@ body[data-view=architecture] #view,body[data-view=architecture] .architecture-su
 .contact-route-empty{position:absolute;left:32%;top:25%;color:var(--ct-muted);font:11px var(--fs-mono)}
 
 .contact-packet[aria-pressed=true]{background:#262219;color:var(--ct-sand)}
+
+/* The lesson and ordinary station share the same catalog, route and controls. */
+.contact-stages{align-items:center;gap:0;min-height:54px;padding:8px 14px;background:var(--ct-card);border:1px solid var(--ct-line);border-radius:6px}
+.contact-stages>button{flex:0 1 auto;align-items:center;gap:9px;padding:4px 0;border:0;background:transparent!important;color:var(--ct-muted)}
+.contact-stages>button[data-fact=current]{color:var(--ct-text)}
+.contact-stages>button[data-fact=current] i{border-color:var(--ct-sand);box-shadow:0 0 0 4px rgb(212 180 138 / 13%);color:var(--ct-sand)}
+.contact-stages>button[data-fact=done]{color:var(--ct-green)}
+.contact-stage-line{height:2px;min-width:16px;flex:1;margin:0 14px;background:var(--ct-line);transition:background .25s ease}
+.contact-stage-line[data-complete=true]{background:var(--ct-green)}
+.contact-stages code{font-size:10px}
+.contact-notice{margin:0;color:var(--ct-muted);font-size:12px}
+.contact-deployment{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid var(--ct-line);border-radius:6px;background:var(--ct-card);color:var(--ct-muted)}
+.contact-deployment button{display:flex;align-items:center;gap:7px;flex:none;padding:8px 12px;border:1px solid var(--ct-sand);border-radius:4px;background:transparent;color:var(--ct-sand)}
+.contact-deployment svg,.contact-confirmed svg{width:14px;height:14px}
+.contact-confirmed{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #2f6e58;border-radius:6px;background:#16261f;color:var(--ct-green)}
+.contact-trip>header .contact-route-explainer{margin-left:auto;padding:0 12px;font-size:10px;color:var(--ct-dim)}
+.contact-route-node{transition:border-color .16s ease,box-shadow .16s ease,background .16s ease}
+.contact-layout :is(.contact-route-scroll,.contact-history-rows,aside>nav,.contact-main,.contact-parameters){scrollbar-color:#343c47 var(--ct-bg);scrollbar-width:thin}
+@media(max-width:1400px){.contact-route-explainer{display:none!important}.contact-stage-line{margin-inline:8px}.contact-stages{padding-inline:10px}}
+@media(prefers-reduced-motion:reduce){.contact-route-node,.contact-stage-line{transition:none}}

@@ -69,13 +69,73 @@ class JourneyTest(unittest.TestCase):
         events.append(Observation("boot-finish", "native", 15, {"job": "new", "status": "failed"}))
         self.assertEqual(derive("native", events)["current"], "boot")
         events[-1] = Observation("boot-finish", "native", 15, {"job": "new", "status": "succeeded"})
-        self.assertEqual(derive("native", events)["current"], "event")
+        recovered = derive("native", events)
+        self.assertEqual(recovered["current"], "send")
+        self.assertEqual(recovered["steps"]["event"]["observed_at"], 3)
         events.append(Observation("event", "native", 17, {"sent_at": 16}))
         completed = derive("native", events)
         self.assertEqual(completed["current"], "send")
         self.assertTrue(completed["steps"]["app"]["done"])
         self.assertTrue(completed["steps"]["command"]["done"])
         self.assertFalse(completed["steps"]["send"]["done"])
+
+    def test_reload_after_rebuild_keeps_learned_event_but_requires_a_new_send(self):
+        for at, step in enumerate(("target", "boot", "event", "app", "command", "send"), 1):
+            self.store.observe("native", step, {"evidence": step}, at)
+        self.store.begin_boot("native", "new-app-run", 10)
+        pending = Store(self.root).snapshot("native")
+        self.assertEqual(pending["current"], "boot")
+        self.assertFalse(pending["steps"]["event"]["done"])
+        self.store.observe("native", "boot", {"started": 10, "instance": "new"}, 11)
+        self.assertEqual(Store(self.root).snapshot("native")["current"], "boot")
+        self.store.finish_boot("native", "new-app-run", "succeeded")
+        resumed = Store(self.root).snapshot("native")
+        self.assertEqual(resumed["current"], "send")
+        for step in ("event", "app", "command"):
+            self.assertTrue(resumed["steps"][step]["done"], step)
+        self.assertTrue(resumed["steps"]["send"]["reachable"])
+        self.assertFalse(resumed["steps"]["send"]["done"])
+        self.assertEqual(resumed["steps"]["event"]["observed_at"], 3)
+        self.assertEqual(resumed["steps"]["event"]["ref"], {"evidence": "event"})
+        # Historical course progress does not become current receiver evidence.
+        self.assertEqual(self.store.references("native", "event"), [])
+        self.assertEqual(self.store.references("native", "send"), [])
+        self.store.observe("native", "send", {"sent_at": 12, "reply": "new"}, 13)
+        self.assertTrue(Store(self.root).snapshot("native")["steps"]["send"]["done"])
+        reset = self.store.reset("native")
+        self.assertEqual(reset["current"], "target")
+        self.assertFalse(reset["contact_completed"])
+        self.assertTrue(all(not step["done"] for step in reset["steps"].values()))
+
+    def test_failed_first_boot_cannot_supply_a_learned_event_to_a_retry(self):
+        for status in ("failed", "cancelled"):
+            with self.subTest(status=status):
+                events = [Observation("target", "native", 1, {"checked": True}),
+                          Observation("boot-start", "native", 2, {"job": "first"}),
+                          Observation("boot", "native", 3, {"started": 2}),
+                          Observation("event", "native", 4, {"sent_at": 4}),
+                          Observation("boot-finish", "native", 5, {"job": "first", "status": status}),
+                          Observation("boot-start", "native", 6, {"job": "retry"}),
+                          Observation("boot", "native", 7, {"started": 6}),
+                          Observation("boot-finish", "native", 8, {"job": "retry", "status": "succeeded"})]
+                state = derive("native", events)
+                self.assertEqual(state["current"], "event")
+                self.assertFalse(state["contact_completed"])
+                self.assertIsNone(state["steps"]["event"]["ref"])
+
+    def test_reset_prevents_old_completed_contact_from_returning_after_boot(self):
+        events = [Observation(step, "native", at, {"evidence": step})
+                  for at, step in enumerate(("target", "boot", "event", "app", "command"), 1)]
+        events.extend([Observation("reset", "native", 10, {"explicit": True}),
+                       Observation("target", "native", 11, {"checked": True}),
+                       Observation("boot-start", "native", 12, {"job": "restart"}),
+                       Observation("event", "native", 13, {"sent_at": 3}),
+                       Observation("boot", "native", 14, {"started": 12}),
+                       Observation("boot-finish", "native", 15, {"job": "restart", "status": "succeeded"})])
+        state = derive("native", events)
+        self.assertEqual(state["current"], "event")
+        self.assertFalse(state["contact_completed"])
+        self.assertIsNone(state["steps"]["event"]["ref"])
 
     def test_attempt_persists_without_deleting_previous_history(self):
         self.store.observe("native", "target", {"checked": True}, 1)

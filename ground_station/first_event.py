@@ -16,26 +16,34 @@ class FirstEvent:
         self.pending = None
         self.counter = {}
         self.hk_fields = {}
+        self.counter_modulus = {}
         for command in catalog.get('commands', []):
             if command['app'] == 'to_lab' and command['id'].endswith('_OUTPUT_ENABLE_CC'):
                 self.enable = command['id']
             if not command['id'].endswith('_NOOP_CC'):
                 continue
-            if command['app'] == 'sample_app' or command.get('source', '').startswith('mission/apps/'):
-                self.noops[command['id']] = command['app']
+            # The installed compiler catalog already limits this to active apps.
+            # User apps now live under cFS/apps beside NASA's modules.
+            self.noops[command['id']] = command['app']
         for packet in catalog.get('packets', []):
             if packet['app'] not in (authored if authored is not None else self.noops).values() or 'HK' not in packet['id'].upper():
                 continue
             for field in packet['fields']:
                 if field['name'].split('.')[-1] == 'CommandCounter':
                     self.hk_fields[packet['mid']] = field['name']
+                    if field.get('format') in ('B', 'H', 'I', 'Q') and field.get('size') in (1, 2, 4, 8):
+                        self.counter_modulus[packet['app']] = 1 << (8 * field['size'])
 
     def sent(self, command):
-        if command['id'] == self.enable and not command.get('automatic') and self.downlink_receipt is None:
+        if command['id'] == self.enable and not command.get('automatic'):
             self.enable_send = command['event_id']
+            self.downlink_receipt = None
         watched = self.noops if self.authored is None else self.authored
         app = watched.get(command['id'])
-        if app and not command.get('automatic') and not self.answer:
+        if app and not command.get('automatic'):
+            # Receipts describe this transmission; completed tutorial evidence is
+            # retained separately in Journey, not by freezing the live receiver.
+            self.event = self.answer = None
             self.pending = {'app': app, 'send_id': command['event_id'], 'sent_at': command.get('sent_at'), 'baseline': self.counter.get(app), 'command': command['id'],
                             'reply': None, 'increase': None}
 
@@ -60,17 +68,23 @@ class FirstEvent:
                 attempt.update(reply=packet['event_id'], message=values['Message'], event_mid=packet['mid'])
             self.event = self.event or packet['received_at']
         if (packet['app'] == attempt['app'] and field and type(count) is int
-                and attempt['baseline'] is not None and count == attempt['baseline'] + 1):
+                and attempt['baseline'] is not None and count == self.next_count(attempt['app'], attempt['baseline'])):
             if not attempt['increase']:
                 attempt.update(increase=packet['event_id'], count=count)
         if attempt['reply'] and attempt['increase']:
             self.answer = packet['received_at']
 
+    def next_count(self, app, baseline):
+        value = baseline + 1
+        modulus = self.counter_modulus.get(app)
+        return value % modulus if modulus else value
+
     def matches_event(self, packet, command, app):
         values = packet['values']
         event_id = values.get('PacketID.EventID')
         declared = self.information_ids.get(command)
-        return (not packet['errors'] and packet['app'] == 'cfe_evs' and event_id is not None and (not declared or event_id in declared)
+        return (not packet['errors'] and packet['app'] == 'cfe_evs' and event_id is not None
+                and (event_id in (declared or ()) if self.authored is not None else not declared or event_id in declared)
                 and self.information is not None and values.get('PacketID.EventType') == self.information
                 and str(values.get('PacketID.AppName', '')).casefold() == app.casefold()
                 and (self.authored is not None or re.search(r'\bno[ -]?op\b', str(values.get('Message', '')), re.I)))

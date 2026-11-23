@@ -5,7 +5,6 @@ import {api, readJourney} from './api.js';
 import {commandLaunchStep} from './command-launch.js';
 import {openAppWizard} from './app-wizard.js';
 import {mountFirstContact} from './first-contact.js';
-import {mountGroundLesson} from './ground-lesson.js';
 import {mountCommandLesson} from './command-lesson.js';
 import {mountSignalLesson} from './signal-lesson.js';
 import {mountFirstBoot} from './first-boot.js';
@@ -427,7 +426,9 @@ function renderToolbar(){
  buildButton.lastElementChild.textContent='Build cFS';
  $('.run-action').disabled=!build?.exists||!build.current||busy||!targets.includes(state.target)||state.hardware?.execution?.can_start!==true;
  $('.run-action').title=!build?.exists||!build.current?'Build this target first':state.hardware?.execution?.block_reason||(native?'Run on this computer':'Run on target');
- buildButton.title=stale?'Mission sources changed':native?'Build for this computer':'Build for selected target';
+ const nativeBuildInUse=native&&Boolean(state.hardware?.native?.running||state.hardware?.execution?.running_targets?.includes('native'));
+ buildButton.disabled=buildButton.disabled||nativeBuildInUse;
+ buildButton.title=nativeBuildInUse?'Stop cFS before building':stale?'Mission sources changed':native?'Build for this computer':'Build for selected target';
  syncBenchActions();
  renderProgress();
  renderSimulationPanel();
@@ -588,7 +589,7 @@ function leaveBoot(){
  bootCleanup?.();bootCleanup=null;bootTarget=null;
 }
 const activities = {event: mountFirstContact, command: mountCommandLesson,
- send: mountGroundLesson, sensor: mountSignalLesson, test: mountSignalLesson};
+ send: mountFirstContact, sensor: mountSignalLesson, test: mountSignalLesson};
 let activity;
 function guidedView() {
  const step = state.activity || (state.view==='ground' && !state.commandLaunch ? 'ground' : null);
@@ -601,7 +602,8 @@ function guidedView() {
   const pane = document.createElement('section');
   pane.className = 'activity-view';
   $('#view').replaceChildren(pane);
-  const controller = mount(pane, {state,startJob,guided:step==='event',advanceDeployment,saveSimulation,openApp:done=>newMissionApp('',done),
+  const controller = mount(pane, {state,startJob,guided:step==='event',authoredCommand:step==='send'?state.sendCommand:null,advanceDeployment,saveSimulation,openApp:done=>newMissionApp('',done),
+    openGround:(app,command)=>openGroundRoute(app,command,true),
     refreshMission:()=>Promise.all([refresh(true),hardwareRefresh(true)]),
     sourceOpened:path=>{state.path=path;markFiles();guarded(revealFile)(path);},
     openEditor:path=>guarded(selectView)('code',path)});
@@ -812,6 +814,7 @@ function connect() {
 async function startJob(action, extra={}, showOutput=true) {
  if(action==='setup'&&state.target==='qemu'){navigate(stepUrl('target', location, 'qemu'));return;}
  if(launchPending)throw Error('Operation starting');
+ if(action==='build'&&state.target==='native'&&(state.hardware?.native?.running||state.hardware?.execution?.running_targets?.includes('native')))throw Error('Stop cFS before building');
  if(['build','run'].includes(action)&&state.missionDraft)throw Error('Mission draft · save or cancel');
  const options={target:action==='stop'?state.hardware?.execution?.target||state.target:state.target,...(['boot','build','run'].includes(action)&&state.target!=='native'?{board:state.board,os:state.os}:{}),...(action==='boot'&&state.target==='qemu'&&state.hardware?.qemu?.can_retry_boot?{retry:true}:{}),...(state.target==='physical'&&['build','run'].includes(action)?{sensorless:state.sensorless}:{}),...extra};
  launchPending={action,target:options.target,retry:!!options.retry,started:Date.now()/1000};renderToolbar();
@@ -840,6 +843,7 @@ async function pollJobs() {
  try{
   const before=signalJobState();
   state.jobs=await api('jobs?lines=0');
+  activity?.update?.();
   if(!state.terminalStream&&(!state.selectedJob||!state.jobs.some(j=>j.id===state.selectedJob)))selectTargetTerminal();
   for(const job of state.jobs){
    const phase=job.operation_complete&&job.status!=='failed'?'ready':job.status,key=job.id+':'+phase;
@@ -881,7 +885,7 @@ function hardwareRefresh(fresh=false){
  if(fresh&&hardwareRequest){hardwareVersion++;return hardwareRequest.then(()=>hardwareRefresh());}
  if(!hardwareRequest){
   const version=hardwareVersion;
-  hardwareRequest=api('hardware').then(h=>{if(version!==hardwareVersion)return;state.hardware=h;renderToolbar();if(isWorkbench())renderView();}).finally(()=>{hardwareRequest=null;});
+  hardwareRequest=api('hardware').then(h=>{if(version!==hardwareVersion)return;state.hardware=h;renderToolbar();if(isWorkbench())renderView();else activity?.update?.();}).finally(()=>{hardwareRequest=null;});
  }
  return hardwareRequest;
 }
@@ -987,10 +991,15 @@ document.addEventListener('submit',async event=>{
 
 // Rail views browse the project; a first-flight link may also start an activity.
 let workspaceReady=false, viewRequest=0;
-async function openFlightStep(step,entry={}){
+async function openFlightStep(step,entry={},journey=null){
  if(!workspaceReady)return;
  state.commandLaunch=null;
  if(step==='event')terminal.show(false);
+ if(step==='send'){
+  const command=authoredCommand(entry.flightCommand,journey?.steps?.command?.ref);
+  if(command)return openGroundRoute(command.app,command.id,true);
+  state.sendCommand=null;
+ }
  if(step==='app'){
   state.archApp='';state.archLibrary='';state.archOverview=true;state.mapMode='2d';state.mapSection='mission';state.missionDraft=null;
  }
@@ -998,10 +1007,17 @@ async function openFlightStep(step,entry={}){
  if(step==='sensor'||step==='test'||step==='simulation')state.signalView=step==='test'?'test':entry.signalTab||'signals';
  return selectView(workspaceRoute(step).view,undefined,undefined,null,step);
 }
-function authoredCommand(){
- const commands=state.workspace.apps.filter(app=>app.managed&&!app.example).flatMap(app=>(app.manifest?.commands||[]).map(cmd=>({app:app.name,id:(app.name+'_'+cmd.name+'_CC').toUpperCase()})));
- return commands.find(c=>c.id===state.commandTask?.id) || commands.find(c=>c.id===state.lastAuthoredCommand) ||
-  commands.find(c=>c.id===historyEntry().flightCommand) || commands.at(-1);
+function authoredCommand(preferred=null,evidence=null){
+ const apps=state.workspace?.apps?.filter(app=>app.managed&&!app.example)||[];
+ const commands=apps.flatMap(app=>(app.manifest?.commands||[]).map(cmd=>({app:app.name,id:(app.name+'_'+cmd.name+'_CC').toUpperCase()})));
+ // Preserve the command selected by the source lesson; on reload use the
+ // backend reference for the command that was actually compiled.
+ for(const id of [preferred,state.commandTask?.id,state.lastAuthoredCommand,evidence?.command]){
+  const found=commands.find(command=>command.id===id);
+  if(found)return found;
+  if(id&&id===evidence?.command&&apps.some(app=>app.name===evidence.app))return {app:evidence.app,id};
+ }
+ return commands.at(-1);
 }
 let navigationRequest = 0;
 async function followLocation(){
@@ -1017,7 +1033,7 @@ async function followLocation(){
  const redirect=redirectForStep(route.id,snapshot);
  if(redirect){navigate(redirect,true);return;}
  recordRoute(route.id,historyEntry(),true);
- return openFlightStep(route.id,historyEntry());
+ return openFlightStep(route.id,historyEntry(),snapshot);
 }
 bindWorkspace(followLocation, error => feedback(error.message,true));
 async function selectView(view,sourceFile,sourceLine,inspection=null,route=view){
@@ -1065,8 +1081,12 @@ async function selectView(view,sourceFile,sourceLine,inspection=null,route=view)
  return request===viewRequest;
 }
 function openGroundRoute(app,command=null,prepare=false){
- state.commandLaunch=prepare?{app,id:command,target:state.target}:null;
+ state.commandLaunch=null;
+ state.sendCommand=prepare?{app,command}:null;
  if(prepare)recordRoute('send',{flightCommand:command});
+ // The contact controller owns its draft and selection. Remount for an
+ // explicit link so a previously opened app cannot retain another command.
+ activity?.close();activity=null;
  Object.assign(state,{groundApp:app,groundSelection:command,groundQuery:'',groundTab:'commands',
                       groundMode:'trip',groundPane:'route',groundPacket:null,inspectedSend:null});
  return selectView('ground',undefined,undefined,null,prepare?'send':'ground');
@@ -1239,7 +1259,7 @@ async function configureProfile(){
 function adoptTarget(target){
  catalogRequest=null;
  Object.assign(state,{target,catalog:null,catalogTarget:null,catalogLoading:false,groundError:'',groundApp:'',
-  groundSelection:null,groundPacket:null,commandLaunch:null,groundQuery:'',groundDrafts:{},selectedTests:{},inspectedSend:null});
+  groundSelection:null,groundPacket:null,commandLaunch:null,sendCommand:null,groundQuery:'',groundDrafts:{},selectedTests:{},inspectedSend:null});
  if(target)document.body.dataset.flightTarget=target;
  else delete document.body.dataset.flightTarget;
 }
@@ -1355,7 +1375,7 @@ document.addEventListener('click',guarded(async e=>{
  else if ('commandTest' in d) {
   const ctx=commandContext(state);if(!ctx)return;
   const app=ctx.app.name,id=ctx.selected.id;
-  await saveAll();await refresh();await openGroundRoute(app,id,false);
+  await saveAll();await refresh();await openGroundRoute(app,id,ctx.app.managed&&!ctx.app.example);
  }
  else if ('codeCommand' in d) newCodeCommand(d.codeCommand);
  else if('editHandler' in d){
