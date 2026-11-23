@@ -85,10 +85,12 @@ def install(root):
                 staged.rename(source)
         elif state in {"incomplete", "revision-mismatch"}:
             _checkout(source)
-        if source_status(root)["state"] != "ready":
+        installed = source_status(root)
+        if installed["state"] != "ready":
             raise ValueError("Missing NASA mission sources. Check the checkout and rerun setup.")
         prepare_mission(root)
-        return {"state": "ready", "revision": REVISION, "url": OFFICIAL_URL, "mission": "mission"}
+        return {"state": "ready", "revision": installed["revision"], "base_revision": REVISION,
+                "url": OFFICIAL_URL, "mission": "mission"}
 
 
 if __name__ == "__main__":

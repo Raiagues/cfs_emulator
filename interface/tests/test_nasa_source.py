@@ -77,6 +77,19 @@ class NasaSourceTest(unittest.TestCase):
             self.assertIn("MyMission", local.read_text())
             self.assertEqual(official.read_text(), "set(MISSION_NAME SampleMission)\n")
 
+    def test_existing_local_extension_reports_its_actual_revision_without_recheckout(self):
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch)
+            local = "b" * 40
+            with patch("project.nasa_source.source_status", return_value={"state": "ready", "revision": local}), \
+                    patch("project.nasa_source._checkout") as checkout, \
+                    patch("project.nasa_source.prepare_mission") as prepare:
+                result = install(root)
+            self.assertEqual(result["revision"], local)
+            self.assertEqual(result["base_revision"], REVISION)
+            checkout.assert_not_called()
+            prepare.assert_called_once_with(root.resolve())
+
     def test_interrupted_download_is_retryable(self):
         with tempfile.TemporaryDirectory() as scratch:
             root = Path(scratch)

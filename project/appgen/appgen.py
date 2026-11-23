@@ -222,13 +222,21 @@ def merged_app_cmake(root, manifest, generated=None):
             raise AppgenError(f"Expected one APPGEN {section} block in {path}")
         return matches[0]
 
+    previous = None
+
+    def previous_cmake():
+        nonlocal previous
+        if previous is None:
+            previous_path = safe_path(root.parent, f"project/apps/{manifest['name']}.json")
+            if not previous_path.is_file():
+                previous_path = safe_path(root, f"apps/{manifest['name']}/app.json")
+            if not previous_path.is_file():
+                raise AppgenError(f"Cannot identify generated CMake entries without previous app settings: {path}")
+            previous = renderer()(json.loads(previous_path.read_text()), root)["CMakeLists.txt"][0]
+        return previous
+
     if "# APPGEN BEGIN" not in current and "# APPGEN END" not in current:
-        previous_path = safe_path(root.parent, f"project/apps/{manifest['name']}.json")
-        if not previous_path.is_file():
-            previous_path = safe_path(root, f"apps/{manifest['name']}/app.json")
-        if not previous_path.is_file():
-            raise AppgenError(f"Cannot identify generated CMake entries without previous app settings: {path}")
-        previous = renderer()(json.loads(previous_path.read_text()), root)["CMakeLists.txt"][0]
+        previous = previous_cmake()
         source_sets = list(re.finditer(r"\bset\s*\(\s*APP_SRC_FILES\b([^)]*)\)", current))
         if len(source_sets) != 1:
             raise AppgenError(f"Expected one native APP_SRC_FILES list in {path}")
@@ -265,7 +273,16 @@ def merged_app_cmake(root, manifest, generated=None):
         current = "".join(replacement)
     for section in ("SOURCES", "DEPENDENCIES"):
         match = block(current, section)
-        current = current[:match.start()] + block(generated, section).group() + current[match.end():]
+        desired = block(generated, section).group()
+        if match.group() == desired:
+            continue
+        # The saved manifest still describes the last committed source plan.
+        # Never treat the newly requested settings as proof that a local edit
+        # belongs to the generator. Already-identical blocks need no baseline.
+        if match.group() != block(previous_cmake(), section).group():
+            raise AppgenError(f"Local changes inside APPGEN {section} in {path}; "
+                              "move custom entries outside the block before syncing")
+        current = current[:match.start()] + desired + current[match.end():]
     return current
 
 

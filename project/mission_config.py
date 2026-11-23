@@ -10,6 +10,7 @@ import hashlib
 from pathlib import Path
 import re
 import threading
+import tempfile
 
 from project.flight_sources import module_directories, module_directory, nasa_module_names, prepare_mission
 from project.appgen.native_startup import (
@@ -221,8 +222,12 @@ class MissionConfig:
             added, removed = selection["added"].copy(), selection["removed"].copy()
             if action in {"remove", "delete"}:
                 self.assert_can_remove(name)
-                if action == "delete" and not self._library_deletable(name, evaluated):
-                    raise ValueError("Only project-created library sources can be deleted")
+                if action == "delete":
+                    if not self._library_deletable(name, evaluated):
+                        raise ValueError("Only project-created library sources can be deleted")
+                    # Remove only changes membership; Delete also removes sources
+                    # that archived apps/libraries may need when restored later.
+                    self._assert_library_unreferenced(name)
                 added.discard(name)
                 removed.add(name)
                 active = [item for item in active if item.name != name]
@@ -277,13 +282,63 @@ class MissionConfig:
                     "# Mission libraries built for CPU1. Native CFE_LIB startup entries load them.\n"
                     "set(MISSION_LIBRARIES " + " ".join(roots) + ")\n")
                 plan.update(self.selection_plan(forget=[name], sources=plan))
-                source = self._path("mission/libs/" + name)
-                plan.update({path.relative_to(self.root).as_posix(): None
-                             for path in source.rglob("*") if path.is_file()})
+                return self._delete_library(name, plan, revision)
             self.assert_revision(revision)
-            changed = commit(self.root, plan, mutable_libraries=[name] if action == "delete" else [])
+            changed = commit(self.root, plan)
             return {"mission": self.snapshot(), "changed": changed,
                     "deleted": [path for path in changed if path in plan and plan[path] is None]}
+
+    def _assert_library_unreferenced(self, name):
+        from project.module_rename import assert_no_module_references
+        from project.source_index import SourceIndex
+        source = module_directory(self.root, "libs", name)
+        modules = [path for group in ("apps", "libs") for path in module_directories(self.root, group)
+                   if path != source and (path / "CMakeLists.txt").is_file()]
+        headers = {path.name for path in source.rglob("*")
+                   if path.suffix in (".h", ".hpp") and "public_inc" in path.relative_to(source).parts}
+        functions = {fn["symbol"] for fn in SourceIndex(self.root).application(source)["functions"]
+                     if not fn["static"]}
+        assert_no_module_references(self.root, modules, name, headers, functions)
+
+    def _delete_library(self, name, plan, revision):
+        """Keep the complete tree for rollback until mission validation succeeds."""
+        from project.manage import commit
+        directory = self._path("mission/libs/" + name)
+
+        def source_hashes(source):
+            files = {}
+            for path in source.rglob("*"):
+                if path.is_symlink() or path.name == ".git" or not (path.is_dir() or path.is_file()):
+                    raise ValueError("Cannot delete a library with linked or external sources: " + name)
+                if path.is_file():
+                    relative = directory / path.relative_to(source)
+                    files[relative.relative_to(self.root).as_posix()] = hashlib.sha256(path.read_bytes()).digest()
+            return files
+
+        sources = source_hashes(directory)
+        self.assert_revision(revision)
+        result = {}
+
+        def validate():
+            if name in self._evaluate(self._revision())["compiled"]:
+                raise ValueError("A native CPU1 build entry still references " + name)
+            result["mission"] = self.snapshot()
+
+        # Include empty directories and binary user files, just as app deletion
+        # does. The rename stays within the source filesystem for atomicity.
+        with tempfile.TemporaryDirectory(prefix=".delete-", dir=directory.parent) as temporary:
+            staged = Path(temporary) / name
+            directory.rename(staged)
+            try:
+                if source_hashes(staged) != sources:
+                    raise ValueError("Library sources changed during deletion. Reload before retrying.")
+                changed = commit(self.root, plan, validate=validate)
+            except BaseException:
+                staged.rename(directory)
+                raise
+        result["changed"] = sorted(set(changed) | set(sources))
+        result["deleted"] = sorted(set(sources) | {path for path in changed if path in plan and plan[path] is None})
+        return result
 
     def schedule_config(self):
         """Use cfe_locate_implementation_file's CPU1 table precedence."""

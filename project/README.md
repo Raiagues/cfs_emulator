@@ -1,8 +1,10 @@
 # Projeto e missão
 
-A NASA fornece o framework, as apps padrão e os exemplos em um checkout independente, `cFS/`. O Studio cria o software da missão em `mission/` e guarda as escolhas da pessoa em `project/`. Para baixar o upstream e abrir o primeiro workspace, siga o [guia inicial](../README.md).
+A NASA fornece o framework, as apps padrão e os exemplos em um checkout independente, `cFS/`. A configuração distribuída começa sem apps próprias nem sensores vinculados. As adições feitas pela pessoa ficam fisicamente em `cFS/apps/` e `cFS/libs/`, sobre o clone oficial. Os scripts, templates e as escolhas do projeto ficam fora desse clone, em `project/`. Para baixar o upstream e abrir o primeiro workspace, siga o [guia inicial](../README.md).
 
-Ao preparar uma missão, o Studio usa os arquivos oficiais de `cFS/sample_defs/` para inicializar as definições locais. O build recebe `mission/sample_defs/` em `MISSION_DEFS` e procura módulos nos diretórios da NASA e da missão usando `CFS_APP_PATH`. O Git do Studio ignora o checkout da NASA, as definições locais materializadas e os diretórios de compilação. Apps próprias, bibliotecas, mapas de sensores e configurações da missão ficam disponíveis para versionamento.
+Ao preparar uma missão nova, o Studio cria os aliases `mission/apps → ../cFS/apps` e `mission/libs → ../cFS/libs`. As definições ficam separadas, em `mission/sample_defs/`, inicializadas a partir dos arquivos oficiais de `cFS/sample_defs/`. O build recebe essas definições em `MISSION_DEFS`, resolve os módulos usando `CFS_APP_PATH` e grava seus resultados em `mission/build-native/` ou `mission/build-flight/`. Missões existentes preservam seus fontes e suas definições locais.
+
+O Git do Studio ignora o checkout `cFS/`, a árvore local `mission/`, os manifestos de apps em `project/apps/` e os artefatos em `project/generated/`. Esses arquivos pertencem ao workspace local; as regras de ignore não os apagam. Os fontes completos em `interface/tests/fixtures/bancada/` são dados de testes isolados, não módulos instalados na configuração inicial.
 
 ```mermaid
 flowchart LR
@@ -33,7 +35,7 @@ Na arquitetura 2D, **New** cria ou inclui um módulo no grupo selecionado. Para 
 | `app disable` / `app enable` | Controla a inicialização da app incluída no build. |
 | `app remove` / `library remove` | Retira o módulo da missão e preserva os fontes para uma inclusão futura. |
 | `app add` / `library add` | Inclui um módulo existente e suas dependências. |
-| `app delete` / `library delete` | Exclui os fontes de um módulo próprio. Um módulo ainda usado por outro precisa ter essa dependência resolvida antes da exclusão. |
+| `app delete` / `library delete` | Exclui os fontes de um módulo próprio após as verificações do backend. |
 | `app list` / `library list` | Mostra a seleção de apps ou as bibliotecas disponíveis. |
 
 Essas operações de CLI recebem o prefixo `./start --no-ui`. Por exemplo, `./start --no-ui app remove attitude_app` retira a app da missão e `./start --no-ui app add attitude_app` volta a incluí-la. A CLI e o navegador usam a mesma implementação. Uma falha de gravação restaura os arquivos da transação.
@@ -85,7 +87,8 @@ As bibliotecas de missão criadas com `library new` incluem pontos `@studio.edit
 | `project/drivers/models/<id>/model.json` | Identidade, registradores, conversões, canais e ABI do sensor |
 | `project/drivers/catalog.json` | HAL e transportes compartilhados |
 | `project/generated/drivers.json` | Assinaturas dos arquivos materializados para preservar edições locais |
-| `mission/apps/`, `mission/libs/` | Fontes compilados dos módulos da missão |
+| `cFS/apps/`, `cFS/libs/` | Fontes oficiais e módulos adicionados pela pessoa no clone local |
+| `mission/apps`, `mission/libs` | Aliases para `../cFS/apps` e `../cFS/libs` em missões novas |
 | `mission/modules.cmake`, `mission/libraries.cmake` | Seleção própria de módulos da CPU1 e bibliotecas da missão |
 | `mission/cpu1_cfe_es_startup.scr` | Módulos ativos e receitas arquivadas de inicialização |
 | `mission/sample_defs/targets.cmake` | Listas de módulos por CPU |
@@ -93,6 +96,7 @@ As bibliotecas de missão criadas com `library new` incluem pontos `@studio.edit
 | `mission/sample_defs/default_osconfig.cmake`, `cfe_core_api_interface_cfg_values.h` na mesma pasta | Limites do carregador, nomes de módulos e campos correspondentes no cFE |
 | `mission/sample_defs/generate_startup.cmake`, `cpu1/install_custom.cmake` sob `sample_defs/` | Instalação do startup e das tabelas da missão |
 | `mission/sample_defs/tables/`, `mission/sample_defs/generated/` | Tabelas de SCH_LAB/TO_LAB e fragmentos de integração gerados |
+| `mission/build-native/`, `mission/build-flight/` | Artefatos locais de compilação, fora do clone oficial |
 
 ## Conferir e compilar
 
@@ -104,3 +108,5 @@ As bibliotecas de missão criadas com `library new` incluem pontos `@studio.edit
 ```
 
 `check` informa diferenças e retorna código 1 se houver alterações geradas pendentes. `sync` aplica essas alterações. Depois de modificar fontes ou membros da missão, compile e execute a nova versão no destino desejado. Para alterar dispositivos, endereços ou barramentos emulados, reinicie o QEMU para carregar a topologia. Os ajustes de sinal sintético podem ser aplicados na sessão de dados. [Execução por destino](../hardware/README.md)
+
+[Auditoria da origem NASA, caminhos locais e geradores](../docs/cfs-wrapper.md) (23/11/2026).

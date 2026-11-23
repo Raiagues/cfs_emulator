@@ -2,6 +2,8 @@
 
 A app cFS mantém um dispositivo por sensor e publica a telemetria. Cada modelo descreve o protocolo e os canais em `models/<id>/model.json`. O `hal_sensor` executa a sequência de configuração, obtém uma amostra completa e devolve um status. A app fornece o barramento ao vincular o dispositivo. No Raspberry Pi, `linux_i2c_lib` executa a transação no dispositivo Linux. Em testes, o mesmo driver pode receber um barramento de memória.
 
+Este diretório contém definições, templates e fontes compartilhados usados pelos geradores, fora do clone da NASA. Eles não instalam apps HAL nem sensores na configuração inicial. Ao vincular um sensor ou incluir uma dependência, o Studio materializa os módulos necessários em `cFS/libs/`; a app que usa o leitor fica em `cFS/apps/`. Em missões novas, `mission/libs` e `mission/apps` são aliases para esses diretórios. As definições em `mission/sample_defs/` e os builds em `mission/build-native/` ou `mission/build-flight/` continuam externos ao clone.
+
 | Onde editar | Responsabilidade |
 | --- | --- |
 | `models/<id>/model.json` | Identidade do chip, escritas de inicialização, registradores de saída, unidades e sensibilidade |
@@ -11,7 +13,7 @@ A app cFS mantém um dispositivo por sensor e publica a telemetria. Cada modelo 
 | `../appgen/templates/hal_sensor/` | Trechos que ligam o leitor da app baseada em `sample_app` à biblioteca do modelo |
 | `project/config.json` ou **Hardware → Configure bus and address** | Instância instalada, barramento, endereço escolhido e valores iniciais |
 | `sensors/<id>.py` ou **Synthetic data** | Forma de onda de cada canal em unidades físicas |
-| `mission/libs/<id>_lib/` | Biblioteca de voo materializada por `project sync` para o build do cFE |
+| `cFS/libs/<id>_lib/` | Biblioteca de voo materializada conforme os vínculos e as dependências do projeto; acessível também pelo alias `mission/libs/` em missões novas |
 
 ```mermaid
 flowchart LR

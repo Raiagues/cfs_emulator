@@ -4,12 +4,8 @@ logs/
 __pycache__/
 node_modules/
 .venv/
-project/generated/build*.json
+/project/generated/
+/project/apps/
 /cFS/
 /.nasa-cfs-*/
-/mission/sample_defs/
-/mission/build-*/
-/mission/.prepare.lock
-/mission/.prepare-*/
-/mission/apps
-/mission/libs
+/mission/

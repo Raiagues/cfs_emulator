@@ -1,5 +1,6 @@
 """Source ownership and migration of sample_app-derived flight applications."""
 from pathlib import Path
+import json
 import tempfile
 import unittest
 
@@ -48,7 +49,7 @@ class AppTemplateTest(unittest.TestCase):
         self.root.mkdir()
         checkout = self.root.parent / "cFS/apps/sample_app"
         fixtures = {
-            "CMakeLists.txt": "set(APP_SRC_FILES fsw/src/sample_app.c)\n# Create the app module\nadd_cfe_app(sample_app ${APP_SRC_FILES})\n# Add table\n",
+            "CMakeLists.txt": "set(APP_SRC_FILES fsw/src/sample_app.c)\n# Create the app module\nadd_cfe_app(sample_app ${APP_SRC_FILES})\nadd_cfe_app_dependency(sample_app sample_lib)\n# Add table\n",
             "fsw/src/sample_app.c": '#include "sample_app.h"\nint unrelated(void) { return status; }\nint SAMPLE_APP_Init(void)\n{\n  return   status;\n}\n',
             "fsw/src/sample_app_dispatch.c": '#include "sample_app.h"\nvoid SAMPLE_APP_ProcessGroundCommand(void)\n{\n    switch (cc) {\n       default : break;\n    }\n}\nvoid SAMPLE_APP_TaskPipe(void)\n{\n    if (hk) {}\n    else if ( CFE_SB_MsgId_Equal( MsgId, CMD_MID ) ) {}\n}\n',
             "fsw/inc/sample_app_fcncodes.h": "#define SAMPLE_APP_NOOP_CC 0\n#endif\n",
@@ -65,6 +66,69 @@ class AppTemplateTest(unittest.TestCase):
     def sync(self):
         files = appgen.planned_files(self.root, [self.manifest], libraries=[])
         appgen.write_files(self.root, files)
+        # Match public sync: the old manifest stays on disk during planning,
+        # then the successful source plan and updated settings are committed.
+        saved = self.root.parent / "project/apps/weather.json"
+        saved.parent.mkdir(parents=True, exist_ok=True)
+        saved.write_text(json.dumps(self.manifest))
+
+    def snapshot(self):
+        return {path.relative_to(self.root.parent).as_posix(): path.read_bytes()
+                for path in self.root.parent.rglob("*") if path.is_file()}
+
+    def test_manual_cmake_entries_inside_blocks_are_not_overwritten(self):
+        path = self.root / "apps/weather/CMakeLists.txt"
+        original = path.read_text()
+        self.manifest["commands"].append({"name": "calibrate", "code": 4})
+        for section, addition in (("SOURCES", "    user_extra.c\n"),
+                                  ("DEPENDENCIES", "add_cfe_app_dependency(weather manual_lib)\n")):
+            with self.subTest(section=section):
+                path.write_text(original.replace("# APPGEN END " + section, addition + "# APPGEN END " + section))
+                before = self.snapshot()
+                with self.assertRaisesRegex(appgen.AppgenError, "Local changes inside APPGEN " + section):
+                    self.sync()
+                self.assertEqual(self.snapshot(), before)
+                self.assertFalse((path.parent / "fsw/src/commands/weather_calibrate_cmd.c").exists())
+
+    def test_normal_add_remove_and_idempotence_preserve_external_entries_and_sample_lib(self):
+        path = self.root / "apps/weather/CMakeLists.txt"
+        custom = "\ntarget_sources(weather PRIVATE user_extra.c)\nadd_cfe_app_dependency(weather manual_lib)\n"
+        path.write_text(path.read_text() + custom)
+        self.manifest["commands"].append({"name": "calibrate", "code": 4})
+        self.sync()
+        added = path.read_text()
+        self.assertIn("fsw/src/commands/weather_calibrate_cmd.c", added)
+        self.assertIn("add_cfe_app_dependency(weather sample_lib)", added)
+        self.assertTrue(added.endswith(custom))
+        before = self.snapshot()
+        self.sync()
+        self.assertEqual(self.snapshot(), before)
+        self.manifest["commands"].clear()
+        self.sync()
+        removed = path.read_text()
+        self.assertNotIn("fsw/src/commands/weather_calibrate_cmd.c", removed)
+        self.assertTrue(removed.endswith(custom))
+        self.assertIn("add_cfe_app_dependency(weather sample_lib)", removed)
+
+    def test_missing_baseline_allows_identical_blocks_but_blocks_changes_without_writes(self):
+        (self.root.parent / "project/apps/weather.json").unlink()
+        before = self.snapshot()
+        plan = appgen.planned_files(self.root, [self.manifest], libraries=[])
+        appgen.write_files(self.root, plan)
+        self.assertEqual(self.snapshot(), before)
+        self.manifest["commands"].append({"name": "calibrate", "code": 4})
+        with self.assertRaisesRegex(appgen.AppgenError, "without previous app settings"):
+            self.sync()
+        self.assertEqual(self.snapshot(), before)
+
+    def test_legacy_manifest_can_prove_previous_cmake_blocks(self):
+        saved = self.root.parent / "project/apps/weather.json"
+        legacy = self.root / "apps/weather/app.json"
+        saved.rename(legacy)
+        self.manifest["commands"].append({"name": "calibrate", "code": 4})
+        self.sync()
+        self.assertIn("fsw/src/commands/weather_calibrate_cmd.c",
+                      (self.root / "apps/weather/CMakeLists.txt").read_text())
 
     def test_custom_command_updates_only_its_scoped_hooks(self):
         driver = self.root / "apps/weather/fsw/src/weather_dispatch.c"

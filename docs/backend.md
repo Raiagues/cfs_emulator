@@ -1,6 +1,8 @@
 # Backend e API local
 
-O servidor iniciado por `./start` vincula a interface e a API ao endereço `127.0.0.1`. O projeto é a unidade de trabalho. O clone oficial da NASA fica em `cFS/`. Definições de missão e módulos do usuário ficam em `mission/`, com a configuração declarativa em `project/`. Os artefatos do build identificam a aplicação e o formato dos pacotes que a estação poderá realmente decodificar.
+O servidor iniciado por `./start` vincula a interface e a API ao endereço `127.0.0.1`. O projeto é a unidade de trabalho. O clone oficial da NASA fica em `cFS/`; novas apps e bibliotecas são adicionadas fisicamente em `cFS/apps/` e `cFS/libs/`. Na preparação de uma missão nova, `mission/apps` e `mission/libs` são aliases para esses diretórios. Os scripts, templates e a configuração declarativa ficam fora do clone, em `project/`.
+
+As definições locais ficam em `mission/sample_defs/`, e os builds em `mission/build-native/` ou `mission/build-flight/`. O checkout `cFS/`, a árvore local `mission/`, os manifestos `project/apps/` e os artefatos `project/generated/` são ignorados pelo Git do Studio. Os artefatos do build identificam a aplicação e o formato dos pacotes que a estação poderá realmente decodificar.
 
 ```mermaid
 flowchart LR
@@ -103,3 +105,5 @@ Para obter a prévia, envie `elements` ou `tle`, um `cycle` a partir de zero e o
 O modelo `orbit.thermal` integra o balanço entre radiação solar direta, albedo, infravermelho terrestre, dissipação interna e emissão térmica. A integração usa Kelvin. Os resultados `values`, `minimum`, `maximum`, `steady_sun` e `steady_shadow` usam °C. O modelo anterior `orbit.sunlight` continua disponível para sinais existentes. Prévia, sessão Python e amostras para QMP usam a mesma órbita e o mesmo material. [Modelo físico](../sensors/orbit.py)
 
 Use `simulate-preview` em `POST /api/job` para amostras locais. Para um cenário local, acrescente `options.device` e `options.scenario` com `orbit`, `eclipse` ou `dropout`. O teste prepara os registradores virtuais e mede a saída pela implementação C do HAL. Ao enviar com `simulate` no alvo `qemu`, a cadeia mostra a escrita confirmada pelo monitor QMP. A leitura de voo aparece quando é possível associar um campo de telemetria recebido ao sinal. [Cenários e HAL](../sensors/scenarios.py) · [Sessão](../sensors/session.py)
+
+[Auditoria da origem NASA, caminhos locais e geradores](cfs-wrapper.md) (23/11/2026).
