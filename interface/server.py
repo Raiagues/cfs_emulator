@@ -295,6 +295,8 @@ class Handler(BaseHTTPRequestHandler):
                 result = app.ground_start(body)
             elif path == '/api/ground/stop':
                 result = app.ground.stop()
+            elif path == '/api/ground/preview':
+                result = app.ground_preview(body)
             elif path == '/api/ground/send':
                 result = app.ground_send(body)
             elif path == '/api/ground/tests':

@@ -64,6 +64,13 @@ function render(snapshot) {
   }
   else forward.removeAttribute('href');
   bar.querySelector('.flight-complete').hidden = !snapshot.optional_board && current !== null;
+  const resume = bar.querySelector('[data-tutorial="resume"]');
+  resume.href = snapshot.next_route || stepUrl('target');
+  resume.textContent = current ? 'Continue · ' + labels[current] : 'Choose target';
+  const targetName = {native:'Native', qemu:'Emulator', physical:'Board'}[snapshot.target];
+  bar.querySelector('.flight-tutorial-title').textContent = 'First flight' + (targetName ? ' · ' + targetName : '');
+  bar.querySelector('[data-flight="reset"]').disabled = !snapshot.target;
+
   if (next) refreshCoach();
 }
 
@@ -87,13 +94,29 @@ if (bar) {
       (i ? '<span class="flight-line" aria-hidden="true"></span>' : '') + '<span data-flight="' + id + '">' +
       '<span class="flight-number" aria-hidden="true">' + (i+1) + '</span><span class="flight-label">' + label + '</span></span>'
     ).join('') + '</div><div class="flight-guide-actions"><span class="flight-complete" hidden>First flight done</span>' +
-    '<a class="flight-next" hidden>Next</a><button type="button" data-flight="reset" title="Start over" aria-label="Start over">' +
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10a8 8 0 1 1 1 7M4 4v6h6"/></svg></button></div>';
-  bar.querySelector('[data-flight="reset"]').onclick = async () => {
+    '<a class="flight-next" hidden>Next</a><details class="flight-tutorial"><summary>Tutorial' +
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>' +
+    '<div class="flight-tutorial-menu"><strong class="flight-tutorial-title">First flight</strong>' +
+    '<a data-tutorial="resume" href="/#target">Continue tutorial</a>' +
+    '<a href="/welcome">Introduction · cFS basics</a><a href="/#target">Choose target</a>' +
+    '<button type="button" data-flight="reset" title="Start over" disabled>Restart first flight</button>' +
+    '<small>Restart resets the tutorial for this target. Your code and builds stay in place.</small></div></details></div>';
+  const tutorial = bar.querySelector('.flight-tutorial');
+  tutorial.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {tutorial.open = false;tutorial.querySelector('summary').focus();}
+  });
+  document.addEventListener('click', event => {if (!tutorial.contains(event.target)) tutorial.open = false;});
+  tutorial.addEventListener('click', event => {if (event.target.closest('a')) tutorial.open = false;});
+  bar.querySelector('[data-flight="reset"]').onclick = async event => {
+    const button = event.currentTarget;
+    if (button.disabled) return;
+    button.disabled = true;
     try {
       await api('journey/reset', {target:observations?.target || context()});
-      navigate(stepUrl('target'));
-    } catch (error) {failure(error);}
+      const destination = stepUrl('target');
+      if (new URL(destination, location.href).href === location.href) location.reload();
+      else navigate(destination);
+    } catch (error) {button.disabled = false;failure(error);}
   };
   const refresh = () => refreshJourney().catch(failure);
   window.addEventListener('flight:boot-state', event => {bootFailure=event.detail.failed;if(observations)render(observations);});

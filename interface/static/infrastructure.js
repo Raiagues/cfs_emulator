@@ -9,6 +9,7 @@ import {boardProgress} from './board-setup.js';
 import {guide} from './coach.js';
 
 for (const art of document.querySelectorAll('[data-art]')) art.innerHTML = targetDrawing(art.dataset.art);
+for (const lock of document.querySelectorAll('[data-lock-icon]')) lock.innerHTML = icon('lock');
 const $ = selector => document.querySelector(selector);
 const form = $('#infrastructure-form');
 const settingsForm = $('#target-settings-form');
@@ -223,8 +224,17 @@ function renderChecks() {
 function controls() {
   for (const card of document.querySelectorAll('.target-option')) {
     const locked = card.dataset.target !== 'native' && !settings?.remote_unlocked;
-    card.disabled = !settings || busy || locked || boardVisit && card.dataset.target !== 'physical';
-    card.title = locked ? 'Complete first contact on Native to unlock this target' : '';
+    card.disabled = !settings || busy || boardVisit && card.dataset.target !== 'physical';
+    card.setAttribute('aria-disabled', String(locked || card.disabled));
+    card.dataset.locked = String(locked);
+    const tip = card.querySelector('.target-lock-tip');
+    if (tip) {
+      card.querySelector('.target-lock').hidden = !locked;
+      tip.hidden = !locked;
+      if (locked) card.setAttribute('aria-describedby', tip.id);
+      else {card.removeAttribute('aria-describedby');delete card.dataset.explain;}
+    }
+    card.title = locked ? 'Part 2 · Complete first contact on Native to unlock this target' : '';
     card.setAttribute('aria-pressed', String(card.dataset.target === target));
   }
   for (const field of form.querySelectorAll('#configuration :is(input,select,button)')) {
@@ -458,8 +468,15 @@ async function installRequirements(groupName) {
 
 function showError(error) { feedback(error.message,true); controls(); }
 $('#targets').addEventListener('click', async event => {
-  const mode = event.target.closest('[data-target]')?.dataset.target;
+  const card = event.target.closest('[data-target]');
+  const mode = card?.dataset.target;
   if (!mode || !settings || busy || boardVisit && mode !== 'physical') return;
+  for (const other of document.querySelectorAll('.target-option')) {delete other.dataset.explain;delete other.dataset.dismissed;}
+  if (mode !== 'native' && !settings.remote_unlocked) {
+    card.dataset.explain = 'true';
+    card.focus({preventScroll:true});
+    return;
+  }
   abortChecks(target);
   selectedVersion++;
   busy = true;
@@ -482,6 +499,20 @@ $('#targets').addEventListener('click', async event => {
     controls();
   }
   await verify();
+});
+$('#targets').addEventListener('keydown', event => {
+  if (event.key === 'Escape') {
+    const card = event.target.closest('[data-target]');
+    if (card) {delete card.dataset.explain;card.dataset.dismissed = 'true';}
+  }
+});
+$('#targets').addEventListener('pointerover', event => {
+  const card = event.target.closest('[data-target]');
+  if (card && !card.contains(event.relatedTarget)) delete card.dataset.dismissed;
+});
+$('#targets').addEventListener('focusout', event => {
+  const card = event.target.closest('[data-target]');
+  if (card && !card.contains(event.relatedTarget)) {delete card.dataset.explain;delete card.dataset.dismissed;}
 });
 $('#verify-target').addEventListener('click', () => verify().catch(showError));
 $('#inspect').addEventListener('click', () => {

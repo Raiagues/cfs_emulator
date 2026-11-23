@@ -63,6 +63,8 @@ RUN qemu-img convert -f raw -O qcow2 /opt/raspi-os/raspios.img /opt/raspi-os/ras
 
 FROM base AS qemu-builder
 
+ARG BUILD_JOBS=1
+
 # Preserve signed magnetic readings in QEMU's LSM303DLHC QOM properties.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential pkg-config ninja-build python3-venv \
@@ -80,7 +82,7 @@ RUN cd /tmp/qemu && patch -p1 < /tmp/qemu-signed.patch && \
     ../configure --prefix=/usr --target-list=aarch64-softmmu --enable-slirp \
         --disable-docs --disable-tools --disable-guest-agent --disable-user \
         --disable-werror --disable-download && \
-    ninja -j4 qemu-system-aarch64 && \
+    ninja -j"$BUILD_JOBS" qemu-system-aarch64 && \
     install -D -s -m755 qemu-system-aarch64 /output/qemu-system-aarch64
 
 # Reuse the base build when a student adds a register model.
@@ -88,7 +90,7 @@ COPY project/qemu/ /tmp/studio/project/qemu/
 COPY project/model.py project/flight_sources.py project/sensor_models.py /tmp/studio/project/
 COPY project/drivers/models/ /tmp/studio/project/drivers/models/
 RUN python3 /tmp/studio/project/qemu/generate.py /tmp/qemu/hw/sensor && \
-    ninja -C /tmp/qemu/build -j4 qemu-system-aarch64 && \
+    ninja -C /tmp/qemu/build -j"$BUILD_JOBS" qemu-system-aarch64 && \
     install -D -s -m755 /tmp/qemu/build/qemu-system-aarch64 /output/qemu-system-aarch64
 
 FROM base

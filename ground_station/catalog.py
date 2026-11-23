@@ -14,12 +14,12 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from project.flight_sources import module_directory
+from project.flight_sources import module_directory, module_directories
 from ground_station.discovery import command_mappings, telemetry_mappings, raw_telemetry_mappings
 from ground_station.tables import table_packets
 from ground_station.subscriptions import subscription_metadata
 
-CATALOG_VERSION = 14
+CATALOG_VERSION = 16
 
 TYPES = {'uint8': 'B', 'uint16': 'H', 'uint32': 'I', 'uint64': 'Q',
          'int8': 'b', 'int16': 'h', 'int32': 'i', 'int64': 'q',
@@ -87,7 +87,7 @@ def source_locations(root, appdir, packet):
     return result
 
 
-def structures(text):
+def structures(text, array_members=None):
     result = {}
     for body, name in re.findall(r'typedef\s+struct\s*(?:\w+\s*)?\{([^{}]*)\}\s*(\w+)\s*;', text):
         members = []
@@ -100,16 +100,17 @@ def structures(text):
                 match = re.fullmatch(r'\s*(\w+)\s*(\[.*\])?\s*', item)
                 if match:
                     array = match[2]
+                    if array and array_members is not None:
+                        array_members[name, match[1]] = array
                     numeric = re.fullmatch(r'\[\s*(\d+)\s*\]', array or '')
                     members.append((typ, match[1], int(numeric[1]) if numeric else (-1 if array else 1)))
         result[name] = members
     return result
 
 
-def fields_for(typ, structs, prefix='', depth=0, formats=None):
+def fields_for(typ, structs, prefix='', depth=0, formats=None, array_members=None, array_length=None):
     formats = formats or TYPES
-    if depth > 5:
-        return []
+    array_members = array_members or {}
     fields = []
     for field_type, name, count in structs.get(typ, []):
         if field_type in ('CFE_MSG_TelemetryHeader_t', 'CFE_MSG_CommandHeader_t'):
@@ -118,11 +119,25 @@ def fields_for(typ, structs, prefix='', depth=0, formats=None):
         if field_type in formats:
             fields.append({'name': path.removeprefix('Payload.'), 'member': path,
                            'type': field_type, 'format': formats[field_type], 'count': count})
-        elif count == 1 and field_type in structs:
-            fields.extend(fields_for(field_type, structs, path + '.', depth + 1, formats))
+            continue
+        array = array_members.get((typ, name))
+        # Preserve each field of arrays such as DS_FileInfo_t Payload[N].
+        # N may be a macro/expression, so the flight compiler supplies its value.
+        nested_count = count
+        if array and array.count('[') == 1 and array_length:
+            nested_count = array_length(typ, name)
+        nested = field_type in structs and depth < 5 and 1 <= nested_count <= 1024
+        nested = nested and (not array or array.count('[') == 1)
+        if nested:
+            members = [path] if not array and count == 1 else [f'{path}[{i}]' for i in range(nested_count)]
+            for member in members:
+                fields.extend(fields_for(field_type, structs, member + '.', depth + 1, formats,
+                                         array_members, array_length))
         else:
+            # Unions and layouts beyond this parser remain explicit bytes;
+            # dropping such a field would silently send a zero-filled payload.
             fields.append({'name': path.removeprefix('Payload.'), 'member': path,
-                           'type': field_type, 'format': 'raw', 'count': max(1, count)})
+                           'type': field_type, 'format': 'raw', 'count': max(1, nested_count)})
     return fields
 
 
@@ -146,12 +161,34 @@ def resolve_build(root, build_dir=None):
     return path
 
 
+
+def unavailable_apps(root, active):
+    """List literal cFE application definitions excluded from the installed startup.
+
+    An add_sbn_module/add_cfe_library is not an independently started app.
+    This is an inventory only: no MID or packet layout is inferred for it.
+    """
+    result = []
+    for directory in module_directories(root, 'apps'):
+        if directory.name in active:
+            continue
+        cmake = directory / 'CMakeLists.txt'
+        if not cmake.is_file():
+            continue
+        source = re.sub(r'#[^\n]*', '', cmake.read_text(errors='replace'))
+        definition = r'(?im)^\s*add_cfe_app\s*\(\s*' + re.escape(directory.name) + r'(?=\s|\))'
+        if re.search(definition, source):
+            result.append({'app': directory.name,
+                           'reason': 'Application source is available, but it is not in this build’s installed startup script.'})
+    return result
+
+
 def _build_catalog(root, overrides_root=None, container=None, temp_root=None, build_dir=None):
     root = Path(root).resolve()
     build = resolve_build(root, build_dir)
     result = {'packets': [], 'commands': [], 'unresolved_commands': [], 'errors': [], 'transport': {},
               'source': build.relative_to(root).as_posix(), 'byte_order': 'little',
-              'catalog_version': CATALOG_VERSION, 'apps': []}
+              'catalog_version': CATALOG_VERSION, 'apps': [], 'unavailable_apps': []}
     compiler_build = build / 'cache' if (build / 'cache').is_dir() else build
     flags_files = sorted(compiler_build.glob('**/default_cpu1/apps/*/CMakeFiles/*.dir/flags.make'))
     flags_files += sorted(compiler_build.glob('**/default_cpu1/*/CMakeFiles/*.dir/flags.make'))
@@ -166,6 +203,7 @@ def _build_catalog(root, overrides_root=None, container=None, temp_root=None, bu
     from project.appgen.native_startup import parse_startup
     active = {entry.name for entry in parse_startup(startup.read_text())[0]
               if entry.kind == 'CFE_APP'}
+    result['unavailable_apps'] = unavailable_apps(root, active)
     for flags_file in flags_files:
         target = flags_file.parents[2].name
         core_module = flags_file.parents[3].name == 'default_cpu1'
@@ -235,7 +273,8 @@ def _build_catalog(root, overrides_root=None, container=None, temp_root=None, bu
             return struct.unpack('<' + 'Q' * (len(data) // 8), data)
         try:
             preprocessed = compile_run([compiler, *args, '-E', '-P', '-x', 'c', '-'], input=source.encode()).decode()
-            structs = structures(preprocessed)
+            array_members = {}
+            structs = structures(preprocessed, array_members)
             formats = dict(TYPES)
             aliases = re.findall(r'typedef\s+(\w+)\s+(\w+)\s*;', preprocessed)
             native_aliases = set(re.findall(r'typedef\s+(?:(?:unsigned|signed|long|short|int|char)\s+)+(\w+)\s*;', preprocessed)) - formats.keys()
@@ -257,6 +296,8 @@ def _build_catalog(root, overrides_root=None, container=None, temp_root=None, bu
                         formats[alias] = formats[base]
                     if base in structs and alias not in structs:
                         structs[alias] = structs[base]
+                        array_members.update({(alias, name): array_members[base, name]
+                                              for _, name, _ in structs[base] if (base, name) in array_members})
             macros = compile_run([compiler, *args, '-E', '-dM', '-x', 'c', '-'], input=source.encode()).decode()
             defined = set(re.findall(r'#define\s+(\w+)', macros))
             mids = {name for name in defined if name.startswith(app.upper() + '_') and
@@ -297,14 +338,24 @@ def _build_catalog(root, overrides_root=None, container=None, temp_root=None, bu
                     key = norm(name.removesuffix('_t')).removesuffix('MESSAGE')
                     candidates = [m for m in mids if norm(m.removesuffix('_MID')).removesuffix('MSG') == key]
                 if len(candidates) == 1: telemetry[candidates[0]] = (name, None)
+            array_lengths = {}
+            def array_length(typ, member):
+                key = (typ, member)
+                if key not in array_lengths:
+                    array_lengths[key] = evaluate('', [f'sizeof((({typ}*)0)->{member}) / '
+                                                        f'sizeof((({typ}*)0)->{member}[0])'])[0]
+                return array_lengths[key]
+            def packet_fields(typ):
+                return fields_for(typ, structs, formats=formats, array_members=array_members,
+                                  array_length=array_length)
             packets = [{'id': mid, 'name': typ, 'app': app, 'mid_expr': mid,
-                        'struct': typ, 'fields': fields_for(typ, structs, formats=formats),
+                        'struct': typ, 'fields': packet_fields(typ),
                         'kind': 'telemetry', 'repeat_expr': repeat or '1'}
                        for mid, (typ, repeat) in sorted(telemetry.items()) if mid in defined]
             mappings, unresolved, explicit = command_mappings(dispatch, structs, defined, prefix)
             commands = [{'id': code, 'name': typ, 'app': app, 'mid_expr': mid,
                          'code_expr': expression, 'struct': typ,
-                         'fields': fields_for(typ, structs, formats=formats), 'kind': 'command',
+                         'fields': packet_fields(typ), 'kind': 'command',
                          'dispatch': 'mid' if code == mid else 'function_code'}
                         for code, (mid, expression, typ) in sorted(mappings.items())]
             for mid, size in sorted(raw_telemetry_mappings(initialized, defined).items()):

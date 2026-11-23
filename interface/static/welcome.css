@@ -5,3 +5,15 @@ body { margin:0; height:100dvh; overflow:hidden }
 @media(max-width:1210px), (max-height:695px) {
   .welcome-frame { height:calc(100dvh / var(--welcome-scale,1)) }
 }
+
+.welcome-target[aria-disabled="true"] {cursor:help!important}
+.welcome-target[aria-disabled="true"] > span:first-child svg {opacity:.35}
+.welcome-target-lock {position:absolute;right:8px;top:8px;display:flex;align-items:center;gap:5px;padding:4px 6px;
+  border:1px solid var(--fs-line);border-radius:4px;color:var(--fs-muted);background:var(--fs-panel);font-size:11px}
+.welcome-target-lock svg {width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.welcome-target-tip {position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:8px;padding:14px;
+  background:var(--fs-panel);color:var(--fs-text);font:12px/1.45 var(--fs-sans);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .16s ease}
+.welcome-target-tip strong {color:var(--fs-accent);font-weight:600}
+.welcome-target-tip small {color:var(--fs-muted);font-size:11px}
+.welcome-target:not([data-dismissed="true"]):is(:hover,:focus-visible,[data-explain="true"]) .welcome-target-tip {opacity:1;visibility:visible}
+@media(prefers-reduced-motion:reduce) {.welcome-target-tip {transition:none}}

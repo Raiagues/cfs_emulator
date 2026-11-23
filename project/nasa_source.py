@@ -62,7 +62,7 @@ def _checkout(source):
         subprocess.run(["git", "-C", str(source), "fetch", "--depth=1", "origin", REVISION], check=True)
         subprocess.run(["git", "-C", str(source), "checkout", "--detach", REVISION], check=True)
     subprocess.run(["git", "-C", str(source), "submodule", "update", "--init", "--recursive",
-                    "--depth=1", "--jobs=4", "--progress"], check=True)
+                    "--depth=1", "--jobs=1", "--progress"], check=True)
 
 
 def install(root):

@@ -474,6 +474,20 @@ class Laboratory:
         self.workspace.path(location['path'])
         return location
 
+    def ground_preview(self, body):
+        from ground_station import official
+        if set(body) - {'target', 'command_id', 'values'}:
+            raise ValueError('Invalid packet preview parameters')
+        values = body.get('values', {})
+        if not isinstance(values, dict):
+            raise ValueError('Command values must be an object')
+        catalog = self.ground_catalog(body.get('target'))
+        command = next((c for c in catalog['commands'] if c['id'] == body.get('command_id')), None)
+        if command is None:
+            raise ValueError('Command does not exist in this build')
+        command = dict(command, header_size=catalog['transport']['command_header_size'])
+        return official.preview(command, values, catalog['byte_order'])
+
     def ground_send(self, body):
         if 'app' in body and 'command' in body:
             if set(body) - {'app', 'command', 'args', 'target'}:

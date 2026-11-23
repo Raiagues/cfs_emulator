@@ -76,6 +76,53 @@ def encode(command, values, byte_order):
     return bytes(packet)
 
 
+def preview(command, values, byte_order):
+    """Serialize a command without sending it, retaining compiler field offsets.
+
+    Each segment is a slice of the exact bytes returned by encode(), including
+    alignment gaps. Header integers are network order; field bytes follow the
+    selected mission ABI, just as they do for a transmitted command.
+    """
+    packet = encode(command, values, byte_order)
+    header = command['header_size']
+    segments = []
+
+    def segment(name, kind, offset, size, **metadata):
+        segments.append(dict(name=name, kind=kind, offset=offset, size=size,
+                             hex=packet[offset:offset + size].hex(), **metadata))
+
+    for name, offset, size in (('MID', 0, 2), ('Sequence', 2, 2), ('Length', 4, 2),
+                               ('Function code', 6, 1), ('Checksum', 7, 1)):
+        segment(name, 'header', offset, size,
+                value=int.from_bytes(packet[offset:offset + size], 'big'), byte_order='big')
+    if header > 8:
+        segment('Header padding', 'padding', 8, header - 8)
+    decoded, errors = decode(command, packet, byte_order)
+    if errors:
+        raise ValueError('; '.join(errors))
+    cursor = header
+    for field in sorted(command['fields'], key=lambda item: item['offset']):
+        offset, size = field['offset'], field['size']
+        if offset < cursor:
+            raise ValueError('Overlapping field layout: ' + field['name'])
+        if offset > cursor:
+            segment('Padding', 'padding', cursor, offset - cursor)
+        metadata = {key: field[key] for key in ('type', 'format', 'count') if key in field}
+        if field['name'] in decoded:
+            metadata['value'] = decoded[field['name']]
+        kind = ('padding' if field['name'].rsplit('.', 1)[-1].lower().startswith(('padding', 'reserved', 'spare'))
+                else 'payload')
+        segment(field['name'], kind, offset, size, byte_order=byte_order, **metadata)
+        cursor = offset + size
+    if cursor < len(packet):
+        segment('Padding', 'padding', cursor, len(packet) - cursor)
+    return dict(id=command['id'], app=command['app'], mid=command['mid'], code=command['code'],
+                size=len(packet), header_size=header, byte_order=byte_order, hex=packet.hex(),
+                header_hex=packet[:header].hex(), payload_hex=packet[header:].hex(),
+                length_field=int.from_bytes(packet[4:6], 'big'), checksum=packet[7],
+                checksum_valid=reduce(xor, packet, 0) == 0xFF, segments=segments)
+
+
 def decode(definition, data, byte_order):
     variable = definition.get("variable_size")
     valid = definition["min_size"] <= len(data) <= definition["max_size"] if variable else len(data) == definition["size"]

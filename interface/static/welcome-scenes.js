@@ -169,6 +169,8 @@ export class Welcome {
       tk: 0,
       place: null,
       placed: false,
+      remoteUnlocked: false,
+      lockedTarget: null,
       k: 0,
       auto: false,
       at: 0,
@@ -180,7 +182,11 @@ export class Welcome {
     Object.assign(this.state, update);
   }
   setPlace(place) {
-    this.setState({ place, placed: true });
+    if (place !== 'native' && !this.state.remoteUnlocked) {
+      this.setState({lockedTarget:place});
+      return;
+    }
+    this.setState({place, placed:true, lockedTarget:null});
   }
   passes() {
     return [
@@ -1874,15 +1880,22 @@ export class Welcome {
       ['board', 'Board', 'real Raspberry Pi'],
     ].map((x) => {
       const sel = P === x[0];
+      const locked = x[0] !== 'native' && !st.remoteUnlocked;
       return {
+        id:x[0],
+        selected:sel,
+        locked,
+        explained:st.lockedTarget === x[0],
+        tipId:locked ? 'welcome-lock-' + x[0] : '',
+        tip:locked ? 'Part 2 · Complete first contact on Native to unlock ' + x[1] : '',
         name: x[1],
         sub: x[2],
         isNative: x[0] === 'native',
         isEmu: x[0] === 'emu',
         isBoard: x[0] === 'board',
-        rec: x[0] === 'emu',
+        rec: x[0] === 'native',
         pick: () => this.setPlace(x[0]),
-        coach: !st.placed && x[0] === 'emu' ? 'fs-coach' : '',
+        coach: !st.placed && x[0] === 'native' ? 'fs-coach' : '',
         src: x[0] === 'native' ? 'from nasa/cFS' : 'added by Flight Studio',
         srcBg: x[0] === 'native' ? BLUEBG : SANDBG,
         srcFg: x[0] === 'native' ? BLUET : SANDT,

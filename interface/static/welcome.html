@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#13171c">
-<title>Welcome · Flight Studio</title>
+<title>Tutorial introduction · Flight Studio</title>
 <link rel="icon" href="/favicon.svg">
 <link rel="stylesheet" href="/design.css">
 <link rel="stylesheet" href="/welcome.css">
@@ -17,7 +17,7 @@
 <header style="height: 52px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid var(--c22272e)">
 <div class="brand-group"><details data-brand-menu><summary class="brand"><strong>Flight</strong> studio</summary><nav>
 <a data-destination="welcome">Welcome</a><a data-destination="target">Setup</a></nav></details><span class="brand-divider">/</span><span>{{project}}</span></div>
-  <span style="display: flex; align-items: center; gap: 14px"><span style="display: flex; align-items: center; gap: 6px; color: var(--c8e96a1)"><span style="width: 6px; height: 6px; border-radius: 99px; background: var(--c5fc9a3)"></span>Saved</span><button data-theme-toggle aria-label="Switch between light and dark" style="width: 30px; height: 30px; border: 1px solid var(--c2b313a); border-radius: 4px; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true" style="stroke: var(--ca4acb6)"><path d="{{themeIcon}}"></path></svg></button></span>
+  <span style="display: flex; align-items: center; gap: 14px"><span style="display: flex; align-items: center; gap: 6px; color: var(--c8e96a1)"><span style="width: 6px; height: 6px; border-radius: 99px; background: var(--c5fc9a3)"></span>Introduction</span><button data-theme-toggle aria-label="Switch between light and dark" style="width: 30px; height: 30px; border: 1px solid var(--c2b313a); border-radius: 4px; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true" style="stroke: var(--ca4acb6)"><path d="{{themeIcon}}"></path></svg></button></span>
 </header>
 
 <main style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 16px 32px 20px; gap: 14px">
@@ -44,7 +44,7 @@
     <output role="status">{{failure}}</output><span style="flex: 1"></span>
     <sc-if value="{{canBack}}"><button data-on-click="back" class="w-nav ghost"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="stroke: currentColor"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>Back</button></sc-if>
     <sc-if value="{{notLast}}"><button data-on-click="next" class="w-nav {{nextCls}}">Next<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="stroke: currentColor"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button></sc-if>
-    <sc-if value="{{isLast}}"><button type="button" data-on-click="start" class="w-nav {{nextCls}}">Start<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="stroke: currentColor"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button></sc-if>
+    <sc-if value="{{isLast}}"><button type="button" data-on-click="start" class="w-nav {{nextCls}}">{{startLabel}}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="stroke: currentColor"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button></sc-if>
   </div>
 
   <sc-if value="{{c0}}">
@@ -531,7 +531,7 @@
   <div style="position: absolute; inset: 0; padding: 18px 20px; display: flex; flex-direction: column; gap: 16px">
     <div style="display: flex; gap: 10px">
       <sc-for list="{{places}}" as="p">
-        <button data-on-click="p.pick" class="{{p.coach}}" style="position: relative; flex: 1; min-width: 0; padding: 0; border-radius: 6px; border: {{p.bw}} solid {{p.bd}}; background: var(--c1a1f25); color: inherit; font: inherit; text-align: left; cursor: pointer; display: flex; flex-direction: column; overflow: hidden; box-shadow: {{p.sh}}">
+        <button data-on-click="p.pick" class="welcome-target {{p.coach}}" data-welcome-target="{{p.id}}" data-explain="{{p.explained}}" aria-label="{{p.name}}" aria-pressed="{{p.selected}}" aria-disabled="{{p.locked}}" aria-describedby="{{p.tipId}}" title="{{p.tip}}" style="position: relative; flex: 1; min-width: 0; padding: 0; border-radius: 6px; border: {{p.bw}} solid {{p.bd}}; background: var(--c1a1f25); color: inherit; font: inherit; text-align: left; cursor: pointer; display: flex; flex-direction: column; overflow: hidden; box-shadow: {{p.sh}}">
           <span style="height: 100px; display: flex; align-items: center; justify-content: center; background: var(--c13171c); border-bottom: 1px solid var(--c22272e)">
             <sc-if value="{{p.isNative}}"><svg width="132" height="94" viewBox="0 0 240 170" fill="none" aria-hidden="true">
           <rect x="30" y="12" width="180" height="116" rx="6" stroke-width="2" style="fill: var(--c0d1115); stroke: var(--c7d8590)"></rect>
@@ -581,6 +581,8 @@
           </span>
           <span style="padding: 10px 12px; display: flex; align-items: center; gap: 8px"><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 13px; color: var(--ceef0f2); font-weight: 500">{{p.name}}</span><span style="font-size: 11px; color: var(--c8e96a1)">{{p.sub}}</span><span class="wc-chip" style="height: 18px; margin-top: 4px; background: {{p.srcBg}}; color: {{p.srcFg}}">{{p.src}}</span></span><span style="width: 16px; height: 16px; box-sizing: border-box; border-radius: 99px; border: 1.5px solid {{p.bd}}; display: flex; align-items: center; justify-content: center"><span style="width: 7px; height: 7px; border-radius: 99px; background: {{p.dot}}"></span></span></span>
           <sc-if value="{{p.rec}}"><span style="position: absolute; top: 8px; right: 8px; height: 20px; padding: 0 7px; border-radius: 99px; background: var(--c16261f); color: var(--c9fe3c9); font-size: 11px; display: flex; align-items: center">start here</span></sc-if>
+          <sc-if value="{{p.locked}}"><span class="welcome-target-lock"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 10h14v11H5z M8 10V7a4 4 0 0 1 8 0v3 M12 14v3"/></svg>Part 2</span>
+          <span class="welcome-target-tip" role="tooltip" id="{{p.tipId}}"><strong>{{p.name}} · Part 2</strong><span>Complete first contact on Native: send ENABLE_OUTPUT, then NOOP and receive its event and counter.</span><small>Choose Native to begin.</small></span></sc-if>
         </button>
       </sc-for>
     </div>

@@ -351,7 +351,7 @@ function renderToolbar(){
  const profile=profiles.find(profile=>profile.board===project.board&&profile.os===project.os),job=operation(),busy=!!job||state.profileBusy||!state.hardware;
  const targets=['native',...(profile?.targets||[])];
  boardSelector.update(boards,state.board||'',busy);osSelector.update(systems,state.os||'',busy||!state.board);
- for(const target of document.querySelectorAll('.target-switch button')){const locked=target.dataset.target!=='native'&&!state.remoteUnlocked;target.disabled=busy||locked;target.title=locked?'Complete first contact on Native to unlock this target':'';target.setAttribute('aria-pressed',String(state.target===target.dataset.target));}
+ for(const target of document.querySelectorAll('.target-switch button')){const locked=target.dataset.target!=='native'&&!state.remoteUnlocked;target.disabled=busy;target.setAttribute('aria-disabled',String(locked||busy));target.title=locked?'Part 2 · Complete Native first: send ENABLE_OUTPUT, then NOOP and receive its event and counter.':'';target.setAttribute('aria-pressed',String(state.target===target.dataset.target));}
  const boot=$('.boot-action'),physical=state.target==='physical',native=state.target==='native';
  $('.profile-selectors').hidden=native;
  $('#native-host').hidden=!native;
@@ -548,8 +548,9 @@ const activities = {event: mountFirstContact, command: mountCommandLesson,
  send: mountGroundLesson, sensor: mountSignalLesson, test: mountSignalLesson};
 let activity;
 function guidedView() {
- const mount = activities[state.activity];
- if (activity && (activity.step !== state.activity || activity.target !== state.target)) {
+ const step = state.activity || (state.view==='ground' && !state.commandLaunch ? 'ground' : null);
+ const mount = step==='ground' ? mountFirstContact : activities[step];
+ if (activity && (activity.step !== step || activity.target !== state.target)) {
   activity.close(); activity = null;
  }
  if (!mount) return false;
@@ -557,9 +558,9 @@ function guidedView() {
   const pane = document.createElement('section');
   pane.className = 'activity-view';
   $('#view').replaceChildren(pane);
-  const controller = mount(pane, {state,startJob,advanceDeployment,saveSimulation,openApp:done=>newMissionApp('',done),
+  const controller = mount(pane, {state,startJob,guided:step==='event',advanceDeployment,saveSimulation,openApp:done=>newMissionApp('',done),
     refreshMission:()=>Promise.all([refresh(true),hardwareRefresh(true)])});
-  activity = {step:state.activity, target:state.target, ...controller};
+  activity = {step, target:state.target, ...controller};
  } else activity.update?.();
  $('#visual-heading').hidden=true;
  syncNavigation();
@@ -1204,6 +1205,7 @@ function adoptTarget(target){
  else delete document.body.dataset.flightTarget;
 }
 async function selectTarget(target){
+ if(target!=='native'&&!state.remoteUnlocked){feedback('Part 2 · Complete Native first: send ENABLE_OUTPUT, then NOOP and receive its event and counter.');return;}
  await api('hardware/target',{target});
  adoptTarget(target);
  displayTarget(target);

@@ -39,11 +39,15 @@ if [[ ! "$MISSION_ARCH" =~ ^[a-zA-Z0-9_-]+$ ]] || [[ "$MISSION_PROFILE" == nativ
     exit 1
 fi
 MISSION_BUILD="build-$MISSION_PROFILE"
-BUILD_JOBS=4
-if [[ "$MISSION_TARGET" == native ]]; then
-    BUILD_JOBS=$(python3 -c 'from hardware.state import RuntimeState; print(RuntimeState(".").build_settings().jobs)')
-    [[ "$BUILD_JOBS" =~ ^([1-9]|[1-5][0-9]|6[0-4])$ ]] || { echo "Invalid native build jobs" >&2; exit 1; }
+# Serial compilation keeps first boot usable on small development hosts.
+# An explicit shell override wins over the saved native setting.
+if [[ -z "${BUILD_JOBS:-}" ]]; then
+    BUILD_JOBS=1
+    if [[ "$MISSION_TARGET" == native ]]; then
+        BUILD_JOBS=$(python3 -c 'from hardware.state import RuntimeState; print(RuntimeState(".").build_settings().jobs)')
+    fi
 fi
+[[ "$BUILD_JOBS" =~ ^([1-9]|[1-5][0-9]|6[0-4])$ ]] || { echo "Invalid build jobs" >&2; exit 1; }
 # Use cFE's external mission definitions and module search path on both hosts.
 if [[ "$MISSION_TARGET" == native ]]; then
     SOURCE_ROOT="$PWD/cFS"

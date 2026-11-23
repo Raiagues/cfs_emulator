@@ -36,7 +36,7 @@ class Emulator:
 
 @dataclass(frozen=True)
 class BuildSettings:
-    jobs: int = 4
+    jobs: int = 1
 
     def __post_init__(self):
         if type(self.jobs) is not int or not 1 <= self.jobs <= 64:

@@ -29,11 +29,15 @@
         <svg class="target-connector" viewBox="0 0 48 12" aria-hidden="true"><path d="M2 6h36" stroke-dasharray="3 4"/><path d="m38 1 6 5-6 5"/></svg>
         <button type="button" class="target-option" data-target="qemu" aria-pressed="false" disabled>
           <span class="target-illustration" data-art="qemu"></span>
+          <span class="target-lock" hidden><span data-lock-icon></span>Part 2</span>
+          <span class="target-lock-tip" id="qemu-lock-tip" role="tooltip" hidden><strong>Unlock Emulator</strong><span>Complete first contact on Native: send ENABLE_OUTPUT, then NOOP and receive its event and counter.</span><small>Choose Native to begin.</small></span>
           <span class="target-caption"><strong>Emulator</strong><small>QEMU</small></span>
         </button>
         <svg class="target-connector" viewBox="0 0 48 12" aria-hidden="true"><path d="M2 6h36" stroke-dasharray="3 4"/><path d="m38 1 6 5-6 5"/></svg>
         <button type="button" class="target-option" data-target="physical" aria-pressed="false" disabled>
           <span class="target-illustration" data-art="physical"></span>
+          <span class="target-lock" hidden><span data-lock-icon></span>Part 2</span>
+          <span class="target-lock-tip" id="physical-lock-tip" role="tooltip" hidden><strong>Unlock Board</strong><span>Complete first contact on Native: send ENABLE_OUTPUT, then NOOP and receive its event and counter.</span><small>Choose Native to begin.</small></span>
           <span class="target-caption"><strong>Board</strong><small>SSH</small></span>
         </button>
     </div>

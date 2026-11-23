@@ -2294,3 +2294,19 @@ dialog > header h2 { font-size: var(--fs-heading); font-weight: 500; }
   .welcome-frame { zoom:var(--welcome-scale,1) }
 }
 }
+
+/* Tutorial access stays visible in Setup and every workspace view. */
+.flight-tutorial {position:relative}
+.flight-tutorial summary {display:flex;align-items:center;gap:6px;min-height:28px;padding:0 8px;cursor:pointer;list-style:none;
+  border:1px solid var(--fs-line);border-radius:var(--fs-radius-control);color:var(--fs-text);background:var(--fs-panel)}
+.flight-tutorial summary::-webkit-details-marker {display:none}
+.flight-tutorial summary:hover,.flight-tutorial[open] summary {border-color:var(--fs-accent);color:var(--fs-accent)}
+.flight-tutorial-menu {position:absolute;top:calc(100% + 8px);right:0;z-index:60;width:260px;max-width:calc(100vw - 24px);
+  display:flex;flex-direction:column;gap:3px;padding:8px;background:var(--fs-panel);border:1px solid var(--fs-line);
+  border-radius:var(--fs-radius-card);box-shadow:0 12px 32px #0005;white-space:normal;text-align:left}
+.flight-tutorial-menu strong {padding:8px 10px;color:var(--fs-muted);font:500 var(--fs-caption)/1.4 var(--fs-sans)}
+.flight-tutorial-menu a,.flight-guide-actions .flight-tutorial-menu button {display:block;width:100%;height:auto;min-height:34px;padding:8px 10px;
+  text-align:left;border:0;border-radius:var(--fs-radius-control);background:transparent;color:var(--fs-text);text-decoration:none;font:var(--fs-body)/1.4 var(--fs-sans)}
+.flight-tutorial-menu a:hover,.flight-tutorial-menu a:focus-visible,.flight-guide-actions .flight-tutorial-menu button:hover {background:var(--fs-raised)}
+.flight-tutorial-menu [data-tutorial="resume"] {color:var(--fs-accent)}
+.flight-tutorial-menu small {padding:5px 10px;color:var(--fs-muted);font:var(--fs-caption)/1.5 var(--fs-sans)}

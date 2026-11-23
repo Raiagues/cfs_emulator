@@ -29,7 +29,7 @@ def prepare(root, *, build=False, options=()):
         directory.mkdir(parents=True, exist_ok=True)
         from tempfile import NamedTemporaryFile
         with NamedTemporaryFile(mode='w', dir=directory, prefix='emulator-image-', suffix='.log', delete=False) as log:
-            print(f'Building QEMU can take tens of minutes on two cores. Build log: {log.name}', file=sys.stderr, flush=True)
+            print(f'Building QEMU can take tens of minutes (one worker by default). Build log: {log.name}', file=sys.stderr, flush=True)
             command = ['docker', 'build', '--network=host', '--progress=plain', '--platform', platform, '--build-arg',
                        'REGISTER_MODELS=' + models, '--tag', image, *options, '.']
             with subprocess.Popen(command, cwd=root, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
